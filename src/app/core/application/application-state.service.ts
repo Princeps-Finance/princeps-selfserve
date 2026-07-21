@@ -49,6 +49,13 @@ export interface OfferDraft {
   interestModel: 'Flat Rate' | 'Reducing Balance' | 'Percentage Based';
   monthlyRepayment: number;
   fees: { name: string; amount: number }[];
+  referralCode?: string;
+}
+
+export interface ReferralDraft {
+  code: string;
+  rateDiscountPct: number;
+  label: string;
 }
 
 /** What the customer last chose, kept so a changed offer can start from it. */
@@ -157,6 +164,7 @@ export interface ApplicationDraft {
   eligibility: EligibilityDraft | null;
   offer: OfferDraft | null;
   offerPreference: OfferPreference | null;
+  referral: ReferralDraft | null;
   profile: ProfileDraft | null;
   bvn: BvnDraft | null;
   nin: NinDraft | null;
@@ -179,6 +187,7 @@ const empty: ApplicationDraft = {
   eligibility: null,
   offer: null,
   offerPreference: null,
+  referral: null,
   profile: null,
   bvn: null,
   nin: null,
@@ -204,6 +213,7 @@ export class ApplicationStateService {
   readonly eligibility = computed(() => this.state().eligibility);
   readonly offer = computed(() => this.state().offer);
   readonly offerPreference = computed(() => this.state().offerPreference);
+  readonly referral = computed(() => this.state().referral);
   readonly profile = computed(() => this.state().profile);
   readonly bvn = computed(() => this.state().bvn);
   /**
@@ -265,6 +275,10 @@ export class ApplicationStateService {
 
   setOfferPreference(offerPreference: OfferPreference | null): void {
     this.state.update((s) => ({ ...s, offerPreference }));
+  }
+
+  setReferral(referral: ReferralDraft | null): void {
+    this.state.update((s) => ({ ...s, referral }));
   }
 
   setProfile(profile: ProfileDraft): void {
