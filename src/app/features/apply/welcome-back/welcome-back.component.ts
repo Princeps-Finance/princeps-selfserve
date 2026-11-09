@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { formatNaira } from '../../../core/money.util';
 
 @Component({
   selector: 'app-welcome-back',
-  imports: [TPipe],
+  imports: [TPipe, IllustrationComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './welcome-back.component.html',
   styleUrl: './welcome-back.component.css',
