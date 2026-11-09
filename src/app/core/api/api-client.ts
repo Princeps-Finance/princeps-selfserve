@@ -54,7 +54,7 @@ export type DocUploadResult =
   | { status: 'network' };
 
 export interface SubmitPayload {
-  contact: { phone: string; email: string };
+  contact: { phone: string; email?: string };
   employment: { type: string };
   offer: { productId: string; amount: number; tenorMonths: number };
   bvn: string;
@@ -110,11 +110,13 @@ export interface Bank {
  * to that BVN. The BVN photo is NEVER returned to the browser: it stays server-side for face match.
  */
 export interface BvnIdentity {
+  /** The first name only, used to greet the customer. Never shown in full. */
+  firstName: string;
   fullName: string;
   dateOfBirth: string; // YYYY-MM-DD
-  state?: string;
-  lga?: string;
-  street?: string;
+  /** The phone number registered with the BVN. This becomes the contact number. */
+  phone: string;
+  gender?: 'male' | 'female';
 }
 
 export type BvnOtpSendResult =
@@ -128,7 +130,7 @@ export type BvnOtpVerifyResult =
   | { status: 'locked'; retryAfterSeconds: number };
 
 export interface StatementReviewInput {
-  contact: { phone: string; email: string };
+  contact: { phone: string; email?: string };
   bvn: string;
   employer: string;
   bankCode: string;
@@ -148,7 +150,7 @@ export interface ApiClient {
   verifyBvnOtp(bvn: string, code: string): Promise<BvnOtpVerifyResult>;
   /** Local government areas for a state. An empty list means the user types it instead. */
   getLgas(state: string): Promise<string[]>;
-  lookupContact(input: { phone: string; email: string }): Promise<LookupResult>;
+  lookupContact(input: { phone: string; email?: string }): Promise<LookupResult>;
   sendPhoneOtp(phone: string, captchaToken?: string): Promise<{ target: string; expiresInSeconds: number }>;
   verifyPhoneOtp(
     phone: string,
@@ -180,7 +182,7 @@ export type WaitlistChannel = 'whatsapp' | 'sms' | 'email';
 
 export interface WaitlistInput {
   phone: string;
-  email: string;
+  email?: string;
   type: string;
   employer?: string;
   incomeBand?: IncomeBand;
@@ -245,7 +247,7 @@ export const NG_BANKS: Bank[] = [
 
 /**
  * In-process mock. Deterministic:
- * - Contact email `returning@princeps.ng` → returning customer.
+ * - BVN `33333333333` → returning customer (the mock BVN record has phone 08099999999).
  * - OTP `123456` = ok, `000000` = expired, else wrong.
  * - Account `0000000000` = not found; `1111111111` = name mismatch;
  *   `9999999999` = service down; `4444444444` = ok but ₦1,000/mo (to see a decline);
@@ -255,9 +257,9 @@ export const NG_BANKS: Bank[] = [
  */
 @Injectable({ providedIn: 'root' })
 export class MockApiClient implements ApiClient {
-  async lookupContact(input: { phone: string; email: string }): Promise<LookupResult> {
+  async lookupContact(input: { phone: string; email?: string }): Promise<LookupResult> {
     await delay(600);
-    if (input.email.toLowerCase() === 'returning@princeps.ng') {
+    if (input.phone === '+2348099999999') {
       return {
         kind: 'returning',
         profileHint: 'A. Adeyemi',
@@ -290,14 +292,14 @@ export class MockApiClient implements ApiClient {
     await delay(600);
     if (code === '000000') return { status: 'expired' };
     if (code !== '123456') return { status: 'wrong' };
-    // 22222222222 returns a record without an address, to exercise the manual fallback.
-    const partial = bvn === '22222222222';
     return {
       status: 'ok',
       identity: {
+        firstName: 'Ada',
         fullName: 'Ada Okafor',
         dateOfBirth: '1988-04-12',
-        ...(partial ? {} : { state: 'Lagos', lga: 'Ikeja', street: '12 Marina Road' }),
+        phone: bvn === '33333333333' ? '08099999999' : '08012345678',
+        gender: 'female',
       },
     };
   }

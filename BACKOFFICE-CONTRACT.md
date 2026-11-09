@@ -125,3 +125,13 @@ Contact (phone, email, privacy consent) → **BVN** → OTP sent to the phone li
 and pre-filled. The typed phone number is a contact number only and is not texted. `send-otp` / `verify-otp`
 (phone) remain in the API but the app no longer calls them. Customer lookup (resume / returning customer) runs after
 the BVN OTP, as it did after the phone OTP.
+
+## Sign-in order (revised)
+
+The phone-and-email screen is gone. Order: welcome -> **BVN + privacy consent** -> OTP sent to the phone linked to the BVN
+-> profile (address, state, LGA, relationship, optional email).
+
+`verify-bvn-otp` must return, in `identity`: `firstName`, `fullName`, `dateOfBirth` (YYYY-MM-DD), `phone` (the BVN's
+registered number, which becomes the contact number) and optionally `gender`. Address, state and LGA are **not** taken from
+the BVN: the customer enters them. The app shows only the first name (a greeting); the rest of the record is never displayed.
+`email` is optional on `lookup-contact`, `statement-review` and `waitlist`; the app leaves it out when empty.

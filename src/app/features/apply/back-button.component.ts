@@ -6,12 +6,11 @@ import { productById } from '../../core/products/products';
 
 const BACK_MAP: Record<string, string> = {
   '/apply/welcome': '/',
-  '/apply/contact': '/apply/welcome',
-  '/apply/bvn': '/apply/contact',
+  '/apply/bvn': '/apply/welcome',
   '/apply/verify': '/apply/bvn',
-  '/apply/saved': '/apply/contact',
-  '/apply/resume': '/apply/contact',
-  '/apply/profile': '/apply/bvn',
+  '/apply/saved': '/apply/welcome',
+  '/apply/resume': '/apply/welcome',
+  '/apply/profile': '/apply/welcome',
   '/apply/employment': '/apply/profile',
   '/apply/waitlist': '/apply/employment',
   '/apply/salary': '/apply/employment',

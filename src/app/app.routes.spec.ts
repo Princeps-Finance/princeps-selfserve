@@ -28,7 +28,7 @@ describe('wizard route guards (bio data → work → offer → loan documentatio
 
   const PROTECTED = [
     'verify', 'resume', 'welcome-back', 'profile', 'employment', 'waitlist', 'salary', 'eligibility',
-    'offers', 'saved', 'terms', 'bvn', 'nin', 'documents', 'verify-identity', 'mandate', 'submit', 'status',
+    'offers', 'saved', 'terms', 'nin', 'documents', 'verify-identity', 'mandate', 'submit', 'status',
   ];
 
   const verified = () => {
@@ -38,16 +38,18 @@ describe('wizard route guards (bio data → work → offer → loan documentatio
   const approve = (decision: 'approved' | 'review' | 'declined' = 'approved') =>
     state.setEligibility({ score: 80, decision, maxEligibleAmount: 100_000, tenorMonths: 6, reasons: [] });
 
-  it('opens welcome and contact to anyone, and blocks everything else on a fresh session', () => {
+  it('opens welcome and the BVN screen to anyone, and blocks everything else on a fresh session', () => {
     expect(allows('welcome')).toBe(true);
+    expect(allows('bvn')).toBe(true);
     for (const path of PROTECTED) expect(allows(path), path).toBe(false);
   });
 
   it('collects bio data first, then work details, then checks eligibility', () => {
-    state.setContact({ phone: '+2348031112233', email: 'a@b.co' });
+    state.setBvn({ value: '12345678901', verified: false });
     expect(allows('verify')).toBe(true);
     expect(allows('profile')).toBe(false);
 
+    state.setContact({ phone: '+2348031112233', email: '' });
     state.markPhoneVerified();
     expect(allows('profile')).toBe(true);
     expect(allows('employment')).toBe(false); // needs bio data first
@@ -81,10 +83,15 @@ describe('wizard route guards (bio data → work → offer → loan documentatio
     expect(allows('documents')).toBe(true);
   });
 
-  it('asks for the BVN straight after the phone number, before anything else', () => {
-    state.setContact({ phone: '+2348012345678', email: 'a@b.ng' });
-    expect(allows('bvn')).toBe(true);
-    expect(allows('profile')).toBe(false); // needs the BVN owner to confirm first
+  it('asks for the BVN first, then the code, and only then the rest of the application', () => {
+    expect(allows('bvn')).toBe(true); // nothing needed before it
+    expect(allows('verify')).toBe(false); // needs a BVN to send the code to
+    state.setBvn({ value: '12345678901', verified: false });
+    expect(allows('verify')).toBe(true);
+    expect(allows('profile')).toBe(false); // needs the BVN owner to confirm with the code
+    state.setContact({ phone: '+2348012345678', email: '' });
+    state.markPhoneVerified();
+    expect(allows('profile')).toBe(true);
   });
 
   it('lets a manual-review result continue (not a dead end) but never a decline', () => {

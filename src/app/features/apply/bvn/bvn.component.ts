@@ -7,6 +7,8 @@ import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { whatsappLink } from '../../../core/support';
+import { LangService } from '../../../core/i18n/lang.service';
+import { PRIVACY_NOTICE_VERSION, PrivacyService } from '../../../core/privacy/privacy.service';
 
 /**
  * The BVN is asked first. We then text a code to the phone linked to that BVN, so only its real
@@ -22,6 +24,8 @@ import { whatsappLink } from '../../../core/support';
 export class BvnComponent {
   private readonly state = inject(ApplicationStateService);
   private readonly router = inject(Router);
+  private readonly lang = inject(LangService);
+  protected readonly privacy = inject(PrivacyService);
   readonly support = whatsappLink('Hello Princeps, I need help with my BVN.');
 
   readonly bvn = new FormControl('', {
@@ -29,6 +33,8 @@ export class BvnComponent {
     validators: [Validators.required, Validators.pattern(/^\d{11}$/)],
   });
 
+  readonly consent = new FormControl(!!this.state.consent(), { nonNullable: true });
+  readonly showConsentError = signal(false);
   readonly submitting = signal(false);
   readonly notFound = signal(inject(ActivatedRoute).snapshot.queryParamMap.get('error') === 'not-found');
 
@@ -55,6 +61,16 @@ export class BvnComponent {
       focusFirstInvalid();
       return;
     }
+    if (!this.consent.value) {
+      this.showConsentError.set(true);
+      document.getElementById('consent')?.focus();
+      return;
+    }
+    this.state.setConsent({
+      version: PRIVACY_NOTICE_VERSION,
+      acceptedAt: new Date().toISOString(),
+      language: this.lang.lang(),
+    });
     this.submitting.set(true);
     // Not verified yet: the next screen sends the code to the phone linked to this BVN.
     this.state.setBvn({ value: this.bvn.value, verified: false });

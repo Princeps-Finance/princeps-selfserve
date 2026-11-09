@@ -71,12 +71,12 @@ export class HttpApiClient implements ApiClient {
   }
 
   private async op<T>(name: string, body: unknown): Promise<T> {
-    const r = await this.post<T>(`/api/selfserve/${name}`, body);
+    const r = await this.post<T>(`/api/selfserve/${name}`, withoutEmptyEmail(body));
     if (!r.ok || r.data === null) throw new ApiUnavailableError(name, r.status);
     return r.data;
   }
 
-  lookupContact(input: { phone: string; email: string }): Promise<LookupResult> {
+  lookupContact(input: { phone: string; email?: string }): Promise<LookupResult> {
     return this.op<LookupResult>('lookup-contact', input);
   }
 
@@ -234,4 +234,15 @@ export class HttpApiClient implements ApiClient {
   joinWaitlist(input: WaitlistInput): Promise<WaitlistResult> {
     return this.op<WaitlistResult>('waitlist', input);
   }
+}
+
+/** Email is optional: an empty string means "not given", so it is left out of the request. */
+function withoutEmptyEmail<B>(body: B): B {
+  if (!body || typeof body !== 'object') return body;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(body as Record<string, unknown>)) {
+    if (k === 'email' && v === '') continue;
+    out[k] = v && typeof v === 'object' && !Array.isArray(v) ? withoutEmptyEmail(v) : v;
+  }
+  return out as B;
 }

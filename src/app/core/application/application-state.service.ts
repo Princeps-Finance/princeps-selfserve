@@ -271,6 +271,11 @@ export class ApplicationStateService {
     this.state.update((s) => ({ ...s, profile }));
   }
 
+  /** Email is optional and asked after sign-in; unlike setContact it keeps the phone verified. */
+  setContactEmail(email: string): void {
+    this.state.update((s) => (s.contact ? { ...s, contact: { ...s.contact, email } } : s));
+  }
+
   setBvnIdentity(identity: BvnIdentity | null): void {
     this._bvnIdentity.set(identity);
   }

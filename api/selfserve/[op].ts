@@ -36,7 +36,7 @@ interface OpDef {
 
 const OPS: Record<string, OpDef> = {
   'lookup-contact': {
-    schema: z.object({ phone, email: z.string().email().max(160) }).strict(),
+    schema: z.object({ phone, email: z.string().email().max(160).optional() }).strict(),
     limit: 10,
     allow: ['kind', 'profileHint', 'snapshot'],
     needsToken: true,
@@ -65,7 +65,7 @@ const OPS: Record<string, OpDef> = {
   'statement-review': {
     schema: z
       .object({
-        contact: z.object({ phone, email: z.string().email().max(160) }).strict(),
+        contact: z.object({ phone, email: z.string().email().max(160).optional() }).strict(),
         bvn: digits(11),
         employer: z.string().min(2).max(120),
         bankCode: digits(3),
@@ -144,7 +144,7 @@ const OPS: Record<string, OpDef> = {
     schema: z
       .object({
         phone,
-        email: z.string().email().max(160),
+        email: z.string().email().max(160).optional(),
         type: z.string().max(40),
         employer: z.string().max(120).optional(),
         incomeBand: z.enum(['under-100k', '100-250k', '250-500k', '500-1m', 'over-1m']).optional(),

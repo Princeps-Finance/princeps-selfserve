@@ -13,7 +13,14 @@ const languageChosenGuard: CanMatchFn = () => {
 const requiresContactGuard: CanMatchFn = () => {
   const state = inject(ApplicationStateService);
   const router = inject(Router);
-  return state.contact() ? true : router.parseUrl('/apply/contact');
+  return state.contact() ? true : router.parseUrl('/apply/bvn');
+};
+
+/** The OTP screen only makes sense once a BVN has been entered. */
+const requiresBvnEnteredGuard: CanMatchFn = () => {
+  const state = inject(ApplicationStateService);
+  const router = inject(Router);
+  return state.bvn() ? true : router.parseUrl('/apply/bvn');
 };
 
 const requiresPhoneVerifiedGuard: CanMatchFn = () => {
@@ -55,7 +62,7 @@ const requiresSubmissionGuard: CanMatchFn = () => {
   const router = inject(Router);
   return state.submission().status !== 'idle' && state.submission().status !== 'submitting'
     ? true
-    : router.parseUrl('/apply/contact');
+    : router.parseUrl('/apply/bvn');
 };
 
 const requiresTermsGuard: CanMatchFn = () => {
@@ -132,14 +139,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/apply/welcome/welcome.component').then((m) => m.WelcomeIntentComponent),
       },
-      {
-        path: 'contact',
-        loadComponent: () =>
-          import('./features/apply/contact/contact.component').then((m) => m.ContactComponent),
-      },
+      // Old links: the phone-and-email screen is gone, the BVN is the first question.
+      { path: 'contact', pathMatch: 'full', redirectTo: 'bvn' },
       {
         path: 'verify',
-        canMatch: [requiresContactGuard],
+        canMatch: [requiresBvnEnteredGuard],
         loadComponent: () =>
           import('./features/apply/verify-phone/verify-phone.component').then(
             (m) => m.VerifyPhoneComponent,
@@ -193,7 +197,6 @@ export const routes: Routes = [
       },
       {
         path: 'bvn',
-        canMatch: [requiresContactGuard],
         loadComponent: () =>
           import('./features/apply/bvn/bvn.component').then((m) => m.BvnComponent),
       },

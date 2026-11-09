@@ -8,7 +8,7 @@ import { AppUpdateService } from './app-update.service';
 /** Nothing has been typed yet: a ready update is applied automatically. */
 const AUTO_APPLY_ROUTES = new Set(['/', '/apply', '/apply/welcome']);
 /** Little or nothing to lose: offer the update, the customer decides. */
-const OFFER_ROUTES = new Set([...AUTO_APPLY_ROUTES, '/apply/contact', '/apply/bvn', '/apply/status']);
+const OFFER_ROUTES = new Set([...AUTO_APPLY_ROUTES, '/apply/bvn', '/apply/status']);
 
 @Component({
   selector: 'app-pwa-banner',

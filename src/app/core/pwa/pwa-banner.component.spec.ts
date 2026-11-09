@@ -17,7 +17,7 @@ describe('PwaBannerComponent', () => {
       providers: [
         provideRouter([
           { path: '', component: PwaBannerComponent },
-          ...['contact', 'status', 'welcome', 'bvn', 'profile', 'employment', 'offers', 'documents'].map((p) => ({
+          ...['status', 'welcome', 'bvn', 'profile', 'employment', 'offers', 'documents'].map((p) => ({
             path: 'apply/' + p,
             component: PwaBannerComponent,
           })),
@@ -44,12 +44,10 @@ describe('PwaBannerComponent', () => {
     expect(apply).not.toHaveBeenCalled();
   });
 
-  it('only offers (never forces) the update on contact and BVN, where something may be typed', async () => {
+  it('only offers (never forces) the update on the BVN screen, where something may be typed', async () => {
     updateReady.set(true);
-    for (const path of ['/apply/contact', '/apply/bvn']) {
-      const el = await at(path);
-      expect(el.querySelector('.banner--update')).not.toBeNull();
-    }
+    const el = await at('/apply/bvn');
+    expect(el.querySelector('.banner--update')).not.toBeNull();
     expect(apply).not.toHaveBeenCalled();
   });
 
@@ -77,7 +75,7 @@ describe('PwaBannerComponent', () => {
 
   it('shows an offline notice anywhere without covering controls', async () => {
     offline.set(true);
-    const el = await at('/apply/contact');
+    const el = await at('/apply/status');
     expect(el.querySelector('.banner--offline')).not.toBeNull();
   });
 });
