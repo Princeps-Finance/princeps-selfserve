@@ -19,6 +19,7 @@ export class MandateComponent {
   readonly offer = this.state.offer;
   readonly salary = this.state.salary;
   readonly agreed = signal(false);
+  readonly attempted = signal(false);
   readonly formatNaira = formatNaira;
 
   readonly employment = this.state.employment;
@@ -52,10 +53,15 @@ export class MandateComponent {
 
   toggleAgree(v: boolean): void {
     this.agreed.set(v);
+    if (v) this.attempted.set(false);
   }
 
   authorize(): void {
-    if (!this.agreed()) return;
+    if (!this.agreed()) {
+      this.attempted.set(true);
+      document.querySelector<HTMLElement>('.agree input')?.focus();
+      return;
+    }
     const o = this.offer();
     const s = this.salary();
     if (!o || !s) return;

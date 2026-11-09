@@ -7,8 +7,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+    <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
+    <!-- Requested as two separate stylesheets: Fontshare returns the wrong
+         family (Cabinet Grotesk) when both are combined in one URL. -->
     <link
-      href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=general-sans@400,500,600&display=swap"
+      href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600&display=swap"
       rel="stylesheet"
     />
   </head>
@@ -16,18 +23,9 @@
     <app-root></app-root>
 
     <!--
-      Zoho SalesIQ live chat widget.
-      Replace `YOUR_WIDGET_CODE` with the widget code from
+      Live chat is disabled until a real Zoho SalesIQ widget code exists.
+      To enable: add the Zoho snippet here with the widget code from
       Zoho SalesIQ → Brand → Installation → Website.
     -->
-    <script type="text/javascript">
-      window.$zoho = window.$zoho || {};
-      $zoho.salesiq = $zoho.salesiq || { ready: function () {} };
-    </script>
-    <script
-      id="zsiqscript"
-      src="https://salesiq.zohopublic.com/widget?wc=YOUR_WIDGET_CODE"
-      defer
-    ></script>
   </body>
 </html>

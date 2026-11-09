@@ -35,6 +35,8 @@ export class DocumentsComponent implements OnInit {
   readonly docs = this.state.docs;
   readonly errors = signal<Record<string, 'too-large' | 'network' | 'bad-type' | null>>({});
 
+  readonly attempted = signal(false);
+
   readonly allUploaded = computed(() => {
     const s = this.specs();
     const d = this.docs();
@@ -85,7 +87,11 @@ export class DocumentsComponent implements OnInit {
   }
 
   continue(): void {
-    if (!this.allUploaded()) return;
+    if (!this.allUploaded()) {
+      this.attempted.set(true);
+      setTimeout(() => document.getElementById('docs-error')?.focus());
+      return;
+    }
     void this.router.navigateByUrl('/apply/verify-identity');
   }
 }

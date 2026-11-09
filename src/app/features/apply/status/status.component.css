@@ -70,7 +70,7 @@
   transition: background 160ms ease;
 }
 .cta:hover { background: var(--action-primary-hover); }
-.cta:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.cta:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 
 .wa {
   align-self: stretch;
@@ -85,7 +85,7 @@
 }
 .wa:hover { background: color-mix(in srgb, #25D366 18%, transparent); }
 .wa:active { transform: scale(0.99); }
-.wa:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.wa:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 .wa-icon {
   width: 36px; height: 36px; flex: none;
   display: inline-flex; align-items: center; justify-content: center;
@@ -165,5 +165,5 @@
   margin-top: var(--space-2);
 }
 .tel:hover { background: rgba(11, 46, 91, 0.12); }
-.tel:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.tel:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 .office .tel { align-self: flex-start; }

@@ -67,7 +67,7 @@ import { TPipe } from '../../core/i18n/t.pipe';
       .wrap { position: relative; display: inline-flex; }
       .trigger {
         display: inline-flex; align-items: center; gap: var(--space-2);
-        min-height: 36px; padding: 0 var(--space-3) 0 var(--space-4);
+        min-height: 44px; padding: 0 var(--space-3) 0 var(--space-4);
         background: transparent; border: 1px solid var(--hairline-strong);
         border-radius: var(--radius-pill);
         font-family: var(--font-sans);
@@ -77,7 +77,7 @@ import { TPipe } from '../../core/i18n/t.pipe';
       }
       .trigger:hover { background: rgba(17,17,17,0.04); border-color: var(--ink); }
       .trigger:focus-visible {
-        outline: none;
+        outline: 2px solid transparent; outline-offset: 2px;
         box-shadow: var(--focus-ring);
       }
       .caret { transition: transform 180ms cubic-bezier(0.2, 0.7, 0.1, 1); color: var(--ink-soft); }
@@ -108,7 +108,7 @@ import { TPipe } from '../../core/i18n/t.pipe';
         font-family: var(--font-sans);
       }
       .option:hover, .option:focus-visible {
-        background: var(--canvas); outline: none;
+        background: var(--canvas); outline: 2px solid transparent; outline-offset: 2px;
       }
       .option-endonym {
         font-family: var(--font-display); font-size: 15px; font-weight: 500;

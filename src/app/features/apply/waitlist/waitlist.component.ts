@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { focusFirstInvalid } from '../../../core/a11y/focus';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import {
   API_CLIENT,
@@ -29,6 +30,7 @@ export class WaitlistComponent {
   });
 
   readonly submitting = signal(false);
+  readonly attempted = signal(false);
   readonly result = signal<WaitlistResult | null>(null);
 
   readonly form = new FormGroup({
@@ -62,7 +64,13 @@ export class WaitlistComponent {
   }
 
   async join(): Promise<void> {
-    if (!this.canSubmit()) return;
+    if (this.submitting()) return;
+    if (!this.form.valid) {
+      this.attempted.set(true);
+      this.form.markAllAsTouched();
+      setTimeout(() => focusFirstInvalid());
+      return;
+    }
     const contact = this.state.contact();
     if (!contact) {
       await this.router.navigateByUrl('/apply/contact');

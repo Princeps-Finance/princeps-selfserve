@@ -17,12 +17,14 @@
         autocomplete="off"
         maxlength="11"
         [formControl]="nin"
+        [attr.aria-invalid]="nin.touched && nin.invalid ? true : null"
+        [attr.aria-describedby]="nin.touched && nin.invalid ? 'nin-error' : 'nin-hint'"
         (input)="onInput($event)"
       />
       @if (nin.touched && nin.invalid) {
-        <p class="msg msg--error">{{ 'step.nin.invalid' | t }}</p>
+        <p class="msg msg--error" id="nin-error">{{ 'step.nin.invalid' | t }}</p>
       } @else {
-        <p class="msg">{{ 'step.nin.hint' | t }}</p>
+        <p class="msg" id="nin-hint">{{ 'step.nin.hint' | t }}</p>
       }
     </div>
 
@@ -35,7 +37,7 @@
       </p>
     }
 
-    <button type="button" class="cta" [disabled]="!canSubmit()" (click)="submit()">
+    <button type="button" class="cta" [disabled]="submitting()" (click)="submit()">
       <span>{{ submitting() ? ('step.nin.verifying' | t) : ('step.nin.verify' | t) }}</span>
       @if (!submitting()) {
         <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">

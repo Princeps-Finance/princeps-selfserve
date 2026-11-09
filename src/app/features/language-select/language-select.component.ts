@@ -2,12 +2,13 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router } from '@angular/router';
 import { LangService } from '../../core/i18n/lang.service';
 import { LANGUAGES, Lang } from '../../core/i18n/translations';
+import { RadioGroupDirective } from '../../core/a11y/radio-group.directive';
 import { TPipe } from '../../core/i18n/t.pipe';
 import { ReadAloudComponent } from '../apply/read-aloud.component';
 
 @Component({
   selector: 'app-language-select',
-  imports: [TPipe, ReadAloudComponent],
+  imports: [TPipe, ReadAloudComponent, RadioGroupDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './language-select.component.html',
   styleUrl: './language-select.component.css',

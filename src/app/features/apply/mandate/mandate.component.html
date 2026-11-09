@@ -53,14 +53,19 @@
   <label class="agree">
     <input
       type="checkbox"
+      [attr.aria-invalid]="attempted() && !agreed() ? true : null"
+      aria-describedby="agree-error"
       class="agree-box"
       [checked]="agreed()"
       (change)="toggleAgree($any($event.target).checked)"
     />
     <span>{{ 'step.mandate.agree' | t }}</span>
   </label>
+  @if (attempted() && !agreed()) {
+    <p class="msg--error" id="agree-error" role="alert">{{ 'form.agree.required' | t }}</p>
+  }
 
-  <button type="button" class="cta" [disabled]="!agreed()" (click)="authorize()">
+  <button type="button" class="cta" (click)="authorize()">
     <span>{{ 'step.mandate.authorize' | t }}</span>
     <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />

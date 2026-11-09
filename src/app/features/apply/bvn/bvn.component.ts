@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router } from '@angular/router';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { focusFirstInvalid } from '../../../core/a11y/focus';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { API_CLIENT } from '../../../core/api/api-client';
@@ -59,7 +60,12 @@ export class BvnComponent {
   }
 
   async submit(): Promise<void> {
-    if (!this.canSubmit()) return;
+    if (this.submitting()) return;
+    if (this.bvn.invalid) {
+      this.bvn.markAsTouched();
+      focusFirstInvalid();
+      return;
+    }
     this.submitting.set(true);
     this.serverError.set(null);
     try {

@@ -17,12 +17,14 @@
         autocomplete="off"
         maxlength="11"
         [formControl]="bvn"
+        [attr.aria-invalid]="bvn.touched && bvn.invalid ? true : null"
+        [attr.aria-describedby]="bvn.touched && bvn.invalid ? 'bvn-error' : 'bvn-hint'"
         (input)="onInput($event)"
       />
       @if (bvn.touched && bvn.invalid) {
-        <p class="msg msg--error">{{ 'step.bvn.invalid' | t }}</p>
+        <p class="msg msg--error" id="bvn-error">{{ 'step.bvn.invalid' | t }}</p>
       } @else {
-        <p class="msg">{{ 'step.bvn.hint' | t }}</p>
+        <p class="msg" id="bvn-hint">{{ 'step.bvn.hint' | t }}</p>
       }
     </div>
 
@@ -35,7 +37,7 @@
       </p>
     }
 
-    <button type="button" class="cta" [disabled]="!canSubmit()" (click)="submit()">
+    <button type="button" class="cta" [disabled]="submitting()" (click)="submit()">
       <span>{{ submitting() ? ('step.bvn.verifying' | t) : ('step.bvn.verify' | t) }}</span>
       @if (!submitting()) {
         <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">

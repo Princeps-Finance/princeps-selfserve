@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router } from '@angular/router';
 import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 import { TPipe } from '../../../core/i18n/t.pipe';
+import { focusFirstInvalid } from '../../../core/a11y/focus';
+import { RadioGroupDirective } from '../../../core/a11y/radio-group.directive';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import {
   ApplicationStateService,
@@ -25,7 +27,7 @@ const OPTIONS: Option[] = [
 
 @Component({
   selector: 'app-employment',
-  imports: [TPipe, WizardProgressComponent, ReactiveFormsModule],
+  imports: [TPipe, WizardProgressComponent, ReactiveFormsModule, RadioGroupDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './employment.component.html',
   styleUrl: './employment.component.css',
@@ -37,6 +39,7 @@ export class EmploymentComponent {
   readonly options = OPTIONS;
   readonly selected = signal<EmploymentType | null>(this.state.employment()?.type ?? null);
   readonly submitting = signal(false);
+  readonly attempted = signal(false);
 
   readonly nyscMonths = new FormControl<number | null>(
     this.state.employment()?.nyscMonthsRemaining ?? null,
@@ -57,11 +60,23 @@ export class EmploymentComponent {
 
   select(type: EmploymentType): void {
     this.selected.set(type);
+    this.attempted.set(false);
   }
 
   async continue(): Promise<void> {
+    if (this.submitting()) return;
+    if (!this.canContinue()) {
+      this.attempted.set(true);
+      if (this.selectedOption()) {
+        this.nyscMonths.markAsTouched();
+        focusFirstInvalid();
+      } else {
+        document.querySelector<HTMLElement>('[role="radio"]')?.focus();
+      }
+      return;
+    }
     const opt = this.selectedOption();
-    if (!opt || this.submitting()) return;
+    if (!opt) return;
 
     if (!opt.live) {
       await this.router.navigate(['/apply/waitlist'], { queryParams: { type: opt.type } });

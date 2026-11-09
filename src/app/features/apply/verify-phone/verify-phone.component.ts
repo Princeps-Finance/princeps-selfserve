@@ -52,6 +52,7 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly justResent = signal(false);
 
   readonly currentLang = computed(() => this.lang.lang());
+  readonly attempted = signal(false);
   readonly code = computed(() => this.cells().join(''));
   readonly canSubmit = computed(() => this.code().length === OTP_LENGTH && !this.submitting());
 
@@ -125,7 +126,13 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async submit(): Promise<void> {
-    if (!this.canSubmit()) return;
+    if (this.submitting()) return;
+    if (this.code().length !== OTP_LENGTH) {
+      this.attempted.set(true);
+      const empty = this.cells().findIndex((c) => !c);
+      this.cellRefs()[empty === -1 ? 0 : empty]?.nativeElement.focus();
+      return;
+    }
     const contact = this.state.contact();
     if (!contact) return;
 

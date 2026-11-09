@@ -26,7 +26,7 @@
 
   --text-primary: #111214;
   --text-secondary: #5a5d63;
-  --text-tertiary: #8a8d93;
+  --text-tertiary: #666a70;
   --text-disabled: #b6b8bd;
   --text-on-navy: #ffffff;
   --text-on-orange: #ffffff;
@@ -38,6 +38,7 @@
   --warning: #d97706;
   --warning-soft: #fef3e2;
   --danger: #dc2626;
+  --danger-text: #b91c1c; /* AA on canvas + white; --danger fails 4.5:1 for small text */
   --danger-soft: #fdecec;
   --info: #0b2b55;
   --info-soft: #e4eaf3;
@@ -51,7 +52,7 @@
   --canvas: #f5f2ec;
   --ink: #111111;
   --ink-soft: #4a4a4a;
-  --ink-muted: #8a8a8a;
+  --ink-muted: #666666;
   --hairline: rgba(17, 17, 17, 0.08);
   --hairline-strong: rgba(17, 17, 17, 0.16);
 
@@ -67,8 +68,8 @@
 
   /* Polaris-style input surface */
   --input-bg: #ffffff;
-  --input-border: #babec3;
-  --input-border-hover: #8a8f95;
+  --input-border: #7b8088;
+  --input-border-hover: #5a5f66;
   --input-border-focus: var(--navy-900);
   --input-shadow-focus: 0 0 0 3px rgba(11, 43, 85, 0.18);
   --input-radius: 10px;

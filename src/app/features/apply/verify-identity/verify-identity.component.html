@@ -1,5 +1,5 @@
 <section class="step">
-  <app-wizard-progress [current]="12" [total]="14" [label]="'step.verify.eyebrow' | t" />
+  <app-wizard-progress [current]="13" [total]="14" [label]="'step.verify.eyebrow' | t" />
 
   <header class="head">
     <h1 class="title">{{ 'step.verify.title' | t }}</h1>
@@ -137,7 +137,11 @@
         }
       </div>
 
-      <button type="button" class="cta" [disabled]="!canContinue()" (click)="confirm()">
+      @if (attempted() && !canContinue()) {
+        <p class="msg--error" id="identity-error" tabindex="-1" role="alert">{{ 'form.identity.required' | t }}</p>
+      }
+
+      <button type="button" class="cta" (click)="confirm()">
         <span>{{ 'step.verify.confirm' | t }}</span>
         <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
           <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />

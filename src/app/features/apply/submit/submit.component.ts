@@ -22,6 +22,7 @@ export class SubmitComponent {
   readonly employment = this.state.employment;
   readonly offer = this.state.offer;
   readonly agreed = signal(false);
+  readonly attempted = signal(false);
   readonly submitting = signal(false);
   readonly formatNaira = formatNaira;
 
@@ -33,10 +34,16 @@ export class SubmitComponent {
     }
   }
 
-  toggleAgree(v: boolean): void { this.agreed.set(v); }
+  toggleAgree(v: boolean): void { this.agreed.set(v);
+    if (v) this.attempted.set(false); }
 
   async submit(): Promise<void> {
-    if (!this.canSubmit()) return;
+    if (this.submitting()) return;
+    if (!this.agreed()) {
+      this.attempted.set(true);
+      document.querySelector<HTMLElement>('.agree input')?.focus();
+      return;
+    }
     if (this.state.submission().status === 'submitting') return;
 
     this.submitting.set(true);

@@ -13,24 +13,24 @@
   <form class="form" [formGroup]="form" (ngSubmit)="continue()" novalidate>
     <div class="field">
       <label class="label" for="name">{{ 'step.profile.name.label' | t }}</label>
-      <input id="name" class="input" type="text" formControlName="fullName" autocomplete="name" />
+      <input id="name" [attr.aria-invalid]="invalid('fullName')" class="input" type="text" formControlName="fullName" autocomplete="name" />
       <p class="msg">{{ 'step.profile.name.hint' | t }}</p>
     </div>
 
     <div class="field">
       <label class="label" for="dob">{{ 'step.profile.dob.label' | t }}</label>
-      <input id="dob" class="input" type="date" formControlName="dateOfBirth" />
+      <input id="dob" [attr.aria-invalid]="invalid('dateOfBirth')" class="input" type="date" formControlName="dateOfBirth" />
     </div>
 
     <div class="field">
       <label class="label" for="street">{{ 'step.profile.address.label' | t }}</label>
-      <input id="street" class="input" type="text" formControlName="street" autocomplete="street-address" />
+      <input id="street" [attr.aria-invalid]="invalid('street')" class="input" type="text" formControlName="street" autocomplete="street-address" />
     </div>
 
     <div class="row">
       <div class="field">
         <label class="label" for="state">{{ 'step.profile.state.label' | t }}</label>
-        <select id="state" class="input" formControlName="stateName">
+        <select id="state" [attr.aria-invalid]="invalid('stateName')" class="input" formControlName="stateName">
           <option value="" disabled>—</option>
           @for (s of states; track s) {
             <option [value]="s">{{ s }}</option>
@@ -40,7 +40,7 @@
 
       <div class="field">
         <label class="label" for="lga">{{ 'step.profile.lga.label' | t }}</label>
-        <input id="lga" class="input" type="text" formControlName="lga" />
+        <input id="lga" [attr.aria-invalid]="invalid('lga')" class="input" type="text" formControlName="lga" />
       </div>
     </div>
 
@@ -60,7 +60,11 @@
       <p class="msg">{{ 'step.profile.religion.hint' | t }}</p>
     </div>
 
-    <button type="submit" class="cta" [disabled]="!canContinue() || submitting()">
+    @if (attempted() && !canContinue()) {
+      <p class="msg--error" role="alert">{{ 'form.fix.required' | t }}</p>
+    }
+
+    <button type="submit" class="cta" [disabled]="submitting()">
       <span>{{ 'step.profile.continue' | t }}</span>
       <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
         <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />

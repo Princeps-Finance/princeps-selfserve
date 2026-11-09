@@ -146,7 +146,7 @@
 .cta:disabled { opacity: 0.5; cursor: not-allowed; }
 .cta:hover:not(:disabled) { background: var(--action-primary-hover); }
 .cta:active:not(:disabled) { transform: scale(0.99); }
-.cta:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.cta:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 .cta.danger { background: var(--danger, #dc2626); }
 .cta.danger:hover:not(:disabled) { background: color-mix(in srgb, var(--danger, #dc2626) 88%, black); }
 .cta-arrow { transition: transform 200ms cubic-bezier(0.2, 0.7, 0.1, 1); }
@@ -164,7 +164,7 @@
   transition: background 160ms ease;
 }
 .ghost:hover { background: rgba(17,17,17,0.05); }
-.ghost:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ghost:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 
 .review-grid {
   display: grid;
