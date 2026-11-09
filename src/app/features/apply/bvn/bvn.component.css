@@ -76,3 +76,9 @@
 .cta:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 .cta-arrow { transition: transform 200ms cubic-bezier(0.2,0.7,0.1,1); }
 .cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); }
+
+.consent { display: flex; flex-direction: column; gap: var(--space-1); }
+.consent-row { display: flex; gap: var(--space-3); align-items: flex-start; font-size: 14px; line-height: 1.5; color: var(--ink); cursor: pointer; }
+.consent-row input { margin-top: 0; }
+.consent-inline { display: inline; padding: 0; border: 0; background: none; font: inherit; color: var(--action-primary); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.consent-inline:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); border-radius: 2px; }

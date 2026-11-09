@@ -17,6 +17,7 @@ import { LangService } from '../../../core/i18n/lang.service';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { environment } from '../../../../environments/environment';
 import { API_CLIENT } from '../../../core/api/api-client';
+import { normalizePhoneNg } from '../../../core/api/contact.util';
 import { CaptchaService } from '../../../core/captcha/captcha.service';
 import { DraftService } from '../../../core/application/draft.service';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
@@ -66,12 +67,7 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
   private cooldownTimer: ReturnType<typeof setInterval> | null = null;
 
   async ngOnInit(): Promise<void> {
-    const contact = this.state.contact();
     const bvn = this.state.bvn();
-    if (!contact) {
-      await this.router.navigateByUrl('/apply/contact');
-      return;
-    }
     if (!bvn) {
       await this.router.navigateByUrl('/apply/bvn');
       return;
@@ -154,15 +150,19 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
       this.cellRefs()[empty === -1 ? 0 : empty]?.nativeElement.focus();
       return;
     }
-    const contact = this.state.contact();
     const bvn = this.state.bvn();
-    if (!contact || !bvn) return;
+    if (!bvn) return;
 
     this.submitting.set(true);
     this.error.set(null);
     try {
       const res = await this.api.verifyBvnOtp(bvn.value, this.code());
       if (res.status === 'ok') {
+        // The contact number is the one registered with the BVN. Email is optional and asked later.
+        const phone = normalizePhoneNg(res.identity.phone);
+        if (!phone) throw new Error('BVN record has no usable phone number');
+        const contact = { phone, email: this.state.contact()?.email ?? '' };
+        this.state.setContact(contact);
         this.state.setBvnIdentity(res.identity);
         this.state.setBvn({ value: bvn.value, verified: true });
         this.state.markPhoneVerified();

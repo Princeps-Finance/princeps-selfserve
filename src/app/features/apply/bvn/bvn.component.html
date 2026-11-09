@@ -28,6 +28,16 @@
       }
     </div>
 
+    <div class="consent" [class.is-invalid]="showConsentError() && !consent.value">
+      <label class="consent-row">
+        <input id="consent" type="checkbox" [formControl]="consent" [attr.aria-invalid]="showConsentError() && !consent.value ? true : null" aria-describedby="consent-error" />
+        <span>{{ 'consent.label' | t }} <button type="button" class="consent-inline" (click)="privacy.open()">{{ 'consent.link' | t }}</button>.</span>
+      </label>
+      @if (showConsentError() && !consent.value) {
+        <p class="msg msg--error" id="consent-error" role="alert">{{ 'consent.required' | t }}</p>
+      }
+    </div>
+
     @if (notFound()) {
       <p class="server-error" role="alert">
         {{ 'step.bvn.error.not.found' | t }}

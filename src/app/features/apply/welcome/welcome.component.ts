@@ -51,6 +51,6 @@ export class WelcomeIntentComponent {
 
   choose(intent: ApplyIntent): void {
     this.state.setIntent(intent);
-    void this.router.navigateByUrl('/apply/contact');
+    void this.router.navigateByUrl('/apply/bvn');
   }
 }

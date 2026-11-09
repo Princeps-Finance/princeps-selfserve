@@ -87,3 +87,5 @@
 .locked dd { margin: 0; font-size: 17px; font-weight: 600; color: var(--ink); }
 .locked-note { margin: 0; display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); font-size: 13px; color: var(--ink-soft); }
 .locked-note .link { color: var(--action-primary); font-weight: 600; text-underline-offset: 3px; min-height: 44px; display: inline-flex; align-items: center; }
+
+.subtitle .link { margin-inline-start: var(--space-2); color: var(--action-primary); font-weight: 600; text-underline-offset: 3px; }

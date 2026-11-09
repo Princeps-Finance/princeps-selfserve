@@ -47,12 +47,19 @@ export class ProfileComponent {
     relationshipStatus: new FormControl<'single' | 'married' | 'divorced' | 'widowed'>('single', {
       nonNullable: true, validators: [Validators.required],
     }),
+    // Optional: only checked when something is typed.
+    email: new FormControl(this.state.contact()?.email ?? '', {
+      nonNullable: true, validators: [Validators.pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)],
+    }),
   });
+
+  /** First name only, to greet the customer. The rest of the BVN record is never shown. */
+  readonly firstName = this.identity ? titleCase(this.identity.firstName) : '';
 
   readonly statusChanges = toSignal(this.form.statusChanges, { initialValue: this.form.status });
   readonly attempted = signal(false);
 
-  invalid(name: 'fullName' | 'dateOfBirth' | 'street' | 'stateName' | 'lga'): true | null {
+  invalid(name: 'fullName' | 'dateOfBirth' | 'street' | 'stateName' | 'lga' | 'email'): true | null {
     return this.attempted() && this.form.controls[name].invalid ? true : null;
   }
 
@@ -68,14 +75,7 @@ export class ProfileComponent {
     const saved = this.state.profile();
     const id = this.identity;
     if (id && !saved) {
-      this.form.patchValue({
-        fullName: id.fullName,
-        dateOfBirth: id.dateOfBirth,
-        street: id.street ?? '',
-        stateName: id.state ?? '',
-        lga: id.lga ?? '',
-      }, { emitEvent: false });
-      if (id.state) void this.loadLgas(id.state, false);
+      this.form.patchValue({ fullName: id.fullName, dateOfBirth: id.dateOfBirth }, { emitEvent: false });
     }
     if (saved) {
       this.form.patchValue({
@@ -90,15 +90,6 @@ export class ProfileComponent {
       return;
     }
   }
-
-  readonly dobText = computed(() => {
-    this.statusChanges();
-    const iso = this.form.controls.dateOfBirth.value;
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
-    try {
-      return new Intl.DateTimeFormat(this.lang.lang(), { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(iso + 'T00:00:00Z'));
-    } catch { return iso; }
-  });
 
   /** Not the customer's record: start over from the BVN. */
   notMe(): void {
@@ -122,6 +113,7 @@ export class ProfileComponent {
     }
     this.submitting.set(true);
     const v = this.form.getRawValue();
+    this.state.setContactEmail(v.email.trim().toLowerCase());
     this.state.setProfile({
       fullName: v.fullName.trim(),
       dateOfBirth: v.dateOfBirth,
@@ -130,4 +122,8 @@ export class ProfileComponent {
     });
     void this.router.navigateByUrl('/apply/employment');
   }
+}
+
+function titleCase(v: string): string {
+  return v.trim().toLowerCase().replace(/(^|[\s-])\p{L}/gu, (m) => m.toUpperCase());
 }

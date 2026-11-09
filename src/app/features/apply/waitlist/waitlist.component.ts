@@ -74,7 +74,7 @@ export class WaitlistComponent {
     }
     const contact = this.state.contact();
     if (!contact) {
-      await this.router.navigateByUrl('/apply/contact');
+      await this.router.navigateByUrl('/apply/bvn');
       return;
     }
     this.submitting.set(true);

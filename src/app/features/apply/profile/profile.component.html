@@ -2,30 +2,16 @@
   <app-wizard-progress [current]="3" [total]="14" [label]="'step.profile.eyebrow' | t" />
 
   <header class="head">
-    <h1 class="title">{{ 'step.profile.title' | t }}</h1>
-    <p class="subtitle">{{ 'step.profile.subtitle' | t }}</p>
+    <h1 class="title">{{ (firstName ? 'step.profile.title.named' : 'step.profile.title') | t: { name: firstName } }}</h1>
+    <p class="subtitle">{{ 'step.profile.subtitle' | t }}
+      @if (identity) {
+        <a class="link" href="/apply/bvn" (click)="$event.preventDefault(); notMe()">{{ 'step.profile.notMe' | t }}</a>
+      }
+    </p>
   </header>
 
   <form class="form" [formGroup]="form" (ngSubmit)="continue()" novalidate>
-    @if (identity) {
-      <div class="locked">
-        <dl class="locked-list">
-          <div>
-            <dt>{{ 'step.profile.name.label' | t }}</dt>
-            <dd>{{ form.controls.fullName.value }}</dd>
-          </div>
-          <div>
-            <dt>{{ 'step.profile.dob.label' | t }}</dt>
-            <dd>{{ dobText() }}</dd>
-          </div>
-        </dl>
-        <p class="locked-note">
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="4" y="9" width="12" height="8" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9" stroke="currentColor" stroke-width="1.6"/></svg>
-          {{ 'step.profile.fromBvn' | t }}
-          <a class="link" href="/apply/bvn" (click)="$event.preventDefault(); notMe()">{{ 'step.profile.notMe' | t }}</a>
-        </p>
-      </div>
-    } @else {
+    @if (!identity) {
       <div class="field">
         <label class="label" for="name">{{ 'step.profile.name.label' | t }}</label>
         <input id="name" [attr.aria-invalid]="invalid('fullName')" class="input" type="text" formControlName="fullName" autocomplete="name" />
@@ -60,6 +46,12 @@
     <div class="field">
       <label class="label" for="rel">{{ 'step.profile.relationship.label' | t }}</label>
       <app-select-field inputId="rel" [options]="relationshipOptions()" [title]="'step.profile.relationship.label' | t" formControlName="relationshipStatus" />
+    </div>
+
+    <div class="field">
+      <label class="label" for="email">{{ 'step.profile.email.label' | t }}</label>
+      <input id="email" class="input" type="email" inputmode="email" autocomplete="email" formControlName="email" [attr.aria-invalid]="invalid('email')" aria-describedby="email-hint" />
+      <p class="msg" [class.msg--error]="invalid('email')" id="email-hint">{{ (invalid('email') ? 'step.contact.email.invalid' : 'step.profile.email.hint') | t }}</p>
     </div>
 
     @if (attempted() && !canContinue()) {
