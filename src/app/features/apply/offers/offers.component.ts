@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { Router } from '@angular/router';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { RadioGroupDirective } from '../../../core/a11y/radio-group.directive';
@@ -44,7 +45,7 @@ interface Choice {
 
 @Component({
   selector: 'app-offers',
-  imports: [TPipe, WizardProgressComponent, RadioGroupDirective],
+  imports: [IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './offers.component.html',
   styleUrl: './offers.component.css',

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -16,7 +17,7 @@ import { PRIVACY_NOTICE_VERSION, PrivacyService } from '../../../core/privacy/pr
  */
 @Component({
   selector: 'app-bvn',
-  imports: [TPipe, WizardProgressComponent, ReactiveFormsModule],
+  imports: [IllustrationComponent, TPipe, WizardProgressComponent, ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './bvn.component.html',
   styleUrl: './bvn.component.css',

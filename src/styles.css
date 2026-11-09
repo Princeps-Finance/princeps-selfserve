@@ -93,7 +93,7 @@ input[type='checkbox'] {
   display: inline-grid;
   place-content: center;
   background: var(--surface, #fff);
-  border: 1.5px solid rgba(17, 17, 17, 0.55);
+  border: 1.5px solid var(--input-border);
   border-radius: 7px;
   cursor: pointer;
   transition: background-color 140ms ease, border-color 140ms ease;
@@ -128,5 +128,18 @@ input[type='checkbox'][aria-invalid='true'] {
   input[type='checkbox'],
   input[type='checkbox']::before {
     transition: none;
+  }
+}
+
+
+/* Kraken-style layout: the step fills the screen and its primary button sits at the bottom, with the
+   content above it. On phones the button also stays in view while a long form scrolls. */
+.step { flex: 1 1 auto; }
+.step > .form { flex: 1 1 auto; }
+.step .cta { margin-top: auto !important; }
+@media (max-width: 719px) {
+  .step .cta {
+    position: sticky; bottom: var(--space-4); z-index: 2;
+    box-shadow: 0 8px 24px rgba(11, 43, 85, 0.22);
   }
 }

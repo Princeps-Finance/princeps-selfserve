@@ -36,7 +36,7 @@
 .title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(26px, 6.5vw, 32px);
+  font-size: clamp(22px, 6vw, 26px);
   line-height: 1.05;
   letter-spacing: -0.03em;
   font-weight: 600;
@@ -175,3 +175,5 @@
 a.cta { text-decoration: none; justify-content: space-between; }
 .alt { align-self: stretch; min-height: 52px; border: 1px solid var(--ink); border-radius: var(--radius-pill); background: transparent; color: var(--ink); font: inherit; font-weight: 500; cursor: pointer; }
 .alt:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
+
+.status .title, .status .body { text-align: center; margin-inline: auto; }

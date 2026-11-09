@@ -1,10 +1,12 @@
 <section class="step">
   <app-wizard-progress [current]="7" [total]="14" [label]="'step.offers.eyebrow' | t" />
 
+  @if (!(ready() && offers().length === 0)) {
   <header class="head">
     <h1 class="title">{{ 'step.offers.title' | t }}</h1>
     <p class="subtitle">{{ 'step.offers.subtitle2' | t }}</p>
   </header>
+  }
 
   @if (reviewRequired()) {
     <p class="review-note" role="note">{{ 'step.eligibility.review.note' | t }}</p>
@@ -12,10 +14,11 @@
 
   @if (ready() && offers().length === 0) {
     <div class="none">
+      <app-illustration name="coins" />
       <h2 class="none-title">{{ 'step.offers.none.title' | t }}</h2>
       <p class="none-body">{{ 'step.offers.none.body' | t }}</p>
       <div class="none-actions">
-        <button type="button" class="alt" (click)="editDetails()">{{ 'step.eligibility.declined.edit' | t }}</button>
+        <button type="button" class="alt alt--primary" (click)="editDetails()">{{ 'step.eligibility.declined.edit' | t }}</button>
         <a class="alt" [attr.href]="whatsapp" target="_blank" rel="noopener">{{ 'step.eligibility.declined.whatsapp' | t }}</a>
         <a class="alt" [attr.href]="tel">{{ 'step.eligibility.declined.call' | t }}</a>
       </div>

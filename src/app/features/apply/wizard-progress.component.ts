@@ -19,31 +19,24 @@ function stageOf(step: number): number {
   selector: 'app-wizard-progress',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="wrap">
-      <span class="label">{{ label() }}</span>
-      <div
-        class="bar"
-        role="progressbar"
-        [attr.aria-label]="label()"
-        [attr.aria-valuenow]="stage()"
-        aria-valuemin="1"
-        [attr.aria-valuemax]="stages"
-        [attr.aria-valuetext]="valueText()"
-      >
-        @for (s of segments; track s) {
-          <span class="seg" [class.is-done]="s < stage()" [class.is-current]="s === stage()"></span>
-        }
-      </div>
+    <div
+      class="bar"
+      role="progressbar"
+      [attr.aria-label]="label()"
+      [attr.aria-valuenow]="stage()"
+      aria-valuemin="1"
+      [attr.aria-valuemax]="stages"
+      [attr.aria-valuetext]="valueText()"
+    >
+      <span class="fill" [style.width.%]="(stage() / stages) * 100"></span>
     </div>
   `,
   styles: [
     `
-      .wrap { display: flex; flex-direction: column; gap: var(--space-2); font-family: var(--font-sans); }
-      .label { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); font-weight: 500; }
-      .bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-      .seg { height: 4px; border-radius: 999px; background: var(--hairline-strong); transition: background-color 240ms ease; }
-      .seg.is-done, .seg.is-current { background: var(--ink); }
-      @media (prefers-reduced-motion: reduce) { .seg { transition: none; } }
+      :host { display: block; }
+      .bar { height: 4px; border-radius: 999px; background: var(--hairline-strong); overflow: hidden; }
+      .fill { display: block; height: 100%; border-radius: 999px; background: var(--action-primary); transition: width 320ms ease; }
+      @media (prefers-reduced-motion: reduce) { .fill { transition: none; } }
     `,
   ],
 })

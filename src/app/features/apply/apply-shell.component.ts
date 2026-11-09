@@ -17,14 +17,21 @@ const NO_BACK_ROUTES = new Set<string>(['/apply', '/apply/', '/apply/status', '/
   imports: [RouterOutlet, LanguageMenuComponent, BackButtonComponent, ReadAloudComponent, HelpLauncherComponent, TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="shell">
+    <div class="page">
+      <!-- Slim top bar. Phone: back chevron (or the logo on the first screens) + controls. Desktop: logo + controls, and the back chevron moves into the card. -->
       <header class="topbar">
         <div class="topbar-left">
           @if (showBack()) {
-            <app-back-button />
-          } @else {
-            <img class="brand-logo" src="/princeps-logo.png" alt="Princeps Credit Systems Limited" width="150" height="34" />
+            <app-back-button class="back-phone" />
           }
+          <img
+            class="brand-logo"
+            [class.brand-logo--desktop-only]="showBack()"
+            src="/princeps-logo.png"
+            alt="Princeps Credit Systems Limited"
+            width="150"
+            height="34"
+          />
         </div>
         <div class="topbar-right">
           <app-read-aloud />
@@ -33,52 +40,56 @@ const NO_BACK_ROUTES = new Set<string>(['/apply', '/apply/', '/apply/status', '/
         </div>
       </header>
 
-      <main class="body">
-        <router-outlet />
-      </main>
+      <div class="shell">
+        @if (showBack()) {
+          <div class="card-top"><app-back-button /></div>
+        }
 
-      <footer class="foot">
-        <p class="foot-trust">{{ 'trust.cbn' | t }}</p>
-        <button type="button" class="foot-link" (click)="privacy.open()">{{ 'privacy.link' | t }}</button>
-      </footer>
+        <main class="body">
+          <router-outlet />
+        </main>
+
+        <footer class="foot">
+          <p class="foot-trust">{{ 'trust.cbn' | t }}</p>
+          <button type="button" class="foot-link" (click)="privacy.open()">{{ 'privacy.link' | t }}</button>
+        </footer>
+      </div>
     </div>
   `,
   styles: [
     `
       :host { display: block; min-height: 100dvh; background: var(--surface-0); color: var(--ink); }
-      .shell {
-        max-width: 520px; margin: 0 auto; min-height: 100dvh;
-        display: flex; flex-direction: column;
-      }
+      .page { min-height: 100dvh; display: flex; flex-direction: column; }
       .topbar {
         display: flex; align-items: center; justify-content: space-between;
-        padding: var(--space-5) var(--space-6);
-        min-height: 68px;
+        width: 100%; box-sizing: border-box; padding: var(--space-2) var(--space-4); min-height: 56px;
       }
-      @media (max-width: 380px) {
-        .topbar { padding-left: var(--space-4); padding-right: var(--space-4); }
-        .topbar-right { gap: var(--space-2); }
-      }
-      .topbar-left { display: inline-flex; align-items: center; min-height: 44px; }
-      .topbar-right { display: inline-flex; align-items: center; gap: var(--space-3); }
-      .brand-logo { height: 32px; width: auto; display: block; }
+      .topbar-left { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; }
+      .topbar-right { display: inline-flex; align-items: center; gap: var(--space-1); }
+      .brand-logo { height: 30px; width: auto; display: block; }
+      .brand-logo--desktop-only { display: none; }
+      .card-top { display: none; }
+      .shell { flex: 1; width: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; }
+      .body { flex: 1; display: flex; flex-direction: column; padding: var(--space-2) var(--space-6) var(--space-6); }
+      .body > :not(router-outlet) { flex: 1 1 auto; display: flex; flex-direction: column; }
       .foot { padding: 0 var(--space-6) calc(var(--space-6) + env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); }
       .foot-trust { margin: 0; font-size: 12px; color: var(--ink-muted); }
       .foot-link { min-height: 44px; padding: 0; border: 0; background: none; color: var(--ink-soft); font: inherit; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-      .body {
-        flex: 1;
-        padding: var(--space-4) var(--space-6) var(--space-8);
-      }
-      /* Wide screens: the form is a centred card on the page (as on Kraken, GoFundMe), not a phone column floating on empty space. */
+
+      /* Desktop: a page header (logo left, controls right) over a centred card. */
       @media (min-width: 720px) {
-        :host { box-sizing: border-box; padding: var(--space-8) var(--space-4); background: var(--canvas); }
+        :host { background: var(--canvas); }
+        .page { padding-bottom: var(--space-8); }
+        .topbar { max-width: 1040px; margin: 0 auto; padding: var(--space-5) var(--space-6); }
+        .back-phone { display: none; }
+        .brand-logo--desktop-only { display: block; }
+        .brand-logo { height: 34px; }
         .shell {
-          min-height: 0; max-width: 560px; margin: 0 auto;
-          background: var(--surface-0); border: 1px solid var(--hairline); border-radius: 24px;
-          box-shadow: var(--shadow-3);
+          flex: 0 0 auto; max-width: 560px; margin-top: var(--space-2);
+          background: var(--surface-0); border: 1px solid var(--hairline); border-radius: 24px; box-shadow: var(--shadow-3);
         }
-        .topbar { padding: var(--space-6) var(--space-8) var(--space-3); }
-        .body { padding: var(--space-4) var(--space-8) var(--space-8); }
+        .card-top { display: block; padding: var(--space-5) var(--space-8) 0; }
+        .body { padding: var(--space-2) var(--space-8) var(--space-8); }
         .foot { padding: 0 var(--space-8) var(--space-6); }
       }
     `,
