@@ -5,6 +5,11 @@ import { WizardProgressComponent } from '../wizard-progress.component';
 import { API_CLIENT } from '../../../core/api/api-client';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { formatNaira } from '../../../core/money.util';
+import { ToastService } from '../../../core/toast/toast.service';
+
+function isLoanEmployment(t: string): t is 'government' | 'paramilitary' | 'corper' {
+  return t === 'government' || t === 'paramilitary' || t === 'corper';
+}
 
 @Component({
   selector: 'app-submit',
@@ -17,6 +22,7 @@ export class SubmitComponent {
   private readonly api = inject(API_CLIENT);
   private readonly state = inject(ApplicationStateService);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   readonly contact = this.state.contact;
   readonly employment = this.state.employment;
@@ -24,6 +30,7 @@ export class SubmitComponent {
   readonly agreed = signal(false);
   readonly attempted = signal(false);
   readonly submitting = signal(false);
+  readonly failed = signal(false);
   readonly formatNaira = formatNaira;
 
   readonly canSubmit = computed(() => this.agreed() && !this.submitting());
@@ -47,6 +54,7 @@ export class SubmitComponent {
     if (this.state.submission().status === 'submitting') return;
 
     this.submitting.set(true);
+    this.failed.set(false);
     this.state.setSubmission({ status: 'submitting' });
     try {
       const contact = this.state.contact()!;
@@ -57,13 +65,16 @@ export class SubmitComponent {
       const salary = this.state.salary();
       const profile = this.state.profile();
 
-      const channel = (salary?.channel ?? 'remita') as 'ippis' | 'remita' | 'dedukt' | 'mono';
+      if (!salary || !isLoanEmployment(employment.type)) throw new Error('incomplete application');
+      const channel = salary.channel;
+      const employmentType = employment.type;
       const res = await this.api.submitApplication({
         contact: { phone: contact.phone, email: contact.email },
         employment: { type: employment.type },
         offer: { productId: offer.productId, amount: offer.amount, tenorMonths: offer.tenorMonths },
         bvn,
         loan: {
+          productId: offer.productId,
           borrowerBvn: bvn,
           borrowerName: profile?.fullName ?? bvnDraft.matchedName ?? 'Unknown',
           borrowerPhone: contact.phone,
@@ -73,11 +84,11 @@ export class SubmitComponent {
           interestModel: offer.interestModel,
           ratePercent: offer.ratePercent,
           channel,
-          bankCode: salary?.bankCode ?? null,
-          accountNumber: salary?.accountNumber ?? null,
-          ippisNumber: salary?.ippisNumber ?? null,
-          employmentType: employment.type,
-          employer: salary?.paramilitaryEmployer ?? null,
+          bankCode: salary.bankCode || null,
+          accountNumber: salary.accountNumber || null,
+          ippisNumber: salary.ippisNumber || null,
+          employmentType,
+          employer: salary.paramilitaryEmployer ?? null,
         },
       });
       const submittedAt = new Date().toISOString();
@@ -96,7 +107,14 @@ export class SubmitComponent {
           status: 'disbursement-pending', submittedAt, referenceId: res.referenceId,
         });
       }
+      // The photo and video were only needed for review; drop them from memory.
+      this.state.setIdentityVerification(null);
       await this.router.navigateByUrl('/apply/status');
+    } catch {
+      // Never invent an outcome: tell the user it did not go through and let them retry.
+      this.state.setSubmission({ status: 'idle' });
+      this.failed.set(true);
+      this.toast.error('Your application was not submitted. Check your connection and try again.');
     } finally {
       this.submitting.set(false);
     }

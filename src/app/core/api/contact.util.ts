@@ -32,28 +32,23 @@ const COMMON_EMAIL_DOMAINS = [
   'live.com',
 ];
 
-/** Levenshtein distance, capped for perf on short strings. */
+/** Levenshtein edit distance (insert, delete, substitute). */
 function distance(a: string, b: string): number {
-  const dp: number[] = Array(b.length + 1)
-    .fill(0)
-    .map((_, i) => i);
+  let prevRow = Array.from({ length: b.length + 1 }, (_, i) => i);
   for (let i = 1; i <= a.length; i++) {
-    let prev = i;
+    const row = [i];
     for (let j = 1; j <= b.length; j++) {
-      const cur = dp[j];
-      dp[j] = a[i - 1] === b[j - 1] ? dp[j - 1] : Math.min(dp[j - 1], dp[j], prev) + 1;
-      prev = cur;
+      row[j] = Math.min(
+        prevRow[j] + 1,
+        row[j - 1] + 1,
+        prevRow[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
     }
-    dp[0] = i;
+    prevRow = row;
   }
-  return dp[b.length];
+  return prevRow[b.length];
 }
 
-/**
- * Non-blocking email typo hint. Returns a suggested address, or null when
- * nothing plausible is close. Callers must NOT block submission on this —
- * FLOW-SPEC Step 1: "non-blocking warning, don't hard-block submission."
- */
 export function suggestEmailFix(email: string): string | null {
   const at = email.lastIndexOf('@');
   if (at <= 0 || at === email.length - 1) return null;

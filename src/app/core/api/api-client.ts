@@ -61,6 +61,7 @@ export interface SubmitPayload {
   // Full loan record for the backoffice ingest. Optional so older call sites
   // still compile; when present, submit() posts to the real API.
   loan?: {
+    productId: string;
     borrowerBvn: string;
     borrowerName: string;
     borrowerPhone: string;
@@ -69,11 +70,11 @@ export interface SubmitPayload {
     monthlyRepaymentKobo: number;
     interestModel: 'Flat Rate' | 'Reducing Balance' | 'Percentage Based';
     ratePercent: number;
-    channel: 'ippis' | 'remita' | 'dedukt' | 'mono';
+    channel: 'ippis' | 'remita' | 'dedukt';
     bankCode: string | null;
     accountNumber: string | null;
     ippisNumber: string | null;
-    employmentType: 'government' | 'paramilitary' | 'corper' | 'private-sector' | 'own-business';
+    employmentType: 'government' | 'paramilitary' | 'corper';
     employer: string | null;
   };
 }
@@ -135,17 +136,21 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function maskPhone(phone: string): string {
-  // Preserve the leading country/prefix and last 2 digits, mask the middle.
-  const digits = phone.replace(/\D/g, '');
-  if (digits.length < 6) return phone;
-  const head = digits.slice(0, 4);
-  const tail = digits.slice(-2);
-  const middle = '•'.repeat(digits.length - head.length - tail.length);
-  return `${head} ${middle} ${tail}`;
+/** Unpredictable short reference (mock only; real ids come from the backoffice). */
+function randomRef(): string {
+  return crypto.randomUUID().replace(/-/g, '').slice(0, 6).toUpperCase();
 }
 
-const NG_BANKS: Bank[] = [
+function maskPhone(phone: string): string {
+  // Show only the country code and last 2 digits.
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length < 6) return '••••';
+  const head = digits.startsWith('234') ? '+234' : '';
+  const tail = digits.slice(-2);
+  return `${head} ${'•'.repeat(6)} ${tail}`.trim();
+}
+
+export const NG_BANKS: Bank[] = [
   { code: '044', name: 'Access Bank' },
   { code: '063', name: 'Access Bank (Diamond)' },
   { code: '050', name: 'Ecobank Nigeria' },
@@ -258,31 +263,7 @@ export class MockApiClient implements ApiClient {
   }
 
   async submitApplication(payload: SubmitPayload): Promise<SubmitResult> {
-    const ref = 'PR-' + Math.random().toString(36).slice(2, 8).toUpperCase();
-
-    // If the caller passed a full loan payload, post it to the backoffice via
-    // our own /api/submit-loan proxy (which holds the ingest token server-side).
-    if (payload.loan) {
-      try {
-        const res = await fetch('/api/submit-loan', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload.loan),
-        });
-        if (res.ok) {
-          const body = await res.json().catch(() => ({}));
-          const backofficeId = typeof body?.id === 'string' ? body.id : ref;
-          // Same demo-variety bucket, but with a real loan record ID persisted.
-          const bucket = payload.offer.amount % 4;
-          if (bucket === 0) return { status: 'approved', referenceId: backofficeId };
-          if (bucket === 1) return { status: 'review', referenceId: backofficeId, etaHours: 24 };
-          if (bucket === 2) return { status: 'disbursement-pending', referenceId: backofficeId };
-          return { status: 'declined', referenceId: backofficeId, reason: 'Insufficient repayment capacity.' };
-        }
-      } catch {
-        // Fall through to mock path when running `ng serve` without the proxy.
-      }
-    }
+    const ref = 'PR-' + randomRef();
 
     await delay(1200);
     const bucket = payload.offer.amount % 4;
@@ -294,7 +275,7 @@ export class MockApiClient implements ApiClient {
 
   async joinWaitlist(input: WaitlistInput): Promise<WaitlistResult> {
     await delay(600);
-    const ref = 'WL-' + Math.random().toString(36).slice(2, 8).toUpperCase();
+    const ref = 'WL-' + randomRef();
     const seed = (input.phone + input.email).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
     const positionInQueue = 800 + (seed % 1600);
     return {

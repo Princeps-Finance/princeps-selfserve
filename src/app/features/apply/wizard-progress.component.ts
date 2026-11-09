@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { ApplicationStateService } from '../../core/application/application-state.service';
 import { LangService } from '../../core/i18n/lang.service';
 
-/** Steps 3–7 (employment through profile) are skipped by returning customers. */
+/** Returning customers skip only step 3 (employment). */
 const RETURNING_FIRST_SKIPPED = 3;
-const RETURNING_LAST_SKIPPED = 7;
+const RETURNING_LAST_SKIPPED = 3;
 
 @Component({
   selector: 'app-wizard-progress',

@@ -37,6 +37,10 @@
     <p class="msg--error" id="agree-error" role="alert">{{ 'form.agree.required' | t }}</p>
   }
 
+  @if (failed()) {
+    <p class="msg--error" role="alert">{{ 'submit.error.failed' | t }}</p>
+  }
+
   <button type="button" class="cta" [disabled]="submitting()" (click)="submit()">
     <span>{{ submitting() ? ('step.submit.submitting' | t) : ('step.submit.submit' | t) }}</span>
     @if (!submitting()) {

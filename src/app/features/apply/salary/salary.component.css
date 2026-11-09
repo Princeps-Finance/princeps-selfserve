@@ -107,6 +107,7 @@
 }
 
 .listbox-item:hover,
+.listbox-item.is-active,
 .listbox-item[aria-selected="true"] {
   background: var(--info-soft);
   color: var(--action-primary);

@@ -58,6 +58,8 @@
           (input)="onBankInput($event)"
           (focus)="onBankFocus()"
           (blur)="onBankBlur()"
+          (keydown)="onBankKeydown($event)"
+          [attr.aria-activedescendant]="activeBank() >= 0 ? 'bank-opt-' + activeBank() : null"
           role="combobox"
           [attr.aria-expanded]="bankOpen()"
           aria-autocomplete="list"
@@ -65,9 +67,11 @@
         />
         @if (bankOpen() && filteredBanks().length) {
           <ul id="bank-listbox" class="listbox" role="listbox">
-            @for (b of filteredBanks(); track b.code) {
+            @for (b of filteredBanks(); track b.code; let i = $index) {
               <li
                 role="option"
+                [id]="'bank-opt-' + i"
+                [class.is-active]="i === activeBank()"
                 class="listbox-item"
                 [attr.aria-selected]="form.controls.bankCode.value === b.code"
                 (mousedown)="pickBank(b)"
@@ -84,8 +88,8 @@
       <label class="label" for="account">{{ 'step.salary.account.label' | t }}</label>
       <input
         id="account"
-          [attr.aria-invalid]="invalid('accountNumber')"
-          class="input"
+        [attr.aria-invalid]="invalid('accountNumber')"
+        class="input"
         type="text"
         inputmode="numeric"
         maxlength="10"

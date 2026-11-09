@@ -14,10 +14,12 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render title', async () => {
+  it('hosts the router outlet, help launcher and toast host', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, princeps-scaffold');
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('router-outlet')).toBeTruthy();
+    expect(el.querySelector('app-help-launcher')).toBeTruthy();
+    expect(el.querySelector('app-toast-host')).toBeTruthy();
   });
 });

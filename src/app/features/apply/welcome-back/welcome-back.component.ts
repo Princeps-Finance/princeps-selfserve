@@ -34,35 +34,17 @@ export class WelcomeBackComponent {
     }
   }
 
+  /**
+   * Returning customers keep their employment type, but identity and bank
+   * details are always collected and verified again. The snapshot only holds
+   * the last 4 digits of the account, and BVN/NIN are never pre-filled, so
+   * nothing is invented or carried over unverified.
+   */
   borrowAgain(): void {
     const s = this.snapshot();
     if (!s) return;
     this.state.setEmployment({ type: s.employmentType });
-    this.state.setSalary({
-      channel: s.employmentType === 'paramilitary' ? 'dedukt'
-        : s.employmentType === 'corper' ? 'remita'
-        : 'ippis',
-      bankCode: '058',
-      bankName: s.bankName,
-      accountNumber: `000000${s.accountLast4}`,
-      monthlyIncome: s.monthlyIncome,
-    });
-    this.state.setProfile({
-      fullName: s.fullName,
-      dateOfBirth: '1993-04-18',
-      address: { street: '14 Adeniyi Jones Avenue', state: 'Lagos', lga: 'Ikeja' },
-      relationshipStatus: 'single',
-    });
-    this.state.setBvn({
-      value: '22222222222',
-      verified: true,
-      matchedName: s.fullName,
-      dateOfBirth: '1993-04-18',
-      phone: this.state.contact()?.phone,
-      address: { street: '14 Adeniyi Jones Avenue', state: 'Lagos', lga: 'Ikeja' },
-    });
-    this.state.setNin({ value: '22222222222', verified: true });
-    void this.router.navigateByUrl('/apply/eligibility');
+    void this.router.navigateByUrl('/apply/salary');
   }
 
   updateDetails(): void {

@@ -24,7 +24,8 @@ const RESEND_COOLDOWN_SECONDS = 30;
 type OtpError =
   | { kind: 'wrong' }
   | { kind: 'expired' }
-  | { kind: 'locked'; retryAfterSeconds: number };
+  | { kind: 'locked'; retryAfterSeconds: number }
+  | { kind: 'service' };
 
 @Component({
   selector: 'app-verify-phone',
@@ -64,9 +65,13 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
       await this.router.navigateByUrl('/apply/contact');
       return;
     }
-    const res = await this.api.sendPhoneOtp(contact.phone);
-    this.maskedTarget.set(res.target);
-    this.startCooldown();
+    try {
+      const res = await this.api.sendPhoneOtp(contact.phone);
+      this.maskedTarget.set(res.target);
+      this.startCooldown();
+    } catch {
+      this.error.set({ kind: 'service' });
+    }
   }
 
   ngAfterViewInit(): void {
@@ -152,6 +157,8 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
       this.cells.set(Array(OTP_LENGTH).fill(''));
       this.cellRefs().forEach((r) => (r.nativeElement.value = ''));
       this.cellRefs()[0]?.nativeElement.focus();
+    } catch {
+      this.error.set({ kind: 'service' });
     } finally {
       this.submitting.set(false);
     }
@@ -169,6 +176,8 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
       this.justResent.set(true);
       this.error.set(null);
       this.startCooldown();
+    } catch {
+      this.error.set({ kind: 'service' });
     } finally {
       this.resending.set(false);
     }
@@ -198,6 +207,7 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!e) return null;
     if (e.kind === 'wrong') return 'step.otp.error.wrong';
     if (e.kind === 'expired') return 'step.otp.error.expired';
+    if (e.kind === 'service') return 'step.contact.error.generic';
     return 'step.otp.error.locked';
   }
 

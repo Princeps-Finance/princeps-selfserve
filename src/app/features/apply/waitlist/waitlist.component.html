@@ -35,6 +35,10 @@
         <p class="msg--error" role="alert">{{ 'form.fix.required' | t }}</p>
       }
 
+      @if (failed()) {
+        <p class="msg--error" role="alert">{{ 'step.contact.error.generic' | t }}</p>
+      }
+
       <button type="submit" class="cta" [disabled]="submitting()">
         <span>{{ submitting() ? ('waitlist.joining' | t) : ('waitlist.join' | t) }}</span>
         @if (!submitting()) {

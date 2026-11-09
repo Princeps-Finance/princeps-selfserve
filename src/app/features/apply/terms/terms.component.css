@@ -59,8 +59,9 @@
 /* Data table per CLAUDE.md: edge-to-edge, no card, hairlines only */
 .table-scroll { overflow-x: auto; margin: 0 calc(var(--space-6) * -1); padding: 0 var(--space-6); }
 .schedule { width: 100%; border-collapse: collapse; font-size: 13px; }
-.schedule th, .schedule td { text-align: right; padding: 10px 12px; border-bottom: 1px solid var(--hairline); }
+.schedule th, .schedule td { text-align: right; padding: 10px 10px; border-bottom: 1px solid var(--hairline); white-space: nowrap; }
 .schedule th:first-child, .schedule td:first-child { text-align: left; }
+.schedule th:last-child, .schedule td:last-child { position: sticky; right: 0; background: var(--canvas); box-shadow: -1px 0 0 var(--hairline); }
 .schedule thead th { font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; color: var(--ink-muted); border-bottom: 1px solid var(--hairline-strong); }
 
 .agree {

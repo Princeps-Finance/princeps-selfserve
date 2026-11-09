@@ -43,6 +43,7 @@ export class SalaryComponent {
   readonly banks = signal<Bank[]>([]);
   readonly bankQuery = signal('');
   readonly bankOpen = signal(false);
+  readonly activeBank = signal(-1);
 
   readonly filteredBanks = computed(() => {
     const q = this.bankQuery().trim().toLowerCase();
@@ -125,7 +126,25 @@ export class SalaryComponent {
     this.bankOpen.set(true);
   }
 
+  onBankKeydown(evt: KeyboardEvent): void {
+    const list = this.filteredBanks();
+    if (evt.key === 'ArrowDown' || evt.key === 'ArrowUp') {
+      evt.preventDefault();
+      if (!list.length) return;
+      this.bankOpen.set(true);
+      const step = evt.key === 'ArrowDown' ? 1 : -1;
+      this.activeBank.update((i) => (i + step + list.length) % list.length);
+    } else if (evt.key === 'Enter' && this.bankOpen() && this.activeBank() >= 0) {
+      evt.preventDefault();
+      this.pickBank(list[this.activeBank()]);
+    } else if (evt.key === 'Escape' && this.bankOpen()) {
+      evt.preventDefault();
+      this.bankOpen.set(false);
+    }
+  }
+
   onBankInput(evt: Event): void {
+    this.activeBank.set(-1);
     const v = (evt.target as HTMLInputElement).value;
     this.bankQuery.set(v);
     this.bankOpen.set(true);
@@ -143,6 +162,7 @@ export class SalaryComponent {
     this.form.controls.bankName.setValue(bank.name);
     this.bankQuery.set(bank.name);
     this.bankOpen.set(false);
+    this.activeBank.set(-1);
   }
 
   errorKey(): string | null {
