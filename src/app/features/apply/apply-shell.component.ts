@@ -10,15 +10,7 @@ import { HelpLauncherComponent } from './help-launcher.component';
 import { TPipe } from '../../core/i18n/t.pipe';
 import { PrivacyService } from '../../core/privacy/privacy.service';
 
-const NO_BACK_ROUTES = new Set<string>([
-  '/apply',
-  '/apply/',
-  '/apply/welcome',
-  '/apply/saved',
-  '/apply/contact',
-  '/apply/eligibility',
-  '/apply/status',
-]);
+const NO_BACK_ROUTES = new Set<string>(['/apply', '/apply/', '/apply/status', '/apply/welcome-back']);
 
 @Component({
   selector: 'app-apply-shell',
