@@ -206,7 +206,8 @@ export const NG_BANKS: Bank[] = [
  * - Contact email `returning@princeps.ng` → returning customer.
  * - OTP `123456` = ok, `000000` = expired, else wrong.
  * - Account `0000000000` = not found; `1111111111` = name mismatch;
- *   `9999999999` = service down; anything else = ok at ₦180,000/mo.
+ *   `9999999999` = service down; `4444444444` = ok but ₦1,000/mo (to see a decline);
+ *   anything else = ok at ₦180,000/mo.
  * - BVN `00000000000` = not-found, `11111111111` = name mismatch,
  *   `99999999999` = service-down, else ok.
  */
@@ -254,6 +255,7 @@ export class MockApiClient implements ApiClient {
     if (input.accountNumber === '9999999999') return { status: 'service-down' };
     if (input.accountNumber === '0000000000') return { status: 'not-found' };
     if (input.accountNumber === '1111111111') return { status: 'name-mismatch' };
+    if (input.accountNumber === '4444444444') return { status: 'ok', monthlyIncome: 1_000, accountName: 'A. Adeyemi' };
     return { status: 'ok', monthlyIncome: 180_000, accountName: 'A. Adeyemi' };
   }
 

@@ -62,20 +62,17 @@ export class ResumeComponent {
     return this.lang.t(`resume.step.${known.includes(key) ? key : 'eligibility'}`);
   });
 
+  /** Own translated wording: the browser's relative-time data is missing for some of our languages. */
   readonly when = computed(() => {
     const d = this.draft();
     if (!d) return '';
-    const mins = Math.round((Date.now() - new Date(d.savedAt).getTime()) / 60_000);
-    const fmt = (() => {
-      try {
-        return new Intl.RelativeTimeFormat(this.lang.lang(), { numeric: 'auto' });
-      } catch {
-        return new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
-      }
-    })();
-    if (mins < 60) return fmt.format(-Math.max(mins, 1), 'minute');
-    if (mins < 60 * 24) return fmt.format(-Math.round(mins / 60), 'hour');
-    return fmt.format(-Math.round(mins / (60 * 24)), 'day');
+    this.lang.lang();
+    const mins = Math.max(0, Math.round((Date.now() - new Date(d.savedAt).getTime()) / 60_000));
+    const t = (key: string, n: number) => this.lang.t(key).replace('{n}', String(n));
+    if (mins < 1) return this.lang.t('time.now');
+    if (mins < 60) return t('time.minutes', mins);
+    if (mins < 60 * 24) return t('time.hours', Math.round(mins / 60));
+    return t('time.days', Math.round(mins / (60 * 24)));
   });
 
   constructor() {

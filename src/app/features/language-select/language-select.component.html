@@ -10,7 +10,7 @@
 
     <ul class="lang-list" appRadioGroup role="radiogroup" [attr.aria-label]="'lang.select.title' | t">
       @for (l of languages; track l.code; let i = $index) {
-        <li [style.--i]="i">
+        <li role="presentation" [style.--i]="i">
           <button
             type="button"
             class="lang-row"

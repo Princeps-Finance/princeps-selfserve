@@ -38,6 +38,12 @@ const BACK_MAP: Record<string, string> = {
         cursor: pointer; border-radius: var(--radius-pill);
         transition: background 160ms ease, border-color 160ms ease;
       }
+      .back span { white-space: nowrap; }
+      /* On narrow phones four top-bar controls do not fit with a text label; keep the arrow (the accessible name stays). */
+      @media (max-width: 380px) {
+        .back { padding: 0; width: 44px; justify-content: center; }
+        .back span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+      }
       .back svg { transition: transform 160ms cubic-bezier(0.2, 0.7, 0.1, 1); }
       .back:hover { background: rgba(17,17,17,0.04); border-color: var(--ink); }
       .back:hover svg { transform: translateX(-2px); }

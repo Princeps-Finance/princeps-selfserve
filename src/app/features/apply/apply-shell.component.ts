@@ -63,6 +63,10 @@ const NO_BACK_ROUTES = new Set<string>([
         padding: var(--space-5) var(--space-6);
         min-height: 68px;
       }
+      @media (max-width: 380px) {
+        .topbar { padding-left: var(--space-4); padding-right: var(--space-4); }
+        .topbar-right { gap: var(--space-2); }
+      }
       .topbar-left { display: inline-flex; align-items: center; min-height: 44px; }
       .topbar-right { display: inline-flex; align-items: center; gap: var(--space-3); }
       .brand-logo { height: 32px; width: auto; display: block; }

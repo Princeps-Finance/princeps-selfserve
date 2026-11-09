@@ -46,7 +46,7 @@
       <strong>{{ 'step.terms.payday.first' | t }}: {{ formatDueDate(firstDueDate()) }}</strong>
       <span>{{ 'step.terms.payday.note' | t }}</span>
     </div>
-    <div class="table-scroll">
+    <div class="table-scroll" tabindex="0" role="region" [attr.aria-label]="'step.terms.schedule' | t">
       <table class="schedule">
         <thead>
           <tr>
