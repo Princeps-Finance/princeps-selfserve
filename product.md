@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| **Document version** | 1.1.0 (draft for review) |
+| **Document version** | 1.2.0 (draft for review) |
 | **Status** | Draft. Not yet approved by Engineering or Compliance |
 | **Owner** | Product (CPO) |
 | **Last updated** | 2026-11-09 |
@@ -92,10 +92,11 @@ Self-Serve must follow. The app builds the journey from these settings.
 | Caltos setting | What it controls in Self-Serve |
 | --- | --- |
 | **Eligibility type** | Who is shown the product: salary processing partner (WACS or Remita), gender (some products are women-only or men-only), corper, pensioner, and similar |
-| **Display fields** | Product name, amount, tenor, interest rate, interest type. These are the only commercial fields shown on the offer |
+| **Display fields** | Product name, amount, tenor, interest rate, interest type, **monthly repayment, total repayable, fees and cost of credit**. The customer can change amount and tenor within the limits (6.4) |
 | **Mandate setup** | Which mandate applies and how it is completed. **This is where a link may be generated**, if the product is set up that way (see 6.6) |
 | **Identity video** | Whether a video is required: customer **records on the site**, **uploads / uses a generated link**, or **chooses between both** |
 | **Required documents** | Which documents the customer must provide |
+| **NIN** | Whether NIN is required. **Not every product needs it**, so the NIN step only appears when the chosen product asks for it |
 | **Eligibility rules** | Calculated in the background from the verified details (section 6.5) |
 
 **Decision:** the number and order of steps can differ per customer, because the
@@ -106,186 +107,121 @@ applies against the current product settings.
 
 ## 6. The journey
 
-### 6.1 Stages
+Our own application format for public servants: **get their bio data and work details, check what they can get,
+then ask for the extra details needed for loan documentation.** The customer sees their offer *before* they are asked
+for ID documents, a selfie, a video or a mandate. This is deliberate: effort comes after the reward.
 
-The customer moves through these stages. Steps inside a stage appear only when the
-matched product needs them.
+### 6.1 Stages
 
 | # | Stage | What happens |
 | --- | --- | --- |
-| 1 | **Language** | Choose English, Yoruba, Igbo or Hausa. Remembered. Switching mid-flow keeps everything entered |
-| 2 | **Contact and phone check** | Phone, email, OTP. A returning customer is recognised |
-| 3 | **Resume** (only if a saved application exists on this device) | See section 7. Eligibility always re-runs before the customer continues |
-| 4 | **Bio data** | Name, date of birth, address, relationship status, and the identity checks required (BVN, NIN) |
-| 5 | **Employment** | Employment type, employer, salary processing partner, salary account, IPPIS number where relevant. This places the customer in the right eligibility group |
-| 6 | **Eligibility** | Calculated in the background. The customer sees a result, never a score |
-| 7 | **Product match** | Only matching products: name, amount, tenor, interest rate, interest type. Customer picks one |
-| 8 | **Terms** | Full terms and repayment schedule for the chosen product. Customer accepts |
-| 9 | **Mandate** | Set up as the product defines. May involve a generated link (6.6) |
-| 10 | **Documents and identity confirmation** | As the product requires, including the video option. Part of the application and sent to Caltos |
-| 11 | **Review and submit** | Customer reviews and submits to Caltos |
-| 12 | **Success and track** | Confirmation and a path to track the loan (6.7) |
+| 0 | **Language, then intent** | Choose English, Yoruba, Igbo or Hausa. Then choose **Take a loan now** or **See how much I can get**. Both use the same journey; the second ends with a "come back any time" screen after the offer instead of continuing |
+| 1 | **Get started** | Phone, email, **consent to the Privacy Notice**, then OTP. Nothing about the customer is looked up before the OTP |
+| | *Resume* | If this device has a saved application for this number, show **Welcome back** (section 7). Returning customers see a summary |
+| 2 | **Your details** | Bio data (name, date of birth, address, relationship status). Work details (employment type, salary processing partner, salary account, IPPIS number). The salary account is verified against the name given |
+| 3 | **Your offer** | Eligibility runs in the background, then the matching products are shown with an editable amount and tenor (6.4). Terms and repayment schedule follow once the customer picks one |
+| 4 | **Loan documentation** | BVN (name and date of birth must match), NIN **only if the product needs it**, documents, a **selfie holding the ID and a video** (6.5), and the **mandate** (6.6) |
+| 5 | **Review and submit** | Customer reviews and submits to Caltos |
+| 6 | **Received** | Success screen with reference, what happens next, and **Track your loan** (6.8) |
 
-Customers who cannot apply yet (a segment that is not live) join a **waitlist**
-with a clear message, never a dead end.
+The progress bar shows four stages (Get started, Your details, Your offer, Loan documentation), not "step n of 14",
+because the number of steps differs by product and customer.
 
-### 6.2 Bio data and employment
-Bio data and employment are separate screens. Together they determine eligibility.
-Where Caltos can confirm details (for example BVN or NIN), prefill and let the
-customer correct, rather than retyping.
+Customers who cannot apply yet (a segment that is not live) join a **waitlist**, never a dead end.
+
+### 6.2 Bio data and work details
+Collected first, in separate screens. Together with the verified salary they determine eligibility. BVN is **not**
+used to prefill bio data (it comes later, and it is used to verify what the customer typed).
 
 ### 6.3 Documents and identity are part of the application
-Documents and the identity video are **not a side step**. They are submitted to
-Caltos as part of the same application. Caltos receives
-nothing until the customer submits, so until then the files are held on the
-customer's device (section 7). If a customer has uploaded them and then stops, they
-must still be there when the customer resumes.
+Documents, the selfie with ID and the video are submitted to Caltos with the application. Caltos receives nothing until
+submission, so they are held in the customer's browser until then. They are **not** saved if the customer leaves
+(section 7); they are captured again on return.
 
-### 6.4 Identity video
-Configured per product (section 5):
-- **Record on the site:** the customer says the required details on camera.
-- **Upload or link:** the customer provides a video another way.
-- **Both:** the customer chooses.
+### 6.4 Offers: the customer chooses amount and tenor
+Eligibility sets the **maximum**. The customer can then change both:
+- **Amount:** type it, use the slider or the plus and minus buttons. It rounds to the product's step and stays between
+  the product minimum and the most they are eligible for. Out-of-range entries are adjusted and the customer is told.
+- **Tenor:** choose from the allowed months.
+- **Live summary:** monthly repayment, total repayable, each fee, total fees and **cost of credit** update as they change
+  either value. Rate, interest type and frequency are shown with the product.
+- The starting point is the maximum, or what they chose last time if it still fits.
+- If no product fits (eligible amount or tenor below every product minimum), say so and offer: update details, WhatsApp,
+  call. Never an empty page.
 
-The video typically includes the loan amount and repayment, so it is only valid for
-the offer it describes. If the offer changes (for example after resume), the customer
-records again.
-
-If the camera or microphone fails, offer the other option when the product allows
-it, and a human fallback when it does not.
-
-### 6.5 Eligibility
-Calculated in the background by Caltos from verified details.
-
-**Decision: eligibility always runs.** It runs when the customer first reaches it,
-**and again every time a customer resumes a saved application**, before they are
-taken back to where they stopped. Eligibility is never trusted from an earlier
-session, because the customer's situation, the rules or the products may have
-changed.
-
-- The customer is never asked to understand a score.
-- A positive result leads to the matching products, fetched fresh.
-- A negative result is explained plainly and offers a next step: another product,
-  the waitlist, or an agent.
-- While it runs, show a short, translated "Checking your options…" state.
+### 6.5 Identity: selfie holding ID, and video
+**Decision: keep the selfie holding the ID.** It is the best low-cost check that the person applying is the person on the
+ID. It was previously asked twice (as a document and again as a face photo); it is now **one live camera capture** in
+the identity step. Rules:
+- **Camera only.** Photos from the gallery are not accepted, so an old or stolen photo cannot be reused.
+- The face and the ID must both be clearly visible, in good light.
+- **It only proves possession, not identity.** Someone holding a stolen ID can still pass. So Caltos or a partner must
+  **match the face to the ID and BVN/NIN photo and run a liveness check**, with human review of mismatches (section 12).
+- The **spoken video** states the loan amount and repayment, which is a strong control against coercion and fake
+  applications. If the offer changes, the video is recorded again.
+- Per product (section 5) the video is **recorded on the site, uploaded, or the customer chooses either**. If the camera
+  fails and uploading is allowed, offer upload; otherwise offer WhatsApp help.
 
 ### 6.6 Mandate and generated links
-The mandate step follows the product. **If the product is set up for it, the mandate
-step generates a link** the customer uses to complete the mandate. The app must:
-- Show clearly what the link is for and what the customer must do.
-- Show waiting, completed and failed states for the mandate.
-- Let the customer return later, and show an up-to-date state when they do.
-- Not let the customer submit until the mandate is in the state the product requires.
+The mandate step follows the product. If the product is set up for it, the step **creates a link** the customer uses to
+complete the mandate with their bank or payroll provider. The app:
+- Explains what the link is for and what to do.
+- Shows waiting, completed and failed states, checks automatically while the page is open, and has a "check now" button.
+- Lets the customer open or copy the link.
+- Does not allow submission until the mandate is completed.
+Otherwise the mandate is a tick-box authorisation.
 
-### 6.7 After submit
-1. Show a **success screen**: application received, a reference number, what happens
-   next, and expected timing.
-2. Show a primary button: **Track your loan**.
-3. The button takes the customer to the **Caltos customer module**, where they
-   track status, repay and get their loan documents.
-4. Self-Serve does not show loan status itself and does not promise an outcome
-   (approval, disbursement) it does not know.
+### 6.7 Eligibility, decline and manual review
+Calculated by Caltos in the background and **always re-run on resume** (section 7).
+- **Approved:** show matching products.
+- **Manual review band:** *not a dead end.* The customer still picks an offer and submits. They are told a person will
+  review it and it may take longer; the application carries a review hint and Caltos decides.
+- **Declined:** a plain, translated explanation of why (for example "NYSC service ends in 2 months; at least 3 are needed"),
+  reassurance that it is not final, and next steps: update details, WhatsApp, call.
+- **Known knock-outs are caught early.** A corper with too few months left is told at the work step, not after more
+  screens.
+Reasons are structured codes, translated in the app, never raw English.
 
-**Open:** how the customer arrives in the customer module without logging in
-twice (section 13, question 5).
+### 6.8 After submit
+1. A **success screen**: "Application received", a reference (with a copy button), what happens next, and a note if a
+   person will review it.
+2. A primary **Track your loan** button to the **Caltos customer module**, plus a secondary **Done**.
+3. The app **never claims approval or disbursement**. Caltos decides and tells the customer.
+4. The saved draft is deleted.
 
 ## 7. Resume: continue where you stopped
 
-**Decision:** application progress is saved, and a customer who stops can resume.
-
-**Why Self-Serve saves it:** Caltos only receives an application at submission. It
-holds no drafts. So Self-Serve is responsible for keeping progress until then.
-
-**Decision (version 1): the draft is saved on the customer's device**, inside the
-PWA, and is tied to the verified phone number. Resume works on the same device and
-browser. A customer who changes phone starts again; details Caltos already holds for
-a returning customer reduce the retyping. Cross-device resume would need a
-Self-Serve-owned draft service and is a later step (section 13).
+**Decision:** progress is saved, and a customer who stops can resume. Caltos holds no drafts (it receives the loan only at
+submission), so Self-Serve saves it **on the customer's device**, tied to the verified phone number. Cross-device resume is
+a later step (it needs a Self-Serve-owned service).
 
 ### 7.1 What the customer sees: a "Welcome back" step, not a modal
+After the OTP, if this device holds a saved application for that number, show a full-screen step: "Welcome back. You have
+an application in progress.", when it was last saved, **Continue from [step]** (primary) and **Start over** (secondary,
+with a confirmation that says what will be deleted). A modal was rejected: it is easy to dismiss, awkward on small screens
+and harder for screen readers. Silent jumping was rejected: it is disorienting.
 
-After the customer verifies their OTP, if a saved application exists, show a
-**full-screen "Welcome back" step** with one clear primary action.
+### 7.2 What is saved, and what is not
+Saved (bio data and work details, up to the salary step): contact, consent, intent, bio data, employment, salary account,
+language, step reached, time, app version.
 
-| Option | Verdict |
-| --- | --- |
-| Silently jump to the last step | Rejected. Disorienting, and the customer may want to correct something |
-| Modal over the next screen | Rejected. Easy to dismiss by accident, awkward on small screens, harder for screen readers, and hides what is being resumed |
-| **Dedicated step after OTP** | **Chosen.** Calm, translatable, accessible, shows what was saved |
+**Never saved:** BVN, NIN, documents, selfie, video, OTP, and anything Caltos decides (eligibility, products, offers).
+Because loan documentation comes *after* the offer, the sensitive data is not needed for resume at all. This also settles
+the earlier question about keeping BVN on the device: **it is not kept.**
 
-The step shows:
-- A friendly line: "Welcome back. You have an application in progress."
-- What is saved: the product and amount if chosen, the step reached, and when
-  (for example "Last saved yesterday").
-- **Primary:** *Continue from [step name]*.
-- **Secondary:** *Start over*, with a confirmation saying exactly what will be deleted.
-- A way to reach help.
-
-It appears only after OTP, because the saved application contains personal data and
-must not be shown before the phone number is verified.
-
-### 7.2 What happens when they tap Continue
-
-1. Show "Checking your options…" and **run eligibility again** (section 6.5).
-2. Fetch the matching products again.
-3. Then one of three things happens:
-   - **Same result, same product terms:** take the customer to the step they stopped at.
-   - **Something changed** (eligibility, amount, rate, tenor, mandate, required
-     documents or video): tell the customer plainly what changed, keep every answer
-     they gave, and take them to the first step affected. If the offer changed, any
-     recorded identity video is discarded and recorded again.
-   - **No longer eligible:** explain plainly and offer a next step (another product,
-     the waitlist or an agent). Their saved answers are kept until the draft expires.
-
-Identity and bank verification results are kept in the draft. They are repeated only
-if the customer edits those details, or Caltos rejects them during the eligibility
-check.
-
-### 7.3 What is saved
-
-| Saved on the device | Never saved |
-| --- | --- |
-| Answers to every completed step (bio data, employment, salary account, BVN, NIN) | OTP codes |
-| The step reached, the language, and when it was saved | Eligibility results, product lists and offers (always re-fetched) |
-| The product the customer chose | |
-| Documents and the identity video, held until submission | |
-| Mandate link state, if one was generated | |
-| The web app version that wrote the draft | |
-
-BVN, NIN and the account number are needed at submission, so they must be kept in the
-draft. See protections below.
+### 7.3 What happens on Continue
+The customer goes back to the step they were on. After the salary step, **eligibility runs again**, products are fetched
+again, and their previous amount and tenor are preselected if they still fit. Then terms and loan documentation are done
+fresh. A changed offer is simply shown as the new offer.
 
 ### 7.4 Rules
-
-- **Save as they go.** Save at the end of each step, not only at the end.
-- **Draft lifetime: 7 days of inactivity**, then delete it and say so. Some mobile
-  browsers clear site storage after about a week of non-use for sites that are not
-  installed, so installing the PWA also makes saved progress more reliable.
-- **Cleared on submit and on "Start over".** Nothing sensitive stays on the device
-  after a successful submission.
-- **Terms:** if the terms text changed since the customer accepted, ask them to
-  accept again.
-- **Mandate link:** if a link was generated and is pending, resume to the waiting or
-  completed state, not to a blank mandate step.
-- **Language:** resume in the language last used, switchable.
-- **One draft per verified phone number on a device.**
-- **App updates:** the draft records the app version. When a release changes the
-  shape of a draft, the app migrates it. If it cannot, the customer is told clearly
-  and the parts that are safe to keep are kept (section 10).
-
-### 7.5 Protections for data kept on the device
-
-- Resume is possible only after OTP verification of the **same phone number**.
-- Sensitive values are masked on screen and never written to logs or analytics.
-- The draft is deleted on expiry, on submit and on "Start over".
-- The customer is told, in plain language, that progress is saved on this device and
-  how to delete it. This matters on a shared phone.
-- **Proposal:** encrypt the draft at rest with a key held by the browser, as defence
-  in depth. This does not stop a script running in the page, so it does not replace
-  the other protections.
-- **Needs Compliance sign-off (NDPR):** keeping BVN, NIN and the account number on
-  the device until submission. If it is not approved, the fallback is to leave those
-  out of the draft and ask the customer to enter and verify them again on resume.
+- Saved as the customer goes, not only at the end.
+- **7-day lifetime** of inactivity, then deleted. Some mobile browsers clear site data after about a week of non-use for
+  sites that are not installed; installing the PWA helps.
+- Deleted on submit and on Start over. Resume needs OTP on the **same phone number**.
+- Terms are accepted fresh at the terms step. Language resumes as last used.
+- The draft records the app version so a newer version can migrate it.
+- A customer who changes phone starts again; details Caltos holds for a returning customer reduce retyping.
 
 ## 8. Language
 
@@ -440,68 +376,86 @@ customer, never show a raw error or key, always offer help.
 
 | This document | Code today |
 | --- | --- |
-| Products come from Caltos, matched per customer | Four products hard-coded in `src/shared/pricing.ts` |
-| Eligibility by partner (WACS, Remita), gender, corper, pensioner | Matched on employment type and channel (`ippis`, `remita`, `dedukt`) only |
-| Eligibility calculated in the background by Caltos, always re-run on resume | Calculated in the browser |
-| Mandate follows product settings, including generated links | Mandate channel derived from employment type; no link flow |
-| Video option per product (record, upload/link, both) | One fixed record-on-site step |
+| Products, limits, fees and settings come from Caltos | A catalogue in `src/shared/pricing.ts` stands in for Caltos (mandate mode, video mode, NIN requirement, amount and tenor limits) |
+| Eligibility by partner (WACS, Remita), gender, corper, pensioner | Matched on employment type and channel (`ippis`, `remita`, `dedukt`) only. "WACS" is shown as IPPIS in the UI; confirm the naming |
+| Eligibility calculated by Caltos | Calculated in the browser (a convenience; Caltos must re-score) |
+| Documents and video sent to Caltos with the application | Only file names and sizes are sent; photo and video stay in memory and are cleared on submit |
 | Required documents per product | One fixed document list |
-| Steps vary by product | Fixed 14-step journey |
-| Documents and video are sent to Caltos with the application | Only file names and sizes are sent; video is kept in memory |
-| Progress saved on the device and resumable after OTP | Progress lives in memory only and is lost on refresh |
-| Submits to Caltos | Code and the integration contract call the target a "backoffice"; rename and repoint to Caltos |
-| Success screen with "Track your loan" to the customer module | Status page shows an interim outcome and no hand-off |
-| One web app version, shown in help and sent on submit | Added with the PWA work; not yet sent on submit |
+| Face match and liveness on the selfie with ID | Not possible in the browser; needs Caltos or a partner |
+| Real mandate link | Mock link; the real link and completion signal come from Caltos |
+| Cross-device resume | Not built (device only) |
+| USSD channel | Not built |
 | Pensioners, private sector, self-employed | "Coming soon" or absent |
 
-### 13.2 Decisions made in this version (please confirm)
+**Built in the app:** welcome intent, bio data and work details before eligibility, editable amount and tenor, early
+knock-out, manual review without a dead end, translated decline with next steps, loan documentation after the offer, NIN
+only when needed, selfie with ID plus video record or upload, mandate link, success screen with Track your loan, device
+resume with Welcome back, consent and privacy notice, four-stage progress, PWA with versioning, Turnstile hook.
 
-These came from your answers. Tell me if any is wrong.
+### 13.2 Decisions made (please confirm)
 
-1. **Caltos holds no drafts**, so progress is saved by Self-Serve on the device, in
-   version 1. Cross-device resume is later.
-2. **Eligibility always re-runs on resume**, before the customer continues, and
-   again at product match.
-3. **Draft lifetime is 7 days.**
-4. **Identity and bank verification are not repeated on resume** unless the
-   customer edits those details or Caltos rejects them.
-5. **The identity video is re-recorded if the offer changes**, because it states the
-   amount.
-6. **Versioning follows the web app**, as one semantic version.
+1. **Order:** bio data, work details, eligibility and offers, then loan documentation (your own format).
+2. **Intent screen** at the start: take a loan now, or see how much I can get.
+3. **Cost and fees are part of the offer**; the customer can change amount and tenor within limits.
+4. **NIN is product-driven**, not always required.
+5. **Keep the selfie holding ID**, as one live camera capture, with face match and liveness done by Caltos or a partner.
+6. **No match against the BVN-registered phone** (customers may no longer have that number). Name and date of birth are
+   matched instead.
+7. **Resume is on the device**, up to the salary step, 7 days; eligibility always re-runs.
+8. **The app never claims an outcome**; it sends the customer to the customer portal.
+9. **A USSD channel is planned.** It will use the same Caltos eligibility and product services, so eligibility must live in
+   Caltos, not the browser.
+10. **Versioning follows the web app.**
 
 ### 13.3 Still needs a product decision
 
-Your answers did not cover these.
-
-1. **More than one application or loan at a time.** May a customer have more than
-   one active application or loan across products, and what does Caltos allow?
-2. **Previously declined customers.** Show their history, or let them apply fresh?
-3. **Gender-restricted products.** Where does gender come from (BVN, bio data, Caltos),
-   and how do we ask for it without confusion?
-4. **Native reviewers.** Who reviews and signs off Yoruba, Igbo and Hausa, and how is
-   the approval recorded?
-5. **Compliance.** Is keeping BVN, NIN and the account number on the device until
-   submission acceptable under NDPR (section 7.5)?
+1. **More than one application or loan at a time.** What does Caltos allow across products?
+2. **Previously declined customers.** Show history, or let them apply fresh? (Renmoney publishes a wait-before-reapply
+   rule; do we want one?)
+3. **Gender-restricted products.** Where does gender come from (BVN, bio data, Caltos)?
+4. **Native reviewers** for Yoruba, Igbo and Hausa, and how approvals are recorded. All privacy, consent and fraud copy in
+   the app was drafted by an engineer and needs Legal and native review.
+5. **Tenor and amount limits.** Credit Direct advertises ₦20,000 to ₦5,000,000 and up to 36 months for public sector.
+   Our catalogue is ₦30,000 to ₦300,000 and up to 12 months. Is that intended?
 
 ### 13.4 Integration details for the Caltos developers
+See `BACKOFFICE-CONTRACT.md` (endpoints, the application token, identity checks that return match or no match only,
+mandate link, submission fields, and the fraud controls Caltos or partners must enforce).
 
-These are engineering details to settle while connecting the endpoints. They are not
-product decisions.
+## 14. Competitor findings
 
-- How Self-Serve authenticates to Caltos.
-- Who provides OTP, BVN, NIN and salary-account verification: Caltos or direct
-  partners.
-- How "Track your loan" signs the customer in to the customer module without a second
-  login.
-- How Self-Serve learns a mandate link was completed (callback or polling).
-- Idempotent submission, so a retry cannot create two applications.
-- Whether eligibility is instant or asynchronous, and what the customer sees while
-  waiting.
+Read from their public sites and Mobbin (not hands-on app tests). Sources: Credit Direct FAQ, Renmoney FAQ, articles.
+
+- **Credit Direct (public sector):** the fast channels (USSD *5120# in about 3 minutes, WhatsApp) are for **pre-qualified**
+  staff who already hold an offer. Products are split by Federal, State, Paramilitary and Private. Up to 36 months; ₦20,000 to
+  ₦5,000,000. Eligibility shown publicly: age 22 to 58, at least 3 months in service, valid BVN, verifiable income.
+- **Renmoney:** asks for **more** than we do (account, BVN, phone and email checks, ID, utility bill, bank statement or card
+  details, e-signed offer letter, credit bureau check). Their FAQ also answers "why was I rejected" and "how long before I can
+  reapply".
+- **What they do better:** pre-qualification, more channels (USSD, WhatsApp, agents), speed claims of minutes, loan top-ups,
+  and published rejection and reapply rules.
+- **Our strengths:** four languages with read-aloud, salary-backed and mandate-backed lending, full transparency before
+  accepting (schedule, fees, cost of credit), visible CBN and NDPR trust and complaint route, regional agents and offices,
+  a light installable PWA, and a spoken-amount video.
+- **Lesson:** our extra questions are not the problem; the problem was asking for effort **before** showing the reward. The
+  new order fixes that. Pre-qualification (offers ready before the customer arrives) and USSD or WhatsApp are the next
+  competitive moves.
+
+## 15. Preventing misuse (stolen details, gaming)
+
+The product must assume someone will try to apply with another person's details. In the app: name and date of birth must
+match for BVN and NIN, identity lookups return match or no match only, nothing about a customer is revealed before OTP, a
+bot check guards SMS, consent is recorded, and the selfie with ID and spoken video are captured live. **What the app cannot do
+alone** and Caltos or partners must enforce: face match with liveness, disbursing only to the verified salary account,
+mandate completed by the account holder, notifying the contact on file, verifying self-declared fields, re-scoring
+eligibility, velocity and device checks, document verification, step-up for returning customers, and an active mandate and
+salary history before disbursement. Full list in `BACKOFFICE-CONTRACT.md`.
 
 ## Changelog
 
 | Version | Date | Change |
 | --- | --- | --- |
-| 1.1.0 | 2026-11-09 | Versioning is now based on the single web app version. Eligibility always re-runs on resume. Caltos holds no drafts, so progress is saved on the device in v1 (cross-device later). Added PWA manifest and service worker. Replaced the open-questions list with confirmed decisions, five remaining product decisions, and a separate list of integration details for developers |
-| 1.0.0 | 2026-11-09 | First full version. Caltos is the source of truth and submission target. Added resume, mandate links, documents and video as part of the application, success and tracking hand-off, versioning and PWA update rules, measures, gaps and open questions |
+| 1.2.0 | 2026-11-09 | Customer-first order (bio data, work, offer, then documentation). Intent screen. Editable amount and tenor, cost and fees part of the offer. NIN product-driven. Selfie holding ID kept as one live capture. Manual review no longer a dead end; translated decline with next steps. Success screen with Track your loan. Resume trimmed to bio data and work details (no BVN on the device). Mandate link. Competitor findings and misuse prevention added. USSD on the roadmap |
+| 1.1.0 | 2026-11-09 | Versioning based on the web app. Eligibility always re-runs on resume. Caltos holds no drafts, so progress is saved on the device in v1. PWA manifest and service worker. Open questions replaced with decisions |
+| 1.0.0 | 2026-11-09 | First full version. Caltos is the source of truth and submission target. Resume, mandate links, documents and video as part of the application, tracking hand-off, versioning, measures, gaps |
 | 0.1.0 | 2026-11-09 | Initial draft from the product owner's description |
