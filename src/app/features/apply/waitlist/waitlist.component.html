@@ -14,12 +14,7 @@
 
       <div class="field">
         <label class="label" for="income">{{ 'waitlist.income.label' | t }}</label>
-        <select id="income" class="input" [attr.aria-invalid]="attempted() && form.controls.incomeBand.invalid ? true : null" formControlName="incomeBand">
-          <option value="" disabled>—</option>
-          @for (b of incomeBands; track b.value) {
-            <option [value]="b.value">{{ b.key | t }}</option>
-          }
-        </select>
+        <app-select-field inputId="income" [options]="incomeOptions()" [title]="'waitlist.income.label' | t" [invalid]="attempted() && form.controls.incomeBand.invalid ? true : null" formControlName="incomeBand" />
       </div>
 
       <fieldset class="field channel-field">

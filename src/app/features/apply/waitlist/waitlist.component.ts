@@ -1,4 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { SelectFieldComponent, SelectOption } from '../../../core/ui/select-field.component';
+import { LangService } from '../../../core/i18n/lang.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -14,7 +16,7 @@ import { ApplicationStateService } from '../../../core/application/application-s
 
 @Component({
   selector: 'app-waitlist',
-  imports: [TPipe, ReactiveFormsModule],
+  imports: [TPipe, ReactiveFormsModule, SelectFieldComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './waitlist.component.html',
   styleUrl: './waitlist.component.css',
@@ -50,6 +52,12 @@ export class WaitlistComponent {
   readonly canSubmit = computed(() => {
     this.statusChanges();
     return this.form.valid && !this.submitting();
+  });
+
+  private readonly lang = inject(LangService);
+  readonly incomeOptions = computed<SelectOption[]>(() => {
+    this.lang.lang();
+    return this.incomeBands.map((b) => ({ value: b.value, label: this.lang.t(b.key) }));
   });
 
   readonly incomeBands: { value: IncomeBand; key: string }[] = [

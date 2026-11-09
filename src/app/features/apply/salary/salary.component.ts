@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { SelectFieldComponent, SelectOption } from '../../../core/ui/select-field.component';
 import { Router } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -21,7 +22,7 @@ const PARAMILITARY_EMPLOYERS = [
 
 @Component({
   selector: 'app-salary',
-  imports: [TPipe, WizardProgressComponent, ReactiveFormsModule],
+  imports: [TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './salary.component.html',
   styleUrl: './salary.component.css',
@@ -34,6 +35,7 @@ export class SalaryComponent {
   readonly channel = signal<SalaryChannel>(this.deriveChannel());
   readonly showChannelChoice = computed(() => this.state.employment()?.type === 'government');
   readonly paramilitaryEmployers = PARAMILITARY_EMPLOYERS;
+  readonly employerOptions: SelectOption[] = PARAMILITARY_EMPLOYERS.map((e) => ({ value: e, label: e }));
 
   setChannel(c: SalaryChannel): void {
     this.channel.set(c);
