@@ -1,17 +1,20 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { TPipe } from '../../core/i18n/t.pipe';
+import { APP_VERSION } from '../../core/app-version';
 
 const SUPPORT_PHONE = '+2348001234567';
 const SUPPORT_WHATSAPP = '2348001234567';
 
 @Component({
   selector: 'app-help-launcher',
+  imports: [TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="launcher">
       @if (open()) {
-        <div class="panel" role="dialog" aria-label="Contact support">
-          <p class="panel-title">Hi! How can we help?</p>
-          <p class="panel-sub">Reach us any way you like.</p>
+        <div class="panel" role="dialog" [attr.aria-label]="'help.dialog' | t">
+          <p class="panel-title">{{ 'help.title' | t }}</p>
+          <p class="panel-sub">{{ 'help.sub' | t }}</p>
           <a class="row" [attr.href]="'https://wa.me/' + wa" target="_blank" rel="noopener">
             <span class="row-icon" aria-hidden="true">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -26,7 +29,7 @@ const SUPPORT_WHATSAPP = '2348001234567';
                 <path d="M4 4h3l2 4-2 1a10 10 0 0 0 4 4l1-2 4 2v3a2 2 0 0 1-2 2A13 13 0 0 1 3 6a2 2 0 0 1 1-2z"/>
               </svg>
             </span>
-            <span>Call {{ tel }}</span>
+            <span>{{ 'help.call' | t: { tel: tel } }}</span>
           </a>
           <a class="row" href="mailto:support@princeps.ng?subject=Loan%20application%20help">
             <span class="row-icon" aria-hidden="true">
@@ -35,8 +38,9 @@ const SUPPORT_WHATSAPP = '2348001234567';
                 <path d="M3 6l9 7 9-7"/>
               </svg>
             </span>
-            <span>Email support</span>
+            <span>{{ 'help.email' | t }}</span>
           </a>
+          <p class="panel-version">{{ 'help.version' | t: { v: version } }}</p>
         </div>
       }
 
@@ -45,7 +49,7 @@ const SUPPORT_WHATSAPP = '2348001234567';
         class="fab"
         (click)="toggle()"
         [attr.aria-expanded]="open()"
-        aria-label="Get help"
+        [attr.aria-label]="'help.open' | t"
       >
         @if (open()) {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -103,6 +107,7 @@ const SUPPORT_WHATSAPP = '2348001234567';
         .panel { animation: none; }
       }
       .panel-title { margin: 0 0 2px; font-family: var(--font-display); font-weight: 600; font-size: 15px; color: var(--ink); }
+      .panel-version { margin: var(--space-2) 0 0; font-size: 12px; color: var(--ink-muted); }
       .panel-sub { margin: 0 0 var(--space-2); font-size: 13px; color: var(--ink-muted); }
       .row {
         display: inline-flex; align-items: center; gap: var(--space-3);
@@ -127,6 +132,7 @@ export class HelpLauncherComponent {
   readonly open = signal(false);
   readonly tel = SUPPORT_PHONE;
   readonly wa = SUPPORT_WHATSAPP;
+  readonly version = APP_VERSION;
 
   toggle(): void {
     this.open.update((v) => !v);

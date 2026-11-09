@@ -62,6 +62,8 @@ export interface SubmitPayload {
   // still compile; when present, submit() posts to the real API.
   loan?: {
     productId: string;
+    /** Web app version that produced this application. */
+    appVersion: string;
     borrowerBvn: string;
     borrowerName: string;
     borrowerPhone: string;
