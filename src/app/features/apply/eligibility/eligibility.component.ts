@@ -3,10 +3,12 @@ import { Router } from '@angular/router';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
+import { telLink, whatsappLink } from '../../../core/support';
 import {
   scoreEligibility,
   EligibilityInput,
   MdaCategory,
+  ReasonCode,
 } from '../../../core/eligibility/eligibility-scoring';
 
 const REVIEW_BAND_MIN = 45;
@@ -23,8 +25,10 @@ export class EligibilityComponent implements OnInit {
   private readonly state = inject(ApplicationStateService);
   private readonly router = inject(Router);
 
-  readonly phase = signal<'checking' | 'declined' | 'review'>('checking');
-  readonly reasons = signal<string[]>([]);
+  readonly phase = signal<'checking' | 'declined'>('checking');
+  readonly reasonCodes = signal<ReasonCode[]>([]);
+  readonly whatsapp = whatsappLink('Hello Princeps, I was told I am not eligible right now and I would like help.');
+  readonly tel = telLink();
 
   async ngOnInit(): Promise<void> {
     const employment = this.state.employment();
@@ -67,17 +71,16 @@ export class EligibilityComponent implements OnInit {
       maxEligibleAmount: result.maxEligibleAmount,
       tenorMonths: result.tenorMonths,
       reasons: result.reasons,
+      reasonCodes: result.reasonCodes,
     });
 
-    if (decision === 'approved') {
+    // A 'review' result is not a dead end: the customer still chooses an offer and submits,
+    // and a person reviews the application afterwards.
+    if (decision === 'approved' || decision === 'review') {
       await this.router.navigateByUrl('/apply/offers');
       return;
     }
-    if (decision === 'review') {
-      this.phase.set('review');
-      return;
-    }
-    this.reasons.set(result.reasons);
+    this.reasonCodes.set(result.reasonCodes);
     this.phase.set('declined');
   }
 
@@ -92,6 +95,10 @@ export class EligibilityComponent implements OnInit {
     if (c === 'remita') return 'remita';
     if (c === 'dedukt') return 'deduct';
     return 'wacs';
+  }
+
+  editDetails(): void {
+    void this.router.navigateByUrl('/apply/employment');
   }
 
   home(): void {

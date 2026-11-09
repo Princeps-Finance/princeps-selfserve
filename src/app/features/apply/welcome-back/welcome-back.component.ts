@@ -30,7 +30,7 @@ export class WelcomeBackComponent {
 
   constructor() {
     if (!this.state.phoneVerified() || !this.state.isReturningCustomer() || !this.snapshot()) {
-      void this.router.navigateByUrl('/apply/employment');
+      void this.router.navigateByUrl('/apply/profile');
     }
   }
 
@@ -43,11 +43,13 @@ export class WelcomeBackComponent {
   borrowAgain(): void {
     const s = this.snapshot();
     if (!s) return;
+    // Bio data and work details are shown again (nothing is carried over unverified), but the
+    // employment type is remembered so the customer does not have to pick it twice.
     this.state.setEmployment({ type: s.employmentType });
-    void this.router.navigateByUrl('/apply/salary');
+    void this.router.navigateByUrl('/apply/profile');
   }
 
   updateDetails(): void {
-    void this.router.navigateByUrl('/apply/employment');
+    void this.router.navigateByUrl('/apply/profile');
   }
 }

@@ -196,3 +196,9 @@
 @media (prefers-reduced-motion: reduce) {
   .cta, .cta-arrow { transition: none; }
 }
+
+.help-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--action-primary); font-weight: 600; text-underline-offset: 3px; }
+.upload-hint { margin: 0; font-size: 14px; color: var(--ink-soft); }
+.upload { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; cursor: pointer; }
+.file { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.upload:focus-within { box-shadow: var(--focus-ring); }

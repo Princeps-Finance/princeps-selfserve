@@ -8,6 +8,10 @@
     </p>
   </header>
 
+  @if (demo) {
+    <p class="demo-hint">Demo · 123456</p>
+  }
+
   <form class="form" (submit)="$event.preventDefault(); submit()" novalidate>
     <div
       class="otp"

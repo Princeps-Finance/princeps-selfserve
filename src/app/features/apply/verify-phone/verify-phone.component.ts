@@ -15,7 +15,10 @@ import { Router } from '@angular/router';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { LangService } from '../../../core/i18n/lang.service';
 import { WizardProgressComponent } from '../wizard-progress.component';
+import { environment } from '../../../../environments/environment';
 import { API_CLIENT } from '../../../core/api/api-client';
+import { CaptchaService } from '../../../core/captcha/captcha.service';
+import { DraftService } from '../../../core/application/draft.service';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 
 const OTP_LENGTH = 6;
@@ -35,7 +38,10 @@ type OtpError =
   styleUrl: './verify-phone.component.css',
 })
 export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
+  readonly demo = environment.demoBanner;
   private readonly api = inject(API_CLIENT);
+  private readonly captcha = inject(CaptchaService);
+  private readonly drafts = inject(DraftService);
   private readonly state = inject(ApplicationStateService);
   private readonly router = inject(Router);
   private readonly lang = inject(LangService);
@@ -66,7 +72,7 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     try {
-      const res = await this.api.sendPhoneOtp(contact.phone);
+      const res = await this.api.sendPhoneOtp(contact.phone, await this.captcha.token());
       this.maskedTarget.set(res.target);
       this.startCooldown();
     } catch {
@@ -147,8 +153,7 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
       const res = await this.api.verifyPhoneOtp(contact.phone, this.code());
       if (res.status === 'ok') {
         this.state.markPhoneVerified();
-        const next = this.state.isReturningCustomer() ? '/apply/welcome-back' : '/apply/employment';
-        await this.router.navigateByUrl(next);
+        await this.router.navigateByUrl(await this.nextAfterVerified(contact));
         return;
       }
       if (res.status === 'wrong') this.error.set({ kind: 'wrong' });
@@ -164,6 +169,26 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  /**
+   * Only now, with a verified phone, do we look the customer up. A saved application on this
+   * device comes first; otherwise a returning customer sees their summary; otherwise bio data.
+   */
+  private async nextAfterVerified(contact: { phone: string; email: string }): Promise<string> {
+    const draft = this.drafts.find(contact.phone);
+    if (draft) return '/apply/resume';
+    try {
+      const result = await this.api.lookupContact(contact);
+      if (result.kind === 'returning') {
+        this.state.setReturningCustomer(true, result.snapshot);
+        return '/apply/welcome-back';
+      }
+    } catch {
+      // A failed lookup must never block a new application.
+    }
+    this.state.setReturningCustomer(false, null);
+    return '/apply/profile';
+  }
+
   async resend(): Promise<void> {
     if (this.resendCooldown() > 0 || this.resending()) return;
     const contact = this.state.contact();
@@ -171,7 +196,7 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
     this.resending.set(true);
     this.justResent.set(false);
     try {
-      const res = await this.api.sendPhoneOtp(contact.phone);
+      const res = await this.api.sendPhoneOtp(contact.phone, await this.captcha.token());
       this.maskedTarget.set(res.target);
       this.justResent.set(true);
       this.error.set(null);

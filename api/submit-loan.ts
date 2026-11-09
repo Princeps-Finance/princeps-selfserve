@@ -34,6 +34,10 @@ const digits = (n: number) => z.string().regex(new RegExp(`^\\d{${n}}$`));
 const Body = z
   .object({
     productId: z.string().max(64),
+    consentVersion: z.string().regex(/^[\w.-]{1,20}$/),
+    consentAt: z.string().datetime(),
+    manualReview: z.boolean(),
+    mandateReference: z.string().regex(/^[\w-]{3,64}$/).nullable(),
     appVersion: z.string().regex(/^\d{1,3}\.\d{1,3}\.\d{1,3}(?:-[\w.]{1,20})?$/),
     borrowerBvn: digits(11),
     borrowerName: z.string().trim().min(2).max(120),
@@ -130,6 +134,10 @@ export default async function handler(req: Request): Promise<Response> {
     employmentType: b.employmentType,
     employer: b.employer,
     appVersion: b.appVersion,
+    consentVersion: b.consentVersion,
+    consentAt: b.consentAt,
+    manualReview: b.manualReview,
+    mandateReference: b.mandateReference,
     feesKobo: calcProductFees(product, amount).reduce((s, f) => s + f.amount * 100, 0),
   };
 

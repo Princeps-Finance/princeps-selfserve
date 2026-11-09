@@ -2,6 +2,7 @@ import { inject } from '@angular/core';
 import { CanMatchFn, Router, Routes } from '@angular/router';
 import { LangService } from './core/i18n/lang.service';
 import { ApplicationStateService } from './core/application/application-state.service';
+import { productById } from './core/products/products';
 
 const languageChosenGuard: CanMatchFn = () => {
   const lang = inject(LangService);
@@ -36,7 +37,8 @@ const requiresSalaryGuard: CanMatchFn = () => {
 const requiresApprovedGuard: CanMatchFn = () => {
   const state = inject(ApplicationStateService);
   const router = inject(Router);
-  return state.eligibility()?.decision === 'approved' ? true : router.parseUrl('/apply/eligibility');
+  const decision = state.eligibility()?.decision;
+  return decision === 'approved' || decision === 'review' ? true : router.parseUrl('/apply/eligibility');
 };
 
 const requiresDocumentsGuard: CanMatchFn = () => {
@@ -54,6 +56,22 @@ const requiresSubmissionGuard: CanMatchFn = () => {
   return state.submission().status !== 'idle' && state.submission().status !== 'submitting'
     ? true
     : router.parseUrl('/apply/contact');
+};
+
+const requiresTermsGuard: CanMatchFn = () => {
+  const state = inject(ApplicationStateService);
+  const router = inject(Router);
+  return state.termsAcceptedAt() ? true : router.parseUrl('/apply/terms');
+};
+
+/** NIN is only needed when the chosen product asks for it. */
+const requiresNinIfNeededGuard: CanMatchFn = () => {
+  const state = inject(ApplicationStateService);
+  const router = inject(Router);
+  const product = productById(state.offer()?.productId ?? '');
+  const needsNin = product?.settings.requiresNin ?? false;
+  if (!state.bvn()?.verified) return router.parseUrl('/apply/bvn');
+  return !needsNin || state.nin()?.verified ? true : router.parseUrl('/apply/nin');
 };
 
 const requiresOfferGuard: CanMatchFn = () => {
@@ -89,6 +107,8 @@ const requiresMandateGuard: CanMatchFn = () => {
 const requiresIdentityVerificationGuard: CanMatchFn = () => {
   const state = inject(ApplicationStateService);
   const router = inject(Router);
+  const product = productById(state.offer()?.productId ?? '');
+  if (product?.settings.identityVideo === 'none' && state.docs().length > 0) return true;
   return state.identityVerification() ? true : router.parseUrl('/apply/verify-identity');
 };
 
@@ -106,7 +126,12 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/apply/apply-shell.component').then((m) => m.ApplyShellComponent),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'contact' },
+      { path: '', pathMatch: 'full', redirectTo: 'welcome' },
+      {
+        path: 'welcome',
+        loadComponent: () =>
+          import('./features/apply/welcome/welcome.component').then((m) => m.WelcomeIntentComponent),
+      },
       {
         path: 'contact',
         loadComponent: () =>
@@ -121,6 +146,18 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'resume',
+        canMatch: [requiresContactGuard, requiresPhoneVerifiedGuard],
+        loadComponent: () =>
+          import('./features/apply/resume/resume.component').then((m) => m.ResumeComponent),
+      },
+      {
+        path: 'saved',
+        canMatch: [requiresApprovedGuard],
+        loadComponent: () =>
+          import('./features/apply/saved/saved.component').then((m) => m.SavedComponent),
+      },
+      {
         path: 'welcome-back',
         canMatch: [requiresContactGuard, requiresPhoneVerifiedGuard],
         loadComponent: () =>
@@ -130,7 +167,7 @@ export const routes: Routes = [
       },
       {
         path: 'employment',
-        canMatch: [requiresContactGuard, requiresPhoneVerifiedGuard],
+        canMatch: [requiresContactGuard, requiresPhoneVerifiedGuard, requiresProfileGuard],
         loadComponent: () =>
           import('./features/apply/employment/employment.component').then(
             (m) => m.EmploymentComponent,
@@ -150,7 +187,7 @@ export const routes: Routes = [
       },
       {
         path: 'bvn',
-        canMatch: [requiresSalaryGuard],
+        canMatch: [requiresTermsGuard],
         loadComponent: () =>
           import('./features/apply/bvn/bvn.component').then((m) => m.BvnComponent),
       },
@@ -162,13 +199,13 @@ export const routes: Routes = [
       },
       {
         path: 'profile',
-        canMatch: [requiresNinGuard],
+        canMatch: [requiresContactGuard, requiresPhoneVerifiedGuard],
         loadComponent: () =>
           import('./features/apply/profile/profile.component').then((m) => m.ProfileComponent),
       },
       {
         path: 'eligibility',
-        canMatch: [requiresNinGuard, requiresProfileGuard],
+        canMatch: [requiresSalaryGuard],
         loadComponent: () =>
           import('./features/apply/eligibility/eligibility.component').then(
             (m) => m.EligibilityComponent,
@@ -176,7 +213,7 @@ export const routes: Routes = [
       },
       {
         path: 'offers',
-        canMatch: [requiresProfileGuard, requiresApprovedGuard],
+        canMatch: [requiresSalaryGuard, requiresApprovedGuard],
         loadComponent: () =>
           import('./features/apply/offers/offers.component').then((m) => m.OffersComponent),
       },
@@ -188,13 +225,13 @@ export const routes: Routes = [
       },
       {
         path: 'mandate',
-        canMatch: [requiresApprovedGuard, requiresOfferGuard],
+        canMatch: [requiresDocumentsGuard, requiresIdentityVerificationGuard],
         loadComponent: () =>
           import('./features/apply/mandate/mandate.component').then((m) => m.MandateComponent),
       },
       {
         path: 'documents',
-        canMatch: [requiresMandateGuard],
+        canMatch: [requiresNinIfNeededGuard],
         loadComponent: () =>
           import('./features/apply/documents/documents.component').then(
             (m) => m.DocumentsComponent,
@@ -202,7 +239,7 @@ export const routes: Routes = [
       },
       {
         path: 'verify-identity',
-        canMatch: [requiresMandateGuard, requiresDocumentsGuard],
+        canMatch: [requiresNinIfNeededGuard, requiresDocumentsGuard],
         loadComponent: () =>
           import('./features/apply/verify-identity/verify-identity.component').then(
             (m) => m.VerifyIdentityComponent,
@@ -210,7 +247,7 @@ export const routes: Routes = [
       },
       {
         path: 'submit',
-        canMatch: [requiresMandateGuard, requiresDocumentsGuard, requiresIdentityVerificationGuard],
+        canMatch: [requiresMandateGuard],
         loadComponent: () =>
           import('./features/apply/submit/submit.component').then((m) => m.SubmitComponent),
       },

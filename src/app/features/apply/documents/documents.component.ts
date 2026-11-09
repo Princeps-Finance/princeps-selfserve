@@ -13,7 +13,6 @@ interface DocSpec {
 
 const BASE_DOCS: DocSpec[] = [
   { id: 'id', labelKey: 'step.docs.id', hintKey: 'step.docs.id.hint' },
-  { id: 'selfie', labelKey: 'step.docs.selfie', hintKey: 'step.docs.selfie.hint' },
 ];
 
 const SALARIED: DocSpec = { id: 'payslip', labelKey: 'step.docs.payslip', hintKey: 'step.docs.payslip.hint' };

@@ -123,3 +123,27 @@ export async function callBackoffice(
     return null;
   }
 }
+
+// ---- Bot check (Cloudflare Turnstile) -----------------------------------
+/**
+ * When TURNSTILE_SECRET is set, requests that send an SMS must carry a valid
+ * Turnstile token. With no secret configured the check is skipped, so local
+ * development and the first deploy still work; set it before going live.
+ */
+export async function verifyCaptcha(token: string | undefined, ip: string): Promise<boolean> {
+  const secret = process.env['TURNSTILE_SECRET'];
+  if (!secret) return true;
+  if (!token) return false;
+  try {
+    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ secret, response: token, remoteip: ip }),
+      signal: AbortSignal.timeout(5_000),
+    });
+    const data = (await res.json()) as { success?: boolean };
+    return data.success === true;
+  } catch {
+    return false;
+  }
+}

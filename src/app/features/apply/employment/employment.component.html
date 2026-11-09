@@ -1,5 +1,5 @@
 <section class="step">
-  <app-wizard-progress [current]="3" [total]="14" [label]="'step.employment.eyebrow' | t" />
+  <app-wizard-progress [current]="4" [total]="14" [label]="'step.employment.eyebrow' | t" />
 
   <header class="head">
     <h1 class="title">{{ 'step.employment.title' | t }}</h1>
@@ -8,7 +8,7 @@
 
   <ul class="options" appRadioGroup role="radiogroup" [attr.aria-label]="'step.employment.title' | t">
     @for (opt of options; track opt.type; let first = $first) {
-      <li>
+      <li role="presentation">
         <button
           type="button"
           role="radio"
@@ -37,6 +37,11 @@
     }
   </ul>
 
+  <p class="other">
+    {{ 'step.employment.other' | t }}
+    <button type="button" class="other-link" (click)="joinWaitlist()">{{ 'step.employment.other.cta' | t }}</button>
+  </p>
+
   @if (attempted() && !selectedOption()) {
     <p class="msg msg--error" role="alert">{{ 'form.choose.required' | t }}</p>
   }
@@ -57,10 +62,20 @@
         min="1"
         max="11"
         [formControl]="nyscMonths"
+        (input)="onMonthsInput()"
         [attr.aria-invalid]="attempted() && nyscMonths.invalid ? true : null"
         aria-describedby="months-hint"
       />
-      @if (attempted() && nyscMonths.invalid) {
+      @if (tooShort()) {
+        <div class="knockout" role="alert">
+          <p class="knockout-title">{{ 'step.employment.corper.too_short' | t: { min: minCorperMonths, months: months() ?? 0 } }}</p>
+          <p class="knockout-help">{{ 'step.employment.corper.too_short.help' | t: { min: minCorperMonths } }}</p>
+          <div class="knockout-actions">
+            <a class="knockout-link" [attr.href]="whatsapp" target="_blank" rel="noopener">{{ 'step.eligibility.declined.whatsapp' | t }}</a>
+            <a class="knockout-link" [attr.href]="tel">{{ 'step.eligibility.declined.call' | t }}</a>
+          </div>
+        </div>
+      } @else if (attempted() && nyscMonths.invalid) {
         <p class="msg msg--error" role="alert">{{ 'form.fix.required' | t }}</p>
       }
       <p class="msg" id="months-hint">{{ 'step.employment.corper.months.hint' | t }}</p>

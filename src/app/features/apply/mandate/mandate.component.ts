@@ -1,9 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { formatNaira } from '../../../core/money.util';
+import { API_CLIENT, MandateStatus } from '../../../core/api/api-client';
+import { productById } from '../../../core/products/products';
+import { LangService } from '../../../core/i18n/lang.service';
+import { telLink, whatsappLink } from '../../../core/support';
 
 @Component({
   selector: 'app-mandate',
@@ -15,6 +19,9 @@ import { formatNaira } from '../../../core/money.util';
 export class MandateComponent {
   private readonly state = inject(ApplicationStateService);
   private readonly router = inject(Router);
+  private readonly api = inject(API_CLIENT);
+  private readonly lang = inject(LangService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly offer = this.state.offer;
   readonly salary = this.state.salary;
@@ -45,10 +52,109 @@ export class MandateComponent {
   readonly monthlyRepayment = computed(() => this.offer()?.monthlyRepayment ?? 0);
   readonly tenorMonths = computed(() => this.offer()?.tenorMonths ?? 0);
 
+  /** 'authorize' = tick-box; 'link' = the customer completes a link (set per product in Caltos). */
+  readonly mode = computed(() => productById(this.offer()?.productId ?? '')?.settings.mandate ?? 'authorize');
+
+  // ---- link mode ----
+  readonly linkUrl = signal<string | null>(null);
+  readonly linkRef = signal<string | null>(null);
+  readonly linkStatus = signal<MandateStatus | null>(null);
+  readonly linkError = signal(false);
+  readonly linkBusy = signal(false);
+  readonly copied = signal(false);
+  readonly help = whatsappLink('Hello Princeps, I need help setting up my repayment mandate.');
+  readonly tel = telLink();
+  private poll: ReturnType<typeof setInterval> | null = null;
+
   constructor() {
     if (!this.offer()) {
       void this.router.navigateByUrl('/apply/offers');
+      return;
     }
+    this.destroyRef.onDestroy(() => this.stopPolling());
+    const existing = this.state.mandate();
+    if (existing?.mode === 'link' && existing.reference && !existing.authorized) {
+      // Came back to a link that was already created: show its current state, don't make a second one.
+      this.linkRef.set(existing.reference);
+      this.linkUrl.set(null);
+    }
+    if (this.mode() === 'link') void this.prepareLink();
+  }
+
+  async prepareLink(): Promise<void> {
+    const o = this.offer();
+    const s = this.salary();
+    if (!o || !s || this.linkBusy()) return;
+    this.linkBusy.set(true);
+    this.linkError.set(false);
+    try {
+      const link = await this.api.createMandateLink({
+        productId: o.productId,
+        channel: s.channel,
+        monthlyAmount: o.monthlyRepayment,
+        tenorMonths: o.tenorMonths,
+      });
+      this.linkUrl.set(link.url);
+      this.linkRef.set(link.reference);
+      this.linkStatus.set('pending');
+      this.startPolling();
+    } catch {
+      this.linkError.set(true);
+    } finally {
+      this.linkBusy.set(false);
+    }
+  }
+
+  private startPolling(): void {
+    this.stopPolling();
+    this.poll = setInterval(() => {
+      if (document.visibilityState === 'visible') void this.checkNow();
+    }, 5000);
+  }
+
+  private stopPolling(): void {
+    if (this.poll) clearInterval(this.poll);
+    this.poll = null;
+  }
+
+  async checkNow(): Promise<void> {
+    const ref = this.linkRef();
+    if (!ref || this.linkStatus() === 'completed') return;
+    try {
+      const status = await this.api.getMandateStatus(ref);
+      this.linkStatus.set(status);
+      if (status === 'completed') this.stopPolling();
+    } catch {
+      // Keep the last known state; the next check will try again.
+    }
+  }
+
+  async copyLink(): Promise<void> {
+    const url = this.linkUrl();
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+      this.copied.set(true);
+      setTimeout(() => this.copied.set(false), 2500);
+    } catch {
+      // Clipboard blocked: the link is still visible and can be opened.
+    }
+  }
+
+  continueWithLink(): void {
+    const o = this.offer();
+    const s = this.salary();
+    if (!o || !s || this.linkStatus() !== 'completed') return;
+    this.state.setMandate({
+      authorized: true,
+      channel: s.channel,
+      monthlyAmount: o.monthlyRepayment,
+      tenorMonths: o.tenorMonths,
+      authorizedAt: new Date().toISOString(),
+      mode: 'link',
+      reference: this.linkRef() ?? undefined,
+    });
+    void this.router.navigateByUrl('/apply/submit');
   }
 
   toggleAgree(v: boolean): void {
@@ -71,7 +177,8 @@ export class MandateComponent {
       monthlyAmount: o.monthlyRepayment,
       tenorMonths: o.tenorMonths,
       authorizedAt: new Date().toISOString(),
+      mode: 'authorize',
     });
-    void this.router.navigateByUrl('/apply/documents');
+    void this.router.navigateByUrl('/apply/submit');
   }
 }

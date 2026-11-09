@@ -6,6 +6,8 @@ import {
   DocUploadInput,
   DocUploadResult,
   LookupResult,
+  MandateLink,
+  MandateStatus,
   NG_BANKS,
   SalaryVerifyInput,
   SalaryVerifyResult,
@@ -74,8 +76,8 @@ export class HttpApiClient implements ApiClient {
     return this.op<LookupResult>('lookup-contact', input);
   }
 
-  sendPhoneOtp(phone: string): Promise<{ target: string; expiresInSeconds: number }> {
-    return this.op('send-otp', { phone });
+  sendPhoneOtp(phone: string, captchaToken?: string): Promise<{ target: string; expiresInSeconds: number }> {
+    return this.op('send-otp', captchaToken ? { phone, captchaToken } : { phone });
   }
 
   async verifyPhoneOtp(phone: string, code: string) {
@@ -118,17 +120,17 @@ export class HttpApiClient implements ApiClient {
     }
   }
 
-  async verifyBvn(bvn: string, fullName: string): Promise<BvnVerifyResult> {
+  async verifyBvn(bvn: string, fullName: string, dateOfBirth: string): Promise<BvnVerifyResult> {
     try {
-      return await this.op<BvnVerifyResult>('verify-bvn', fullName ? { bvn, fullName } : { bvn });
+      return await this.op<BvnVerifyResult>('verify-bvn', { bvn, fullName, dateOfBirth });
     } catch {
       return { status: 'service-down' };
     }
   }
 
-  async verifyNin(nin: string, fullName: string): Promise<BvnVerifyResult> {
+  async verifyNin(nin: string, fullName: string, dateOfBirth: string): Promise<BvnVerifyResult> {
     try {
-      return await this.op<BvnVerifyResult>('verify-nin', fullName ? { nin, fullName } : { nin });
+      return await this.op<BvnVerifyResult>('verify-nin', { nin, fullName, dateOfBirth });
     } catch {
       return { status: 'service-down' };
     }
@@ -143,6 +145,25 @@ export class HttpApiClient implements ApiClient {
     }
   }
 
+  async createMandateLink(input: {
+    productId: string;
+    channel: 'ippis' | 'remita' | 'dedukt';
+    monthlyAmount: number;
+    tenorMonths: number;
+  }): Promise<MandateLink> {
+    const link = await this.op<MandateLink>('mandate-link', input);
+    // Only ever offer the customer an https link, whatever the server returned.
+    if (typeof link.url !== 'string' || !link.url.startsWith('https://') || typeof link.reference !== 'string') {
+      throw new ApiUnavailableError('mandate-link', 502);
+    }
+    return link;
+  }
+
+  async getMandateStatus(reference: string): Promise<MandateStatus> {
+    const r = await this.op<{ status: MandateStatus }>('mandate-status', { reference });
+    return r.status === 'completed' || r.status === 'failed' ? r.status : 'pending';
+  }
+
   async submitApplication(payload: SubmitPayload): Promise<SubmitResult> {
     if (!payload.loan) throw new ApiUnavailableError('missing-loan', 400);
     const r = await this.post<{ id?: unknown; error?: { code?: string } }>(
@@ -152,8 +173,8 @@ export class HttpApiClient implements ApiClient {
     if (!r.ok || typeof r.data?.id !== 'string') {
       throw new ApiUnavailableError(r.data?.error?.code ?? 'submit', r.status);
     }
-    // The backoffice records the loan and decides; the browser never fakes an outcome.
-    return { status: 'review', referenceId: r.data.id, etaHours: 24 };
+    // Caltos records the loan and decides; the browser never claims an outcome.
+    return { status: 'received', referenceId: r.data.id };
   }
 
   joinWaitlist(input: WaitlistInput): Promise<WaitlistResult> {

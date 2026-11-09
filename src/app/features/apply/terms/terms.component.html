@@ -1,6 +1,6 @@
 @if (offer(); as o) {
 <section class="step">
-  <app-wizard-progress [current]="10" [total]="14" [label]="'step.terms.eyebrow' | t" />
+  <app-wizard-progress [current]="8" [total]="14" [label]="'step.terms.eyebrow' | t" />
 
   <header class="head">
     <h1 class="title">{{ 'step.terms.title' | t }}</h1>
@@ -36,17 +36,17 @@
       @for (f of o.fees; track f.name) {
         <li><span>{{ f.name }}</span><strong>{{ formatNaira(f.amount) }}</strong></li>
       }
-      <li class="fees-total"><span>Total fees</span><strong>{{ formatNaira(totalFees()) }}</strong></li>
+      <li class="fees-total"><span>{{ 'step.terms.fees.total' | t }}</span><strong>{{ formatNaira(totalFees()) }}</strong></li>
     </ul>
   </section>
 
-  <section class="block">
-    <h2 class="block-title">{{ 'step.terms.schedule' | t }}</h2>
+  <details class="block schedule-block">
+    <summary class="block-title">{{ 'step.terms.schedule' | t }}</summary>
     <div class="payday-callout" role="note">
       <strong>{{ 'step.terms.payday.first' | t }}: {{ formatDueDate(firstDueDate()) }}</strong>
       <span>{{ 'step.terms.payday.note' | t }}</span>
     </div>
-    <div class="table-scroll">
+    <div class="table-scroll" tabindex="0" role="region" [attr.aria-label]="'step.terms.schedule' | t">
       <table class="schedule">
         <thead>
           <tr>
@@ -72,7 +72,7 @@
         </tbody>
       </table>
     </div>
-  </section>
+  </details>
 
   <label class="agree">
     <input type="checkbox"

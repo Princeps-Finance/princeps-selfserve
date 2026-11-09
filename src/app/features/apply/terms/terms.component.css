@@ -72,7 +72,9 @@
 
 .agree input { margin-top: 3px; accent-color: var(--action-primary); }
 
-.actions { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+.actions { display: flex; flex-direction: column-reverse; align-items: stretch; gap: var(--space-3); }
+.actions .cta { justify-content: space-between; }
+.actions .link-btn { justify-content: center; }
 
 .link-btn {
   background: transparent;
@@ -105,3 +107,11 @@
 .cta:hover:not(:disabled) { background: var(--action-primary-hover); }
 .cta:active:not(:disabled) { transform: scale(0.99); }
 .cta:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
+
+.table-scroll:focus-visible { outline: 2px solid transparent; outline-offset: -2px; box-shadow: inset var(--focus-ring); }
+
+.schedule-block > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
+.schedule-block > summary::marker { content: ''; }
+.schedule-block > summary::after { content: '+'; margin-left: auto; font-size: 22px; font-weight: 400; }
+.schedule-block[open] > summary::after { content: '−'; }
+.schedule-block > summary:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); border-radius: 4px; }

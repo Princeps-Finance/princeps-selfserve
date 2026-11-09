@@ -36,6 +36,7 @@ export interface EligibilityDraft {
   maxEligibleAmount: number;
   tenorMonths: number;
   reasons: string[];
+  reasonCodes?: { code: string; params?: Record<string, number> }[];
 }
 
 export interface OfferDraft {
@@ -47,6 +48,13 @@ export interface OfferDraft {
   interestModel: 'Flat Rate' | 'Reducing Balance' | 'Percentage Based';
   monthlyRepayment: number;
   fees: { name: string; amount: number }[];
+}
+
+/** What the customer last chose, kept so a changed offer can start from it. */
+export interface OfferPreference {
+  productId: string;
+  amount: number;
+  tenorMonths: number;
 }
 
 export interface AddressDraft {
@@ -83,6 +91,9 @@ export interface MandateDraft {
   monthlyAmount: number;
   tenorMonths: number;
   authorizedAt: string;
+  /** 'link' mandates carry the Caltos reference that was completed. */
+  mode?: 'authorize' | 'link';
+  reference?: string;
 }
 
 export type DocStatus = 'pending' | 'uploading' | 'uploaded' | 'failed';
@@ -94,25 +105,23 @@ export interface DocDraft {
   fileName?: string;
 }
 
-export type SubmissionStatus =
-  | 'idle'
-  | 'submitting'
-  | 'approved'
-  | 'review'
-  | 'declined'
-  | 'disbursement-pending';
+export type SubmissionStatus = 'idle' | 'submitting' | 'received';
 
 export interface SubmissionDraft {
   status: SubmissionStatus;
   submittedAt?: string;
   reason?: string;
   referenceId?: string;
+  /** A person will review this application (eligibility fell in the manual-review band). */
+  manualReview?: boolean;
 }
 
 export interface IdentityVerificationDraft {
   facePhotoDataUrl: string;
   videoDataUrl: string;
   capturedAt: string;
+  /** The offer the spoken statement describes. If the offer changes, the video must be redone. */
+  offerKey?: string;
 }
 
 export interface ReturningSnapshotDraft {
@@ -125,7 +134,19 @@ export interface ReturningSnapshotDraft {
   monthlyIncome: number;
 }
 
+export interface ConsentDraft {
+  /** Version of the privacy notice the customer accepted. */
+  version: string;
+  acceptedAt: string;
+  language: string;
+}
+
+export type ApplyIntent = 'apply' | 'check';
+
 export interface ApplicationDraft {
+  intent: ApplyIntent;
+  termsAcceptedAt: string | null;
+  consent: ConsentDraft | null;
   contact: ContactDraft | null;
   phoneVerified: boolean;
   isReturningCustomer: boolean;
@@ -134,6 +155,7 @@ export interface ApplicationDraft {
   salary: SalaryDraft | null;
   eligibility: EligibilityDraft | null;
   offer: OfferDraft | null;
+  offerPreference: OfferPreference | null;
   profile: ProfileDraft | null;
   bvn: BvnDraft | null;
   nin: NinDraft | null;
@@ -144,6 +166,9 @@ export interface ApplicationDraft {
 }
 
 const empty: ApplicationDraft = {
+  intent: 'apply',
+  termsAcceptedAt: null,
+  consent: null,
   contact: null,
   phoneVerified: false,
   isReturningCustomer: false,
@@ -152,6 +177,7 @@ const empty: ApplicationDraft = {
   salary: null,
   eligibility: null,
   offer: null,
+  offerPreference: null,
   profile: null,
   bvn: null,
   nin: null,
@@ -165,6 +191,9 @@ const empty: ApplicationDraft = {
 export class ApplicationStateService {
   private readonly state = signal<ApplicationDraft>(empty);
   readonly draft = this.state.asReadonly();
+  readonly intent = computed(() => this.state().intent);
+  readonly termsAcceptedAt = computed(() => this.state().termsAcceptedAt);
+  readonly consent = computed(() => this.state().consent);
   readonly contact = computed(() => this.state().contact);
   readonly phoneVerified = computed(() => this.state().phoneVerified);
   readonly isReturningCustomer = computed(() => this.state().isReturningCustomer);
@@ -173,6 +202,7 @@ export class ApplicationStateService {
   readonly salary = computed(() => this.state().salary);
   readonly eligibility = computed(() => this.state().eligibility);
   readonly offer = computed(() => this.state().offer);
+  readonly offerPreference = computed(() => this.state().offerPreference);
   readonly profile = computed(() => this.state().profile);
   readonly bvn = computed(() => this.state().bvn);
   readonly nin = computed(() => this.state().nin);
@@ -180,6 +210,18 @@ export class ApplicationStateService {
   readonly docs = computed(() => this.state().docs);
   readonly identityVerification = computed(() => this.state().identityVerification);
   readonly submission = computed(() => this.state().submission);
+
+  setIntent(intent: ApplyIntent): void {
+    this.state.update((s) => ({ ...s, intent }));
+  }
+
+  setTermsAccepted(at: string | null): void {
+    this.state.update((s) => ({ ...s, termsAcceptedAt: at }));
+  }
+
+  setConsent(consent: ConsentDraft): void {
+    this.state.update((s) => ({ ...s, consent }));
+  }
 
   setContact(contact: ContactDraft): void {
     this.state.update((s) => ({ ...s, contact, phoneVerified: false }));
@@ -211,6 +253,10 @@ export class ApplicationStateService {
 
   setOffer(offer: OfferDraft): void {
     this.state.update((s) => ({ ...s, offer }));
+  }
+
+  setOfferPreference(offerPreference: OfferPreference | null): void {
+    this.state.update((s) => ({ ...s, offerPreference }));
   }
 
   setProfile(profile: ProfileDraft): void {
@@ -246,6 +292,17 @@ export class ApplicationStateService {
 
   setSubmission(submission: SubmissionDraft): void {
     this.state.update((s) => ({ ...s, submission }));
+  }
+
+  /** Restores the answers saved on this device. Verification-grade data is never restored. */
+  hydrateFromDraft(d: {
+    intent: ApplyIntent;
+    consent: ConsentDraft | null;
+    profile: ProfileDraft | null;
+    employment: EmploymentDraft | null;
+    salary: SalaryDraft | null;
+  }): void {
+    this.state.update((s) => ({ ...s, ...d }));
   }
 
   reset(): void {

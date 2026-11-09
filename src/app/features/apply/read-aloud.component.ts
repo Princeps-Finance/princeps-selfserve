@@ -77,16 +77,13 @@ export class ReadAloudComponent implements OnDestroy {
   });
 
   readonly ariaLabel = computed(() => {
-    if (this.speaking()) return 'Stop reading';
-    if (!this.hasVoice()) return `Read aloud (using English — no ${this.lang.lang().toUpperCase()} voice on this device)`;
-    return 'Read this screen aloud';
+    this.lang.lang();
+    if (this.speaking()) return this.lang.t('tts.stop');
+    if (!this.hasVoice()) return this.lang.t('tts.novoice').replace('{lang}', this.lang.lang().toUpperCase());
+    return this.lang.t('tts.read');
   });
 
-  readonly titleAttr = computed(() => {
-    if (this.speaking()) return 'Stop';
-    if (!this.hasVoice()) return `No ${this.lang.lang().toUpperCase()} voice — will read in English`;
-    return 'Read aloud';
-  });
+  readonly titleAttr = computed(() => this.ariaLabel());
 
   private voicesHandler = () => this.voicesTick.update((v) => v + 1);
 

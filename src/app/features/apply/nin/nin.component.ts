@@ -7,6 +7,8 @@ import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { API_CLIENT } from '../../../core/api/api-client';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
+import { whatsappLink } from '../../../core/support';
+import { LangService } from '../../../core/i18n/lang.service';
 import { ToastService } from '../../../core/toast/toast.service';
 
 @Component({
@@ -21,6 +23,8 @@ export class NinComponent {
   private readonly state = inject(ApplicationStateService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  private readonly lang = inject(LangService);
+  readonly support = whatsappLink('Hello Princeps, my name does not match my NIN and I need help.');
 
   readonly nin = new FormControl('', {
     nonNullable: true,
@@ -69,18 +73,15 @@ export class NinComponent {
     this.submitting.set(true);
     this.serverError.set(null);
     try {
-      const bvnMatchedName = this.state.bvn()?.matchedName ?? '';
-      const res = await this.api.verifyNin(this.nin.value, bvnMatchedName);
+      const profile = this.state.profile()!;
+      const res = await this.api.verifyNin(this.nin.value, profile.fullName, profile.dateOfBirth);
       if (res.status !== 'ok') {
         this.serverError.set(res.status);
-        if (res.status === 'not-found') this.toast.error('NIN not found. Check the 11 digits and try again.');
-        else if (res.status === 'name-mismatch') this.toast.error('NIN name doesn\'t match your BVN. Please check the NIN.');
-        else this.toast.error('NIN service unavailable. Try again in a moment.');
         return;
       }
       this.state.setNin({ value: this.nin.value, verified: true });
-      this.toast.success('NIN verified');
-      await this.router.navigateByUrl('/apply/profile');
+      this.toast.success(this.lang.t('toast.nin.ok'));
+      await this.router.navigateByUrl('/apply/documents');
     } finally {
       this.submitting.set(false);
     }

@@ -42,15 +42,15 @@ describe('POST /api/selfserve/[op]', () => {
 
   it('passes the application token through to the backoffice', async () => {
     fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ status: 'ok' })));
-    await handler(req('verify-nin', { nin: '12345678901' }, { 'x-application-token': 'tok-1' }));
+    await handler(req('verify-nin', { nin: '12345678901', fullName: 'Ada Obi', dateOfBirth: '1990-01-01' }, { 'x-application-token': 'tok-1' }));
     expect(fetchMock.mock.calls[0][1].headers['X-Application-Token']).toBe('tok-1');
   });
 
   it('rejects unknown operations (including prototype keys), bad input and foreign origins', async () => {
     expect((await handler(req('drop-tables', {}))).status).toBe(404);
     expect((await handler(req('constructor', {}))).status).toBe(404);
-    expect((await handler(req('verify-bvn', { bvn: '1' }))).status).toBe(400);
-    expect((await handler(req('verify-bvn', { bvn: '12345678901', extra: 1 }))).status).toBe(400);
+    expect((await handler(req('verify-bvn', { bvn: '1' }, { 'x-application-token': 't' }))).status).toBe(400);
+    expect((await handler(req('verify-bvn', { bvn: '12345678901', fullName: 'Ada Obi', dateOfBirth: '1990-01-01', extra: 1 }, { 'x-application-token': 't' }))).status).toBe(400);
     expect((await handler(req('send-otp', { phone: '+2348031112233' }, { origin: 'https://evil.example' }))).status).toBe(403);
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -73,5 +73,80 @@ describe('POST /api/selfserve/[op]', () => {
     const res = await handler(req('banks', {}));
     expect(res.status).toBe(502);
     expect(await res.text()).not.toContain('db.ts');
+  });
+
+  describe('anti-fraud', () => {
+    const tok = { 'x-application-token': 'tok' };
+    const bvn = { bvn: '12345678901', fullName: 'Ada Obi', dateOfBirth: '1990-01-01' };
+
+    it('BVN and NIN checks need name and date of birth, so a bare number cannot look anyone up', async () => {
+      expect((await handler(req('verify-bvn', { bvn: '12345678901' }, tok))).status).toBe(400);
+      expect((await handler(req('verify-bvn', { bvn: '12345678901', fullName: 'Ada Obi' }, tok))).status).toBe(400);
+      expect((await handler(req('verify-nin', { nin: '12345678901', fullName: 'Ada Obi' }, tok))).status).toBe(400);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('never returns the record holder\'s name, birth date, phone or address', async () => {
+      fetchMock.mockResolvedValueOnce(
+        new Response(JSON.stringify({ status: 'name-mismatch', matchedName: 'Real Person', dateOfBirth: '1980-02-02', phone: '+2348000000000', address: { street: 'x' } })),
+      );
+      const res = await handler(req('verify-bvn', bvn, tok));
+      expect(await res.json()).toEqual({ status: 'name-mismatch' });
+    });
+
+    it('identity, salary, lookup, mandate and waitlist calls need the token from a verified OTP', async () => {
+      const calls: [string, unknown][] = [
+        ['lookup-contact', { phone: '+2348031112233', email: 'a@b.co' }],
+        ['verify-bvn', bvn],
+        ['verify-nin', { nin: '12345678901', fullName: 'Ada Obi', dateOfBirth: '1990-01-01' }],
+        ['verify-salary', { channel: 'ippis', bankCode: '058', accountNumber: '0123456789', fullName: 'Ada Obi' }],
+        ['mandate-status', { reference: 'MD-123' }],
+      ];
+      for (const [op, body] of calls) expect((await handler(req(op, body))).status, op).toBe(401);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('does not require the token for the calls that happen before OTP (send-otp, banks)', async () => {
+      fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ banks: [], target: 'x', expiresInSeconds: 1 }))));
+      expect((await handler(req('banks', {}))).status).toBe(200);
+      expect((await handler(req('send-otp', { phone: '+2348077777777' }))).status).toBe(200);
+    });
+
+    it('enforces the bot check before sending an SMS when it is configured', async () => {
+      process.env['TURNSTILE_SECRET'] = 'ts-secret';
+      try {
+        const noToken = await handler(req('send-otp', { phone: '+2348012345678' }));
+        expect(noToken.status).toBe(400);
+        expect(fetchMock).not.toHaveBeenCalled();
+
+        fetchMock.mockImplementation((url: string) =>
+          Promise.resolve(
+            new Response(JSON.stringify(String(url).includes('turnstile') ? { success: false } : { target: 'x', expiresInSeconds: 1 })),
+          ),
+        );
+        const bad = await handler(req('send-otp', { phone: '+2348012345679', captchaToken: 'bad' }));
+        expect(bad.status).toBe(400);
+
+        fetchMock.mockImplementation((url: string) =>
+          Promise.resolve(
+            new Response(JSON.stringify(String(url).includes('turnstile') ? { success: true } : { target: 'x', expiresInSeconds: 1 })),
+          ),
+        );
+        const good = await handler(req('send-otp', { phone: '+2348012345680', captchaToken: 'ok' }));
+        expect(good.status).toBe(200);
+        // The token is for us, not for the backoffice.
+        const forwarded = JSON.parse(fetchMock.mock.calls.at(-1)![1].body);
+        expect(forwarded.captchaToken).toBeUndefined();
+      } finally {
+        delete process.env['TURNSTILE_SECRET'];
+      }
+    });
+
+    it('validates mandate link requests', async () => {
+      expect((await handler(req('mandate-link', { productId: 'p', channel: 'nope', monthlyAmount: 1, tenorMonths: 6 }, tok))).status).toBe(400);
+      fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ url: 'https://bank.example/m', reference: 'MD-1', secret: 'x' })));
+      const ok = await handler(req('mandate-link', { productId: 'p', channel: 'ippis', monthlyAmount: 31966, tenorMonths: 12 }, tok));
+      expect(await ok.json()).toEqual({ url: 'https://bank.example/m', reference: 'MD-1' });
+    });
   });
 });

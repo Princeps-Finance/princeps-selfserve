@@ -18,6 +18,8 @@ export interface SalaryVerifyInput {
   channel: 'remita' | 'ippis' | 'dedukt';
   bankCode: string;
   accountNumber: string;
+  /** Name the customer gave in bio data; the account name must match it. */
+  fullName: string;
   ippisNumber?: string;
   employer?: string;
 }
@@ -28,16 +30,14 @@ export type SalaryVerifyResult =
   | { status: 'not-found' }
   | { status: 'service-down' };
 
-export interface BvnPrefill {
-  matchedName: string;
-  dateOfBirth?: string;
-  phone?: string;
-  address?: { street?: string; state?: string; lga?: string };
-}
-
+/**
+ * Identity checks answer match / no-match only. They never return the record
+ * holder's name, date of birth, phone or address, so they cannot be used to
+ * look a stranger up.
+ */
 export type BvnVerifyResult =
-  | ({ status: 'ok' } & BvnPrefill)
-  | { status: 'name-mismatch'; matchedName: string }
+  | { status: 'ok' }
+  | { status: 'name-mismatch' }
   | { status: 'not-found' }
   | { status: 'service-down' };
 
@@ -64,6 +64,11 @@ export interface SubmitPayload {
     productId: string;
     /** Web app version that produced this application. */
     appVersion: string;
+    consentVersion: string;
+    consentAt: string;
+    /** Eligibility fell in the manual-review band. Caltos re-scores; this is a hint only. */
+    manualReview: boolean;
+    mandateReference: string | null;
     borrowerBvn: string;
     borrowerName: string;
     borrowerPhone: string;
@@ -81,11 +86,19 @@ export interface SubmitPayload {
   };
 }
 
-export type SubmitResult =
-  | { status: 'approved'; referenceId: string }
-  | { status: 'review'; referenceId: string; etaHours: number }
-  | { status: 'declined'; referenceId: string; reason: string }
-  | { status: 'disbursement-pending'; referenceId: string };
+/** The application reached Caltos. Caltos decides the outcome; the app never claims one. */
+export interface SubmitResult {
+  status: 'received';
+  referenceId: string;
+}
+
+export interface MandateLink {
+  /** https link the customer opens to complete the mandate with their bank or salary provider. */
+  url: string;
+  reference: string;
+}
+
+export type MandateStatus = 'pending' | 'completed' | 'failed';
 
 export interface Bank {
   code: string;
@@ -94,7 +107,7 @@ export interface Bank {
 
 export interface ApiClient {
   lookupContact(input: { phone: string; email: string }): Promise<LookupResult>;
-  sendPhoneOtp(phone: string): Promise<{ target: string; expiresInSeconds: number }>;
+  sendPhoneOtp(phone: string, captchaToken?: string): Promise<{ target: string; expiresInSeconds: number }>;
   verifyPhoneOtp(
     phone: string,
     code: string,
@@ -106,9 +119,16 @@ export interface ApiClient {
   >;
   listBanks(): Promise<Bank[]>;
   verifySalary(input: SalaryVerifyInput): Promise<SalaryVerifyResult>;
-  verifyBvn(bvn: string, fullName: string): Promise<BvnVerifyResult>;
-  verifyNin(nin: string, fullName: string): Promise<BvnVerifyResult>;
+  verifyBvn(bvn: string, fullName: string, dateOfBirth: string): Promise<BvnVerifyResult>;
+  verifyNin(nin: string, fullName: string, dateOfBirth: string): Promise<BvnVerifyResult>;
   uploadDocument(input: DocUploadInput): Promise<DocUploadResult>;
+  createMandateLink(input: {
+    productId: string;
+    channel: 'ippis' | 'remita' | 'dedukt';
+    monthlyAmount: number;
+    tenorMonths: number;
+  }): Promise<MandateLink>;
+  getMandateStatus(reference: string): Promise<MandateStatus>;
   submitApplication(payload: SubmitPayload): Promise<SubmitResult>;
   joinWaitlist(input: WaitlistInput): Promise<WaitlistResult>;
 }
@@ -128,8 +148,9 @@ export interface WaitlistInput {
 export interface WaitlistResult {
   status: 'ok';
   referenceId: string;
-  positionInQueue: number;
-  estimatedWindow: string;
+  /** Only shown when Caltos provides them; the app never invents a queue position or date. */
+  positionInQueue?: number;
+  estimatedWindow?: string;
 }
 
 export const API_CLIENT = new InjectionToken<ApiClient>('ApiClient');
@@ -185,7 +206,8 @@ export const NG_BANKS: Bank[] = [
  * - Contact email `returning@princeps.ng` → returning customer.
  * - OTP `123456` = ok, `000000` = expired, else wrong.
  * - Account `0000000000` = not found; `1111111111` = name mismatch;
- *   `9999999999` = service down; anything else = ok at ₦180,000/mo.
+ *   `9999999999` = service down; `4444444444` = ok but ₦1,000/mo (to see a decline);
+ *   anything else = ok at ₦180,000/mo.
  * - BVN `00000000000` = not-found, `11111111111` = name mismatch,
  *   `99999999999` = service-down, else ok.
  */
@@ -211,7 +233,7 @@ export class MockApiClient implements ApiClient {
     return { kind: 'new' };
   }
 
-  async sendPhoneOtp(phone: string) {
+  async sendPhoneOtp(phone: string, _captchaToken?: string) {
     await delay(500);
     return { target: maskPhone(phone), expiresInSeconds: 300 };
   }
@@ -233,29 +255,45 @@ export class MockApiClient implements ApiClient {
     if (input.accountNumber === '9999999999') return { status: 'service-down' };
     if (input.accountNumber === '0000000000') return { status: 'not-found' };
     if (input.accountNumber === '1111111111') return { status: 'name-mismatch' };
+    if (input.accountNumber === '4444444444') return { status: 'ok', monthlyIncome: 1_000, accountName: 'A. Adeyemi' };
     return { status: 'ok', monthlyIncome: 180_000, accountName: 'A. Adeyemi' };
   }
 
-  async verifyBvn(bvn: string, _fullName: string): Promise<BvnVerifyResult> {
+  async verifyBvn(bvn: string, _fullName: string, _dateOfBirth: string): Promise<BvnVerifyResult> {
     await delay(900);
     if (bvn === '99999999999') return { status: 'service-down' };
     if (bvn === '00000000000') return { status: 'not-found' };
-    if (bvn === '11111111111') return { status: 'name-mismatch', matchedName: 'A. Different' };
-    return {
-      status: 'ok',
-      matchedName: 'Adeola Adeyemi',
-      dateOfBirth: '1993-04-18',
-      phone: '+2348031112233',
-      address: { street: '14 Adeniyi Jones Avenue', state: 'Lagos', lga: 'Ikeja' },
-    };
+    if (bvn === '11111111111') return { status: 'name-mismatch' };
+    return { status: 'ok' };
   }
 
-  async verifyNin(nin: string, _fullName: string): Promise<BvnVerifyResult> {
+  async verifyNin(nin: string, _fullName: string, _dateOfBirth: string): Promise<BvnVerifyResult> {
     await delay(900);
     if (nin === '99999999999') return { status: 'service-down' };
     if (nin === '00000000000') return { status: 'not-found' };
-    if (nin === '11111111111') return { status: 'name-mismatch', matchedName: 'A. Different' };
-    return { status: 'ok', matchedName: 'Adeola Adeyemi' };
+    if (nin === '11111111111') return { status: 'name-mismatch' };
+    return { status: 'ok' };
+  }
+
+  private mandateChecks = new Map<string, number>();
+
+  async createMandateLink(_input: {
+    productId: string;
+    channel: 'ippis' | 'remita' | 'dedukt';
+    monthlyAmount: number;
+    tenorMonths: number;
+  }): Promise<MandateLink> {
+    await delay(700);
+    const reference = 'MD-' + randomRef();
+    return { url: `https://example.com/mandate/${reference}`, reference };
+  }
+
+  /** Mock: pending for the first two checks, then completed. */
+  async getMandateStatus(reference: string): Promise<MandateStatus> {
+    await delay(400);
+    const n = (this.mandateChecks.get(reference) ?? 0) + 1;
+    this.mandateChecks.set(reference, n);
+    return n >= 3 ? 'completed' : 'pending';
   }
 
   async uploadDocument(input: DocUploadInput): Promise<DocUploadResult> {
@@ -264,27 +302,13 @@ export class MockApiClient implements ApiClient {
     return { status: 'ok' };
   }
 
-  async submitApplication(payload: SubmitPayload): Promise<SubmitResult> {
-    const ref = 'PR-' + randomRef();
-
+  async submitApplication(_payload: SubmitPayload): Promise<SubmitResult> {
     await delay(1200);
-    const bucket = payload.offer.amount % 4;
-    if (bucket === 0) return { status: 'approved', referenceId: ref };
-    if (bucket === 1) return { status: 'review', referenceId: ref, etaHours: 24 };
-    if (bucket === 2) return { status: 'disbursement-pending', referenceId: ref };
-    return { status: 'declined', referenceId: ref, reason: 'Insufficient repayment capacity.' };
+    return { status: 'received', referenceId: 'PR-' + randomRef() };
   }
 
-  async joinWaitlist(input: WaitlistInput): Promise<WaitlistResult> {
+  async joinWaitlist(_input: WaitlistInput): Promise<WaitlistResult> {
     await delay(600);
-    const ref = 'WL-' + randomRef();
-    const seed = (input.phone + input.email).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-    const positionInQueue = 800 + (seed % 1600);
-    return {
-      status: 'ok',
-      referenceId: ref,
-      positionInQueue,
-      estimatedWindow: 'Q4 2026',
-    };
+    return { status: 'ok', referenceId: 'WL-' + randomRef() };
   }
 }

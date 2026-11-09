@@ -1,5 +1,5 @@
 <section class="step">
-  <app-wizard-progress [current]="13" [total]="14" [label]="'step.verify.eyebrow' | t" />
+  <app-wizard-progress [current]="12" [total]="14" [label]="'step.verify.eyebrow' | t" />
 
   <header class="head">
     <h1 class="title">{{ 'step.verify.title' | t }}</h1>
@@ -8,6 +8,7 @@
 
   @if (cameraError()) {
     <p class="error" role="alert">{{ cameraError() }}</p>
+    <a class="help-link" [attr.href]="helpLink" target="_blank" rel="noopener">{{ 'step.verify.help' | t }}</a>
   }
 
   @switch (stage()) {
@@ -18,7 +19,7 @@
           <span class="num">1</span>
           <div>
             <p class="check-title">{{ 'step.verify.check.face.title' | t }}</p>
-            <p class="check-hint">{{ 'step.verify.check.face.hint' | t }}</p>
+            <p class="check-hint">{{ 'step.verify.check.face.hint2' | t }}</p>
           </div>
         </li>
         <li>
@@ -46,7 +47,7 @@
     }
 
     @case ('face') {
-      <p class="stage-label">{{ 'step.verify.stage.face' | t }}</p>
+      <p class="stage-label">{{ 'step.verify.stage.face2' | t }}</p>
 
       <div class="frame frame--face">
         @if (facePhoto(); as p) {
@@ -87,6 +88,7 @@
         </p>
       </div>
 
+      @if (canRecord() || videoPreviewUrl()) {
       <div class="frame frame--video">
         @if (videoPreviewUrl(); as u) {
           <video [attr.src]="u" controls playsinline class="media"></video>
@@ -100,6 +102,8 @@
           }
         }
       </div>
+
+      }
 
       @if (checkingVideo()) {
         <p class="processing">{{ 'step.verify.processing' | t }}</p>
@@ -115,9 +119,18 @@
           <span>{{ 'step.verify.stop' | t }}</span>
         </button>
       } @else {
-        <button type="button" class="cta" (click)="startRecording()">
-          <span>{{ 'step.verify.record' | t }}</span>
-        </button>
+        @if (canRecord()) {
+          <button type="button" class="cta" (click)="startRecording()">
+            <span>{{ 'step.verify.record' | t }}</span>
+          </button>
+        }
+        @if (canUpload()) {
+          <p class="upload-hint">{{ 'step.verify.upload.hint' | t }}</p>
+          <label class="ghost upload">
+            <input type="file" accept="video/*" capture="user" class="file" (change)="onVideoFile($event)" />
+            <span>{{ 'step.verify.upload' | t }}</span>
+          </label>
+        }
       }
     }
 

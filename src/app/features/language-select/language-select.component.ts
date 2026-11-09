@@ -5,10 +5,12 @@ import { LANGUAGES, Lang } from '../../core/i18n/translations';
 import { RadioGroupDirective } from '../../core/a11y/radio-group.directive';
 import { TPipe } from '../../core/i18n/t.pipe';
 import { ReadAloudComponent } from '../apply/read-aloud.component';
+import { HelpLauncherComponent } from '../apply/help-launcher.component';
+import { PrivacyService } from '../../core/privacy/privacy.service';
 
 @Component({
   selector: 'app-language-select',
-  imports: [TPipe, ReadAloudComponent, RadioGroupDirective],
+  imports: [TPipe, ReadAloudComponent, HelpLauncherComponent, RadioGroupDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './language-select.component.html',
   styleUrl: './language-select.component.css',
@@ -16,6 +18,7 @@ import { ReadAloudComponent } from '../apply/read-aloud.component';
 export class LanguageSelectComponent {
   private readonly langService = inject(LangService);
   private readonly router = inject(Router);
+  protected readonly privacy = inject(PrivacyService);
 
   readonly languages = LANGUAGES;
   readonly selected = signal<Lang>(this.langService.lang());

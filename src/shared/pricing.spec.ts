@@ -1,5 +1,8 @@
 import {
   PRICING_PRODUCTS,
+  clampAmount,
+  offerLimits,
+  quoteLoan,
   calcProductFees,
   estimateMonthlyRepayment,
   pricingProductById,
@@ -57,5 +60,59 @@ describe('pricing catalogue', () => {
 
   it('returns undefined for an unknown product', () => {
     expect(pricingProductById('nope')).toBeUndefined();
+  });
+});
+
+describe('quoteLoan', () => {
+  it('adds up repayment, fees and the cost of credit', () => {
+    const p = pricingProductById('ippis-standard')!; // 5% flat, 2% processing fee
+    const q = quoteLoan(p, 200_000, 6);
+    expect(q.monthly).toBe(35_000);
+    expect(q.totalRepayment).toBe(210_000);
+    expect(q.totalFees).toBe(4_000);
+    expect(q.costOfCredit).toBe(210_000 - 200_000 + 4_000);
+    expect(q.fees).toEqual([{ name: 'Processing fee', amount: 4_000 }]);
+  });
+
+  it('a longer tenor lowers the monthly payment', () => {
+    const p = pricingProductById('ippis-advance')!;
+    expect(quoteLoan(p, 100_000, 12).monthly).toBeLessThan(quoteLoan(p, 100_000, 6).monthly);
+  });
+});
+
+describe('offerLimits and clampAmount', () => {
+  const p = pricingProductById('ippis-advance')!; // 50k–300k, step 5k, 3–12 months
+
+  it('caps the range by what the customer is eligible for, on a step boundary', () => {
+    const l = offerLimits(p, { maxAmount: 123_456, maxTenorMonths: 9 })!;
+    expect(l).toEqual({ minAmount: 50_000, maxAmount: 120_000, minTenor: 3, maxTenor: 9 });
+  });
+
+  it('never exceeds the product maximum', () => {
+    expect(offerLimits(p, { maxAmount: 9_000_000, maxTenorMonths: 99 })).toMatchObject({ maxAmount: 300_000, maxTenor: 12 });
+  });
+
+  it('returns null when nothing fits (eligible amount or tenor below the product minimum)', () => {
+    expect(offerLimits(p, { maxAmount: 20_000, maxTenorMonths: 12 })).toBeNull();
+    expect(offerLimits(p, { maxAmount: 300_000, maxTenorMonths: 2 })).toBeNull();
+  });
+
+  it('rounds typed amounts to the step and keeps them in range', () => {
+    const l = { minAmount: 50_000, maxAmount: 120_000 };
+    expect(clampAmount(p, 87_300, l)).toBe(85_000);
+    expect(clampAmount(p, 10, l)).toBe(50_000);
+    expect(clampAmount(p, 999_999, l)).toBe(120_000);
+  });
+});
+
+describe('product settings', () => {
+  it('every product defines a mandate mode, identity video mode and NIN requirement', () => {
+    for (const p of PRICING_PRODUCTS) {
+      expect(['authorize', 'link']).toContain(p.settings.mandate);
+      expect(['none', 'record', 'upload', 'either']).toContain(p.settings.identityVideo);
+      expect(typeof p.settings.requiresNin).toBe('boolean');
+      expect(p.minTenorMonths).toBeLessThanOrEqual(p.maxTenorMonths);
+      expect(p.maxAmount % p.amountStep).toBe(0);
+    }
   });
 });

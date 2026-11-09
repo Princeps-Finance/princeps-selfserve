@@ -30,7 +30,6 @@ export class ProfileComponent {
     relationshipStatus: new FormControl<'single' | 'married' | 'divorced' | 'widowed'>('single', {
       nonNullable: true, validators: [Validators.required],
     }),
-    religion: new FormControl<string>('', { nonNullable: true }),
   });
 
   readonly statusChanges = toSignal(this.form.statusChanges, { initialValue: this.form.status });
@@ -46,13 +45,8 @@ export class ProfileComponent {
   });
 
   readonly submitting = signal(false);
-  readonly prefilledFromBvn = signal(false);
 
   constructor() {
-    if (!this.state.nin()?.verified) {
-      void this.router.navigateByUrl('/apply/nin');
-      return;
-    }
     const saved = this.state.profile();
     if (saved) {
       this.form.patchValue({
@@ -62,20 +56,8 @@ export class ProfileComponent {
         stateName: saved.address.state,
         lga: saved.address.lga,
         relationshipStatus: saved.relationshipStatus,
-        religion: saved.religion ?? '',
       });
       return;
-    }
-    const bvn = this.state.bvn();
-    if (bvn?.verified) {
-      this.form.patchValue({
-        fullName: bvn.matchedName ?? '',
-        dateOfBirth: bvn.dateOfBirth ?? '',
-        street: bvn.address?.street ?? '',
-        stateName: bvn.address?.state ?? '',
-        lga: bvn.address?.lga ?? '',
-      });
-      this.prefilledFromBvn.set(true);
     }
   }
 
@@ -94,8 +76,7 @@ export class ProfileComponent {
       dateOfBirth: v.dateOfBirth,
       address: { street: v.street.trim(), state: v.stateName, lga: v.lga.trim() },
       relationshipStatus: v.relationshipStatus,
-      religion: v.religion.trim() || undefined,
     });
-    void this.router.navigateByUrl('/apply/eligibility');
+    void this.router.navigateByUrl('/apply/employment');
   }
 }

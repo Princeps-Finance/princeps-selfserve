@@ -13,6 +13,7 @@ import {
   fail,
   isSameOrigin,
   json,
+  verifyCaptcha,
   rateLimited,
   readJson,
 } from '../_lib/http';
@@ -21,6 +22,7 @@ export const config = { runtime: 'nodejs' };
 
 const phone = z.string().regex(/^\+234[789]\d{9}$/);
 const digits = (n: number) => z.string().regex(new RegExp(`^\\d{${n}}$`));
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 interface OpDef {
   schema: z.ZodTypeAny;
@@ -28,6 +30,8 @@ interface OpDef {
   limit: number;
   /** Response keys passed back to the browser. */
   allow: string[];
+  /** Needs the application token issued after a verified OTP. Stops anonymous probing. */
+  needsToken?: boolean;
 }
 
 const OPS: Record<string, OpDef> = {
@@ -35,9 +39,10 @@ const OPS: Record<string, OpDef> = {
     schema: z.object({ phone, email: z.string().email().max(160) }).strict(),
     limit: 10,
     allow: ['kind', 'profileHint', 'snapshot'],
+    needsToken: true,
   },
   'send-otp': {
-    schema: z.object({ phone }).strict(),
+    schema: z.object({ phone, captchaToken: z.string().max(2048).optional() }).strict(),
     limit: 3,
     allow: ['target', 'expiresInSeconds'],
   },
@@ -53,22 +58,29 @@ const OPS: Record<string, OpDef> = {
         channel: z.enum(['ippis', 'remita', 'dedukt']),
         bankCode: digits(3),
         accountNumber: digits(10),
+        fullName: z.string().trim().min(2).max(120),
         ippisNumber: z.string().regex(/^\d{4,20}$/).optional(),
         employer: z.string().max(120).optional(),
       })
       .strict(),
     limit: 6,
     allow: ['status', 'monthlyIncome', 'accountName'],
+    needsToken: true,
   },
+  // Identity checks need the claimed name AND date of birth, and answer match / no-match
+  // only. Nothing about the record holder is ever returned, so these cannot be used to
+  // look a stranger up (an attacker with only a BVN learns nothing).
   'verify-bvn': {
-    schema: z.object({ bvn: digits(11), fullName: z.string().max(120).optional() }).strict(),
+    schema: z.object({ bvn: digits(11), fullName: z.string().trim().min(2).max(120), dateOfBirth: isoDate }).strict(),
     limit: 5,
-    allow: ['status', 'matchedName', 'dateOfBirth', 'phone', 'address'],
+    allow: ['status'],
+    needsToken: true,
   },
   'verify-nin': {
-    schema: z.object({ nin: digits(11), fullName: z.string().max(120).optional() }).strict(),
+    schema: z.object({ nin: digits(11), fullName: z.string().trim().min(2).max(120), dateOfBirth: isoDate }).strict(),
     limit: 5,
-    allow: ['status', 'matchedName'],
+    allow: ['status'],
+    needsToken: true,
   },
   'upload-document': {
     schema: z
@@ -80,6 +92,26 @@ const OPS: Record<string, OpDef> = {
       .strict(),
     limit: 20,
     allow: ['status'],
+    needsToken: true,
+  },
+  'mandate-link': {
+    schema: z
+      .object({
+        productId: z.string().max(64),
+        channel: z.enum(['ippis', 'remita', 'dedukt']),
+        monthlyAmount: z.number().int().positive().max(10_000_000),
+        tenorMonths: z.number().int().min(1).max(60),
+      })
+      .strict(),
+    limit: 6,
+    allow: ['url', 'reference'],
+    needsToken: true,
+  },
+  'mandate-status': {
+    schema: z.object({ reference: z.string().regex(/^[\w-]{3,64}$/) }).strict(),
+    limit: 40,
+    allow: ['status'],
+    needsToken: true,
   },
   waitlist: {
     schema: z
@@ -94,6 +126,7 @@ const OPS: Record<string, OpDef> = {
       .strict(),
     limit: 5,
     allow: ['status', 'referenceId', 'positionInQueue', 'estimatedWindow'],
+    needsToken: true,
   },
 };
 
@@ -126,17 +159,31 @@ export default async function handler(req: Request): Promise<Response> {
   const parsed = def.schema.safeParse(raw);
   if (!parsed.success) return fail('VALIDATION_ERROR', 'Some details are invalid.', 400);
 
+  const token = req.headers.get('x-application-token');
+  if (def.needsToken && (!token || token.length > 512)) {
+    return fail('UNVERIFIED', 'Verify your phone number first.', 401);
+  }
+
+  // Bot check before sending an SMS (costs money and can harass a victim).
+  let payload = parsed.data as Record<string, unknown>;
+  if (op === 'send-otp') {
+    const { captchaToken, ...rest } = payload as { captchaToken?: string };
+    if (!(await verifyCaptcha(captchaToken, ip))) {
+      return fail('CAPTCHA', 'Please confirm you are not a robot and try again.', 400);
+    }
+    payload = rest;
+  }
+
   // Per-phone limits stop one number being hammered from many IPs.
   const target = (parsed.data as { phone?: string }).phone;
   if (target && (op === 'send-otp' || op === 'verify-otp') && rateLimited(`${op}:${target}`, def.limit * 2, 10 * 60_000)) {
     return fail('RATE_LIMITED', 'Too many attempts. Try again shortly.', 429);
   }
 
-  const token = req.headers.get('x-application-token');
   const upstream = await callBackoffice(
     cfg,
     `/api/selfserve/${op}`,
-    parsed.data,
+    payload,
     token && token.length <= 512 ? { 'X-Application-Token': token } : {},
   );
   if (!upstream) return fail('UPSTREAM_DOWN', 'Service unavailable. Try again shortly.', 502);

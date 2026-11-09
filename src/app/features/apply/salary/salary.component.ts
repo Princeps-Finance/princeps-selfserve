@@ -189,6 +189,7 @@ export class SalaryComponent {
         channel: this.channel(),
         bankCode: v.bankCode,
         accountNumber: v.accountNumber,
+        fullName: this.state.profile()?.fullName ?? '',
         ippisNumber: v.ippisNumber || undefined,
         employer: v.employer || undefined,
       });
@@ -205,7 +206,7 @@ export class SalaryComponent {
         paramilitaryEmployer: v.employer || undefined,
         monthlyIncome: res.monthlyIncome,
       });
-      await this.router.navigateByUrl('/apply/bvn');
+      await this.router.navigateByUrl('/apply/eligibility');
     } finally {
       this.submitting.set(false);
     }

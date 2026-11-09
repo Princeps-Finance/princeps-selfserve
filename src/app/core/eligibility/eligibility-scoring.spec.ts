@@ -64,4 +64,20 @@ describe('scoreEligibility', () => {
   it('is deterministic', () => {
     expect(scoreEligibility(strong)).toEqual(scoreEligibility(strong));
   });
+
+  it('explains a decline with machine-readable reasons that the UI can translate', () => {
+    const corper = scoreEligibility({ ...strong, stability: { type: 'nysc-corper', monthsRemaining: 1 } });
+    expect(corper.reasonCodes).toEqual([{ code: 'nysc_too_short', params: { months: 1, min: 3 } }]);
+
+    const exposed = scoreEligibility({ ...strong, exposure: { hasActiveLoanElsewhere: true } });
+    expect(exposed.reasonCodes.length).toBeGreaterThan(0);
+
+    const poor = scoreEligibility({
+      ...strong,
+      income: { source: 'remita', monthlyAmount: 1_000 },
+      repaymentHistory: { isRepeatBorrower: true, loansCompleted: 0, latePayments: 5, defaults: 2 },
+    });
+    expect(poor.decision).toBe('declined');
+    expect(poor.reasonCodes.map((r) => r.code)).toContain('score_too_low');
+  });
 });

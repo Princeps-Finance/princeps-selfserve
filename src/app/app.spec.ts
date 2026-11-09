@@ -14,12 +14,14 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('hosts the router outlet, help launcher and toast host', async () => {
+  it('hosts the router outlet, toast host, privacy dialog and update banner', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('router-outlet')).toBeTruthy();
-    expect(el.querySelector('app-help-launcher')).toBeTruthy();
+    expect(el.querySelector('app-privacy-dialog')).toBeTruthy();
+    expect(el.querySelector('app-pwa-banner')).toBeTruthy();
+    expect(el.querySelector('app-demo-banner')).toBeTruthy();
     expect(el.querySelector('app-toast-host')).toBeTruthy();
   });
 });

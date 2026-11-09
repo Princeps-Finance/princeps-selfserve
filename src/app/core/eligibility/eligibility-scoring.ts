@@ -142,6 +142,12 @@ export interface EligibilityBreakdown {
   exposureScore: number;
 }
 
+/** Machine-readable decline/caution reasons, translated in the UI. */
+export interface ReasonCode {
+  code: 'nysc_too_short' | 'exposure_blocked' | 'exposure_penalized' | 'score_too_low';
+  params?: Record<string, number>;
+}
+
 export interface EligibilityResult {
   /** Normalized 0–100 overall score. */
   score: number;
@@ -150,6 +156,7 @@ export interface EligibilityResult {
   tenorMonths: number;
   breakdown: EligibilityBreakdown;
   reasons: string[];
+  reasonCodes: ReasonCode[];
 }
 
 export const DEFAULT_ELIGIBILITY_CONFIG: EligibilityConfig = {
@@ -237,11 +244,17 @@ function scoreIncome(input: VerifiedIncomeInput, config: EligibilityConfig): num
 function scoreStability(
   input: EmploymentStabilityInput,
   config: EligibilityConfig,
-): { score: number; nyscCap: { amount: number; tenorMonths: number } | null; reasons: string[] } {
+): {
+  score: number;
+  nyscCap: { amount: number; tenorMonths: number } | null;
+  reasons: string[];
+  codes: ReasonCode[];
+} {
   const reasons: string[] = [];
+  const codes: ReasonCode[] = [];
 
   if (input.type === 'mda') {
-    return { score: config.stability.mdaScores[input.category], nyscCap: null, reasons };
+    return { score: config.stability.mdaScores[input.category], nyscCap: null, reasons, codes };
   }
 
   const { monthsRemaining } = input;
@@ -251,7 +264,11 @@ function scoreStability(
     reasons.push(
       `Declined: NYSC service ends in ${monthsRemaining} month(s), below the ${nyscConfig.minEligibleMonthsRemaining}-month minimum.`,
     );
-    return { score: 0, nyscCap: { amount: 0, tenorMonths: 0 }, reasons };
+    codes.push({
+      code: 'nysc_too_short',
+      params: { months: monthsRemaining, min: nyscConfig.minEligibleMonthsRemaining },
+    });
+    return { score: 0, nyscCap: { amount: 0, tenorMonths: 0 }, reasons, codes };
   }
 
   const explicit = nyscConfig.amountTable.find((b) => b.monthsRemaining === monthsRemaining);
@@ -265,7 +282,7 @@ function scoreStability(
     );
 
   const score = clamp((monthsRemaining / nyscConfig.baseMonths) * 100, 0, 100);
-  return { score, nyscCap: { amount, tenorMonths: monthsRemaining }, reasons };
+  return { score, nyscCap: { amount, tenorMonths: monthsRemaining }, reasons, codes };
 }
 
 function scoreRepaymentHistory(
@@ -288,14 +305,15 @@ function scoreRepaymentHistory(
 function scoreExposure(
   input: InternalExposureInput,
   config: EligibilityConfig,
-): { score: number; hardBlock: boolean; reasons: string[] } {
-  if (!input.hasActiveLoanElsewhere) return { score: 100, hardBlock: false, reasons: [] };
+): { score: number; hardBlock: boolean; reasons: string[]; codes: ReasonCode[] } {
+  if (!input.hasActiveLoanElsewhere) return { score: 100, hardBlock: false, reasons: [], codes: [] };
 
   if (config.exposure.mode === 'block') {
     return {
       score: 0,
       hardBlock: true,
       reasons: ['Declined: this BVN already has an active loan under a different product.'],
+      codes: [{ code: 'exposure_blocked' }],
     };
   }
 
@@ -303,6 +321,7 @@ function scoreExposure(
     score: config.exposure.penalizedScore,
     hardBlock: false,
     reasons: ['Existing active loan under a different product reduced the score.'],
+    codes: [{ code: 'exposure_penalized' }],
   };
 }
 
@@ -318,6 +337,7 @@ export function scoreEligibility(
   const exposure = scoreExposure(input.exposure, config);
 
   reasons.push(...stability.reasons, ...exposure.reasons);
+  const reasonCodes: ReasonCode[] = [...stability.codes, ...exposure.codes];
 
   const breakdown: EligibilityBreakdown = {
     incomeScore,
@@ -361,6 +381,7 @@ export function scoreEligibility(
       tenorMonths: 0,
       breakdown,
       reasons: reasons.length ? reasons : ['Declined: score too low for any eligible amount.'],
+      reasonCodes: reasonCodes.length ? reasonCodes : [{ code: 'score_too_low' }],
     };
   }
 
@@ -371,5 +392,6 @@ export function scoreEligibility(
     tenorMonths,
     breakdown,
     reasons,
+    reasonCodes,
   };
 }

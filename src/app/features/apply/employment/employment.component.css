@@ -150,3 +150,21 @@
 @media (prefers-reduced-motion: reduce) {
   .cta, .cta-arrow, .option, .mark, .input { transition: none; }
 }
+
+.knockout {
+  align-self: stretch; width: 100%; box-sizing: border-box;
+  margin-top: var(--space-3); padding: var(--space-4);
+  border-radius: var(--radius-md); background: var(--warning-soft);
+  border: 1px solid rgba(217, 119, 6, 0.35);
+}
+.knockout-title { margin: 0 0 var(--space-1); font-weight: 600; font-size: 15px; color: var(--ink); }
+.knockout-help { margin: 0; font-size: 14px; color: var(--ink-soft); }
+.knockout-actions { display: flex; flex-wrap: wrap; gap: var(--space-4); margin-top: var(--space-3); }
+.knockout-link {
+  min-height: 44px; display: inline-flex; align-items: center;
+  color: var(--action-primary); font-weight: 600; text-decoration: underline; text-underline-offset: 3px;
+}
+
+.other { margin: 0; font-size: 14px; color: var(--ink-soft); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); }
+.other-link { min-height: 44px; padding: 0; border: 0; background: none; color: var(--action-primary); font: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.other-link:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); border-radius: 4px; }
