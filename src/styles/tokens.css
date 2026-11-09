@@ -44,8 +44,8 @@
   --info-soft: #e4eaf3;
 
   /* Typography */
-  --font-display: 'Clash Display', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-sans: 'General Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
 
   /* Editorial surface — Contra-leaning cream, less "web app white" */
