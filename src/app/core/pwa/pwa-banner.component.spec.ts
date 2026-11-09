@@ -17,8 +17,10 @@ describe('PwaBannerComponent', () => {
       providers: [
         provideRouter([
           { path: '', component: PwaBannerComponent },
-          { path: 'apply/contact', component: PwaBannerComponent },
-          { path: 'apply/status', component: PwaBannerComponent },
+          ...['contact', 'status', 'welcome', 'bvn', 'profile', 'employment', 'offers', 'documents'].map((p) => ({
+            path: 'apply/' + p,
+            component: PwaBannerComponent,
+          })),
         ]),
         { provide: AppUpdateService, useValue: { updateReady, offline, apply } },
       ],
@@ -33,11 +35,29 @@ describe('PwaBannerComponent', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('never offers an update in the middle of the application', async () => {
+  it('never offers or applies an update once real details have been entered', async () => {
     updateReady.set(true);
-    const el = await at('/apply/contact');
-    expect(el.querySelector('.banner--update')).toBeNull();
+    for (const path of ['/apply/profile', '/apply/employment', '/apply/offers', '/apply/documents']) {
+      const el = await at(path);
+      expect(el.querySelector('.banner--update')).toBeNull();
+    }
     expect(apply).not.toHaveBeenCalled();
+  });
+
+  it('only offers (never forces) the update on contact and BVN, where something may be typed', async () => {
+    updateReady.set(true);
+    for (const path of ['/apply/contact', '/apply/bvn']) {
+      const el = await at(path);
+      expect(el.querySelector('.banner--update')).not.toBeNull();
+    }
+    expect(apply).not.toHaveBeenCalled();
+  });
+
+  it('applies a ready update by itself on the welcome screen', async () => {
+    updateReady.set(true);
+    await at('/apply/welcome');
+    TestBed.tick();
+    expect(apply).toHaveBeenCalled();
   });
 
   it('shows the Update button after submission, on the status page', async () => {
