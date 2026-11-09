@@ -62,9 +62,8 @@
           [attr.aria-invalid]="showFieldErrors() && !form.controls.consent.value ? true : null"
           aria-describedby="consent-error"
         />
-        <span>{{ 'consent.label' | t }}</span>
+        <span>{{ 'consent.label' | t }} <button type="button" class="consent-inline" (click)="privacy.open()">{{ 'consent.link' | t }}</button>.</span>
       </label>
-      <button type="button" class="suggest-btn consent-link" (click)="privacy.open()">{{ 'consent.link' | t }}</button>
       @if (showFieldErrors() && !form.controls.consent.value) {
         <p class="msg msg--error" id="consent-error" role="alert">{{ 'consent.required' | t }}</p>
       }
