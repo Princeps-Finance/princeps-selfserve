@@ -1,4 +1,5 @@
 import { Injectable, computed, signal } from '@angular/core';
+import type { BvnIdentity } from "../api/api-client";
 
 export interface ContactDraft {
   phone: string;
@@ -205,6 +206,13 @@ export class ApplicationStateService {
   readonly offerPreference = computed(() => this.state().offerPreference);
   readonly profile = computed(() => this.state().profile);
   readonly bvn = computed(() => this.state().bvn);
+  /**
+   * Details released by the BVN record after the owner confirmed with an OTP. Kept in memory only:
+   * never written to the device draft. "phoneVerified" now means the customer proved who they are
+   * (BVN OTP to the phone linked to their BVN), not that the typed phone number was texted.
+   */
+  private readonly _bvnIdentity = signal<BvnIdentity | null>(null);
+  readonly bvnIdentity = this._bvnIdentity.asReadonly();
   readonly nin = computed(() => this.state().nin);
   readonly mandate = computed(() => this.state().mandate);
   readonly docs = computed(() => this.state().docs);
@@ -263,6 +271,10 @@ export class ApplicationStateService {
     this.state.update((s) => ({ ...s, profile }));
   }
 
+  setBvnIdentity(identity: BvnIdentity | null): void {
+    this._bvnIdentity.set(identity);
+  }
+
   setBvn(bvn: BvnDraft): void {
     this.state.update((s) => ({ ...s, bvn }));
   }
@@ -306,6 +318,7 @@ export class ApplicationStateService {
   }
 
   reset(): void {
+    this._bvnIdentity.set(null);
     this.state.set(empty);
   }
 }

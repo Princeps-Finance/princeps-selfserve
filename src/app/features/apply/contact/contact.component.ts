@@ -93,14 +93,14 @@ export class ContactComponent {
     this.submitting.set(true);
     try {
       // Nothing about the customer is looked up here: who is (or is not) a customer is only
-      // revealed after the phone number is verified, so this screen cannot be used to probe.
+      // revealed after the BVN owner confirms with an OTP, so this screen cannot be used to probe.
       this.state.setContact({ phone, email });
       this.state.setConsent({
         version: PRIVACY_NOTICE_VERSION,
         acceptedAt: new Date().toISOString(),
         language: this.lang.lang(),
       });
-      await this.router.navigateByUrl('/apply/verify');
+      await this.router.navigateByUrl('/apply/bvn');
     } catch {
       this.serverError.set(this.lang.t('step.contact.error.generic'));
     } finally {

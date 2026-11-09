@@ -1,0 +1,44 @@
+<section class="step">
+  <app-wizard-progress [current]="4" [total]="5" [label]="'step.statement.eyebrow' | t" />
+
+  <header class="head">
+    <h1 class="title">{{ 'step.statement.title' | t }}</h1>
+    <p class="subtitle">{{ 'step.statement.subtitle' | t }}</p>
+  </header>
+
+  <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="field">
+      <label class="label" for="employer">{{ 'step.statement.employer' | t }}</label>
+      <input id="employer" class="input" type="text" formControlName="employer" autocomplete="organization" [attr.aria-invalid]="invalid('employer')" />
+    </div>
+
+    <div class="field">
+      <label class="label" for="bank">{{ 'step.statement.bank' | t }}</label>
+      <app-select-field inputId="bank" [options]="bankOptions()" [title]="'step.statement.bank' | t" [searchable]="true" [invalid]="invalid('bankCode')" formControlName="bankCode" />
+    </div>
+
+    <div class="field">
+      <label class="label" for="statement-file">{{ 'step.statement.file' | t }}</label>
+      <label class="drop" [class.has-file]="file()" [class.is-invalid]="fileError()" for="statement-file">
+        <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path d="M10 13V4M10 4L6.5 7.5M10 4L13.5 7.5M4 14v1.5A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5V14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span class="drop-text">{{ file() ? file()!.name : ('step.statement.choose' | t) }}</span>
+      </label>
+      <input id="statement-file" class="file" type="file" accept="application/pdf,.pdf" (change)="onFile($event)" [attr.aria-invalid]="fileError() ? true : null" aria-describedby="statement-hint" />
+      @if (fileError(); as e) {
+        <p class="msg msg--error" role="alert">{{ 'step.statement.error.' + e | t }}</p>
+      } @else {
+        <p class="msg" id="statement-hint">{{ 'step.statement.hint' | t }}</p>
+      }
+    </div>
+
+    @if (failed()) {
+      <p class="msg msg--error" role="alert">{{ 'step.statement.error.send' | t }}</p>
+    }
+
+    <button type="submit" class="cta" [disabled]="submitting()">
+      <span>{{ submitting() ? ('step.statement.sending' | t) : ('step.statement.send' | t) }}</span>
+    </button>
+  </form>
+</section>

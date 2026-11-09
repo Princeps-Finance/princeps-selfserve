@@ -52,6 +52,10 @@ response keys.
 | --- | --- | --- |
 | `/api/selfserve/send-otp` | `{phone}` | `{target, expiresInSeconds}` (masked target) |
 | `/api/selfserve/verify-otp` | `{phone, code}` | `{status:'ok', token}` / `{status:'wrong'\|'expired'}` / `{status:'locked', retryAfterSeconds}` |
+| `/api/selfserve/send-bvn-otp` | `{bvn}` | `{status:'sent', target, expiresInSeconds}` (masked phone **linked to the BVN**) / `{status:'not-found'}`. Sent by Princeps to the BVN's own phone, never to a number the customer typed. |
+| `/api/selfserve/verify-bvn-otp` | `{bvn, code}` | `{status:'ok', token, identity:{fullName, dateOfBirth, state?, lga?, street?}}` / `{status:'wrong'\|'expired'}` / `{status:'locked', retryAfterSeconds}`. **Never return the BVN photo to the browser**; keep it server-side for face match against the selfie. Name and date of birth are shown read-only and become the application's identity. |
+| `/api/selfserve/lgas` | `{state}` | `{lgas: string[]}` for that state. Empty list = the customer types the LGA. |
+| `/api/selfserve/statement-review` | `{contact, bvn, employer, bankCode, fileName, sizeBytes}` (token required) | `{status:'received', referenceId}`. Private-sector applicants are not auto-scored: a person reviews the statement. The PDF upload itself still needs the real upload endpoint. |
 | `/api/selfserve/lookup-contact` *(token required)* | `{phone, email}` | `{kind:'new'}` or `{kind:'returning', profileHint, snapshot}`. Called **after** OTP, so who is a customer is never revealed before the phone is verified |
 | `/api/selfserve/banks` | `{}` | `{banks:[{code,name}]}` |
 | `/api/selfserve/verify-salary` *(token)* | `{channel, bankCode, accountNumber, fullName, ippisNumber?, employer?}` | `{status:'ok', monthlyIncome, accountName}` / `{status:'name-mismatch'\|'not-found'\|'service-down'}`. The account name must match `fullName` |
@@ -114,3 +118,10 @@ These come from thinking like someone using stolen details. The browser cannot e
   biometrics are collected. Vercel functions cap request bodies at about 4.5 MB, so uploads must go direct to storage.
 - **USSD channel (planned):** it should call the same Caltos eligibility and product services, which is another
   reason eligibility must live in Caltos rather than the browser.
+
+## Sign-in order (changed)
+
+Contact (phone, email, privacy consent) → **BVN** → OTP sent to the phone linked to the BVN → details released
+and pre-filled. The typed phone number is a contact number only and is not texted. `send-otp` / `verify-otp`
+(phone) remain in the API but the app no longer calls them. Customer lookup (resume / returning customer) runs after
+the BVN OTP, as it did after the phone OTP.

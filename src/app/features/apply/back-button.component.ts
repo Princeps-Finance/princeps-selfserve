@@ -7,18 +7,19 @@ import { productById } from '../../core/products/products';
 const BACK_MAP: Record<string, string> = {
   '/apply/welcome': '/',
   '/apply/contact': '/apply/welcome',
-  '/apply/verify': '/apply/contact',
+  '/apply/bvn': '/apply/contact',
+  '/apply/verify': '/apply/bvn',
   '/apply/saved': '/apply/contact',
   '/apply/resume': '/apply/contact',
-  '/apply/profile': '/apply/contact',
+  '/apply/profile': '/apply/bvn',
   '/apply/employment': '/apply/profile',
   '/apply/waitlist': '/apply/employment',
   '/apply/salary': '/apply/employment',
   '/apply/eligibility': '/apply/salary',
   '/apply/offers': '/apply/salary',
   '/apply/terms': '/apply/offers',
-  '/apply/bvn': '/apply/terms',
-  '/apply/nin': '/apply/bvn',
+  '/apply/nin': '/apply/terms',
+  '/apply/statement': '/apply/employment',
   '/apply/verify-identity': '/apply/documents',
   '/apply/mandate': '/apply/verify-identity',
   '/apply/submit': '/apply/mandate',
@@ -72,7 +73,7 @@ export class BackButtonComponent {
     let target = BACK_MAP[here] ?? '/apply/welcome';
     if (here === '/apply/documents') {
       const needsNin = productById(this.state.offer()?.productId ?? '')?.settings.requiresNin ?? false;
-      target = needsNin ? '/apply/nin' : '/apply/bvn';
+      target = needsNin ? '/apply/nin' : '/apply/terms';
     }
     void this.router.navigateByUrl(target);
   }

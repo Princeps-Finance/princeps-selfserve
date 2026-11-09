@@ -26,6 +26,8 @@ export class StatusComponent {
   readonly offices = OFFICES;
   readonly trackUrl = environment.customerModuleUrl;
   readonly copied = signal(false);
+  /** Private-sector applicants get a person-led bank statement review, not the scored loan path. */
+  readonly isReview = this.state.employment()?.type === 'private-sector';
   readonly telHref = (phone: string): string => `tel:${phone.replace(/\s+/g, '')}`;
   readonly reference = computed(() => this.submission().referenceId ?? '');
 

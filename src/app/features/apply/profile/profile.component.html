@@ -7,47 +7,59 @@
   </header>
 
   <form class="form" [formGroup]="form" (ngSubmit)="continue()" novalidate>
-    <div class="field">
-      <label class="label" for="name">{{ 'step.profile.name.label' | t }}</label>
-      <input id="name" [attr.aria-invalid]="invalid('fullName')" class="input" type="text" formControlName="fullName" autocomplete="name" />
-      <p class="msg">{{ 'step.profile.name.hint' | t }}</p>
-    </div>
+    @if (identity) {
+      <div class="locked">
+        <dl class="locked-list">
+          <div>
+            <dt>{{ 'step.profile.name.label' | t }}</dt>
+            <dd>{{ form.controls.fullName.value }}</dd>
+          </div>
+          <div>
+            <dt>{{ 'step.profile.dob.label' | t }}</dt>
+            <dd>{{ dobText() }}</dd>
+          </div>
+        </dl>
+        <p class="locked-note">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="4" y="9" width="12" height="8" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9" stroke="currentColor" stroke-width="1.6"/></svg>
+          {{ 'step.profile.fromBvn' | t }}
+          <a class="link" href="/apply/bvn" (click)="$event.preventDefault(); notMe()">{{ 'step.profile.notMe' | t }}</a>
+        </p>
+      </div>
+    } @else {
+      <div class="field">
+        <label class="label" for="name">{{ 'step.profile.name.label' | t }}</label>
+        <input id="name" [attr.aria-invalid]="invalid('fullName')" class="input" type="text" formControlName="fullName" autocomplete="name" />
+        <p class="msg">{{ 'step.profile.name.hint' | t }}</p>
+      </div>
 
-    <div class="field">
-      <label class="label" for="dob">{{ 'step.profile.dob.label' | t }}</label>
-      <input id="dob" [attr.aria-invalid]="invalid('dateOfBirth')" class="input" type="date" formControlName="dateOfBirth" />
-    </div>
+      <div class="field">
+        <span class="label" id="dob-label">{{ 'step.profile.dob.label' | t }}</span>
+        <app-dob-field inputId="dob" labelId="dob-label" [invalid]="invalid('dateOfBirth')" formControlName="dateOfBirth" />
+      </div>
+    }
 
     <div class="field">
       <label class="label" for="street">{{ 'step.profile.address.label' | t }}</label>
       <input id="street" [attr.aria-invalid]="invalid('street')" class="input" type="text" formControlName="street" autocomplete="street-address" />
     </div>
 
-    <div class="row">
-      <div class="field">
-        <label class="label" for="state">{{ 'step.profile.state.label' | t }}</label>
-        <select id="state" [attr.aria-invalid]="invalid('stateName')" class="input" formControlName="stateName">
-          <option value="" disabled>—</option>
-          @for (s of states; track s) {
-            <option [value]="s">{{ s }}</option>
-          }
-        </select>
-      </div>
+    <div class="field">
+      <label class="label" for="state">{{ 'step.profile.state.label' | t }}</label>
+      <app-select-field inputId="state" [options]="stateOptions" [title]="'step.profile.state.label' | t" [searchable]="true" [invalid]="invalid('stateName')" formControlName="stateName" />
+    </div>
 
-      <div class="field">
-        <label class="label" for="lga">{{ 'step.profile.lga.label' | t }}</label>
+    <div class="field">
+      <label class="label" for="lga">{{ 'step.profile.lga.label' | t }}</label>
+      @if (lgas().length) {
+        <app-select-field inputId="lga" [options]="lgaOptions()" [title]="'step.profile.lga.label' | t" [searchable]="true" [invalid]="invalid('lga')" formControlName="lga" />
+      } @else {
         <input id="lga" [attr.aria-invalid]="invalid('lga')" class="input" type="text" formControlName="lga" />
-      </div>
+      }
     </div>
 
     <div class="field">
       <label class="label" for="rel">{{ 'step.profile.relationship.label' | t }}</label>
-      <select id="rel" class="input" formControlName="relationshipStatus">
-        <option value="single">{{ 'step.profile.relationship.single' | t }}</option>
-        <option value="married">{{ 'step.profile.relationship.married' | t }}</option>
-        <option value="divorced">{{ 'step.profile.relationship.divorced' | t }}</option>
-        <option value="widowed">{{ 'step.profile.relationship.widowed' | t }}</option>
-      </select>
+      <app-select-field inputId="rel" [options]="relationshipOptions()" [title]="'step.profile.relationship.label' | t" formControlName="relationshipStatus" />
     </div>
 
     @if (attempted() && !canContinue()) {

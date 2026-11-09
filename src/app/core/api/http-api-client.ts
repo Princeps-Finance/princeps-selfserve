@@ -2,6 +2,9 @@ import { Injectable } from '@angular/core';
 import {
   ApiClient,
   Bank,
+  BvnOtpSendResult,
+  BvnOtpVerifyResult,
+  BvnIdentity,
   BvnVerifyResult,
   DocUploadInput,
   DocUploadResult,
@@ -11,6 +14,7 @@ import {
   NG_BANKS,
   SalaryVerifyInput,
   SalaryVerifyResult,
+  StatementReviewInput,
   SubmitPayload,
   SubmitResult,
   WaitlistInput,
@@ -74,6 +78,56 @@ export class HttpApiClient implements ApiClient {
 
   lookupContact(input: { phone: string; email: string }): Promise<LookupResult> {
     return this.op<LookupResult>('lookup-contact', input);
+  }
+
+  async submitStatementReview(input: StatementReviewInput): Promise<SubmitResult> {
+    const r = await this.op<{ status?: string; referenceId?: string }>('statement-review', input);
+    if (r.status !== 'received' || typeof r.referenceId !== 'string') throw new ApiUnavailableError('statement-review', 502);
+    return { status: 'received', referenceId: r.referenceId };
+  }
+
+  async sendBvnOtp(bvn: string, captchaToken?: string): Promise<BvnOtpSendResult> {
+    const r = await this.op<{ status?: string; target?: string; expiresInSeconds?: number }>(
+      'send-bvn-otp',
+      captchaToken ? { bvn, captchaToken } : { bvn },
+    );
+    if (r.status === 'not-found') return { status: 'not-found' };
+    if (typeof r.target !== 'string') throw new ApiUnavailableError('send-bvn-otp', 502);
+    return { status: 'sent', target: r.target, expiresInSeconds: r.expiresInSeconds ?? 300 };
+  }
+
+  async verifyBvnOtp(bvn: string, code: string): Promise<BvnOtpVerifyResult> {
+    const r = await this.post<{ status: string; retryAfterSeconds?: number; token?: string; identity?: BvnIdentity }>(
+      '/api/selfserve/verify-bvn-otp',
+      { bvn, code },
+    );
+    if (r.status === 429) return { status: 'locked', retryAfterSeconds: 60 };
+    if (!r.ok || !r.data) throw new ApiUnavailableError('verify-bvn-otp', r.status);
+    switch (r.data.status) {
+      case 'ok': {
+        // Fail closed: no token or no identity means the backoffice did not confirm ownership.
+        if (typeof r.data.token !== 'string' || !r.data.identity || typeof r.data.identity.fullName !== 'string') {
+          throw new ApiUnavailableError('verify-bvn-otp', 502);
+        }
+        this.token = r.data.token;
+        return { status: 'ok', identity: r.data.identity };
+      }
+      case 'expired':
+        return { status: 'expired' };
+      case 'locked':
+        return { status: 'locked', retryAfterSeconds: r.data.retryAfterSeconds ?? 60 };
+      default:
+        return { status: 'wrong' };
+    }
+  }
+
+  async getLgas(state: string): Promise<string[]> {
+    try {
+      const r = await this.op<{ lgas: string[] }>('lgas', { state });
+      return Array.isArray(r.lgas) ? r.lgas.filter((x) => typeof x === 'string') : [];
+    } catch {
+      return []; // The user can type it.
+    }
   }
 
   sendPhoneOtp(phone: string, captchaToken?: string): Promise<{ target: string; expiresInSeconds: number }> {
