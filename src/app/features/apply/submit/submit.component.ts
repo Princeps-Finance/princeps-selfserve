@@ -6,6 +6,8 @@ import { API_CLIENT } from '../../../core/api/api-client';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { formatNaira } from '../../../core/money.util';
 import { APP_VERSION } from '../../../core/app-version';
+import { LangService } from '../../../core/i18n/lang.service';
+import { DraftService } from '../../../core/application/draft.service';
 import { ToastService } from '../../../core/toast/toast.service';
 
 function isLoanEmployment(t: string): t is 'government' | 'paramilitary' | 'corper' {
@@ -24,6 +26,8 @@ export class SubmitComponent {
   private readonly state = inject(ApplicationStateService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  private readonly drafts = inject(DraftService);
+  private readonly lang = inject(LangService);
 
   readonly contact = this.state.contact;
   readonly employment = this.state.employment;
@@ -64,6 +68,8 @@ export class SubmitComponent {
       const bvnDraft = this.state.bvn()!;
       const bvn = bvnDraft.value;
       const salary = this.state.salary();
+      const consent = this.state.consent();
+      if (!consent) throw new Error('consent missing');
       const profile = this.state.profile();
 
       if (!salary || !isLoanEmployment(employment.type)) throw new Error('incomplete application');
@@ -77,6 +83,10 @@ export class SubmitComponent {
         loan: {
           productId: offer.productId,
           appVersion: APP_VERSION,
+          consentVersion: consent.version,
+          consentAt: consent.acceptedAt,
+          manualReview: this.state.eligibility()?.decision === 'review',
+          mandateReference: this.state.mandate()?.reference ?? null,
           borrowerBvn: bvn,
           borrowerName: profile?.fullName ?? bvnDraft.matchedName ?? 'Unknown',
           borrowerPhone: contact.phone,
@@ -93,22 +103,13 @@ export class SubmitComponent {
           employer: salary.paramilitaryEmployer ?? null,
         },
       });
-      const submittedAt = new Date().toISOString();
-      if (res.status === 'approved') {
-        this.state.setSubmission({ status: 'approved', submittedAt, referenceId: res.referenceId });
-      } else if (res.status === 'review') {
-        this.state.setSubmission({
-          status: 'review', submittedAt, referenceId: res.referenceId, reason: String(res.etaHours),
-        });
-      } else if (res.status === 'declined') {
-        this.state.setSubmission({
-          status: 'declined', submittedAt, referenceId: res.referenceId, reason: res.reason,
-        });
-      } else {
-        this.state.setSubmission({
-          status: 'disbursement-pending', submittedAt, referenceId: res.referenceId,
-        });
-      }
+      this.state.setSubmission({
+        status: 'received',
+        submittedAt: new Date().toISOString(),
+        referenceId: res.referenceId,
+        manualReview: this.state.eligibility()?.decision === 'review',
+      });
+      this.drafts.clear();
       // The photo and video were only needed for review; drop them from memory.
       this.state.setIdentityVerification(null);
       await this.router.navigateByUrl('/apply/status');
@@ -116,7 +117,7 @@ export class SubmitComponent {
       // Never invent an outcome: tell the user it did not go through and let them retry.
       this.state.setSubmission({ status: 'idle' });
       this.failed.set(true);
-      this.toast.error('Your application was not submitted. Check your connection and try again.');
+      this.toast.error(this.lang.t('submit.error.failed'));
     } finally {
       this.submitting.set(false);
     }

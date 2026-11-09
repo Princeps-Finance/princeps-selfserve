@@ -1,5 +1,5 @@
 <section class="step">
-  <app-wizard-progress [current]="8" [total]="14" [label]="'step.eligibility.eyebrow' | t" />
+  <app-wizard-progress [current]="6" [total]="14" [label]="'step.eligibility.eyebrow' | t" />
 
   @if (phase() === 'checking') {
     <header class="head">
@@ -7,28 +7,31 @@
       <p class="subtitle">{{ 'step.eligibility.subtitle' | t }}</p>
     </header>
     <div class="spinner" aria-hidden="true"></div>
-  } @else if (phase() === 'review') {
-    <header class="head">
-      <h1 class="title">{{ 'step.eligibility.review.title' | t }}</h1>
-      <p class="subtitle">{{ 'step.eligibility.review.body' | t }}</p>
-    </header>
-    <button type="button" class="cta" (click)="home()">
-      <span>{{ 'status.done' | t }}</span>
-    </button>
   } @else {
     <header class="head">
       <h1 class="title">{{ 'step.eligibility.declined.title' | t }}</h1>
       <p class="subtitle">{{ 'step.eligibility.declined.body' | t }}</p>
     </header>
-    @if (reasons().length) {
+
+    @if (reasonCodes().length) {
       <ul class="reasons">
-        @for (r of reasons(); track r) {
-          <li>{{ r }}</li>
+        @for (r of reasonCodes(); track r.code) {
+          <li>{{ 'reason.' + r.code | t: r.params }}</li>
         }
       </ul>
     }
-    <button type="button" class="cta" (click)="home()">
-      <span>{{ 'step.eligibility.declined.support' | t }}</span>
-    </button>
+
+    <h2 class="next-title">{{ 'step.eligibility.declined.next' | t }}</h2>
+    <div class="next">
+      <button type="button" class="next-action" (click)="editDetails()">
+        <span>{{ 'step.eligibility.declined.edit' | t }}</span>
+      </button>
+      <a class="next-action" [attr.href]="whatsapp" target="_blank" rel="noopener">
+        <span>{{ 'step.eligibility.declined.whatsapp' | t }}</span>
+      </a>
+      <a class="next-action" [attr.href]="tel">
+        <span>{{ 'step.eligibility.declined.call' | t }}</span>
+      </a>
+    </div>
   }
 </section>

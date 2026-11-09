@@ -1,5 +1,5 @@
 <section class="step">
-  <app-wizard-progress [current]="6" [total]="14" [label]="'step.nin.eyebrow' | t" />
+  <app-wizard-progress [current]="10" [total]="14" [label]="'step.nin.eyebrow' | t" />
 
   <header class="head">
     <h1 class="title">{{ 'step.nin.title' | t }}</h1>
@@ -32,7 +32,7 @@
       <p class="server-error" role="alert">
         {{ key | t }}
         @if (serverError() === 'name-mismatch') {
-          <br /><a class="link" href="#">{{ 'step.nin.support' | t }}</a>
+          <br /><a class="link" [attr.href]="support" target="_blank" rel="noopener">{{ 'step.nin.support' | t }}</a>
         }
       </p>
     }

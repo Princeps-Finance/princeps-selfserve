@@ -14,6 +14,19 @@ export type PricingEmployment =
 export type PricingChannel = 'remita' | 'ippis' | 'dedukt';
 export type InterestModel = 'Flat Rate' | 'Reducing Balance' | 'Percentage Based';
 
+export type MandateMode = 'authorize' | 'link';
+export type IdentityVideoMode = 'none' | 'record' | 'upload' | 'either';
+
+/** Per-product journey settings. In production these come from Caltos. */
+export interface ProductSettings {
+  /** 'authorize' = tick-box mandate; 'link' = a link the customer completes. */
+  mandate: MandateMode;
+  /** How the identity video is provided. */
+  identityVideo: IdentityVideoMode;
+  /** NIN is not required for every product. */
+  requiresNin: boolean;
+}
+
 export interface PricingProduct {
   id: string;
   channel: PricingChannel;
@@ -22,6 +35,11 @@ export interface PricingProduct {
   interestModel: InterestModel;
   minAmount: number;
   maxAmount: number;
+  /** Smallest change the customer can make to the amount. */
+  amountStep: number;
+  minTenorMonths: number;
+  maxTenorMonths: number;
+  settings: ProductSettings;
   fees: { name: string; percent?: number; flat?: number }[];
 }
 
@@ -37,6 +55,10 @@ export const PRICING_PRODUCTS: readonly PricingProduct[] = [
     interestModel: 'Reducing Balance',
     minAmount: 50_000,
     maxAmount: 300_000,
+    amountStep: 5_000,
+    minTenorMonths: 3,
+    maxTenorMonths: 12,
+    settings: { mandate: 'authorize', identityVideo: 'record', requiresNin: false },
     fees: [
       { name: 'Management fee', percent: 1 },
       { name: 'Insurance', percent: 0.5 },
@@ -50,6 +72,10 @@ export const PRICING_PRODUCTS: readonly PricingProduct[] = [
     interestModel: 'Flat Rate',
     minAmount: 100_000,
     maxAmount: 300_000,
+    amountStep: 5_000,
+    minTenorMonths: 3,
+    maxTenorMonths: 12,
+    settings: { mandate: 'link', identityVideo: 'either', requiresNin: false },
     fees: [{ name: 'Processing fee', percent: 2 }],
   },
   {
@@ -60,6 +86,10 @@ export const PRICING_PRODUCTS: readonly PricingProduct[] = [
     interestModel: 'Flat Rate',
     minAmount: 50_000,
     maxAmount: 300_000,
+    amountStep: 5_000,
+    minTenorMonths: 3,
+    maxTenorMonths: 12,
+    settings: { mandate: 'authorize', identityVideo: 'record', requiresNin: true },
     fees: [
       { name: 'Management fee', percent: 1 },
       { name: 'Insurance', flat: 2_000 },
@@ -73,6 +103,10 @@ export const PRICING_PRODUCTS: readonly PricingProduct[] = [
     interestModel: 'Flat Rate',
     minAmount: 30_000,
     maxAmount: 300_000,
+    amountStep: 1_000,
+    minTenorMonths: 3,
+    maxTenorMonths: 11,
+    settings: { mandate: 'link', identityVideo: 'record', requiresNin: true },
     fees: [{ name: 'Processing fee', flat: 1_500 }],
   },
 ];
@@ -105,4 +139,54 @@ export function calcProductFees(
     name: f.name,
     amount: Math.round(f.percent ? (amount * f.percent) / 100 : (f.flat ?? 0)),
   }));
+}
+
+export interface LoanQuote {
+  amount: number;
+  tenorMonths: number;
+  monthly: number;
+  totalRepayment: number;
+  fees: { name: string; amount: number }[];
+  totalFees: number;
+  /** Interest plus fees: what the loan costs on top of the amount borrowed. */
+  costOfCredit: number;
+}
+
+export function quoteLoan(
+  product: PricingProduct,
+  amount: number,
+  tenorMonths: number,
+): LoanQuote {
+  const monthly = estimateMonthlyRepayment(amount, tenorMonths, product.ratePercent, product.interestModel);
+  const fees = calcProductFees(product, amount);
+  const totalFees = fees.reduce((sum, f) => sum + f.amount, 0);
+  const totalRepayment = monthly * tenorMonths;
+  return {
+    amount,
+    tenorMonths,
+    monthly,
+    totalRepayment,
+    fees,
+    totalFees,
+    costOfCredit: totalRepayment - amount + totalFees,
+  };
+}
+
+/** Limits a customer may choose within, given what they were found eligible for. */
+export function offerLimits(
+  product: PricingProduct,
+  eligible: { maxAmount: number; maxTenorMonths: number },
+): { minAmount: number; maxAmount: number; minTenor: number; maxTenor: number } | null {
+  const step = product.amountStep;
+  const maxAmount = Math.floor(Math.min(eligible.maxAmount, product.maxAmount) / step) * step;
+  const maxTenor = Math.min(eligible.maxTenorMonths, product.maxTenorMonths);
+  if (maxAmount < product.minAmount || maxTenor < product.minTenorMonths) return null;
+  return { minAmount: product.minAmount, maxAmount, minTenor: product.minTenorMonths, maxTenor };
+}
+
+/** Rounds to the product step and keeps the amount inside the allowed range. */
+export function clampAmount(product: PricingProduct, amount: number, limits: { minAmount: number; maxAmount: number }): number {
+  const step = product.amountStep;
+  const rounded = Math.round(amount / step) * step;
+  return Math.min(limits.maxAmount, Math.max(limits.minAmount, rounded));
 }

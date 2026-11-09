@@ -46,13 +46,8 @@ export class ProfileComponent {
   });
 
   readonly submitting = signal(false);
-  readonly prefilledFromBvn = signal(false);
 
   constructor() {
-    if (!this.state.nin()?.verified) {
-      void this.router.navigateByUrl('/apply/nin');
-      return;
-    }
     const saved = this.state.profile();
     if (saved) {
       this.form.patchValue({
@@ -65,17 +60,6 @@ export class ProfileComponent {
         religion: saved.religion ?? '',
       });
       return;
-    }
-    const bvn = this.state.bvn();
-    if (bvn?.verified) {
-      this.form.patchValue({
-        fullName: bvn.matchedName ?? '',
-        dateOfBirth: bvn.dateOfBirth ?? '',
-        street: bvn.address?.street ?? '',
-        stateName: bvn.address?.state ?? '',
-        lga: bvn.address?.lga ?? '',
-      });
-      this.prefilledFromBvn.set(true);
     }
   }
 
@@ -96,6 +80,6 @@ export class ProfileComponent {
       relationshipStatus: v.relationshipStatus,
       religion: v.religion.trim() || undefined,
     });
-    void this.router.navigateByUrl('/apply/eligibility');
+    void this.router.navigateByUrl('/apply/employment');
   }
 }

@@ -13,6 +13,9 @@ import { Router } from '@angular/router';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
+import { LangService } from '../../../core/i18n/lang.service';
+import { productById } from '../../../core/products/products';
+import { whatsappLink } from '../../../core/support';
 import { ToastService } from '../../../core/toast/toast.service';
 import { formatNaira } from '../../../core/money.util';
 
@@ -30,6 +33,8 @@ export class VerifyIdentityComponent implements OnDestroy {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly lang = inject(LangService);
+  readonly helpLink = whatsappLink('Hello Princeps, I cannot complete the identity check and need help.');
 
   readonly formatNaira = formatNaira;
   readonly offer = this.state.offer;
@@ -55,16 +60,63 @@ export class VerifyIdentityComponent implements OnDestroy {
 
   readonly attempted = signal(false);
 
+  /** How the product wants the video provided. */
+  private readonly videoMode = computed(
+    () => productById(this.offer()?.productId ?? '')?.settings.identityVideo ?? 'record',
+  );
+  readonly canRecord = computed(() => this.videoMode() === 'record' || this.videoMode() === 'either');
+  readonly canUpload = computed(() => this.videoMode() === 'upload' || this.videoMode() === 'either');
+
+  private offerKey(): string {
+    const o = this.offer();
+    return o ? `${o.productId}|${o.amount}|${o.tenorMonths}|${o.monthlyRepayment}` : '';
+  }
+
+  /** Upload path: for products that allow a video file, or when recording is not possible. */
+  onVideoFile(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    if (file.size > 25 * 1024 * 1024) {
+      this.toast.error(this.lang.t('step.verify.upload.toolarge'));
+      return;
+    }
+    this.checkingVideo.set(true);
+    const prev = this.videoPreviewUrl();
+    if (prev) URL.revokeObjectURL(prev);
+    this.videoPreviewUrl.set(URL.createObjectURL(file));
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.checkingVideo.set(false);
+      this.videoDataUrl.set(reader.result as string);
+      this.cdr.markForCheck();
+      this.toast.success(this.lang.t('toast.video'));
+    };
+    reader.onerror = () => {
+      this.checkingVideo.set(false);
+      this.toast.error(this.lang.t('toast.video.error'));
+      this.cdr.markForCheck();
+    };
+    reader.readAsDataURL(file);
+  }
+
   readonly canContinue = computed(() =>
     this.facePhoto() !== null && this.videoDataUrl() !== null,
   );
 
   constructor() {
-    if (!this.state.mandate()?.authorized) {
-      void this.router.navigateByUrl('/apply/mandate');
+    const docs = this.state.docs();
+    if (docs.length === 0 || !docs.every((d) => d.status === 'uploaded')) {
+      void this.router.navigateByUrl('/apply/documents');
       return;
     }
-    const existing = this.state.identityVerification();
+    let existing = this.state.identityVerification();
+    // The video states the amount and repayment. If the offer changed since, record it again.
+    if (existing && existing.offerKey !== this.offerKey()) {
+      this.state.setIdentityVerification(null);
+      existing = null;
+    }
     if (existing) {
       this.facePhoto.set(existing.facePhotoDataUrl);
       this.videoDataUrl.set(existing.videoDataUrl);
@@ -90,9 +142,7 @@ export class VerifyIdentityComponent implements OnDestroy {
       });
     } catch {
       this.cameraError.set(
-        withAudio
-          ? 'Camera and microphone access is needed. Please allow both and try again.'
-          : 'Camera access is needed. Please allow it and try again.',
+        this.lang.t(withAudio ? 'camera.error.av' : 'camera.error.v'),
       );
     }
   }
@@ -111,7 +161,7 @@ export class VerifyIdentityComponent implements OnDestroy {
     const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
     this.facePhoto.set(dataUrl);
     this.stopStream();
-    this.toast.success('Photo captured');
+    this.toast.success(this.lang.t('toast.photo'));
   }
 
   retakePhoto(): void {
@@ -166,11 +216,11 @@ export class VerifyIdentityComponent implements OnDestroy {
       this.checkingVideo.set(false);
       this.videoDataUrl.set(reader.result as string);
       this.cdr.markForCheck();
-      this.toast.success('Video captured');
+      this.toast.success(this.lang.t('toast.video'));
     };
     reader.onerror = () => {
       this.checkingVideo.set(false);
-      this.toast.error('Could not save the video. Please try again.');
+      this.toast.error(this.lang.t('toast.video.error'));
       this.cdr.markForCheck();
     };
     reader.readAsDataURL(blob);
@@ -196,9 +246,10 @@ export class VerifyIdentityComponent implements OnDestroy {
       facePhotoDataUrl: this.facePhoto()!,
       videoDataUrl: this.videoDataUrl()!,
       capturedAt: new Date().toISOString(),
+      offerKey: this.offerKey(),
     });
-    this.toast.success('Identity verification saved');
-    void this.router.navigateByUrl('/apply/submit');
+    this.toast.success(this.lang.t('toast.identity.saved'));
+    void this.router.navigateByUrl('/apply/mandate');
   }
 
   private stopStream(): void {

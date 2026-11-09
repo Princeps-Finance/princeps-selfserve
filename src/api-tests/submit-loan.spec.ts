@@ -9,6 +9,10 @@ function valid(overrides: Record<string, unknown> = {}) {
   return {
     productId: 'ippis-standard',
     appVersion: '0.1.0',
+    consentVersion: '2026-11-1',
+    consentAt: '2026-11-09T10:00:00.000Z',
+    manualReview: false,
+    mandateReference: null,
     borrowerBvn: '12345678901',
     borrowerName: 'Ada Obi',
     borrowerPhone: '+2348031112233',
@@ -75,6 +79,8 @@ describe('POST /api/submit-loan', () => {
     const sent = JSON.parse(init.body);
     expect(sent.productId).toBeUndefined();
     expect(sent.appVersion).toBe('0.1.0');
+    expect(sent.consentVersion).toBe('2026-11-1');
+    expect(sent.manualReview).toBe(false);
     expect(sent.ratePercent).toBe(5);
     expect(sent.feesKobo).toBe(4_000 * 100);
   });
@@ -111,6 +117,8 @@ describe('POST /api/submit-loan', () => {
     expect((await handler(req(valid({ tenorMonths: 0 })))).status).toBe(400);
     expect((await handler(req(valid({ isAdmin: true })))).status).toBe(400);
     expect((await handler(req(valid({ appVersion: 'latest' })))).status).toBe(400);
+    expect((await handler(req(valid({ consentAt: 'yesterday' })))).status).toBe(400);
+    expect((await handler(req(valid({ mandateReference: 'bad ref!' })))).status).toBe(400);
     expect((await handler(req(null, { raw: '{not json' }))).status).toBe(400);
     expect((await handler(req(valid({ borrowerName: 'x'.repeat(9_000) })))).status).toBe(413);
   });

@@ -7,7 +7,7 @@ import { ApplicationStateService } from './core/application/application-state.se
 const applyRoute = routes.find((r) => r.path === 'apply') as Route;
 const child = (path: string) => applyRoute.children!.find((r) => r.path === path) as Route;
 
-describe('wizard route guards', () => {
+describe('wizard route guards (bio data → work → offer → loan documentation)', () => {
   let state: ApplicationStateService;
   let injector: EnvironmentInjector;
 
@@ -27,61 +27,101 @@ describe('wizard route guards', () => {
   }
 
   const PROTECTED = [
-    'verify', 'welcome-back', 'employment', 'waitlist', 'salary', 'bvn', 'nin', 'profile',
-    'eligibility', 'offers', 'terms', 'mandate', 'documents', 'verify-identity', 'submit', 'status',
+    'verify', 'resume', 'welcome-back', 'profile', 'employment', 'waitlist', 'salary', 'eligibility',
+    'offers', 'saved', 'terms', 'bvn', 'nin', 'documents', 'verify-identity', 'mandate', 'submit', 'status',
   ];
 
-  it('blocks every step beyond contact on a fresh session', () => {
+  const verified = () => {
+    state.setContact({ phone: '+2348031112233', email: 'a@b.co' });
+    state.markPhoneVerified();
+  };
+  const approve = (decision: 'approved' | 'review' | 'declined' = 'approved') =>
+    state.setEligibility({ score: 80, decision, maxEligibleAmount: 100_000, tenorMonths: 6, reasons: [] });
+
+  it('opens welcome and contact to anyone, and blocks everything else on a fresh session', () => {
+    expect(allows('welcome')).toBe(true);
     for (const path of PROTECTED) expect(allows(path), path).toBe(false);
   });
 
-  it('opens steps one at a time as their prerequisites are met', () => {
+  it('collects bio data first, then work details, then checks eligibility', () => {
     state.setContact({ phone: '+2348031112233', email: 'a@b.co' });
     expect(allows('verify')).toBe(true);
-    expect(allows('employment')).toBe(false);
-    expect(allows('waitlist')).toBe(false);
+    expect(allows('profile')).toBe(false);
 
     state.markPhoneVerified();
-    expect(allows('employment')).toBe(true);
+    expect(allows('profile')).toBe(true);
+    expect(allows('employment')).toBe(false); // needs bio data first
     expect(allows('waitlist')).toBe(true);
+
+    state.setProfile({} as never);
+    expect(allows('employment')).toBe(true);
     expect(allows('salary')).toBe(false);
 
     state.setEmployment({ type: 'government' });
     expect(allows('salary')).toBe(true);
-    expect(allows('bvn')).toBe(false);
+    expect(allows('eligibility')).toBe(false);
+
+    state.setSalary({} as never);
+    expect(allows('eligibility')).toBe(true);
   });
 
-  it('does not let a declined applicant reach offers, terms or mandate', () => {
-    state.setContact({ phone: '+2348031112233', email: 'a@b.co' });
-    state.markPhoneVerified();
+  it('asks for the documentation details only after an offer is chosen and the terms accepted', () => {
+    verified();
     state.setProfile({} as never);
-    state.setEligibility({ score: 10, decision: 'declined', maxEligibleAmount: 0, tenorMonths: 0, reasons: [] });
-    state.setOffer({} as never);
+    state.setEmployment({ type: 'government' });
+    state.setSalary({} as never);
+    approve();
+    expect(allows('offers')).toBe(true);
+    expect(allows('bvn')).toBe(false);
+    state.setOffer({ productId: 'ippis-advance' } as never);
+    expect(allows('terms')).toBe(true);
+    expect(allows('bvn')).toBe(false);
+    state.setTermsAccepted(new Date().toISOString());
+    expect(allows('bvn')).toBe(true);
+  });
+
+  it('lets a manual-review result continue (not a dead end) but never a decline', () => {
+    verified();
+    state.setSalary({} as never);
+    approve('declined');
+    state.setOffer({ productId: 'ippis-advance' } as never);
     expect(allows('offers')).toBe(false);
     expect(allows('terms')).toBe(false);
-    expect(allows('mandate')).toBe(false);
-
-    state.setEligibility({ score: 90, decision: 'approved', maxEligibleAmount: 100_000, tenorMonths: 6, reasons: [] });
+    approve('review');
     expect(allows('offers')).toBe(true);
     expect(allows('terms')).toBe(true);
   });
 
-  it('requires all documents before identity capture and submit', () => {
-    state.setMandate({ authorized: true } as never);
+  it('only asks for NIN when the chosen product needs it', () => {
+    state.setBvn({ value: '12345678901', verified: true });
+    state.setOffer({ productId: 'ippis-advance' } as never); // NIN not required
+    expect(allows('documents')).toBe(true);
+    state.setOffer({ productId: 'corper-allowee' } as never); // NIN required
+    expect(allows('documents')).toBe(false);
+    state.setNin({ value: '12345678901', verified: true });
+    expect(allows('documents')).toBe(true);
+  });
+
+  it('puts identity capture after documents, the mandate after identity, and submit last', () => {
+    state.setBvn({ value: '12345678901', verified: true });
+    state.setOffer({ productId: 'ippis-advance' } as never);
     state.setDocs([{ id: 'a', name: 'A', status: 'uploaded' }, { id: 'b', name: 'B', status: 'pending' }]);
     expect(allows('verify-identity')).toBe(false);
     state.setDocs([{ id: 'a', name: 'A', status: 'uploaded' }, { id: 'b', name: 'B', status: 'uploaded' }]);
     expect(allows('verify-identity')).toBe(true);
-    expect(allows('submit')).toBe(false);
+    expect(allows('mandate')).toBe(false);
     state.setIdentityVerification({ facePhotoDataUrl: 'x', videoDataUrl: 'y', capturedAt: 'z' });
+    expect(allows('mandate')).toBe(true);
+    expect(allows('submit')).toBe(false);
+    state.setMandate({ authorized: true } as never);
     expect(allows('submit')).toBe(true);
   });
 
-  it('only shows the status page after a submission outcome exists', () => {
+  it('only shows the status page after the application was received', () => {
     expect(allows('status')).toBe(false);
     state.setSubmission({ status: 'submitting' });
     expect(allows('status')).toBe(false);
-    state.setSubmission({ status: 'review', referenceId: 'R' });
+    state.setSubmission({ status: 'received', referenceId: 'R' });
     expect(allows('status')).toBe(true);
   });
 });

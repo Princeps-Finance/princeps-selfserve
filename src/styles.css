@@ -29,6 +29,7 @@ h1, h2, h3, h4 {
   font-family: var(--font-display);
   font-weight: 600;
   letter-spacing: -0.02em;
+  word-spacing: 0.08em; /* the display face sets words very tight; longer words and diacritics need air */
   color: var(--ink);
 }
 

@@ -1,5 +1,5 @@
 import { EmploymentType, SalaryChannel } from '../application/application-state.service';
-import { PRICING_PRODUCTS, calcProductFees } from '../../../shared/pricing';
+import { PRICING_PRODUCTS, PricingProduct, calcProductFees } from '../../../shared/pricing';
 
 export type RepaymentFrequency = 'monthly' | 'weekly' | 'bullet';
 
@@ -9,17 +9,9 @@ export interface ProductHero {
   glyph: string;
 }
 
-export interface Product {
-  id: string;
+export interface Product extends PricingProduct {
   name: string;
-  channel: SalaryChannel;
-  employmentTypes: EmploymentType[];
-  ratePercent: number;
-  interestModel: 'Flat Rate' | 'Reducing Balance' | 'Percentage Based';
   repaymentFrequency: RepaymentFrequency;
-  minAmount: number;
-  maxAmount: number;
-  fees: { name: string; percent?: number; flat?: number }[];
   hero: ProductHero;
 }
 

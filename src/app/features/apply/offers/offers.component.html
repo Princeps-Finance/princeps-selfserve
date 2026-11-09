@@ -1,79 +1,144 @@
 <section class="step">
-  <app-wizard-progress [current]="9" [total]="14" [label]="'step.offers.eyebrow' | t" />
+  <app-wizard-progress [current]="7" [total]="14" [label]="'step.offers.eyebrow' | t" />
 
   <header class="head">
     <h1 class="title">{{ 'step.offers.title' | t }}</h1>
-    <p class="subtitle">{{ 'step.offers.subtitle' | t }}</p>
+    <p class="subtitle">{{ 'step.offers.subtitle2' | t }}</p>
   </header>
+
+  @if (reviewRequired()) {
+    <p class="review-note" role="note">{{ 'step.eligibility.review.note' | t }}</p>
+  }
+
+  @if (ready() && offers().length === 0) {
+    <div class="none">
+      <h2 class="none-title">{{ 'step.offers.none.title' | t }}</h2>
+      <p class="none-body">{{ 'step.offers.none.body' | t }}</p>
+      <div class="none-actions">
+        <button type="button" class="alt" (click)="editDetails()">{{ 'step.eligibility.declined.edit' | t }}</button>
+        <a class="alt" [attr.href]="whatsapp" target="_blank" rel="noopener">{{ 'step.eligibility.declined.whatsapp' | t }}</a>
+        <a class="alt" [attr.href]="tel">{{ 'step.eligibility.declined.call' | t }}</a>
+      </div>
+    </div>
+  }
 
   <ul class="offers">
     @for (o of offers(); track o.product.id; let i = $index) {
       <li class="offer" [style.--i]="i">
-        <div
-          class="hero"
-          [style.background]="'linear-gradient(135deg, ' + o.product.hero.from + ' 0%, ' + o.product.hero.to + ' 100%)'"
-          aria-hidden="true"
-        >
-          <svg class="hero-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path [attr.d]="o.product.hero.glyph" />
-          </svg>
-          <span class="hero-badge">{{ o.product.ratePercent }}%</span>
+        <div class="offer-top">
+          <h2 class="offer-name">{{ o.product.name }}</h2>
+          <p class="offer-meta">
+            {{ o.product.ratePercent }}% · {{ modelKey(o.product.interestModel) | t }} · {{ frequencyKey(o.product.repaymentFrequency) | t }}
+          </p>
+          <p class="offer-range">
+            {{ 'step.offers.upto' | t: { amount: formatNaira(o.limits.maxAmount), months: o.limits.maxTenor } }}
+          </p>
         </div>
 
-        <div class="offer-body">
-          <div class="offer-head">
-            <h2 class="offer-name">{{ o.product.name }}</h2>
+        <div class="control">
+          <label class="control-label" [attr.for]="'amt-' + o.product.id">{{ 'step.offers.amount.edit' | t }}</label>
+          <div class="amount-row">
+            <button type="button" class="step-btn" [disabled]="o.amount <= o.limits.minAmount"
+              [attr.aria-label]="'step.offers.amount.decrease' | t" (click)="nudge(o, -1)">−</button>
+            <div class="amount-field">
+              <span class="currency" aria-hidden="true">₦</span>
+              <input
+                class="amount-input"
+                [id]="'amt-' + o.product.id"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                enterkeyhint="done"
+                [attr.aria-label]="'step.offers.amount.input' | t"
+                [attr.aria-describedby]="'amt-hint-' + o.product.id"
+                [value]="o.amount.toLocaleString('en-NG')"
+                (input)="onAmountInput(o, $event)"
+                (blur)="commitAmount(o, $event)"
+                (keydown.enter)="commitAmount(o, $event)"
+              />
+            </div>
+            <button type="button" class="step-btn" [disabled]="o.amount >= o.limits.maxAmount"
+              [attr.aria-label]="'step.offers.amount.increase' | t" (click)="nudge(o, 1)">+</button>
           </div>
+          <input
+            class="slider"
+            type="range"
+            [min]="o.limits.minAmount"
+            [max]="o.limits.maxAmount"
+            [step]="o.product.amountStep"
+            [value]="o.amount"
+            [attr.aria-label]="'step.offers.slider' | t"
+            [attr.aria-valuetext]="formatNaira(o.amount)"
+            (input)="onSlider(o, $event)"
+          />
+          <p class="hint" [id]="'amt-hint-' + o.product.id">
+            @if (adjusted()[o.product.id]; as a) {
+              <span role="status">{{ 'step.offers.amount.adjusted' | t: { amount: formatNaira(a) } }}</span>
+            } @else {
+              {{ 'step.offers.amount.range' | t: { min: formatNaira(o.limits.minAmount), max: formatNaira(o.limits.maxAmount) } }}
+            }
+          </p>
+        </div>
 
-          <dl class="offer-facts">
-            <div>
-              <dt>{{ 'step.offers.amount' | t }}</dt>
-              <dd class="big">{{ formatNaira(o.amount) }}</dd>
-            </div>
-            <div>
-              <dt>{{ 'step.offers.monthly' | t }}</dt>
-              <dd>{{ formatNaira(o.monthly) }}</dd>
-            </div>
-            <div>
-              <dt>{{ 'step.offers.rate' | t }}</dt>
-              <dd>{{ o.product.ratePercent }}%</dd>
-            </div>
-            <div>
-              <dt>{{ 'step.offers.interestType' | t }}</dt>
-              <dd class="soft">{{ modelKey(o.product.interestModel) | t }}</dd>
-            </div>
-            <div>
-              <dt>{{ 'step.offers.frequency' | t }}</dt>
-              <dd class="soft">{{ frequencyKey(o.product.repaymentFrequency) | t }}</dd>
-            </div>
-            <div>
-              <dt>{{ 'step.offers.tenor' | t }}</dt>
-              <dd class="soft">{{ o.tenorMonths }} {{ 'step.offers.months' | t }}</dd>
-            </div>
-          </dl>
-
-          <div class="totals">
-            <div class="totals-row">
-              <span class="totals-label">{{ 'step.offers.total.repayment' | t }}</span>
-              <span class="totals-value">{{ formatNaira(o.totalRepayment) }}</span>
-            </div>
-            <div class="totals-row">
-              <span class="totals-label">{{ 'step.offers.cost.credit' | t }}</span>
-              <span class="totals-value totals-value--accent">{{ formatNaira(o.costOfCredit) }}</span>
-            </div>
-            @if (o.totalFees > 0) {
-              <p class="totals-note">{{ 'step.offers.fees.included' | t }} · {{ formatNaira(o.totalFees) }}</p>
+        <div class="control">
+          <span class="control-label" [id]="'ten-' + o.product.id">{{ 'step.offers.tenor.edit' | t }}</span>
+          <div class="tenors" appRadioGroup role="radiogroup" [attr.aria-labelledby]="'ten-' + o.product.id">
+            @for (t of o.tenors; track t) {
+              <button
+                type="button"
+                role="radio"
+                class="tenor"
+                [attr.aria-checked]="o.tenor === t"
+                [attr.tabindex]="tenorTab(o, t)"
+                (click)="setTenor(o, t)"
+              >
+                <span class="tenor-num">{{ t }}</span>
+                <span class="tenor-unit">{{ 'step.offers.months' | t }}</span>
+              </button>
             }
           </div>
-
-          <button type="button" class="pick" (click)="pick(o)">
-            <span>{{ 'step.offers.pick' | t }}</span>
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </button>
         </div>
+
+        <div class="summary">
+          <div class="summary-main">
+            <span class="summary-label">{{ 'step.offers.monthly' | t }}</span>
+            <span class="summary-big">{{ formatNaira(o.quote.monthly) }}</span>
+          </div>
+          <dl class="summary-rows">
+            <div class="row">
+              <dt>{{ 'step.offers.total.repayment' | t }}</dt>
+              <dd>{{ formatNaira(o.quote.totalRepayment) }}</dd>
+            </div>
+            @for (f of o.quote.fees; track f.name) {
+              <div class="row row--sub">
+                <dt>{{ f.name }}</dt>
+                <dd>{{ formatNaira(f.amount) }}</dd>
+              </div>
+            }
+            @if (o.quote.totalFees > 0) {
+              <div class="row">
+                <dt>{{ 'step.offers.fees.included' | t }}</dt>
+                <dd>{{ formatNaira(o.quote.totalFees) }}</dd>
+              </div>
+            }
+            <div class="row row--accent">
+              <dt>{{ 'step.offers.cost.credit' | t }}</dt>
+              <dd>{{ formatNaira(o.quote.costOfCredit) }}</dd>
+            </div>
+          </dl>
+        </div>
+
+        <button type="button" class="pick" (click)="pick(o)">
+          <span>{{ 'step.offers.pick' | t }}</span>
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
       </li>
     }
   </ul>
+
+  @if (justChecking() && offers().length > 0) {
+    <button type="button" class="alt later" (click)="finishLater()">{{ 'offers.check.cta' | t }}</button>
+  }
 </section>

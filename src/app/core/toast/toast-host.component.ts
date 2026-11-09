@@ -1,11 +1,13 @@
+import { TPipe } from '../i18n/t.pipe';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ToastService } from './toast.service';
 
 @Component({
+  imports: [TPipe],
   selector: 'app-toast-host',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="stack" role="region" aria-label="Notifications" aria-live="polite">
+    <div class="stack" role="region" [attr.aria-label]="'toast.region' | t" aria-live="polite">
       @for (t of toasts(); track t.id) {
         <output class="toast" [attr.data-tone]="t.tone" role="status">
           <span class="icon" aria-hidden="true">
@@ -33,7 +35,7 @@ import { ToastService } from './toast.service';
             }
           </span>
           <span class="msg">{{ t.message }}</span>
-          <button type="button" class="close" (click)="toastSvc.dismiss(t.id)" aria-label="Dismiss">
+          <button type="button" class="close" (click)="toastSvc.dismiss(t.id)" [attr.aria-label]="'toast.dismiss' | t">
             <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
               <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
             </svg>
@@ -48,7 +50,7 @@ import { ToastService } from './toast.service';
         position: fixed;
         left: 50%;
         transform: translateX(-50%);
-        top: calc(env(safe-area-inset-top) + 12px);
+        bottom: calc(env(safe-area-inset-bottom) + 16px);
         z-index: 1000;
         display: flex; flex-direction: column; gap: 8px;
         width: min(520px, calc(100vw - 24px));

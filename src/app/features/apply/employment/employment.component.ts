@@ -3,6 +3,8 @@ import { Router } from '@angular/router';
 import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { focusFirstInvalid } from '../../../core/a11y/focus';
+import { DEFAULT_ELIGIBILITY_CONFIG } from '../../../core/eligibility/eligibility-scoring';
+import { telLink, whatsappLink } from '../../../core/support';
 import { RadioGroupDirective } from '../../../core/a11y/radio-group.directive';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import {
@@ -46,6 +48,16 @@ export class EmploymentComponent {
     { validators: [Validators.required, Validators.min(1), Validators.max(11)] },
   );
 
+  /** Corpers below this many months left cannot be offered a loan: tell them now, not after four more steps. */
+  readonly minCorperMonths = DEFAULT_ELIGIBILITY_CONFIG.stability.nysc.minEligibleMonthsRemaining;
+  readonly months = signal<number | null>(this.nyscMonths.value);
+  readonly tooShort = computed(() => {
+    const m = this.months();
+    return this.selected() === 'corper' && m !== null && m >= 1 && m < this.minCorperMonths;
+  });
+  readonly whatsapp = whatsappLink('Hello Princeps, my NYSC service is almost over and I would like help.');
+  readonly tel = telLink();
+
   readonly showCorperMonths = computed(() => this.selected() === 'corper');
   readonly selectedOption = computed(() =>
     OPTIONS.find((o) => o.type === this.selected()) ?? null,
@@ -54,9 +66,13 @@ export class EmploymentComponent {
     const opt = this.selectedOption();
     if (!opt) return false;
     if (!opt.live) return true;
-    if (opt.type === 'corper') return this.nyscMonths.valid;
+    if (opt.type === 'corper') return this.nyscMonths.valid && !this.tooShort();
     return true;
   });
+
+  onMonthsInput(): void {
+    this.months.set(this.nyscMonths.value);
+  }
 
   select(type: EmploymentType): void {
     this.selected.set(type);
@@ -69,7 +85,8 @@ export class EmploymentComponent {
       this.attempted.set(true);
       if (this.selectedOption()) {
         this.nyscMonths.markAsTouched();
-        focusFirstInvalid();
+        if (this.tooShort()) document.getElementById('months')?.focus();
+        else focusFirstInvalid();
       } else {
         document.querySelector<HTMLElement>('[role="radio"]')?.focus();
       }

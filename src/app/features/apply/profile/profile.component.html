@@ -1,14 +1,10 @@
 <section class="step">
-  <app-wizard-progress [current]="7" [total]="14" [label]="'step.profile.eyebrow' | t" />
+  <app-wizard-progress [current]="3" [total]="14" [label]="'step.profile.eyebrow' | t" />
 
   <header class="head">
     <h1 class="title">{{ 'step.profile.title' | t }}</h1>
     <p class="subtitle">{{ 'step.profile.subtitle' | t }}</p>
   </header>
-
-  @if (prefilledFromBvn()) {
-    <p class="prefill-banner" role="status">{{ 'step.profile.prefilled' | t }}</p>
-  }
 
   <form class="form" [formGroup]="form" (ngSubmit)="continue()" novalidate>
     <div class="field">

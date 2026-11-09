@@ -20,7 +20,7 @@ describe('HttpApiClient', () => {
     expect(await client.verifyPhoneOtp('+2348031112233', '123456')).toEqual({ status: 'ok' });
 
     fetchMock.mockResolvedValueOnce(reply({ status: 'ok', monthlyIncome: 1, accountName: 'A' }));
-    await client.verifySalary({ channel: 'ippis', bankCode: '058', accountNumber: '0123456789' });
+    await client.verifySalary({ channel: 'ippis', bankCode: '058', accountNumber: '0123456789', fullName: 'Ada Obi' });
     const headers = fetchMock.mock.calls[1][1].headers as Record<string, string>;
     expect(headers['X-Application-Token']).toBe('tok-123');
   });
@@ -46,10 +46,10 @@ describe('HttpApiClient', () => {
 
   it('never reports a verification as ok when the network fails', async () => {
     fetchMock.mockRejectedValue(new Error('offline'));
-    expect(await client.verifyBvn('12345678901', '')).toEqual({ status: 'service-down' });
-    expect(await client.verifyNin('12345678901', '')).toEqual({ status: 'service-down' });
+    expect(await client.verifyBvn('12345678901', 'Ada Obi', '1990-01-01')).toEqual({ status: 'service-down' });
+    expect(await client.verifyNin('12345678901', 'Ada Obi', '1990-01-01')).toEqual({ status: 'service-down' });
     expect(
-      await client.verifySalary({ channel: 'ippis', bankCode: '058', accountNumber: '0123456789' }),
+      await client.verifySalary({ channel: 'ippis', bankCode: '058', accountNumber: '0123456789', fullName: 'Ada Obi' }),
     ).toEqual({ status: 'service-down' });
     await expect(client.sendPhoneOtp('+2348031112233')).rejects.toBeInstanceOf(ApiUnavailableError);
   });
@@ -64,13 +64,36 @@ describe('HttpApiClient', () => {
     const loan = { productId: 'ippis-advance' } as never;
     fetchMock.mockResolvedValueOnce(reply({ id: 'LN-1' }));
     const ok = await client.submitApplication({ loan } as never);
-    expect(ok).toEqual({ status: 'review', referenceId: 'LN-1', etaHours: 24 });
+    expect(ok).toEqual({ status: 'received', referenceId: 'LN-1' });
 
     fetchMock.mockResolvedValueOnce(reply({ error: { code: 'UPSTREAM_DOWN' } }, 502));
     await expect(client.submitApplication({ loan } as never)).rejects.toBeInstanceOf(
       ApiUnavailableError,
     );
     await expect(client.submitApplication({} as never)).rejects.toBeInstanceOf(ApiUnavailableError);
+  });
+
+  it('only ever offers an https mandate link', async () => {
+    fetchMock.mockResolvedValueOnce(reply({ url: 'javascript:alert(1)', reference: 'MD-123' }));
+    await expect(
+      client.createMandateLink({ productId: 'p', channel: 'ippis', monthlyAmount: 1000, tenorMonths: 6 }),
+    ).rejects.toBeInstanceOf(ApiUnavailableError);
+    fetchMock.mockResolvedValueOnce(reply({ url: 'https://bank.example/m/1', reference: 'MD-123' }));
+    const link = await client.createMandateLink({ productId: 'p', channel: 'ippis', monthlyAmount: 1000, tenorMonths: 6 });
+    expect(link.url).toBe('https://bank.example/m/1');
+  });
+
+  it('treats an unknown mandate status as pending', async () => {
+    fetchMock.mockResolvedValueOnce(reply({ status: 'weird' }));
+    expect(await client.getMandateStatus('MD-123')).toBe('pending');
+    fetchMock.mockResolvedValueOnce(reply({ status: 'completed' }));
+    expect(await client.getMandateStatus('MD-123')).toBe('completed');
+  });
+
+  it('sends the bot-check token with the OTP request when there is one', async () => {
+    fetchMock.mockResolvedValueOnce(reply({ target: 'x', expiresInSeconds: 1 }));
+    await client.sendPhoneOtp('+2348031112233', 'captcha-token');
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ phone: '+2348031112233', captchaToken: 'captcha-token' });
   });
 
   it('rejects oversized documents without calling the network', async () => {

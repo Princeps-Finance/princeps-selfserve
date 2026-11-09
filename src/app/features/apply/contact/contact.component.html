@@ -53,6 +53,23 @@
       }
     </div>
 
+    <div class="consent" [class.is-invalid]="showFieldErrors() && !form.controls.consent.value">
+      <label class="consent-row">
+        <input
+          id="consent"
+          type="checkbox"
+          formControlName="consent"
+          [attr.aria-invalid]="showFieldErrors() && !form.controls.consent.value ? true : null"
+          aria-describedby="consent-error"
+        />
+        <span>{{ 'consent.label' | t }}</span>
+      </label>
+      <button type="button" class="suggest-btn consent-link" (click)="privacy.open()">{{ 'consent.link' | t }}</button>
+      @if (showFieldErrors() && !form.controls.consent.value) {
+        <p class="msg msg--error" id="consent-error" role="alert">{{ 'consent.required' | t }}</p>
+      }
+    </div>
+
     @if (serverError()) {
       <p class="server-error" role="alert">{{ serverError() }}</p>
     }

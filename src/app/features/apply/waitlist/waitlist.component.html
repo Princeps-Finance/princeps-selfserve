@@ -56,14 +56,18 @@
           <dt>{{ 'waitlist.result.reference' | t }}</dt>
           <dd>{{ r.referenceId }}</dd>
         </div>
-        <div>
-          <dt>{{ 'waitlist.result.position' | t }}</dt>
-          <dd>#{{ r.positionInQueue }}</dd>
-        </div>
-        <div>
-          <dt>{{ 'waitlist.result.window' | t }}</dt>
-          <dd>{{ r.estimatedWindow }}</dd>
-        </div>
+        @if (r.positionInQueue) {
+          <div>
+            <dt>{{ 'waitlist.result.position' | t }}</dt>
+            <dd>#{{ r.positionInQueue }}</dd>
+          </div>
+        }
+        @if (r.estimatedWindow) {
+          <div>
+            <dt>{{ 'waitlist.result.window' | t }}</dt>
+            <dd>{{ r.estimatedWindow }}</dd>
+          </div>
+        }
       </dl>
       <p class="ok-note">{{ 'waitlist.result.note' | t }}</p>
     </div>

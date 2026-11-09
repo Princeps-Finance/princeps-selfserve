@@ -83,7 +83,8 @@ export class TermsComponent implements OnInit {
       document.querySelector<HTMLElement>('.agree input')?.focus();
       return;
     }
-    void this.router.navigateByUrl('/apply/mandate');
+    this.state.setTermsAccepted(new Date().toISOString());
+    void this.router.navigateByUrl('/apply/bvn');
   }
 }
 

@@ -12,13 +12,13 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { LangService } from '../../../core/i18n/lang.service';
 import { WizardProgressComponent } from '../wizard-progress.component';
-import { API_CLIENT } from '../../../core/api/api-client';
 import {
   isValidEmailShape,
   normalizePhoneNg,
   suggestEmailFix,
 } from '../../../core/api/contact.util';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
+import { PRIVACY_NOTICE_VERSION, PrivacyService } from '../../../core/privacy/privacy.service';
 
 function phoneValidator(control: AbstractControl): ValidationErrors | null {
   const raw = (control.value as string | null)?.trim() ?? '';
@@ -40,12 +40,13 @@ function emailValidator(control: AbstractControl): ValidationErrors | null {
   styleUrl: './contact.component.css',
 })
 export class ContactComponent {
-  private readonly api = inject(API_CLIENT);
   private readonly state = inject(ApplicationStateService);
   private readonly router = inject(Router);
   private readonly lang = inject(LangService);
+  protected readonly privacy = inject(PrivacyService);
 
   readonly form = new FormGroup({
+    consent: new FormControl(!!this.state.consent(), { nonNullable: true }),
     phone: new FormControl(this.state.contact()?.phone ?? '', {
       nonNullable: true,
       validators: [Validators.required, phoneValidator],
@@ -80,7 +81,10 @@ export class ContactComponent {
   async submit(): Promise<void> {
     this.serverError.set(null);
     this.showFieldErrors.set(true);
-    if (this.form.invalid) return;
+    if (this.form.invalid || !this.form.controls.consent.value) {
+      if (!this.form.controls.consent.value) document.getElementById('consent')?.focus();
+      return;
+    }
 
     const phone = normalizePhoneNg(this.form.controls.phone.value.trim());
     const email = this.form.controls.email.value.trim().toLowerCase();
@@ -88,13 +92,14 @@ export class ContactComponent {
 
     this.submitting.set(true);
     try {
-      const result = await this.api.lookupContact({ phone, email });
+      // Nothing about the customer is looked up here: who is (or is not) a customer is only
+      // revealed after the phone number is verified, so this screen cannot be used to probe.
       this.state.setContact({ phone, email });
-      if (result.kind === 'returning') {
-        this.state.setReturningCustomer(true, result.snapshot);
-      } else {
-        this.state.setReturningCustomer(false, null);
-      }
+      this.state.setConsent({
+        version: PRIVACY_NOTICE_VERSION,
+        acceptedAt: new Date().toISOString(),
+        language: this.lang.lang(),
+      });
       await this.router.navigateByUrl('/apply/verify');
     } catch {
       this.serverError.set(this.lang.t('step.contact.error.generic'));

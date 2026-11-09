@@ -1,11 +1,15 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { AGENTS, OFFICES } from '../../../core/directory/contacts';
+import { environment } from '../../../../environments/environment';
 
-const PRINCEPS_WHATSAPP = '2348030000000';
-
+/**
+ * After a successful submission. The app never claims an outcome (approval, disbursement):
+ * it confirms the application reached Caltos and sends the customer to the customer
+ * portal, where they can track the loan, repay and get their documents.
+ */
 @Component({
   selector: 'app-status',
   imports: [TPipe],
@@ -20,40 +24,24 @@ export class StatusComponent {
   readonly submission = this.state.submission;
   readonly agents = AGENTS;
   readonly offices = OFFICES;
+  readonly trackUrl = environment.customerModuleUrl;
+  readonly copied = signal(false);
   readonly telHref = (phone: string): string => `tel:${phone.replace(/\s+/g, '')}`;
-
-  readonly whatsappHref = computed(() => {
-    const s = this.submission();
-    const ref = s.referenceId ?? '';
-    const message = ref
-      ? `Hi Princeps, please send WhatsApp updates for my application ${ref}.`
-      : `Hi Princeps, please send WhatsApp updates for my application.`;
-    return `https://wa.me/${PRINCEPS_WHATSAPP}?text=${encodeURIComponent(message)}`;
-  });
-
-  readonly showWhatsapp = computed(() => {
-    const s = this.submission().status;
-    return s === 'approved' || s === 'review' || s === 'disbursement-pending';
-  });
-
-  readonly titleKey = computed(() => `status.${this.baseKey()}.title`);
-  readonly bodyKey = computed(() => `status.${this.baseKey()}.body`);
-  readonly bodyParams = computed<Record<string, string | number> | undefined>(() => {
-    const s = this.submission();
-    if (s.status === 'review') return { hours: s.reason ?? '24' } as Record<string, string | number>;
-    if (s.status === 'declined') return { reason: s.reason ?? '' } as Record<string, string | number>;
-    return undefined;
-  });
-
-  private baseKey(): string {
-    const status = this.submission().status;
-    if (status === 'disbursement-pending') return 'disbursement';
-    return status;
-  }
+  readonly reference = computed(() => this.submission().referenceId ?? '');
 
   constructor() {
-    if (this.submission().status === 'idle') {
+    if (this.submission().status !== 'received') {
       void this.router.navigateByUrl('/apply/submit');
+    }
+  }
+
+  async copyReference(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(this.reference());
+      this.copied.set(true);
+      setTimeout(() => this.copied.set(false), 2500);
+    } catch {
+      // The reference is on screen and can be read out.
     }
   }
 
