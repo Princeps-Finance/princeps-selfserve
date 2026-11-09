@@ -425,8 +425,7 @@ const en: Dict = {
   'step.mandate.row.months': '{n} months',
   'step.mandate.row.channel': 'Paid through',
   'step.mandate.finePrint': 'You can cancel once the loan is fully repaid.',
-  'step.mandate.agree':
-    'I authorize Princeps to deduct the amount above from my salary every month until the loan is repaid.',
+  'step.mandate.agree': 'I allow Princeps to deduct this amount from my salary each month until the loan is repaid.',
   'step.mandate.authorize': 'Authorize deduction',
 
   'step.docs.eyebrow': 'Almost done',
@@ -918,8 +917,7 @@ const yo: Dict = {
   'step.mandate.row.months': 'Oṣù {n}',
   'step.mandate.row.channel': 'A óò san nípasẹ̀',
   'step.mandate.finePrint': 'O lè fagilé rẹ̀ nígbà tí a bá ti san àwìn náà tán.',
-  'step.mandate.agree':
-    'Mo gba Princeps láàyè láti gba iye tí ó wà lókè láti orí owó oṣù mi lóṣooṣù títí a fi san awin náà.',
+  'step.mandate.agree': 'Mo gba Princeps láàyè láti yọ iye yìí kúrò nínú owó oṣù mi lóṣooṣù títí ìgbèsè yóò fi san.',
   'step.mandate.authorize': 'Fọwọ́ sí ìgbà náà',
 
   'step.docs.eyebrow': 'Ó ti fẹ́rẹ̀ parí',
@@ -1411,8 +1409,7 @@ const ig: Dict = {
   'step.mandate.row.months': 'Ọnwa {n}',
   'step.mandate.row.channel': 'A ga-akwụ site na',
   'step.mandate.finePrint': 'Ị nwere ike ịkagbu ya mgbe e kwụchara ụgwọ ahụ kpam kpam.',
-  'step.mandate.agree':
-    'A na m enye Princeps ikike iwepụta ego dị n’elu site n’ụgwọ ọnwa m kwa ọnwa ruo mgbe akwụghachiri mbinye ego.',
+  'step.mandate.agree': 'Ana m ekwe ka Princeps wepụ ọnụ ahịa a n\'ụgwọ ọrụ m kwa ọnwa ruo mgbe a ga-akwụghachi ụgwọ.',
   'step.mandate.authorize': 'Nye ikike mbelata',
 
   'step.docs.eyebrow': 'Fọrọ nke nta',
@@ -1904,8 +1901,7 @@ const ha: Dict = {
   'step.mandate.row.months': 'Watanni {n}',
   'step.mandate.row.channel': 'Ana biya ta',
   'step.mandate.finePrint': 'Za ka iya soke shi idan an gama biyan rancen.',
-  'step.mandate.agree':
-    'Na ba Princeps izini ta cire kuɗin da ke sama daga albashina kowane wata har sai an biya bashi.',
+  'step.mandate.agree': 'Na ba Princeps izinin cire wannan adadi daga albashina kowane wata har sai an biya rancen.',
   'step.mandate.authorize': 'Ba da izinin cirewa',
 
   'step.docs.eyebrow': 'Kusan ƙarshe',

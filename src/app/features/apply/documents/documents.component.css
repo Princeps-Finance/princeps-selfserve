@@ -27,7 +27,7 @@
 .doc-label { margin: 0; font-family: var(--font-display); font-size: 18px; font-weight: 500; letter-spacing: -0.01em; color: var(--ink); }
 .doc-hint { margin: 0; font-size: 13px; color: var(--ink-muted); }
 .doc-file { margin: 4px 0 0; font-size: 12px; color: var(--ink-soft); font-family: var(--font-mono); }
-.doc-error { margin: 4px 0 0; font-size: 13px; color: var(--danger); }
+.doc-error { margin: 4px 0 0; font-size: 13px; color: var(--danger-text); }
 
 .doc-action { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 

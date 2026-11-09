@@ -51,6 +51,8 @@ export class VerifyIdentityComponent implements OnDestroy {
   private stream: MediaStream | null = null;
   private mediaRecorder: MediaRecorder | null = null;
   private recordedChunks: Blob[] = [];
+  /** What the browser really recorded: webm on Chrome/Android, mp4 on iPhone. */
+  private recordedMime = 'video/webm';
   private recordTimer: ReturnType<typeof setInterval> | null = null;
 
   @ViewChild('preview') previewRef?: ElementRef<HTMLVideoElement>;
@@ -91,7 +93,6 @@ export class VerifyIdentityComponent implements OnDestroy {
       this.checkingVideo.set(false);
       this.videoDataUrl.set(reader.result as string);
       this.cdr.markForCheck();
-      this.toast.success(this.lang.t('toast.video'));
     };
     reader.onerror = () => {
       this.checkingVideo.set(false);
@@ -161,7 +162,6 @@ export class VerifyIdentityComponent implements OnDestroy {
     const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
     this.facePhoto.set(dataUrl);
     this.stopStream();
-    this.toast.success(this.lang.t('toast.photo'));
   }
 
   retakePhoto(): void {
@@ -186,7 +186,14 @@ export class VerifyIdentityComponent implements OnDestroy {
     }
     recorder.ondataavailable = (e) => { if (e.data.size > 0) this.recordedChunks.push(e.data); };
     recorder.onstop = () => this.onRecordingStopped();
-    recorder.start();
+    try {
+      recorder.start();
+    } catch {
+      // Some browsers cannot record: say so instead of failing silently.
+      this.toast.error(this.lang.t('toast.video.error'));
+      return;
+    }
+    this.recordedMime = recorder.mimeType || 'video/webm';
     this.mediaRecorder = recorder;
     this.isRecording.set(true);
     this.recordSeconds.set(0);
@@ -206,7 +213,7 @@ export class VerifyIdentityComponent implements OnDestroy {
   }
 
   private onRecordingStopped(): void {
-    const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
+    const blob = new Blob(this.recordedChunks, { type: this.recordedMime });
     const prev = this.videoPreviewUrl();
     if (prev) URL.revokeObjectURL(prev);
     this.videoPreviewUrl.set(URL.createObjectURL(blob));
@@ -216,7 +223,6 @@ export class VerifyIdentityComponent implements OnDestroy {
       this.checkingVideo.set(false);
       this.videoDataUrl.set(reader.result as string);
       this.cdr.markForCheck();
-      this.toast.success(this.lang.t('toast.video'));
     };
     reader.onerror = () => {
       this.checkingVideo.set(false);
@@ -248,7 +254,6 @@ export class VerifyIdentityComponent implements OnDestroy {
       capturedAt: new Date().toISOString(),
       offerKey: this.offerKey(),
     });
-    this.toast.success(this.lang.t('toast.identity.saved'));
     void this.router.navigateByUrl('/apply/mandate');
   }
 

@@ -59,7 +59,7 @@ export type IllustrationName = 'shield' | 'message' | 'coins' | 'check' | 'docum
   `,
   styles: [
     `
-      :host { display: block; }
+      :host { display: block; align-self: center; }
       .art { display: block; margin: 0 auto; }
     `,
   ],

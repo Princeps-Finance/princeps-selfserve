@@ -38,7 +38,7 @@
   box-shadow: var(--input-shadow-focus);
 }
 
-.field.is-invalid .input { border-color: var(--danger); }
+.field.is-invalid .input { border-color: var(--danger-text); }
 
 .msg { margin: 0; font-size: 13px; color: var(--ink-muted); }
 .msg--error { color: var(--danger-text); }
@@ -48,12 +48,12 @@
   padding: var(--space-3) var(--space-4);
   background: var(--danger-soft);
   border-radius: var(--radius-md);
-  color: var(--danger);
+  color: var(--danger-text);
   font-size: 14px;
   line-height: 1.4;
 }
 
-.link { color: var(--danger); text-decoration: underline; }
+.link { color: var(--danger-text); text-decoration: underline; }
 
 .cta {
   align-self: stretch;
