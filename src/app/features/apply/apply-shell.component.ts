@@ -69,6 +69,18 @@ const NO_BACK_ROUTES = new Set<string>(['/apply', '/apply/', '/apply/status', '/
         flex: 1;
         padding: var(--space-4) var(--space-6) var(--space-8);
       }
+      /* Wide screens: the form is a centred card on the page (as on Kraken, GoFundMe), not a phone column floating on empty space. */
+      @media (min-width: 720px) {
+        :host { padding: var(--space-8) var(--space-4); }
+        .shell {
+          min-height: 0; max-width: 560px; margin: 0 auto;
+          background: var(--surface-0); border: 1px solid var(--hairline); border-radius: 24px;
+          box-shadow: var(--shadow-3); overflow: hidden;
+        }
+        .topbar { padding: var(--space-6) var(--space-8) var(--space-3); }
+        .body { padding: var(--space-4) var(--space-8) var(--space-8); }
+        .foot { padding: 0 var(--space-8) var(--space-6); }
+      }
     `,
   ],
 })
