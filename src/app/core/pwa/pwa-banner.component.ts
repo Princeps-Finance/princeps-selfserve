@@ -5,8 +5,10 @@ import { filter, map, startWith } from 'rxjs';
 import { TPipe } from '../i18n/t.pipe';
 import { AppUpdateService } from './app-update.service';
 
-/** Routes where reloading cannot lose customer input. */
-const SAFE_ROUTES = new Set(['/', '/apply/status']);
+/** Nothing has been typed yet: a ready update is applied automatically. */
+const AUTO_APPLY_ROUTES = new Set(['/', '/apply', '/apply/welcome']);
+/** Little or nothing to lose: offer the update, the customer decides. */
+const OFFER_ROUTES = new Set([...AUTO_APPLY_ROUTES, '/apply/contact', '/apply/bvn', '/apply/status']);
 
 @Component({
   selector: 'app-pwa-banner',
@@ -65,13 +67,13 @@ export class PwaBannerComponent {
     { initialValue: '/' },
   );
 
-  private readonly atSafePoint = computed(() => SAFE_ROUTES.has(this.path()));
+  private readonly atSafePoint = computed(() => OFFER_ROUTES.has(this.path()));
   readonly showUpdate = computed(() => this.updater.updateReady() && this.atSafePoint());
 
   constructor() {
-    // The start screen is the safest place of all: apply a ready update automatically.
+    // On the first screens nothing can be lost, so a ready update is applied automatically.
     effect(() => {
-      if (this.updater.updateReady() && this.path() === '/') void this.updater.apply();
+      if (this.updater.updateReady() && AUTO_APPLY_ROUTES.has(this.path())) void this.updater.apply();
     });
   }
 }
