@@ -2,6 +2,7 @@
   display: block;
   min-height: 100dvh;
   color: var(--ink);
+  background: var(--surface-0);
 }
 
 .tools { display: inline-flex; align-items: center; gap: var(--space-3); }
@@ -15,6 +16,15 @@
   flex-direction: column;
   padding: var(--space-6) var(--space-6) calc(var(--space-8) + env(safe-area-inset-bottom));
   gap: var(--space-10);
+}
+
+/* Wide screens: the same centred card as the rest of the flow. */
+@media (min-width: 720px) {
+  :host { padding: var(--space-8) var(--space-4); background: var(--canvas); }
+  .screen {
+    min-height: 0; max-width: 560px; padding: var(--space-8);
+    background: var(--surface-0); border: 1px solid var(--hairline); border-radius: 24px; box-shadow: var(--shadow-3);
+  }
 }
 
 /* Brand — small, top-left, editorial */
@@ -51,7 +61,7 @@
 .title {
   margin: 0 0 var(--space-3);
   font-family: var(--font-display);
-  font-size: clamp(32px, 7.5vw, 44px);
+  font-size: clamp(26px, 6.5vw, 32px);
   line-height: 1.05;
   letter-spacing: -0.03em;
   font-weight: 600;
@@ -69,81 +79,23 @@
   text-wrap: balance;
 }
 
-/* Language list — editorial rows, hairline divider, no per-item card */
-.lang-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  border-top: 1px solid var(--hairline);
+/* Language cards: a 2x2 grid, one tap chooses and continues */
+.lang-grid { list-style: none; margin: var(--space-6) 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.lang-card {
+  position: relative; width: 100%; min-height: 96px; padding: var(--space-4);
+  display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; gap: 2px;
+  background: var(--surface-0); border: 1.5px solid rgba(17, 17, 17, 0.55); border-radius: 16px;
+  color: var(--ink); text-align: start; cursor: pointer;
+  transition: border-color 140ms ease, background-color 140ms ease, transform 140ms ease;
 }
-
-.lang-list li {
-  border-bottom: 1px solid var(--hairline);
-}
-
-.lang-row {
-  width: 100%;
-  min-height: 68px;
-  padding: var(--space-4) 0;
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  align-items: baseline;
-  gap: var(--space-4);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  text-align: left;
-  color: var(--ink);
-  transition: opacity 160ms ease, transform 120ms ease-out;
-}
-
-.lang-row:hover .lang-endonym { text-decoration-thickness: 2px; }
-.lang-row:active { transform: translateX(2px); }
-
-.lang-row:focus-visible {
-  outline: 2px solid transparent; outline-offset: 2px;
-}
-.lang-row:focus-visible .lang-endonym {
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 6px;
-}
-
-.lang-endonym {
-  font-family: var(--font-display);
-  font-size: 28px;
-  line-height: 1;
-  letter-spacing: -0.025em;
-  font-weight: 500;
-  text-underline-offset: 6px;
-}
-
-.lang-english {
-  font-size: 13px;
-  color: var(--ink-muted);
-  letter-spacing: 0.01em;
-}
-
-.mark {
-  width: 22px;
-  height: 22px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1.5px solid var(--input-border);
-  border-radius: 50%;
-  color: var(--action-on-primary);
-  transition: background-color 160ms ease, border-color 160ms ease;
-}
-
-.lang-row.is-selected .mark { background: var(--action-primary); border-color: var(--action-primary); }
-.lang-row.is-selected .lang-endonym {
-  color: var(--action-primary);
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 6px;
-  text-decoration-color: var(--action-primary);
-}
+.lang-card:hover { border-color: var(--ink); background: rgba(17, 17, 17, 0.03); }
+.lang-card:active { transform: scale(0.98); }
+.lang-card:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
+.lang-card.is-current { border-color: var(--action-primary); box-shadow: inset 0 0 0 1px var(--action-primary); }
+.lang-endonym { font-family: var(--font-display); font-size: 22px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.15; }
+.lang-english { font-size: 13px; color: var(--ink-soft); }
+.lang-check { position: absolute; top: var(--space-3); right: var(--space-3); color: var(--action-primary); }
+@media (prefers-reduced-motion: reduce) { .lang-card { transition: none; } .lang-card:active { transform: none; } }
 
 /* Footer — CTA is a black pill with arrow, tagline in fine print */
 .footer {
@@ -230,7 +182,7 @@
 .brand-row  { animation: rise 420ms cubic-bezier(0.2, 0.7, 0.1, 1) both;    animation-delay:   0ms; }
 .title      { animation: rise 480ms cubic-bezier(0.2, 0.7, 0.1, 1) both;    animation-delay:  80ms; }
 .subtitle   { animation: rise 480ms cubic-bezier(0.2, 0.7, 0.1, 1) both;    animation-delay: 160ms; }
-.lang-list li {
+.lang-grid li {
   animation: rise 420ms cubic-bezier(0.2, 0.7, 0.1, 1) both;
   animation-delay: calc(240ms + var(--i, 0) * 60ms);
 }
@@ -243,7 +195,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .lang-row, .cta, .cta-arrow, .mark { transition: none; }
-  .brand-row, .title, .subtitle, .lang-list li, .footer {
+  .brand-row, .title, .subtitle, .lang-grid li, .footer {
     animation: none; opacity: 1; transform: none;
   }
 }

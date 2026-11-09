@@ -45,7 +45,7 @@ const NO_BACK_ROUTES = new Set<string>(['/apply', '/apply/', '/apply/status', '/
   `,
   styles: [
     `
-      :host { display: block; min-height: 100dvh; background: var(--canvas); color: var(--ink); }
+      :host { display: block; min-height: 100dvh; background: var(--surface-0); color: var(--ink); }
       .shell {
         max-width: 520px; margin: 0 auto; min-height: 100dvh;
         display: flex; flex-direction: column;
@@ -71,7 +71,7 @@ const NO_BACK_ROUTES = new Set<string>(['/apply', '/apply/', '/apply/status', '/
       }
       /* Wide screens: the form is a centred card on the page (as on Kraken, GoFundMe), not a phone column floating on empty space. */
       @media (min-width: 720px) {
-        :host { padding: var(--space-8) var(--space-4); }
+        :host { padding: var(--space-8) var(--space-4); background: var(--canvas); }
         .shell {
           min-height: 0; max-width: 560px; margin: 0 auto;
           background: var(--surface-0); border: 1px solid var(--hairline); border-radius: 24px;
