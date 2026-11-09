@@ -1,18 +1,27 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { TPipe } from '../../core/i18n/t.pipe';
+import { ApplicationStateService } from '../../core/application/application-state.service';
+import { productById } from '../../core/products/products';
 
 const BACK_MAP: Record<string, string> = {
+  '/apply/welcome': '/',
+  '/apply/contact': '/apply/welcome',
   '/apply/verify': '/apply/contact',
-  '/apply/employment': '/apply/verify',
+  '/apply/saved': '/apply/contact',
+  '/apply/resume': '/apply/contact',
+  '/apply/profile': '/apply/contact',
+  '/apply/employment': '/apply/profile',
   '/apply/waitlist': '/apply/employment',
   '/apply/salary': '/apply/employment',
+  '/apply/eligibility': '/apply/salary',
   '/apply/offers': '/apply/salary',
   '/apply/terms': '/apply/offers',
-  '/apply/profile': '/apply/terms',
-  '/apply/bvn': '/apply/profile',
-  '/apply/documents': '/apply/bvn',
-  '/apply/submit': '/apply/documents',
+  '/apply/bvn': '/apply/terms',
+  '/apply/nin': '/apply/bvn',
+  '/apply/verify-identity': '/apply/documents',
+  '/apply/mandate': '/apply/verify-identity',
+  '/apply/submit': '/apply/mandate',
 };
 
 @Component({
@@ -56,10 +65,15 @@ const BACK_MAP: Record<string, string> = {
 })
 export class BackButtonComponent {
   private readonly router = inject(Router);
+  private readonly state = inject(ApplicationStateService);
 
   goBack(): void {
     const here = this.router.url.split('?')[0];
-    const target = BACK_MAP[here] ?? '/apply/contact';
+    let target = BACK_MAP[here] ?? '/apply/welcome';
+    if (here === '/apply/documents') {
+      const needsNin = productById(this.state.offer()?.productId ?? '')?.settings.requiresNin ?? false;
+      target = needsNin ? '/apply/nin' : '/apply/bvn';
+    }
     void this.router.navigateByUrl(target);
   }
 }

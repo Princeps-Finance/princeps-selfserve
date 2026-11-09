@@ -79,3 +79,53 @@ select.input[aria-invalid='true'] { border-color: var(--danger-text); }
   }
   .step, .server-error { animation: none; opacity: 1; transform: none; }
 }
+
+/* Branded checkbox: native input (keyboard + screen readers intact), custom look. */
+input[type='checkbox'] {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: none;
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  display: inline-grid;
+  place-content: center;
+  background: var(--surface, #fff);
+  border: 1.5px solid rgba(17, 17, 17, 0.55);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+input[type='checkbox']::before {
+  content: '';
+  width: 12px;
+  height: 7px;
+  border-left: 2.5px solid #fff;
+  border-bottom: 2.5px solid #fff;
+  transform: translateY(-1px) rotate(-45deg) scale(0);
+  transition: transform 140ms ease;
+}
+input[type='checkbox']:checked {
+  background: var(--action-primary);
+  border-color: var(--action-primary);
+}
+input[type='checkbox']:checked::before {
+  transform: translateY(-1px) rotate(-45deg) scale(1);
+}
+input[type='checkbox']:hover:not(:checked) {
+  border-color: var(--ink);
+}
+input[type='checkbox']:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--focus-ring);
+}
+input[type='checkbox'][aria-invalid='true'] {
+  border-color: var(--danger-text);
+}
+@media (prefers-reduced-motion: reduce) {
+  input[type='checkbox'],
+  input[type='checkbox']::before {
+    transition: none;
+  }
+}

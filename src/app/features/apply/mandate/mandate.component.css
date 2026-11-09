@@ -90,8 +90,6 @@
 }
 .agree-box {
   flex: 0 0 auto;
-  width: 20px; height: 20px;
-  accent-color: var(--action-primary);
   margin-top: 2px;
   cursor: pointer;
 }

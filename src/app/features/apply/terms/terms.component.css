@@ -70,7 +70,7 @@
   cursor: pointer;
 }
 
-.agree input { margin-top: 3px; accent-color: var(--action-primary); }
+.agree input { margin-top: 1px; }
 
 .actions { display: flex; flex-direction: column-reverse; align-items: stretch; gap: var(--space-3); }
 .actions .cta { justify-content: space-between; }
