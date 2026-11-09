@@ -81,7 +81,7 @@ import { ToastService } from './toast.service';
         cursor: pointer; border-radius: 6px;
       }
       .close:hover { background: rgba(17,17,17,0.06); color: var(--ink); }
-      .close:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+      .close:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
       @keyframes slide-in {
         from { opacity: 0; transform: translateY(-8px); }
         to   { opacity: 1; transform: translateY(0); }

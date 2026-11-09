@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { focusFirstInvalid } from '../../../core/a11y/focus';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
@@ -33,6 +34,12 @@ export class ProfileComponent {
   });
 
   readonly statusChanges = toSignal(this.form.statusChanges, { initialValue: this.form.status });
+  readonly attempted = signal(false);
+
+  invalid(name: 'fullName' | 'dateOfBirth' | 'street' | 'stateName' | 'lga'): true | null {
+    return this.attempted() && this.form.controls[name].invalid ? true : null;
+  }
+
   readonly canContinue = computed(() => {
     this.statusChanges();
     return this.form.valid;
@@ -73,7 +80,13 @@ export class ProfileComponent {
   }
 
   continue(): void {
-    if (!this.canContinue()) return;
+    if (this.submitting()) return;
+    if (!this.canContinue()) {
+      this.attempted.set(true);
+      this.form.markAllAsTouched();
+      setTimeout(() => focusFirstInvalid());
+      return;
+    }
     this.submitting.set(true);
     const v = this.form.getRawValue();
     this.state.setProfile({

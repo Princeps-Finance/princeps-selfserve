@@ -81,7 +81,7 @@ const SUPPORT_WHATSAPP = '2348001234567';
       }
       .fab:hover { background: var(--action-primary-hover); transform: translateY(-1px); }
       .fab:active { transform: scale(0.96); }
-      .fab:focus-visible { outline: none; box-shadow: 0 12px 28px -12px rgba(11, 46, 91, 0.55), var(--focus-ring); }
+      .fab:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: 0 12px 28px -12px rgba(11, 46, 91, 0.55), var(--focus-ring); }
 
       .panel {
         width: 260px;

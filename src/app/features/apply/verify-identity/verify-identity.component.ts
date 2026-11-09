@@ -53,6 +53,8 @@ export class VerifyIdentityComponent implements OnDestroy {
   readonly loanAmount = computed(() => this.offer()?.amount ?? 0);
   readonly monthlyRepayment = computed(() => this.offer()?.monthlyRepayment ?? 0);
 
+  readonly attempted = signal(false);
+
   readonly canContinue = computed(() =>
     this.facePhoto() !== null && this.videoDataUrl() !== null,
   );
@@ -185,7 +187,11 @@ export class VerifyIdentityComponent implements OnDestroy {
   goReview(): void { this.stage.set('review'); }
 
   confirm(): void {
-    if (!this.canContinue()) return;
+    if (!this.canContinue()) {
+      this.attempted.set(true);
+      setTimeout(() => document.getElementById('identity-error')?.focus());
+      return;
+    }
     this.state.setIdentityVerification({
       facePhotoDataUrl: this.facePhoto()!,
       videoDataUrl: this.videoDataUrl()!,

@@ -52,7 +52,7 @@ const NO_BACK_ROUTES = new Set<string>([
         padding: var(--space-5) var(--space-6);
         min-height: 68px;
       }
-      .topbar-left { display: inline-flex; align-items: center; min-height: 36px; }
+      .topbar-left { display: inline-flex; align-items: center; min-height: 44px; }
       .topbar-right { display: inline-flex; align-items: center; gap: var(--space-3); }
       .brand-logo { height: 32px; width: auto; display: block; }
       .brand { display: inline-flex; align-items: center; gap: 10px; }
@@ -68,7 +68,7 @@ const NO_BACK_ROUTES = new Set<string>([
       }
       .body {
         flex: 1;
-        padding: var(--space-4) var(--space-6) calc(var(--space-10) + env(safe-area-inset-bottom));
+        padding: var(--space-4) var(--space-6) calc(var(--space-20) + var(--space-4) + env(safe-area-inset-bottom));
       }
     `,
   ],

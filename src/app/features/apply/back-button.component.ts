@@ -31,7 +31,7 @@ const BACK_MAP: Record<string, string> = {
     `
       .back {
         display: inline-flex; align-items: center; gap: var(--space-2);
-        min-height: 36px; padding: 0 var(--space-4);
+        min-height: 44px; padding: 0 var(--space-4);
         background: transparent; border: 1px solid var(--hairline-strong);
         font-family: var(--font-sans);
         font-size: 14px; font-weight: 500; color: var(--ink);
@@ -41,7 +41,7 @@ const BACK_MAP: Record<string, string> = {
       .back svg { transition: transform 160ms cubic-bezier(0.2, 0.7, 0.1, 1); }
       .back:hover { background: rgba(17,17,17,0.04); border-color: var(--ink); }
       .back:hover svg { transform: translateX(-2px); }
-      .back:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+      .back:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
       @media (prefers-reduced-motion: reduce) {
         .back, .back svg { transition: none; }
       }

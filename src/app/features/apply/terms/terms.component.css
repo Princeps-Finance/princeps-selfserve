@@ -85,7 +85,7 @@
   transition: background 160ms ease, color 160ms ease;
 }
 .link-btn:hover { background: var(--ink); color: var(--action-on-primary); }
-.link-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.link-btn:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 
 .cta {
   min-height: 56px;
@@ -103,4 +103,4 @@
 .cta:disabled { opacity: 0.5; cursor: not-allowed; }
 .cta:hover:not(:disabled) { background: var(--action-primary-hover); }
 .cta:active:not(:disabled) { transform: scale(0.99); }
-.cta:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.cta:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }

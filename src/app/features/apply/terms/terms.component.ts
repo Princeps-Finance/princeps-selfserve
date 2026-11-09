@@ -39,6 +39,7 @@ export class TermsComponent implements OnInit {
 
   readonly offer = this.state.offer;
   readonly agreed = signal(false);
+  readonly attempted = signal(false);
   readonly formatNaira = formatNaira;
 
   readonly schedule = computed<ScheduleRow[]>(() => {
@@ -69,6 +70,7 @@ export class TermsComponent implements OnInit {
 
   toggleAgree(v: boolean): void {
     this.agreed.set(v);
+    if (v) this.attempted.set(false);
   }
 
   back(): void {
@@ -76,7 +78,11 @@ export class TermsComponent implements OnInit {
   }
 
   take(): void {
-    if (!this.agreed()) return;
+    if (!this.agreed()) {
+      this.attempted.set(true);
+      document.querySelector<HTMLElement>('.agree input')?.focus();
+      return;
+    }
     void this.router.navigateByUrl('/apply/mandate');
   }
 }

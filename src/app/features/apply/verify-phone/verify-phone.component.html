@@ -13,7 +13,7 @@
       class="otp"
       role="group"
       [attr.aria-label]="'step.otp.title' | t"
-      [class.is-invalid]="!!error()"
+      [class.is-invalid]="!!error() || (attempted() && code().length < 6)"
     >
       @for (i of indices; track i) {
         <input
@@ -23,8 +23,8 @@
           inputmode="numeric"
           autocomplete="one-time-code"
           maxlength="1"
-          [attr.aria-label]="'digit ' + (i + 1)"
-          [attr.aria-invalid]="!!error() ? true : null"
+          [attr.aria-label]="('otp.digit' | t: { n: i + 1 })"
+          [attr.aria-invalid]="!!error() || (attempted() && !cells()[i]) ? true : null"
           (input)="onCellInput(i, $event)"
           (keydown)="onCellKeydown(i, $event)"
           (paste)="onCellPaste($event)"
@@ -61,7 +61,11 @@
       </button>
     </div>
 
-    <button type="submit" class="cta" [disabled]="!canSubmit()">
+    @if (attempted() && code().length < 6) {
+      <p class="msg--error" role="alert">{{ 'step.otp.title' | t }}</p>
+    }
+
+    <button type="submit" class="cta" [disabled]="submitting()">
       <span>{{ submitting() ? ('step.otp.verifying' | t) : ('step.otp.verify' | t) }}</span>
       @if (!submitting()) {
         <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">

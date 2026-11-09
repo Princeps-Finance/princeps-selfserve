@@ -14,7 +14,7 @@
 
       <div class="field">
         <label class="label" for="income">{{ 'waitlist.income.label' | t }}</label>
-        <select id="income" class="input" formControlName="incomeBand">
+        <select id="income" class="input" [attr.aria-invalid]="attempted() && form.controls.incomeBand.invalid ? true : null" formControlName="incomeBand">
           <option value="" disabled>—</option>
           @for (b of incomeBands; track b.value) {
             <option [value]="b.value">{{ b.key | t }}</option>
@@ -31,7 +31,11 @@
         </div>
       </fieldset>
 
-      <button type="submit" class="cta" [disabled]="!canSubmit()">
+      @if (attempted() && !form.valid) {
+        <p class="msg--error" role="alert">{{ 'form.fix.required' | t }}</p>
+      }
+
+      <button type="submit" class="cta" [disabled]="submitting()">
         <span>{{ submitting() ? ('waitlist.joining' | t) : ('waitlist.join' | t) }}</span>
         @if (!submitting()) {
           <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">

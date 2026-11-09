@@ -58,7 +58,7 @@
 }
 .cta:hover { background: var(--action-primary-hover); }
 .cta:active { transform: scale(0.99); }
-.cta:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.cta:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 
 .secondary {
   align-self: stretch;
@@ -74,6 +74,6 @@
   transition: background 160ms ease, color 160ms ease;
 }
 .secondary:hover { background: var(--ink); color: var(--action-on-primary); }
-.secondary:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.secondary:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 
 .fine { margin: 0; font-size: 12px; color: var(--ink-muted); line-height: 1.5; }

@@ -59,4 +59,4 @@
   cursor: pointer;
 }
 .cta:hover { background: var(--action-primary-hover); }
-.cta:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.cta:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }

@@ -31,7 +31,7 @@
   border: none;
   background: transparent;
   padding: 8px 18px;
-  min-height: 36px;
+  min-height: 44px;
   border-radius: var(--radius-pill);
   font-family: var(--font-sans);
   font-size: 14px;
@@ -44,7 +44,7 @@
   background: var(--action-primary);
   color: var(--action-on-primary);
 }
-.seg-item:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.seg-item:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 
 .label { font-family: var(--font-sans); font-size: 13px; font-weight: 500; color: var(--ink); }
 
@@ -56,7 +56,7 @@
   border: 1px solid var(--input-border);
   border-radius: var(--input-radius);
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: 16px;
   color: var(--ink);
   box-shadow: inset 0 1px 0 rgba(0,0,0,0.02);
   transition: border-color 140ms ease, box-shadow 140ms ease;
@@ -64,7 +64,7 @@
 
 .input:hover { border-color: var(--input-border-hover); }
 .input:focus, .input:focus-visible {
-  outline: none;
+  outline: 2px solid transparent; outline-offset: 2px;
   border-color: var(--input-border-focus);
   box-shadow: var(--input-shadow-focus);
 }
@@ -72,7 +72,7 @@
 .field.is-invalid .input { border-color: var(--danger); }
 
 .msg { margin: 0; font-size: 13px; color: var(--ink-muted); }
-.msg--error { color: var(--danger); }
+.msg--error { color: var(--danger-text); }
 
 .server-error {
   margin: 0;
@@ -131,6 +131,6 @@
 .cta:disabled { opacity: 0.5; cursor: not-allowed; }
 .cta:hover:not(:disabled) { background: var(--action-primary-hover); }
 .cta:active:not(:disabled) { transform: scale(0.99); }
-.cta:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.cta:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 .cta-arrow { transition: transform 200ms cubic-bezier(0.2,0.7,0.1,1); }
 .cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); }

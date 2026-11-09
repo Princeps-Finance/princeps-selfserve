@@ -40,6 +40,13 @@ button {
   font-family: inherit;
 }
 
+/* Inline form messages shared by every step (component CSS may override). */
+.msg--error { color: var(--danger-text); font-size: 13px; line-height: 1.4; margin: 0; }
+
+/* Invalid fields: border colour as well as aria-invalid for sighted users. */
+input.input[aria-invalid='true'],
+select.input[aria-invalid='true'] { border-color: var(--danger-text); }
+
 /* Wizard step entry — bridges the router-outlet teleport between /apply/* steps.
    Every .step fades + lifts on mount. No scale (text must not resample). */
 .step {

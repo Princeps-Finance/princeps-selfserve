@@ -6,8 +6,8 @@
     <p class="subtitle">{{ 'step.employment.subtitle' | t }}</p>
   </header>
 
-  <ul class="options" role="radiogroup" [attr.aria-label]="'step.employment.title' | t">
-    @for (opt of options; track opt.type) {
+  <ul class="options" appRadioGroup role="radiogroup" [attr.aria-label]="'step.employment.title' | t">
+    @for (opt of options; track opt.type; let first = $first) {
       <li>
         <button
           type="button"
@@ -16,6 +16,7 @@
           [class.is-selected]="selected() === opt.type"
           [class.is-coming-soon]="!opt.live"
           [attr.aria-checked]="selected() === opt.type"
+          [attr.tabindex]="selected() === opt.type || (selected() === null && first) ? 0 : -1"
           (click)="select(opt.type)"
         >
           <span class="option-body">
@@ -36,6 +37,10 @@
     }
   </ul>
 
+  @if (attempted() && !selectedOption()) {
+    <p class="msg msg--error" role="alert">{{ 'form.choose.required' | t }}</p>
+  }
+
   @if (showCorperMonths()) {
     <aside class="nysc-notice" role="note">
       <p class="nysc-notice-headline">{{ 'step.employment.corper.cap.headline' | t }}</p>
@@ -52,12 +57,17 @@
         min="1"
         max="11"
         [formControl]="nyscMonths"
+        [attr.aria-invalid]="attempted() && nyscMonths.invalid ? true : null"
+        aria-describedby="months-hint"
       />
-      <p class="msg">{{ 'step.employment.corper.months.hint' | t }}</p>
+      @if (attempted() && nyscMonths.invalid) {
+        <p class="msg msg--error" role="alert">{{ 'form.fix.required' | t }}</p>
+      }
+      <p class="msg" id="months-hint">{{ 'step.employment.corper.months.hint' | t }}</p>
     </div>
   }
 
-  <button type="button" class="cta" [disabled]="!canContinue() || submitting()" (click)="continue()">
+  <button type="button" class="cta" [disabled]="submitting()" (click)="continue()">
     <span>{{ 'step.employment.continue' | t }}</span>
     <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />

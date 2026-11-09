@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { focusFirstInvalid } from '../../../core/a11y/focus';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { API_CLIENT, Bank } from '../../../core/api/api-client';
@@ -66,6 +67,17 @@ export class SalaryComponent {
 
   readonly statusChanges = toSignal(this.form.statusChanges, { initialValue: this.form.status });
   readonly valueChanges = toSignal(this.form.valueChanges, { initialValue: this.form.value });
+
+  readonly attempted = signal(false);
+
+  invalid(name: 'bankCode' | 'accountNumber' | 'ippisNumber' | 'employer'): true | null {
+    if (!this.attempted()) return null;
+    const c = this.form.controls[name];
+    let bad = c.invalid;
+    if (name === 'ippisNumber') bad = this.needsIppis() && !/^\d+$/.test(c.value);
+    if (name === 'employer') bad = this.channel() === 'dedukt' && !c.value;
+    return bad ? true : null;
+  }
 
   readonly canSubmit = computed(() => {
     this.statusChanges();
@@ -142,7 +154,13 @@ export class SalaryComponent {
   }
 
   async submit(): Promise<void> {
-    if (!this.canSubmit() || this.submitting()) return;
+    if (this.submitting()) return;
+    if (!this.canSubmit()) {
+      this.attempted.set(true);
+      this.form.markAllAsTouched();
+      setTimeout(() => focusFirstInvalid());
+      return;
+    }
     this.submitting.set(true);
     this.serverError.set(null);
     const v = this.form.getRawValue();

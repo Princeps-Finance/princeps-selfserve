@@ -40,7 +40,7 @@ const VOICE_LOCALE: Record<string, string> = {
     `
       .tts {
         display: inline-flex; align-items: center; justify-content: center;
-        width: 36px; height: 36px;
+        width: 44px; height: 44px;
         background: transparent; border: 1px solid var(--hairline);
         color: var(--ink); border-radius: 50%;
         cursor: pointer;
@@ -48,7 +48,7 @@ const VOICE_LOCALE: Record<string, string> = {
       }
       .tts:hover:not(:disabled) { background: rgba(17,17,17,0.06); }
       .tts:active:not(:disabled) { transform: scale(0.96); }
-      .tts:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+      .tts:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
       .tts:disabled { opacity: 0.4; cursor: not-allowed; }
       .tts.is-speaking {
         background: var(--action-primary);
