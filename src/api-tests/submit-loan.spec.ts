@@ -8,6 +8,7 @@ function valid(overrides: Record<string, unknown> = {}) {
   const monthly = estimateMonthlyRepayment(200_000, 6, 5, 'Flat Rate');
   return {
     productId: 'ippis-standard',
+    appVersion: '0.1.0',
     borrowerBvn: '12345678901',
     borrowerName: 'Ada Obi',
     borrowerPhone: '+2348031112233',
@@ -73,6 +74,7 @@ describe('POST /api/submit-loan', () => {
     expect(init.headers['X-Application-Token']).toBe('tok');
     const sent = JSON.parse(init.body);
     expect(sent.productId).toBeUndefined();
+    expect(sent.appVersion).toBe('0.1.0');
     expect(sent.ratePercent).toBe(5);
     expect(sent.feesKobo).toBe(4_000 * 100);
   });
@@ -108,6 +110,7 @@ describe('POST /api/submit-loan', () => {
     expect((await handler(req(valid({ borrowerPhone: '08031112233' })))).status).toBe(400);
     expect((await handler(req(valid({ tenorMonths: 0 })))).status).toBe(400);
     expect((await handler(req(valid({ isAdmin: true })))).status).toBe(400);
+    expect((await handler(req(valid({ appVersion: 'latest' })))).status).toBe(400);
     expect((await handler(req(null, { raw: '{not json' }))).status).toBe(400);
     expect((await handler(req(valid({ borrowerName: 'x'.repeat(9_000) })))).status).toBe(413);
   });

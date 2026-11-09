@@ -5,6 +5,7 @@ import { WizardProgressComponent } from '../wizard-progress.component';
 import { API_CLIENT } from '../../../core/api/api-client';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { formatNaira } from '../../../core/money.util';
+import { APP_VERSION } from '../../../core/app-version';
 import { ToastService } from '../../../core/toast/toast.service';
 
 function isLoanEmployment(t: string): t is 'government' | 'paramilitary' | 'corper' {
@@ -75,6 +76,7 @@ export class SubmitComponent {
         bvn,
         loan: {
           productId: offer.productId,
+          appVersion: APP_VERSION,
           borrowerBvn: bvn,
           borrowerName: profile?.fullName ?? bvnDraft.matchedName ?? 'Unknown',
           borrowerPhone: contact.phone,

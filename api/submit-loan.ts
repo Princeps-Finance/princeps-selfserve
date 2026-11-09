@@ -34,6 +34,7 @@ const digits = (n: number) => z.string().regex(new RegExp(`^\\d{${n}}$`));
 const Body = z
   .object({
     productId: z.string().max(64),
+    appVersion: z.string().regex(/^\d{1,3}\.\d{1,3}\.\d{1,3}(?:-[\w.]{1,20})?$/),
     borrowerBvn: digits(11),
     borrowerName: z.string().trim().min(2).max(120),
     borrowerPhone: z.string().regex(/^\+234[789]\d{9}$/),
@@ -128,6 +129,7 @@ export default async function handler(req: Request): Promise<Response> {
     ippisNumber: b.ippisNumber,
     employmentType: b.employmentType,
     employer: b.employer,
+    appVersion: b.appVersion,
     feesKobo: calcProductFees(product, amount).reduce((s, f) => s + f.amount * 100, 0),
   };
 
