@@ -26,9 +26,15 @@
   <div class="next">
     <h2 class="next-title">{{ 'received.next.title' | t }}</h2>
     <ol class="next-list">
-      <li>{{ 'received.next.1' | t }}</li>
-      <li>{{ 'received.next.2' | t }}</li>
-      <li>{{ 'received.next.3' | t }}</li>
+      @if (isReview) {
+        <li>{{ 'received.review.1' | t }}</li>
+        <li>{{ 'received.review.2' | t }}</li>
+        <li>{{ 'received.review.3' | t }}</li>
+      } @else {
+        <li>{{ 'received.next.1' | t }}</li>
+        <li>{{ 'received.next.2' | t }}</li>
+        <li>{{ 'received.next.3' | t }}</li>
+      }
     </ol>
   </div>
 

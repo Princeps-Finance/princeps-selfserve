@@ -67,12 +67,22 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     const contact = this.state.contact();
+    const bvn = this.state.bvn();
     if (!contact) {
       await this.router.navigateByUrl('/apply/contact');
       return;
     }
+    if (!bvn) {
+      await this.router.navigateByUrl('/apply/bvn');
+      return;
+    }
     try {
-      const res = await this.api.sendPhoneOtp(contact.phone, await this.captcha.token());
+      // The code goes to the phone linked to the BVN, not to the number typed earlier.
+      const res = await this.api.sendBvnOtp(bvn.value, await this.captcha.token());
+      if (res.status === 'not-found') {
+        await this.router.navigate(['/apply/bvn'], { queryParams: { error: 'not-found' } });
+        return;
+      }
       this.maskedTarget.set(res.target);
       this.startCooldown();
     } catch {
@@ -145,13 +155,16 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     const contact = this.state.contact();
-    if (!contact) return;
+    const bvn = this.state.bvn();
+    if (!contact || !bvn) return;
 
     this.submitting.set(true);
     this.error.set(null);
     try {
-      const res = await this.api.verifyPhoneOtp(contact.phone, this.code());
+      const res = await this.api.verifyBvnOtp(bvn.value, this.code());
       if (res.status === 'ok') {
+        this.state.setBvnIdentity(res.identity);
+        this.state.setBvn({ value: bvn.value, verified: true });
         this.state.markPhoneVerified();
         await this.router.navigateByUrl(await this.nextAfterVerified(contact));
         return;
@@ -191,12 +204,13 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async resend(): Promise<void> {
     if (this.resendCooldown() > 0 || this.resending()) return;
-    const contact = this.state.contact();
-    if (!contact) return;
+    const bvn = this.state.bvn();
+    if (!bvn) return;
     this.resending.set(true);
     this.justResent.set(false);
     try {
-      const res = await this.api.sendPhoneOtp(contact.phone, await this.captcha.token());
+      const res = await this.api.sendBvnOtp(bvn.value, await this.captcha.token());
+      if (res.status !== 'sent') throw new Error('not-sent');
       this.maskedTarget.set(res.target);
       this.justResent.set(true);
       this.error.set(null);
@@ -209,7 +223,7 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   goBack(): void {
-    void this.router.navigateByUrl('/apply/contact');
+    void this.router.navigateByUrl('/apply/bvn');
   }
 
   private startCooldown(): void {

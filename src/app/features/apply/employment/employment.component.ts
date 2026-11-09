@@ -5,7 +5,6 @@ import { TPipe } from '../../../core/i18n/t.pipe';
 import { focusFirstInvalid } from '../../../core/a11y/focus';
 import { DEFAULT_ELIGIBILITY_CONFIG } from '../../../core/eligibility/eligibility-scoring';
 import { telLink, whatsappLink } from '../../../core/support';
-import { RadioGroupDirective } from '../../../core/a11y/radio-group.directive';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import {
   ApplicationStateService,
@@ -23,13 +22,13 @@ const OPTIONS: Option[] = [
   { type: 'government', labelKey: 'step.employment.government', hintKey: 'step.employment.government.hint', live: true },
   { type: 'paramilitary', labelKey: 'step.employment.paramilitary', hintKey: 'step.employment.paramilitary.hint', live: true },
   { type: 'corper', labelKey: 'step.employment.corper', hintKey: 'step.employment.corper.hint', live: true },
-  { type: 'private-sector', labelKey: 'step.employment.private', hintKey: 'step.employment.private.hint', live: false },
+  { type: 'private-sector', labelKey: 'step.employment.private', hintKey: 'step.employment.private.hint', live: true },
   { type: 'own-business', labelKey: 'step.employment.business', hintKey: 'step.employment.business.hint', live: false },
 ];
 
 @Component({
   selector: 'app-employment',
-  imports: [TPipe, WizardProgressComponent, ReactiveFormsModule, RadioGroupDirective],
+  imports: [TPipe, WizardProgressComponent, ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './employment.component.html',
   styleUrl: './employment.component.css',
@@ -39,7 +38,7 @@ export class EmploymentComponent {
   private readonly router = inject(Router);
 
   /** Only segments we can serve now are options. The rest are a single waitlist link, not disabled-looking rows. */
-  readonly options = OPTIONS.filter((o) => o.live);
+  readonly options = OPTIONS;
   readonly selected = signal<EmploymentType | null>(this.state.employment()?.type ?? null);
   readonly submitting = signal(false);
   readonly attempted = signal(false);
@@ -71,17 +70,15 @@ export class EmploymentComponent {
     return true;
   });
 
-  joinWaitlist(): void {
-    void this.router.navigate(['/apply/waitlist'], { queryParams: { type: 'private-sector' } });
-  }
-
   onMonthsInput(): void {
     this.months.set(this.nyscMonths.value);
   }
 
+  /** One tap moves on. Only a corper needs one more answer (months left), so only they get a button. */
   select(type: EmploymentType): void {
     this.selected.set(type);
     this.attempted.set(false);
+    if (type !== 'corper') void this.continue();
   }
 
   async continue(): Promise<void> {
@@ -102,6 +99,11 @@ export class EmploymentComponent {
 
     if (!opt.live) {
       await this.router.navigate(['/apply/waitlist'], { queryParams: { type: opt.type } });
+      return;
+    }
+    if (opt.type === 'private-sector') {
+      this.state.setEmployment({ type: opt.type });
+      await this.router.navigateByUrl('/apply/statement');
       return;
     }
 

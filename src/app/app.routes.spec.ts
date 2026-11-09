@@ -67,17 +67,24 @@ describe('wizard route guards (bio data → work → offer → loan documentatio
 
   it('asks for the documentation details only after an offer is chosen and the terms accepted', () => {
     verified();
+    state.setBvn({ value: '12345678901', verified: true }); // BVN is confirmed first, at sign-in
     state.setProfile({} as never);
     state.setEmployment({ type: 'government' });
     state.setSalary({} as never);
     approve();
     expect(allows('offers')).toBe(true);
-    expect(allows('bvn')).toBe(false);
+    expect(allows('documents')).toBe(false);
     state.setOffer({ productId: 'ippis-advance' } as never);
     expect(allows('terms')).toBe(true);
-    expect(allows('bvn')).toBe(false);
+    expect(allows('documents')).toBe(false);
     state.setTermsAccepted(new Date().toISOString());
+    expect(allows('documents')).toBe(true);
+  });
+
+  it('asks for the BVN straight after the phone number, before anything else', () => {
+    state.setContact({ phone: '+2348012345678', email: 'a@b.ng' });
     expect(allows('bvn')).toBe(true);
+    expect(allows('profile')).toBe(false); // needs the BVN owner to confirm first
   });
 
   it('lets a manual-review result continue (not a dead end) but never a decline', () => {
@@ -94,6 +101,7 @@ describe('wizard route guards (bio data → work → offer → loan documentatio
 
   it('only asks for NIN when the chosen product needs it', () => {
     state.setBvn({ value: '12345678901', verified: true });
+    state.setTermsAccepted(new Date().toISOString());
     state.setOffer({ productId: 'ippis-advance' } as never); // NIN not required
     expect(allows('documents')).toBe(true);
     state.setOffer({ productId: 'corper-allowee' } as never); // NIN required

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { productById } from '../../../core/products/products';
 import { Router } from '@angular/router';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
@@ -84,7 +85,8 @@ export class TermsComponent implements OnInit {
       return;
     }
     this.state.setTermsAccepted(new Date().toISOString());
-    void this.router.navigateByUrl('/apply/bvn');
+    const needsNin = productById(this.offer()?.productId ?? '')?.settings.requiresNin ?? false;
+    void this.router.navigateByUrl(needsNin ? '/apply/nin' : '/apply/documents');
   }
 }
 

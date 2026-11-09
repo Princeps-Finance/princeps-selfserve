@@ -9,11 +9,12 @@ import { environment } from '../../../environments/environment';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (show) {
-      <p class="demo" role="note">{{ 'demo.banner' | t }}</p>
+      <aside class="demo" [attr.aria-label]="'demo.label' | t"><p>{{ 'demo.banner' | t }}</p></aside>
     }
   `,
   styles: [
     `
+      .demo p { margin: 0; }
       .demo {
         margin: 0; padding: 6px var(--space-4); text-align: center;
         background: var(--navy-950); color: #fff; font-size: 12px; line-height: 1.4;

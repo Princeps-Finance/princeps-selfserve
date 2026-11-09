@@ -51,6 +51,33 @@ const OPS: Record<string, OpDef> = {
     limit: 6,
     allow: ['status', 'retryAfterSeconds', 'token'],
   },
+  'send-bvn-otp': {
+    schema: z.object({ bvn: digits(11), captchaToken: z.string().max(2048).optional() }).strict(),
+    limit: 3,
+    allow: ['status', 'target', 'expiresInSeconds'],
+  },
+  'verify-bvn-otp': {
+    schema: z.object({ bvn: digits(11), code: digits(6) }).strict(),
+    limit: 6,
+    // identity carries name, date of birth and address. The BVN photo is never passed through.
+    allow: ['status', 'retryAfterSeconds', 'token', 'identity'],
+  },
+  'statement-review': {
+    schema: z
+      .object({
+        contact: z.object({ phone, email: z.string().email().max(160) }).strict(),
+        bvn: digits(11),
+        employer: z.string().min(2).max(120),
+        bankCode: digits(3),
+        fileName: z.string().min(1).max(200),
+        sizeBytes: z.number().int().positive().max(10 * 1024 * 1024),
+      })
+      .strict(),
+    limit: 5,
+    allow: ['status', 'referenceId'],
+    needsToken: true,
+  },
+  lgas: { schema: z.object({ state: z.string().min(2).max(40) }).strict(), limit: 30, allow: ['lgas'] },
   banks: { schema: z.object({}).strict(), limit: 30, allow: ['banks'] },
   'verify-salary': {
     schema: z
@@ -166,7 +193,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   // Bot check before sending an SMS (costs money and can harass a victim).
   let payload = parsed.data as Record<string, unknown>;
-  if (op === 'send-otp') {
+  if (op === 'send-otp' || op === 'send-bvn-otp') {
     const { captchaToken, ...rest } = payload as { captchaToken?: string };
     if (!(await verifyCaptcha(captchaToken, ip))) {
       return fail('CAPTCHA', 'Please confirm you are not a robot and try again.', 400);
@@ -175,8 +202,8 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   // Per-phone limits stop one number being hammered from many IPs.
-  const target = (parsed.data as { phone?: string }).phone;
-  if (target && (op === 'send-otp' || op === 'verify-otp') && rateLimited(`${op}:${target}`, def.limit * 2, 10 * 60_000)) {
+  const target = (parsed.data as { phone?: string; bvn?: string }).phone ?? (parsed.data as { bvn?: string }).bvn;
+  if (target && (op === 'send-otp' || op === 'verify-otp' || op === 'send-bvn-otp' || op === 'verify-bvn-otp') && rateLimited(`${op}:${target}`, def.limit * 2, 10 * 60_000)) {
     return fail('RATE_LIMITED', 'Too many attempts. Try again shortly.', 429);
   }
 

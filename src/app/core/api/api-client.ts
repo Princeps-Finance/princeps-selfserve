@@ -105,7 +105,49 @@ export interface Bank {
   name: string;
 }
 
+/**
+ * What the BVN record gives us once the owner has confirmed with an OTP sent to the phone linked
+ * to that BVN. The BVN photo is NEVER returned to the browser: it stays server-side for face match.
+ */
+export interface BvnIdentity {
+  fullName: string;
+  dateOfBirth: string; // YYYY-MM-DD
+  state?: string;
+  lga?: string;
+  street?: string;
+}
+
+export type BvnOtpSendResult =
+  | { status: 'sent'; target: string; expiresInSeconds: number }
+  | { status: 'not-found' };
+
+export type BvnOtpVerifyResult =
+  | { status: 'ok'; identity: BvnIdentity }
+  | { status: 'wrong' }
+  | { status: 'expired' }
+  | { status: 'locked'; retryAfterSeconds: number };
+
+export interface StatementReviewInput {
+  contact: { phone: string; email: string };
+  bvn: string;
+  employer: string;
+  bankCode: string;
+  fileName: string;
+  sizeBytes: number;
+}
+
 export interface ApiClient {
+  /**
+   * Private-sector applicants are not scored automatically: a bank statement is reviewed by a person.
+   * Caltos receives the request and decides; the app never claims an outcome.
+   */
+  submitStatementReview(input: StatementReviewInput): Promise<SubmitResult>;
+  /** Sends a one-time code to the phone number linked to this BVN (not to a number the user typed). */
+  sendBvnOtp(bvn: string, captchaToken?: string): Promise<BvnOtpSendResult>;
+  /** A correct code proves the customer owns the BVN, and releases the details for it. */
+  verifyBvnOtp(bvn: string, code: string): Promise<BvnOtpVerifyResult>;
+  /** Local government areas for a state. An empty list means the user types it instead. */
+  getLgas(state: string): Promise<string[]>;
   lookupContact(input: { phone: string; email: string }): Promise<LookupResult>;
   sendPhoneOtp(phone: string, captchaToken?: string): Promise<{ target: string; expiresInSeconds: number }>;
   verifyPhoneOtp(
@@ -231,6 +273,43 @@ export class MockApiClient implements ApiClient {
       };
     }
     return { kind: 'new' };
+  }
+
+  async submitStatementReview(_input: StatementReviewInput): Promise<SubmitResult> {
+    await delay(900);
+    return { status: 'received', referenceId: 'PRN-' + Math.random().toString(36).slice(2, 8).toUpperCase() };
+  }
+
+  async sendBvnOtp(bvn: string, _captchaToken?: string): Promise<BvnOtpSendResult> {
+    await delay(600);
+    if (bvn === '00000000000') return { status: 'not-found' };
+    return { status: 'sent', target: '+234 •••• ••78', expiresInSeconds: 300 };
+  }
+
+  async verifyBvnOtp(bvn: string, code: string): Promise<BvnOtpVerifyResult> {
+    await delay(600);
+    if (code === '000000') return { status: 'expired' };
+    if (code !== '123456') return { status: 'wrong' };
+    // 22222222222 returns a record without an address, to exercise the manual fallback.
+    const partial = bvn === '22222222222';
+    return {
+      status: 'ok',
+      identity: {
+        fullName: 'Ada Okafor',
+        dateOfBirth: '1988-04-12',
+        ...(partial ? {} : { state: 'Lagos', lga: 'Ikeja', street: '12 Marina Road' }),
+      },
+    };
+  }
+
+  async getLgas(state: string): Promise<string[]> {
+    await delay(150);
+    const demo: Record<string, string[]> = {
+      Lagos: ['Alimosho', 'Eti-Osa', 'Ikeja', 'Kosofe', 'Mushin', 'Surulere'],
+      FCT: ['Abaji', 'Bwari', 'Gwagwalada', 'Kuje', 'Kwali', 'Municipal Area Council'],
+      Kano: ['Fagge', 'Gwale', 'Nasarawa', 'Tarauni', 'Ungogo'],
+    };
+    return demo[state] ?? [];
   }
 
   async sendPhoneOtp(phone: string, _captchaToken?: string) {

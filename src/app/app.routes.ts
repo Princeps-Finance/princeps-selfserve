@@ -186,14 +186,20 @@ export const routes: Routes = [
           import('./features/apply/salary/salary.component').then((m) => m.SalaryComponent),
       },
       {
+        path: 'statement',
+        canMatch: [requiresContactGuard, requiresPhoneVerifiedGuard, requiresEmploymentGuard],
+        loadComponent: () =>
+          import('./features/apply/statement/statement.component').then((m) => m.StatementComponent),
+      },
+      {
         path: 'bvn',
-        canMatch: [requiresTermsGuard],
+        canMatch: [requiresContactGuard],
         loadComponent: () =>
           import('./features/apply/bvn/bvn.component').then((m) => m.BvnComponent),
       },
       {
         path: 'nin',
-        canMatch: [requiresBvnGuard],
+        canMatch: [requiresTermsGuard, requiresBvnGuard],
         loadComponent: () =>
           import('./features/apply/nin/nin.component').then((m) => m.NinComponent),
       },
@@ -231,7 +237,7 @@ export const routes: Routes = [
       },
       {
         path: 'documents',
-        canMatch: [requiresNinIfNeededGuard],
+        canMatch: [requiresTermsGuard, requiresNinIfNeededGuard],
         loadComponent: () =>
           import('./features/apply/documents/documents.component').then(
             (m) => m.DocumentsComponent,
