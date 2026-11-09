@@ -18,6 +18,12 @@ export class WelcomeBackComponent {
   readonly snapshot = this.state.returningSnapshot;
   readonly formatNaira = formatNaira;
 
+  /** Only a first name is shown; employer, account, income and the rest stay out of sight. */
+  readonly firstName = computed(() => {
+    const raw = this.state.bvnIdentity()?.firstName ?? this.snapshot()?.fullName.split(/\s+/)[0] ?? '';
+    return raw.trim().toLowerCase().replace(/(^|[\s-])\p{L}/gu, (m) => m.toUpperCase());
+  });
+
   readonly lastLoanLabel = computed(() => {
     const s = this.snapshot();
     if (!s) return '';

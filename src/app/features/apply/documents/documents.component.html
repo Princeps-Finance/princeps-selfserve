@@ -13,6 +13,11 @@
         <div class="doc-body">
           <h2 class="doc-label">{{ spec.labelKey | t }}</h2>
           <p class="doc-hint">{{ spec.hintKey | t }}</p>
+          @if (d?.status === 'uploading') {
+            <span class="badge badge--pending">{{ 'step.docs.uploading' | t }}</span>
+          } @else if (d?.status === 'uploaded') {
+            <span class="badge badge--ok">{{ 'step.docs.uploaded' | t }}</span>
+          }
           @if (d?.status === 'uploaded' && d?.fileName) {
             <p class="doc-file">{{ d?.fileName }}</p>
           }
@@ -25,9 +30,8 @@
 
         <div class="doc-action">
           @if (d?.status === 'uploading') {
-            <span class="badge badge--pending">{{ 'step.docs.uploading' | t }}</span>
+            <!-- status shown under the title -->
           } @else if (d?.status === 'uploaded') {
-            <span class="badge badge--ok">{{ 'step.docs.uploaded' | t }}</span>
             <label class="ghost-btn">
               <input type="file" hidden (change)="onFile(spec.id, $event)" accept="image/*,application/pdf" />
               {{ 'step.docs.replace' | t }}

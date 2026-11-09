@@ -43,28 +43,31 @@
   transition: background 140ms ease, border-color 140ms ease;
 }
 
+/* Secondary action: outline, so the page's one filled button (Continue) stays the main thing. */
 .pill-btn {
-  background: var(--action-primary);
-  color: var(--action-on-primary);
+  background: transparent;
+  color: var(--action-primary);
+  border-color: var(--action-primary);
+  min-height: 44px; padding-inline: var(--space-5);
 }
-.pill-btn:hover { background: var(--action-primary-hover); }
+.pill-btn:hover { background: rgba(11, 43, 85, 0.06); }
 
 .ghost-btn {
   background: transparent;
-  color: var(--ink);
-  border-color: var(--input-border);
+  color: var(--action-primary);
+  border-color: var(--action-primary);
 }
 .ghost-btn:hover { border-color: var(--input-border-hover); }
 
-.badge {
-  font-size: 11px;
+.badge { align-self: flex-start;
+  font-size: 12px; font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   padding: 4px 10px;
   border-radius: var(--radius-pill);
 }
 
-.badge--ok { background: var(--success-soft); color: var(--success); }
+.badge--ok { background: var(--success-soft); color: var(--success-text); }
 .badge--pending { background: var(--info-soft); color: var(--action-primary); }
 
 .cta {

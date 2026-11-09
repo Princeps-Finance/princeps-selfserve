@@ -124,7 +124,7 @@
 .link-title { margin: 0; font-size: 22px; }
 .link-body { margin: 0; color: var(--ink-soft); line-height: 1.5; }
 .link-status { margin: 0; font-weight: 500; }
-.link-status[data-status='completed'] { color: var(--success); }
+.link-status[data-status='completed'] { color: var(--success-text); }
 .link-status[data-status='failed'] { color: var(--danger-text); }
 .alt-btn {
   min-height: 52px; padding: 0 var(--space-5); display: inline-flex; align-items: center; justify-content: center;
@@ -133,3 +133,20 @@
 }
 .alt-btn:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 a.cta { text-decoration: none; justify-content: center; }
+
+/* Link screen: one filled button at a time, the rest are quiet text buttons. */
+.step--link { align-items: stretch; }
+.head--center { text-align: center; align-items: center; }
+.head--center .title, .head--center .subtitle { margin-inline: auto; max-width: 30ch; }
+.link-status { margin: 0; text-align: center; font-size: 15px; color: var(--ink-soft); }
+.link-status[data-status='failed'] { color: var(--danger-text); }
+.link-actions { margin-top: auto; display: flex; flex-direction: column; gap: var(--space-2); }
+.text-btn {
+  min-height: 48px; padding: 0 var(--space-4); border: 0; background: none; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; text-align: center;
+  font: inherit; font-size: 15px; font-weight: 600; color: var(--action-primary);
+  text-decoration: underline; text-underline-offset: 4px; border-radius: var(--radius-pill);
+}
+.text-btn:hover { background: rgba(11, 43, 85, 0.05); }
+.text-btn:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
+.link-actions .cta { justify-content: center; text-decoration: none; }

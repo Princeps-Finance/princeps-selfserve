@@ -10,7 +10,7 @@ export type IllustrationName = 'shield' | 'message' | 'coins' | 'check' | 'docum
   selector: 'app-illustration',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <svg class="art" viewBox="0 0 160 120" fill="none" aria-hidden="true" focusable="false">
+    <svg class="art" viewBox="0 0 160 120" fill="none" aria-hidden="true" focusable="false" [style.width.px]="size()" [style.height.px]="size() * 0.75">
       <circle cx="80" cy="62" r="48" fill="#E8EEF7" />
       @switch (name()) {
         @case ('shield') {
@@ -60,10 +60,12 @@ export type IllustrationName = 'shield' | 'message' | 'coins' | 'check' | 'docum
   styles: [
     `
       :host { display: block; }
-      .art { display: block; width: 132px; height: 99px; margin: 0 auto; }
+      .art { display: block; margin: 0 auto; }
     `,
   ],
 })
 export class IllustrationComponent {
   readonly name = input.required<IllustrationName>();
+  /** Width in px; height follows the 4:3 artwork. */
+  readonly size = input<number>(132);
 }

@@ -1,30 +1,9 @@
 @if (snapshot(); as s) {
 <section class="step">
-  <p class="eyebrow">{{ 'welcome.eyebrow' | t }}</p>
-
   <header class="head">
-    <h1 class="title">{{ 'welcome.title' | t }}, {{ s.fullName }}.</h1>
+    <h1 class="title">{{ 'welcome.title' | t }}, {{ firstName() }}</h1>
     <p class="subtitle">{{ 'welcome.subtitle' | t }}</p>
   </header>
-
-  <dl class="snap">
-    <div>
-      <dt>{{ 'welcome.employer' | t }}</dt>
-      <dd>{{ s.employerName }}</dd>
-    </div>
-    <div>
-      <dt>{{ 'welcome.salary.account' | t }}</dt>
-      <dd>{{ s.bankName }} · •••• {{ s.accountLast4 }}</dd>
-    </div>
-    <div>
-      <dt>{{ 'welcome.income' | t }}</dt>
-      <dd>{{ formatNaira(s.monthlyIncome) }}</dd>
-    </div>
-    <div>
-      <dt>{{ 'welcome.last.loan' | t }}</dt>
-      <dd>{{ lastLoanLabel() }}</dd>
-    </div>
-  </dl>
 
   <div class="actions">
     <button type="button" class="cta" (click)="borrowAgain()">

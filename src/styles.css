@@ -132,14 +132,9 @@ input[type='checkbox'][aria-invalid='true'] {
 }
 
 
-/* Kraken-style layout: the step fills the screen and its primary button sits at the bottom, with the
-   content above it. On phones the button also stays in view while a long form scrolls. */
+/* Kraken-style layout: the step fills the screen and its primary button sits at the bottom of it.
+   On long screens the button simply follows the content, so it never covers anything. */
+.body > :not(router-outlet) { flex: 1 1 auto; display: flex; flex-direction: column; } /* the routed screen fills the body */
 .step { flex: 1 1 auto; }
 .step > .form { flex: 1 1 auto; }
 .step .cta { margin-top: auto !important; }
-@media (max-width: 719px) {
-  .step .cta {
-    position: sticky; bottom: var(--space-4); z-index: 2;
-    box-shadow: 0 8px 24px rgba(11, 43, 85, 0.22);
-  }
-}
