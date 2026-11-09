@@ -8,33 +8,19 @@
     <h1 class="title">{{ 'lang.select.title' | t }}</h1>
     <p class="subtitle">{{ 'lang.select.subtitle' | t }}</p>
 
-    <ul class="lang-list" appRadioGroup role="radiogroup" [attr.aria-label]="'lang.select.title' | t">
+    <ul class="lang-grid" [attr.aria-label]="'lang.select.title' | t">
       @for (l of languages; track l.code; let i = $index) {
-        <li role="presentation" [style.--i]="i">
-          <button
-            type="button"
-            class="lang-row"
-            role="radio"
-            [attr.aria-checked]="selected() === l.code"
-            [attr.tabindex]="selected() === l.code ? 0 : -1"
-            [class.is-selected]="selected() === l.code"
-            (click)="choose(l.code)"
-          >
+        <li [style.--i]="i">
+          <button type="button" class="lang-card" [attr.lang]="l.code" [class.is-current]="current() === l.code" (click)="choose(l.code)">
             <span class="lang-endonym">{{ l.endonym }}</span>
-            <span class="lang-english">{{ l.english }}</span>
-            <span class="mark" aria-hidden="true">
-              @if (selected() === l.code) {
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-                  <path
-                    d="M4 10.5L8 14.5L16 6"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              }
-            </span>
+            @if (l.english !== l.endonym) {
+              <span class="lang-english">{{ l.english }}</span>
+            }
+            @if (current() === l.code) {
+              <svg class="lang-check" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M4 10.5L8 14.5L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            }
           </button>
         </li>
       }
@@ -42,12 +28,6 @@
   </section>
 
   <footer class="footer">
-    <button type="button" class="cta" (click)="continue()">
-      <span>{{ 'lang.select.continue' | t }}</span>
-      <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-        <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
-    </button>
     <a class="signin" href="https://caltos-rho.vercel.app/portal/repayments" rel="noopener">
       {{ 'lang.select.signin' | t }}
     </a>

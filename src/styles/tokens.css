@@ -67,13 +67,13 @@
   --focus-ring: 0 0 0 3px var(--canvas), 0 0 0 5px var(--navy-900);
 
   /* Polaris-style input surface */
-  --input-bg: #ffffff;
+  --input-bg: #f4f3ef;
   --input-border: #7b8088;
   --input-border-hover: #5a5f66;
   --input-border-focus: var(--navy-900);
   --input-shadow-focus: 0 0 0 3px rgba(11, 43, 85, 0.18);
-  --input-radius: 10px;
-  --input-height: 44px;
+  --input-radius: 12px;
+  --input-height: 52px;
 
   /* Spacing (4px base) */
   --space-1: 4px;
