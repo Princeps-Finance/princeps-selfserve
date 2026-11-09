@@ -31,6 +31,7 @@ export class WaitlistComponent {
 
   readonly submitting = signal(false);
   readonly attempted = signal(false);
+  readonly failed = signal(false);
   readonly result = signal<WaitlistResult | null>(null);
 
   readonly form = new FormGroup({
@@ -77,6 +78,7 @@ export class WaitlistComponent {
       return;
     }
     this.submitting.set(true);
+    this.failed.set(false);
     const v = this.form.getRawValue();
     try {
       const res = await this.api.joinWaitlist({
@@ -88,6 +90,8 @@ export class WaitlistComponent {
         channel: v.channel,
       });
       this.result.set(res);
+    } catch {
+      this.failed.set(true);
     } finally {
       this.submitting.set(false);
     }

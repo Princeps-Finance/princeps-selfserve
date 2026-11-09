@@ -1,4 +1,5 @@
 import { EmploymentType, SalaryChannel } from '../application/application-state.service';
+import { PRICING_PRODUCTS, calcProductFees } from '../../../shared/pricing';
 
 export type RepaymentFrequency = 'monthly' | 'weekly' | 'bullet';
 
@@ -31,66 +32,19 @@ const GLYPH_BADGE =
 const GLYPH_SPARK =
   'M12 3v6M12 15v6M3 12h6M15 12h6M6 6l4 4M14 14l4 4M18 6l-4 4M10 14l-4 4';
 
-export const PRODUCTS: Product[] = [
-  {
-    id: 'ippis-advance',
-    name: 'IPPIS Salary Advance',
-    channel: 'ippis',
-    employmentTypes: ['government'],
-    ratePercent: 4,
-    interestModel: 'Reducing Balance',
-    repaymentFrequency: 'monthly',
-    minAmount: 50_000,
-    maxAmount: 300_000,
-    fees: [
-      { name: 'Management fee', percent: 1 },
-      { name: 'Insurance', percent: 0.5 },
-    ],
-    hero: { from: '#0B2E5B', to: '#3AB0C9', glyph: GLYPH_WALLET },
-  },
-  {
-    id: 'ippis-standard',
-    name: 'IPPIS Standard Loan',
-    channel: 'ippis',
-    employmentTypes: ['government'],
-    ratePercent: 5,
-    interestModel: 'Flat Rate',
-    repaymentFrequency: 'monthly',
-    minAmount: 100_000,
-    maxAmount: 300_000,
-    fees: [{ name: 'Processing fee', percent: 2 }],
-    hero: { from: '#0B2E5B', to: '#F6A45B', glyph: GLYPH_BADGE },
-  },
-  {
-    id: 'dedukt-primary',
-    name: 'Paramilitary Dedukt Loan',
-    channel: 'dedukt',
-    employmentTypes: ['paramilitary'],
-    ratePercent: 6,
-    interestModel: 'Flat Rate',
-    repaymentFrequency: 'monthly',
-    minAmount: 50_000,
-    maxAmount: 300_000,
-    fees: [
-      { name: 'Management fee', percent: 1 },
-      { name: 'Insurance', flat: 2_000 },
-    ],
-    hero: { from: '#0B2E5B', to: '#5A6F8C', glyph: GLYPH_SHIELD },
-  },
-  {
-    id: 'corper-allowee',
-    name: 'NYSC Allowee Loan',
-    channel: 'remita',
-    employmentTypes: ['corper'],
-    ratePercent: 5,
-    interestModel: 'Flat Rate',
-    repaymentFrequency: 'monthly',
-    minAmount: 30_000,
-    maxAmount: 300_000,
-    fees: [{ name: 'Processing fee', flat: 1_500 }],
-    hero: { from: '#F6A45B', to: '#3AB0C9', glyph: GLYPH_SPARK },
-  },
-];
+const UI_META: Record<string, { name: string; hero: ProductHero }> = {
+  'ippis-advance': { name: 'IPPIS Salary Advance', hero: { from: '#0B2E5B', to: '#3AB0C9', glyph: GLYPH_WALLET } },
+  'ippis-standard': { name: 'IPPIS Standard Loan', hero: { from: '#0B2E5B', to: '#F6A45B', glyph: GLYPH_BADGE } },
+  'dedukt-primary': { name: 'Paramilitary Dedukt Loan', hero: { from: '#0B2E5B', to: '#5A6F8C', glyph: GLYPH_SHIELD } },
+  'corper-allowee': { name: 'NYSC Allowee Loan', hero: { from: '#F6A45B', to: '#3AB0C9', glyph: GLYPH_SPARK } },
+};
+
+/** Rates, limits and fees come from the shared catalogue; this adds display-only fields. */
+export const PRODUCTS: Product[] = PRICING_PRODUCTS.map((p) => ({
+  ...p,
+  ...UI_META[p.id],
+  repaymentFrequency: 'monthly' as RepaymentFrequency,
+}));
 
 export function productsFor(
   employment: EmploymentType,
@@ -106,8 +60,5 @@ export function productById(id: string): Product | undefined {
 }
 
 export function calcFees(product: Product, amount: number): { name: string; amount: number }[] {
-  return product.fees.map((f) => ({
-    name: f.name,
-    amount: Math.round(f.percent ? (amount * f.percent) / 100 : f.flat ?? 0),
-  }));
+  return calcProductFees(product, amount);
 }

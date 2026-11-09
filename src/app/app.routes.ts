@@ -33,6 +33,29 @@ const requiresSalaryGuard: CanMatchFn = () => {
   return state.salary() ? true : router.parseUrl('/apply/salary');
 };
 
+const requiresApprovedGuard: CanMatchFn = () => {
+  const state = inject(ApplicationStateService);
+  const router = inject(Router);
+  return state.eligibility()?.decision === 'approved' ? true : router.parseUrl('/apply/eligibility');
+};
+
+const requiresDocumentsGuard: CanMatchFn = () => {
+  const state = inject(ApplicationStateService);
+  const router = inject(Router);
+  const docs = state.docs();
+  return docs.length > 0 && docs.every((d) => d.status === 'uploaded')
+    ? true
+    : router.parseUrl('/apply/documents');
+};
+
+const requiresSubmissionGuard: CanMatchFn = () => {
+  const state = inject(ApplicationStateService);
+  const router = inject(Router);
+  return state.submission().status !== 'idle' && state.submission().status !== 'submitting'
+    ? true
+    : router.parseUrl('/apply/contact');
+};
+
 const requiresOfferGuard: CanMatchFn = () => {
   const state = inject(ApplicationStateService);
   const router = inject(Router);
@@ -115,7 +138,7 @@ export const routes: Routes = [
       },
       {
         path: 'waitlist',
-        canMatch: [requiresContactGuard],
+        canMatch: [requiresContactGuard, requiresPhoneVerifiedGuard],
         loadComponent: () =>
           import('./features/apply/waitlist/waitlist.component').then((m) => m.WaitlistComponent),
       },
@@ -145,7 +168,7 @@ export const routes: Routes = [
       },
       {
         path: 'eligibility',
-        canMatch: [requiresProfileGuard],
+        canMatch: [requiresNinGuard, requiresProfileGuard],
         loadComponent: () =>
           import('./features/apply/eligibility/eligibility.component').then(
             (m) => m.EligibilityComponent,
@@ -153,19 +176,19 @@ export const routes: Routes = [
       },
       {
         path: 'offers',
-        canMatch: [requiresProfileGuard],
+        canMatch: [requiresProfileGuard, requiresApprovedGuard],
         loadComponent: () =>
           import('./features/apply/offers/offers.component').then((m) => m.OffersComponent),
       },
       {
         path: 'terms',
-        canMatch: [requiresOfferGuard],
+        canMatch: [requiresApprovedGuard, requiresOfferGuard],
         loadComponent: () =>
           import('./features/apply/terms/terms.component').then((m) => m.TermsComponent),
       },
       {
         path: 'mandate',
-        canMatch: [requiresOfferGuard],
+        canMatch: [requiresApprovedGuard, requiresOfferGuard],
         loadComponent: () =>
           import('./features/apply/mandate/mandate.component').then((m) => m.MandateComponent),
       },
@@ -179,7 +202,7 @@ export const routes: Routes = [
       },
       {
         path: 'verify-identity',
-        canMatch: [requiresMandateGuard],
+        canMatch: [requiresMandateGuard, requiresDocumentsGuard],
         loadComponent: () =>
           import('./features/apply/verify-identity/verify-identity.component').then(
             (m) => m.VerifyIdentityComponent,
@@ -187,12 +210,13 @@ export const routes: Routes = [
       },
       {
         path: 'submit',
-        canMatch: [requiresMandateGuard, requiresIdentityVerificationGuard],
+        canMatch: [requiresMandateGuard, requiresDocumentsGuard, requiresIdentityVerificationGuard],
         loadComponent: () =>
           import('./features/apply/submit/submit.component').then((m) => m.SubmitComponent),
       },
       {
         path: 'status',
+        canMatch: [requiresSubmissionGuard],
         loadComponent: () =>
           import('./features/apply/status/status.component').then((m) => m.StatusComponent),
       },

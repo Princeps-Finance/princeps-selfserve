@@ -12,6 +12,8 @@
  *   the scorer itself does not know about that gate.
  */
 
+import { estimateMonthlyRepayment } from '../../../shared/pricing';
+
 export type IncomeSource = 'wacs' | 'remita' | 'deduct' | 'other';
 
 export interface VerifiedIncomeInput {
@@ -220,21 +222,7 @@ function clamp(value: number, min: number, max: number): number {
  * - Percentage Based: monthly interest = principal * rate, added to each instalment
  * - Reducing Balance: standard PMT formula (interest on outstanding balance each period)
  */
-export function estimateMonthlyRepayment(
-  amount: number,
-  tenorMonths: number,
-  ratePercent: number,
-  model: 'Flat Rate' | 'Reducing Balance' | 'Percentage Based' = 'Flat Rate',
-): number {
-  const n = Math.max(tenorMonths, 1);
-  const r = ratePercent / 100;
-  if (model === 'Reducing Balance') {
-    if (r === 0) return Math.ceil(amount / n);
-    const pmt = (amount * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-    return Math.ceil(pmt);
-  }
-  return Math.ceil((amount * (1 + r)) / n);
-}
+export { estimateMonthlyRepayment };
 
 function pickBand<T extends { minScore: number }>(bands: T[], score: number): T {
   const match = bands.find((b) => score >= b.minScore);

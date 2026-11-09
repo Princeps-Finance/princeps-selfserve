@@ -55,17 +55,6 @@ const NO_BACK_ROUTES = new Set<string>([
       .topbar-left { display: inline-flex; align-items: center; min-height: 44px; }
       .topbar-right { display: inline-flex; align-items: center; gap: var(--space-3); }
       .brand-logo { height: 32px; width: auto; display: block; }
-      .brand { display: inline-flex; align-items: center; gap: 10px; }
-      .brand-mark { display: inline-flex; gap: 3px; align-items: center; }
-      .dot { width: 8px; height: 8px; border-radius: 50%; }
-      .dot--navy { background: var(--navy-900); }
-      .dot--cyan { background: var(--cyan-500); }
-      .dot--orange { background: var(--orange-500); }
-      .brand-name {
-        font-family: var(--font-display);
-        font-weight: 600; font-size: 15px; letter-spacing: -0.01em;
-        color: var(--ink);
-      }
       .body {
         flex: 1;
         padding: var(--space-4) var(--space-6) calc(var(--space-20) + var(--space-4) + env(safe-area-inset-bottom));
