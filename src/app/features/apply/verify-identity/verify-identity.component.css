@@ -11,7 +11,7 @@
   color: var(--ink);
   max-width: 20ch;
 }
-.subtitle { margin: 0; font-size: 16px; line-height: 1.5; color: var(--ink-soft); max-width: 42ch; }
+.subtitle { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); max-width: 42ch; }
 
 .error {
   margin: 0;
@@ -48,7 +48,7 @@
 .privacy {
   margin: 0;
   padding: var(--space-3) var(--space-4);
-  background: var(--surface-2, rgba(17,17,17,0.03));
+  background: var(--surface-2, rgba(11, 43, 85, 0.03));
   border-radius: 8px;
   font-size: 12px; line-height: 1.5; color: var(--ink-muted);
 }
@@ -163,7 +163,7 @@
   cursor: pointer;
   transition: background 160ms ease;
 }
-.ghost:hover { background: rgba(17,17,17,0.05); }
+.ghost:hover { background: rgba(11, 43, 85, 0.05); }
 .ghost:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 
 .review-grid {

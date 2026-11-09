@@ -12,7 +12,7 @@
   max-width: 20ch;
 }
 
-.subtitle { margin: 0; font-size: 16px; line-height: 1.5; color: var(--ink-soft); max-width: 42ch; }
+.subtitle { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); max-width: 42ch; }
 
 .channel-explainer {
   padding: var(--space-4);

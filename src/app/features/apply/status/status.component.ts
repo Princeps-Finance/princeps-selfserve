@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { Router } from '@angular/router';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
@@ -12,7 +13,7 @@ import { environment } from '../../../../environments/environment';
  */
 @Component({
   selector: 'app-status',
-  imports: [TPipe],
+  imports: [IllustrationComponent, TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './status.component.html',
   styleUrl: './status.component.css',

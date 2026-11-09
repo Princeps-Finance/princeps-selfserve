@@ -12,6 +12,7 @@ import {
   viewChildren,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { LangService } from '../../../core/i18n/lang.service';
 import { WizardProgressComponent } from '../wizard-progress.component';
@@ -33,7 +34,7 @@ type OtpError =
 
 @Component({
   selector: 'app-verify-phone',
-  imports: [TPipe, WizardProgressComponent],
+  imports: [IllustrationComponent, TPipe, WizardProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './verify-phone.component.html',
   styleUrl: './verify-phone.component.css',

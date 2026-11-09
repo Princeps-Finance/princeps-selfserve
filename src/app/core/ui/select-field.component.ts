@@ -109,7 +109,7 @@ export interface SelectOption {
         flex: none; width: 44px; height: 44px; display: grid; place-items: center;
         border: 0; border-radius: 50%; background: transparent; color: var(--ink); cursor: pointer;
       }
-      .x:hover { background: rgba(17, 17, 17, 0.06); }
+      .x:hover { background: rgba(11, 43, 85, 0.06); }
       .search {
         width: 100%; min-height: 48px; padding: 0 var(--space-4); border: 1px solid var(--input-border);
         border-radius: var(--input-radius); background: var(--input-bg); font: inherit; font-size: 16px; color: var(--ink);
@@ -121,7 +121,7 @@ export interface SelectOption {
         background: transparent; font: inherit; font-size: 16px; color: var(--ink); text-align: start; cursor: pointer;
       }
       .opt[aria-selected='true'] { font-weight: 600; color: var(--action-primary); }
-      .opt:hover { background: rgba(17, 17, 17, 0.04); }
+      .opt:hover { background: rgba(11, 43, 85, 0.04); }
       .x:focus-visible, .opt:focus-visible, .search:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
       .none { margin: 0; padding: var(--space-5) var(--space-2); color: var(--ink-soft); }
     `,

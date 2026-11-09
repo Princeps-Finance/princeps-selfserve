@@ -1,11 +1,6 @@
 @if (submission(); as s) {
 <section class="status" [attr.data-status]="s.status">
-  <div class="mark" aria-hidden="true">
-    <svg class="mark-svg mark-svg--ok" width="48" height="48" viewBox="0 0 24 24" fill="none">
-      <circle class="draw-circle" cx="12" cy="12" r="11" stroke="currentColor" stroke-width="1.5" />
-      <path class="draw-check" d="M7 12.5L11 16L17 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-    </svg>
-  </div>
+  <app-illustration name="check" />
 
   <h1 class="title">{{ 'received.title' | t }}</h1>
   <p class="body">{{ 'received.body' | t }}</p>

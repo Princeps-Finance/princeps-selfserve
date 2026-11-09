@@ -49,12 +49,12 @@
   --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
 
   /* Editorial surface — Contra-leaning cream, less "web app white" */
-  --canvas: #f5f2ec;
-  --ink: #111111;
-  --ink-soft: #4a4a4a;
-  --ink-muted: #666666;
-  --hairline: rgba(17, 17, 17, 0.08);
-  --hairline-strong: rgba(17, 17, 17, 0.16);
+  --canvas: #eaf0f8; /* cool navy-tinted page backdrop (desktop) */
+  --ink: #0a1f3d;
+  --ink-soft: #3d4f6b;
+  --ink-muted: #5b6b85;
+  --hairline: rgba(11, 43, 85, 0.08);
+  --hairline-strong: rgba(11, 43, 85, 0.16);
 
   /* Semantic action tokens — resolve to the brand navy so every CTA/focus
      ring/link routes through one variable. Change here to reskin globally. */
@@ -64,12 +64,12 @@
   --action-on-primary: var(--text-on-navy);
   --accent-cool: var(--cyan-500);
   --accent-warm: var(--orange-500);
-  --focus-ring: 0 0 0 3px var(--canvas), 0 0 0 5px var(--navy-900);
+  --focus-ring: 0 0 0 3px #ffffff, 0 0 0 5px var(--navy-900);
 
   /* Polaris-style input surface */
-  --input-bg: #f4f3ef;
-  --input-border: #7b8088;
-  --input-border-hover: #5a5f66;
+  --input-bg: #eef3fa;
+  --input-border: #6f83a3;
+  --input-border-hover: #4a5f82;
   --input-border-focus: var(--navy-900);
   --input-shadow-focus: 0 0 0 3px rgba(11, 43, 85, 0.18);
   --input-radius: 12px;

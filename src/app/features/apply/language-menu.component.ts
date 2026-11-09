@@ -30,7 +30,7 @@ import { TPipe } from '../../core/i18n/t.pipe';
         [attr.aria-label]="'apply.language' | t"
         (click)="toggle($event)"
       >
-        <span class="current">{{ currentEndonym() }}</span>
+        <span class="current" aria-hidden="true">{{ currentLang().toUpperCase() }}</span><span class="vh">{{ currentEndonym() }}</span>
         <svg class="caret" [class.is-open]="open()" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
           <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
@@ -67,19 +67,21 @@ import { TPipe } from '../../core/i18n/t.pipe';
       .wrap { position: relative; display: inline-flex; }
       .trigger {
         display: inline-flex; align-items: center; gap: var(--space-2);
-        min-height: 44px; padding: 0 var(--space-3) 0 var(--space-4);
-        background: transparent; border: 1px solid var(--hairline-strong);
+        min-height: 44px; min-width: 44px; padding: 0 var(--space-2);
+        background: transparent; border: 0;
         border-radius: var(--radius-pill);
+        letter-spacing: 0.04em;
         font-family: var(--font-sans);
         font-size: 13px; font-weight: 500; color: var(--ink);
         cursor: pointer;
         transition: background 160ms ease, border-color 160ms ease;
       }
-      .trigger:hover { background: rgba(17,17,17,0.04); border-color: var(--ink); }
+      .trigger:hover { background: rgba(11, 43, 85, 0.04); border-color: var(--ink); }
       .trigger:focus-visible {
         outline: 2px solid transparent; outline-offset: 2px;
         box-shadow: var(--focus-ring);
       }
+      .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
       .caret { transition: transform 180ms cubic-bezier(0.2, 0.7, 0.1, 1); color: var(--ink-soft); }
       .caret.is-open { transform: rotate(180deg); }
       .menu {

@@ -62,10 +62,10 @@ import { SUPPORT_EMAIL, SUPPORT_PHONE, telLink, whatsappLink } from '../../core/
       .help-btn {
         display: inline-flex; align-items: center; justify-content: center;
         width: 44px; height: 44px; border-radius: 50%;
-        background: transparent; border: 1px solid var(--hairline); color: var(--ink); cursor: pointer;
+        background: transparent; border: 0; color: var(--ink); cursor: pointer;
         transition: background 160ms ease;
       }
-      .help-btn:hover { background: rgba(17, 17, 17, 0.06); }
+      .help-btn:hover { background: rgba(11, 43, 85, 0.06); }
       .help-btn:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
       .backdrop { position: fixed; inset: 0; z-index: 79; background: rgba(7, 30, 61, 0.45); }
       .sheet {

@@ -4,7 +4,7 @@
 .title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(26px, 6.5vw, 32px);
+  font-size: clamp(22px, 6vw, 26px);
   line-height: 1.05;
   letter-spacing: -0.03em;
   font-weight: 600;
@@ -12,7 +12,7 @@
   max-width: 18ch;
 }
 
-.subtitle { margin: 0; font-size: 16px; line-height: 1.5; color: var(--ink-soft); max-width: 38ch; }
+.subtitle { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); max-width: 38ch; }
 
 .prefill-banner {
   margin: 0;
@@ -90,7 +90,7 @@
 .file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .drop {
   display: flex; align-items: center; gap: var(--space-3); min-height: 64px; padding: 0 var(--space-4);
-  border: 1.5px dashed rgba(17, 17, 17, 0.4); border-radius: var(--input-radius); background: var(--input-bg);
+  border: 1.5px dashed var(--input-border); border-radius: var(--input-radius); background: var(--input-bg);
   color: var(--ink); cursor: pointer; transition: border-color 140ms ease, background-color 140ms ease;
 }
 .drop:hover { border-color: var(--ink); }

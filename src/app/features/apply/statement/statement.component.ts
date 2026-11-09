@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { Router } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -17,7 +18,7 @@ const MAX_BYTES = 10 * 1024 * 1024;
  */
 @Component({
   selector: 'app-statement',
-  imports: [TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent],
+  imports: [IllustrationComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './statement.component.html',
   styleUrl: './statement.component.css',
