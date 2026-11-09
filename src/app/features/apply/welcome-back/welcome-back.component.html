@@ -1,41 +1,22 @@
 @if (snapshot(); as s) {
 <section class="step">
-  <p class="eyebrow">{{ 'welcome.eyebrow' | t }}</p>
-
+  <app-illustration name="coins" [size]="140" />
   <header class="head">
-    <h1 class="title">{{ 'welcome.title' | t }}, {{ s.fullName }}.</h1>
+    <h1 class="title">{{ 'welcome.title' | t }}, {{ firstName() }}</h1>
     <p class="subtitle">{{ 'welcome.subtitle' | t }}</p>
   </header>
 
-  <dl class="snap">
-    <div>
-      <dt>{{ 'welcome.employer' | t }}</dt>
-      <dd>{{ s.employerName }}</dd>
-    </div>
-    <div>
-      <dt>{{ 'welcome.salary.account' | t }}</dt>
-      <dd>{{ s.bankName }} · •••• {{ s.accountLast4 }}</dd>
-    </div>
-    <div>
-      <dt>{{ 'welcome.income' | t }}</dt>
-      <dd>{{ formatNaira(s.monthlyIncome) }}</dd>
-    </div>
-    <div>
-      <dt>{{ 'welcome.last.loan' | t }}</dt>
-      <dd>{{ lastLoanLabel() }}</dd>
-    </div>
-  </dl>
-
   <div class="actions">
-    <button type="button" class="cta" (click)="borrowAgain()">
-      <span>{{ 'welcome.borrow' | t }}</span>
-      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-        <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
-    </button>
+    <div class="choice">
+      <button type="button" class="cta" (click)="borrowAgain()">
+        <span>{{ 'welcome.borrow' | t }}</span>
+        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+      <p class="hint">{{ 'welcome.fine' | t }}</p>
+    </div>
     <button type="button" class="secondary" (click)="updateDetails()">{{ 'welcome.update' | t }}</button>
   </div>
-
-  <p class="fine">{{ 'welcome.fine' | t }}</p>
 </section>
 }

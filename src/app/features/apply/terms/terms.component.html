@@ -7,31 +7,34 @@
     <p class="subtitle">{{ 'step.terms.subtitle' | t }}</p>
   </header>
 
-  <dl class="summary">
-    <div>
+  <!-- The number that matters first: what leaves the account each month. -->
+  <section class="hero" [attr.aria-label]="'step.terms.monthly' | t">
+    <p class="hero-label">{{ 'step.terms.hero.label' | t }}</p>
+    <p class="hero-amount">{{ formatNaira(o.monthlyRepayment) }}</p>
+    <p class="hero-per">{{ 'step.terms.hero.per' | t: { months: o.tenorMonths } }}</p>
+  </section>
+
+  <dl class="card rows">
+    <div class="row">
       <dt>{{ 'step.terms.principal' | t }}</dt>
       <dd>{{ formatNaira(o.amount) }}</dd>
     </div>
-    <div>
+    <div class="row">
       <dt>{{ 'step.terms.rate' | t }}</dt>
-      <dd>{{ o.ratePercent }}% · {{ o.interestModel }}</dd>
+      <dd>{{ o.ratePercent }}%<span class="sub">{{ modelKey(o.interestModel) | t }}</span></dd>
     </div>
-    <div>
+    <div class="row">
       <dt>{{ 'step.terms.tenor' | t }}</dt>
       <dd>{{ o.tenorMonths }} {{ 'step.offers.months' | t }}</dd>
     </div>
-    <div>
-      <dt>{{ 'step.terms.monthly' | t }}</dt>
-      <dd>{{ formatNaira(o.monthlyRepayment) }}</dd>
-    </div>
-    <div>
+    <div class="row row--strong">
       <dt>{{ 'step.terms.total' | t }}</dt>
       <dd>{{ formatNaira(totalRepayable()) }}</dd>
     </div>
   </dl>
 
-  <section class="block">
-    <h2 class="block-title">{{ 'step.terms.fees' | t }}</h2>
+  <section class="card">
+    <h2 class="card-title">{{ 'step.terms.fees' | t }}</h2>
     <ul class="fees">
       @for (f of o.fees; track f.name) {
         <li><span>{{ f.name }}</span><strong>{{ formatNaira(f.amount) }}</strong></li>
@@ -40,8 +43,8 @@
     </ul>
   </section>
 
-  <details class="block schedule-block">
-    <summary class="block-title">{{ 'step.terms.schedule' | t }}</summary>
+  <details class="card schedule-block">
+    <summary class="card-title">{{ 'step.terms.schedule' | t }}</summary>
     <div class="payday-callout" role="note">
       <strong>{{ 'step.terms.payday.first' | t }}: {{ formatDueDate(firstDueDate()) }}</strong>
       <span>{{ 'step.terms.payday.note' | t }}</span>

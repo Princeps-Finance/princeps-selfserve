@@ -43,6 +43,12 @@ export class TermsComponent implements OnInit {
   readonly attempted = signal(false);
   readonly formatNaira = formatNaira;
 
+  modelKey(m: string): string {
+    if (m === 'Flat Rate') return 'step.offers.model.flat';
+    if (m === 'Reducing Balance') return 'step.offers.model.reducing';
+    return 'step.offers.model.percent';
+  }
+
   readonly schedule = computed<ScheduleRow[]>(() => {
     const o = this.offer();
     if (!o) return [];

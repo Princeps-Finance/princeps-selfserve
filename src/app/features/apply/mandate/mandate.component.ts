@@ -8,10 +8,11 @@ import { API_CLIENT, MandateStatus } from '../../../core/api/api-client';
 import { productById } from '../../../core/products/products';
 import { LangService } from '../../../core/i18n/lang.service';
 import { telLink, whatsappLink } from '../../../core/support';
+import { IllustrationComponent } from '../../../core/ui/illustration.component';
 
 @Component({
   selector: 'app-mandate',
-  imports: [TPipe, WizardProgressComponent],
+  imports: [TPipe, WizardProgressComponent, IllustrationComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './mandate.component.html',
   styleUrl: './mandate.component.css',
@@ -25,6 +26,8 @@ export class MandateComponent {
 
   readonly offer = this.state.offer;
   readonly salary = this.state.salary;
+  /** Link-mode mandates are two screens: review the deduction, then complete the mandate. */
+  readonly view = signal<'review' | 'link'>('review');
   readonly agreed = signal(false);
   readonly attempted = signal(false);
   readonly formatNaira = formatNaira;
@@ -79,6 +82,11 @@ export class MandateComponent {
       this.linkUrl.set(null);
     }
     if (this.mode() === 'link') void this.prepareLink();
+  }
+
+  showLink(): void {
+    this.view.set('link');
+    window.scrollTo({ top: 0 });
   }
 
   async prepareLink(): Promise<void> {

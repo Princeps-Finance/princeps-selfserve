@@ -1,3 +1,46 @@
+@if (mode() === 'link' && view() === 'link') {
+<section class="step step--link">
+  <app-wizard-progress [current]="13" [total]="14" [label]="'step.mandate.eyebrow' | t" />
+
+  <app-illustration [name]="linkStatus() === 'completed' ? 'check' : 'document'" [size]="156" />
+
+  <header class="head head--center">
+    <h1 class="title">{{ (linkStatus() === 'completed' ? 'mandate.status.completed' : 'mandate.link.title') | t }}</h1>
+    <p class="subtitle">{{ (linkStatus() === 'completed' ? 'mandate.link.done' : 'mandate.link.body') | t }}</p>
+  </header>
+
+  @if (linkBusy() && !linkUrl()) {
+    <p class="link-status" role="status">{{ 'mandate.link.preparing' | t }}</p>
+  }
+  @if (linkError()) {
+    <p class="msg--error" role="alert">{{ 'mandate.link.error' | t }}</p>
+  }
+  @if (linkUrl() && linkStatus() !== 'completed') {
+    <p class="link-status" role="status" [attr.data-status]="linkStatus()">
+      {{ (linkStatus() === 'failed' ? 'mandate.status.failed' : 'mandate.status.pending') | t }}
+    </p>
+  }
+
+  <div class="link-actions">
+    @if (linkStatus() === 'completed') {
+      <button type="button" class="cta" (click)="continueWithLink()">
+        <span>{{ 'mandate.continue' | t }}</span>
+      </button>
+    } @else if (linkUrl(); as url) {
+      <a class="cta" [attr.href]="url" target="_blank" rel="noopener noreferrer">
+        <span>{{ 'mandate.link.open' | t }}</span>
+      </a>
+      <button type="button" class="text-btn" (click)="copyLink()">
+        {{ copied() ? ('mandate.link.copied' | t) : ('mandate.link.copy' | t) }}
+      </button>
+      <button type="button" class="text-btn" (click)="checkNow()">{{ 'mandate.link.check' | t }}</button>
+    } @else if (linkError()) {
+      <button type="button" class="cta" (click)="prepareLink()"><span>{{ 'mandate.link.retry' | t }}</span></button>
+      <a class="text-btn" [attr.href]="help" target="_blank" rel="noopener">{{ 'step.eligibility.declined.whatsapp' | t }}</a>
+    }
+  </div>
+</section>
+} @else {
 <section class="step">
   <app-wizard-progress [current]="13" [total]="14" [label]="'step.mandate.eyebrow' | t" />
 
@@ -46,40 +89,12 @@
   </div>
 
   @if (mode() === 'link') {
-    <div class="link-card">
-      <h2 class="link-title">{{ 'mandate.link.title' | t }}</h2>
-      <p class="link-body">{{ 'mandate.link.body' | t }}</p>
-
-      @if (linkBusy() && !linkUrl()) {
-        <p class="link-status" role="status">{{ 'mandate.link.preparing' | t }}</p>
-      }
-      @if (linkError()) {
-        <p class="msg--error" role="alert">{{ 'mandate.link.error' | t }}</p>
-        <button type="button" class="alt-btn" (click)="prepareLink()">{{ 'mandate.link.retry' | t }}</button>
-        <a class="alt-btn" [attr.href]="help" target="_blank" rel="noopener">{{ 'step.eligibility.declined.whatsapp' | t }}</a>
-      }
-      @if (linkUrl(); as url) {
-        <a class="cta" [attr.href]="url" target="_blank" rel="noopener noreferrer">
-          <span>{{ 'mandate.link.open' | t }}</span>
-        </a>
-        <button type="button" class="alt-btn" (click)="copyLink()">
-          {{ copied() ? ('mandate.link.copied' | t) : ('mandate.link.copy' | t) }}
-        </button>
-        <p class="link-status" role="status" [attr.data-status]="linkStatus()">
-          @switch (linkStatus()) {
-            @case ('completed') { {{ 'mandate.status.completed' | t }} }
-            @case ('failed') { {{ 'mandate.status.failed' | t }} }
-            @default { {{ 'mandate.status.pending' | t }} }
-          }
-        </p>
-        @if (linkStatus() !== 'completed') {
-          <button type="button" class="alt-btn" (click)="checkNow()">{{ 'mandate.link.check' | t }}</button>
-        }
-      }
-      <button type="button" class="cta" [disabled]="linkStatus() !== 'completed'" (click)="continueWithLink()">
-        <span>{{ 'mandate.continue' | t }}</span>
-      </button>
-    </div>
+    <button type="button" class="cta" (click)="showLink()">
+      <span>{{ 'mandate.continue' | t }}</span>
+      <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
   } @else {
   <label class="agree">
     <input
@@ -104,3 +119,4 @@
   </button>
   }
 </section>
+}

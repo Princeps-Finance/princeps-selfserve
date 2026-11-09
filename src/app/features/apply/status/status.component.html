@@ -43,11 +43,9 @@
     <span>{{ 'status.done' | t }}</span>
   </button>
 
-  <aside class="directory">
-    <header class="directory-head">
-      <h2>{{ 'status.contact.title' | t }}</h2>
-      <p>{{ 'status.contact.subtitle' | t }}</p>
-    </header>
+  <details class="directory">
+    <summary class="directory-sum">{{ 'status.contact.title' | t }}</summary>
+    <p class="directory-sub">{{ 'status.contact.subtitle' | t }}</p>
 
     <section class="dir-block">
       <h3>{{ 'status.contact.agents' | t }}</h3>
@@ -87,6 +85,6 @@
         }
       </ul>
     </section>
-  </aside>
+  </details>
 </section>
 }

@@ -199,3 +199,6 @@
     animation: none; opacity: 1; transform: none;
   }
 }
+
+.lang-go { color: var(--ink-soft); }
+.lang-card:hover .lang-go { color: var(--ink); }

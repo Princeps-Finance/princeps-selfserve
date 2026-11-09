@@ -50,7 +50,8 @@ import { ToastService } from './toast.service';
         position: fixed;
         left: 50%;
         transform: translateX(-50%);
-        bottom: calc(env(safe-area-inset-bottom) + 16px);
+        /* Top, under the app bar: the primary button is pinned to the bottom and a toast must not cover it. */
+        top: calc(env(safe-area-inset-top) + 64px);
         z-index: 1000;
         display: flex; flex-direction: column; gap: 8px;
         width: min(520px, calc(100vw - 24px));

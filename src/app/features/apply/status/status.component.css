@@ -177,3 +177,11 @@ a.cta { text-decoration: none; justify-content: space-between; }
 .alt:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 
 .status .title, .status .body { text-align: center; margin-inline: auto; }
+
+.directory { border-top: 1px solid var(--hairline); padding-top: var(--space-2); }
+.directory-sum { min-height: 48px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: -0.01em; color: var(--ink); list-style: none; }
+.directory-sum::-webkit-details-marker { display: none; }
+.directory-sum::after { content: '+'; font-size: 22px; font-weight: 400; }
+.directory[open] .directory-sum::after { content: '−'; }
+.directory-sum:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); border-radius: 4px; }
+.directory-sub { margin: 0 0 var(--space-4); color: var(--ink-soft); font-size: 15px; }

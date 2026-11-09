@@ -1,79 +1,22 @@
-.step { display: flex; flex-direction: column; gap: var(--space-6); }
-.eyebrow {
-  margin: 0;
-  font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500;
-  color: var(--action-primary);
-}
-.head { display: flex; flex-direction: column; gap: var(--space-3); }
-.title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(30px, 7vw, 40px);
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-  font-weight: 600;
-  color: var(--ink);
-  text-wrap: balance;
-}
-.subtitle { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); max-width: 40ch; }
+.step { display: flex; flex-direction: column; gap: var(--space-5); padding-top: var(--space-6); }
+.head { display: flex; flex-direction: column; gap: var(--space-2); text-align: center; align-items: center; }
+.title { margin: 0; font-size: clamp(26px, 7vw, 32px); line-height: 1.15; letter-spacing: -0.02em; font-weight: 600; color: var(--ink); text-wrap: balance; }
+.subtitle { margin: 0; font-size: 16px; line-height: 1.5; color: var(--ink-soft); max-width: 32ch; }
 
-.snap {
-  margin: 0;
-  padding: var(--space-5) 0;
-  border-top: 1px solid var(--hairline);
-  border-bottom: 1px solid var(--hairline);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-4) var(--space-6);
-}
-.snap > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.snap dt { margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); }
-.snap dd {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 15px; font-weight: 500;
-  color: var(--ink);
-  word-break: break-word;
-}
-@media (max-width: 380px) {
-  .snap { grid-template-columns: 1fr; gap: var(--space-3); padding: var(--space-4) 0; }
-  .snap dd { font-size: 14px; }
-}
+.actions { margin-top: auto; display: flex; flex-direction: column; gap: var(--space-4); padding-top: var(--space-4); }
+.choice { display: flex; flex-direction: column; gap: var(--space-2); }
+.hint { margin: 0; text-align: center; font-size: 14px; color: var(--ink-soft); }
 
-.actions { display: flex; flex-direction: column; gap: var(--space-3); }
-
-.cta {
-  align-self: stretch;
-  min-height: 56px;
-  padding: 0 var(--space-6);
-  display: inline-flex; align-items: center; justify-content: space-between;
-  gap: var(--space-4);
-  background: var(--action-primary);
-  color: var(--action-on-primary);
-  border: none;
-  border-radius: var(--radius-pill);
-  font-family: var(--font-sans); font-size: 16px; font-weight: 500;
-  cursor: pointer;
-  transition: transform 120ms ease-out, background 160ms ease;
+.cta, .secondary {
+  min-height: 56px; padding: 0 var(--space-6); border-radius: var(--radius-pill); cursor: pointer;
+  font-family: var(--font-sans); font-size: 16px; font-weight: 600;
+  display: inline-flex; align-items: center; gap: var(--space-4);
+  transition: background 160ms ease, transform 120ms ease-out;
 }
+.cta { justify-content: space-between; background: var(--action-primary); color: var(--action-on-primary); border: 0; margin-top: 0 !important; }
 .cta:hover { background: var(--action-primary-hover); }
-.cta:active { transform: scale(0.99); }
-.cta:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
-
-.secondary {
-  align-self: stretch;
-  min-height: 56px;
-  padding: 0 var(--space-5);
-  display: inline-flex; align-items: center; justify-content: center;
-  background: transparent;
-  color: var(--ink);
-  border: 1px solid var(--ink);
-  border-radius: var(--radius-pill);
-  font-family: var(--font-sans); font-size: 14px; font-weight: 500;
-  cursor: pointer;
-  transition: background 160ms ease, color 160ms ease;
-}
-.secondary:hover { background: var(--ink); color: var(--action-on-primary); }
-.secondary:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
-
-.fine { margin: 0; font-size: 12px; color: var(--ink-muted); line-height: 1.5; }
+.secondary { justify-content: center; background: transparent; color: var(--action-primary); border: 1.5px solid var(--action-primary); }
+.secondary:hover { background: rgba(11, 43, 85, 0.06); }
+.cta:active, .secondary:active { transform: scale(0.99); }
+.cta:focus-visible, .secondary:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
+@media (prefers-reduced-motion: reduce) { .cta, .secondary { transition: none; } }

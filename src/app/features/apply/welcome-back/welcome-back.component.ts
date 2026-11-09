@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { formatNaira } from '../../../core/money.util';
 
 @Component({
   selector: 'app-welcome-back',
-  imports: [TPipe],
+  imports: [TPipe, IllustrationComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './welcome-back.component.html',
   styleUrl: './welcome-back.component.css',
@@ -17,6 +18,12 @@ export class WelcomeBackComponent {
 
   readonly snapshot = this.state.returningSnapshot;
   readonly formatNaira = formatNaira;
+
+  /** Only a first name is shown; employer, account, income and the rest stay out of sight. */
+  readonly firstName = computed(() => {
+    const raw = this.state.bvnIdentity()?.firstName ?? this.snapshot()?.fullName.split(/\s+/)[0] ?? '';
+    return raw.trim().toLowerCase().replace(/(^|[\s-])\p{L}/gu, (m) => m.toUpperCase());
+  });
 
   readonly lastLoanLabel = computed(() => {
     const s = this.snapshot();

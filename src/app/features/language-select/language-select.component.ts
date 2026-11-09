@@ -20,7 +20,8 @@ export class LanguageSelectComponent {
   protected readonly privacy = inject(PrivacyService);
 
   readonly languages = LANGUAGES;
-  readonly current = computed(() => this.langService.lang());
+  /** Highlight a language only once the customer has actually chosen one, so nothing looks already done. */
+  readonly current = computed(() => (this.langService.hasChosen() ? this.langService.lang() : null));
 
   /** One tap picks the language and moves on, there is nothing else to answer on this screen. */
   choose(lang: Lang): void {

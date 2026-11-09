@@ -35,6 +35,7 @@
   /* Semantic */
   --success: #16a34a;
   --success-soft: #e7f6ec;
+  --success-text: #166534; /* AA on --success-soft and white; --success is for icons only */
   --warning: #d97706;
   --warning-soft: #fef3e2;
   --danger: #dc2626;

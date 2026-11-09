@@ -1,47 +1,56 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { ApplicationStateService, ApplyIntent } from '../../../core/application/application-state.service';
 
 /** First choice: apply now, or just find out how much they could get. Both use the same journey. */
 @Component({
   selector: 'app-welcome-intent',
-  imports: [TPipe],
+  imports: [TPipe, IllustrationComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="step">
+      <app-illustration name="coins" [size]="176" />
       <h1 class="title">{{ 'welcome.intent.title' | t }}</h1>
-      <div class="options">
-        <button type="button" class="option option--primary" (click)="choose('apply')">
-          <span class="option-title">{{ 'welcome.intent.apply' | t }}</span>
-          <span class="option-hint">{{ 'welcome.intent.apply.hint' | t }}</span>
-        </button>
-        <button type="button" class="option" (click)="choose('check')">
-          <span class="option-title">{{ 'welcome.intent.check' | t }}</span>
-          <span class="option-hint">{{ 'welcome.intent.check.hint' | t }}</span>
-        </button>
+
+      <div class="actions">
+        <div class="choice">
+          <button type="button" class="cta" (click)="choose('apply')">
+            <span>{{ 'welcome.intent.apply' | t }}</span>
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+          <p class="hint">{{ 'welcome.intent.apply.hint' | t }}</p>
+        </div>
+        <div class="choice">
+          <button type="button" class="alt" (click)="choose('check')">{{ 'welcome.intent.check' | t }}</button>
+          <p class="hint">{{ 'welcome.intent.check.hint' | t }}</p>
+        </div>
       </div>
     </section>
   `,
   styles: [
     `
-      .step { display: flex; flex-direction: column; gap: var(--space-6); padding-top: var(--space-4); }
-      .title { margin: 0; font-size: clamp(30px, 7vw, 40px); line-height: 1.1; }
-      .options { display: flex; flex-direction: column; gap: var(--space-4); }
-      .option {
-        display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1);
-        min-height: 96px; padding: var(--space-5); text-align: left; cursor: pointer; font: inherit;
-        border: 1px solid var(--input-border); border-radius: var(--radius-lg);
-        background: var(--surface-0); color: var(--ink);
-        transition: transform 120ms ease-out, border-color 140ms ease;
+      .step { display: flex; flex-direction: column; gap: var(--space-5); padding-top: var(--space-6); }
+      .title { margin: 0; text-align: center; font-size: clamp(24px, 6.5vw, 30px); line-height: 1.15; letter-spacing: -0.02em; }
+      .actions { margin-top: auto; display: flex; flex-direction: column; gap: var(--space-5); padding-top: var(--space-6); }
+      .choice { display: flex; flex-direction: column; gap: var(--space-2); }
+      .hint { margin: 0; text-align: center; font-size: 14px; color: var(--ink-soft); }
+      .cta, .alt {
+        min-height: 56px; padding: 0 var(--space-6); border-radius: var(--radius-pill); cursor: pointer;
+        font-family: var(--font-sans); font-size: 16px; font-weight: 600;
+        display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3);
+        transition: background 160ms ease, transform 120ms ease-out;
       }
-      .option:hover { border-color: var(--ink); }
-      .option:active { transform: scale(0.99); }
-      .option--primary { background: var(--action-primary); border-color: var(--action-primary); color: var(--action-on-primary); }
-      .option-title { font-family: var(--font-display); font-size: 22px; font-weight: 600; }
-      .option-hint { font-size: 14px; line-height: 1.4; opacity: 0.85; }
-      .option:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
-      @media (prefers-reduced-motion: reduce) { .option { transition: none; } }
+      .cta { background: var(--action-primary); color: var(--action-on-primary); border: 0; justify-content: space-between; margin-top: 0 !important; }
+      .cta:hover { background: var(--action-primary-hover); }
+      .alt { background: transparent; color: var(--action-primary); border: 1.5px solid var(--action-primary); }
+      .alt:hover { background: rgba(11, 43, 85, 0.06); }
+      .cta:active, .alt:active { transform: scale(0.99); }
+      .cta:focus-visible, .alt:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
+      @media (prefers-reduced-motion: reduce) { .cta, .alt { transition: none; } }
     `,
   ],
 })

@@ -35,12 +35,7 @@
     @if (channel() === 'dedukt') {
       <div class="field">
         <label class="label" for="employer">{{ 'step.salary.employer.label' | t }}</label>
-        <select id="employer" [attr.aria-invalid]="invalid('employer')" class="input" formControlName="employer">
-          <option value="" disabled>{{ 'step.salary.employer.placeholder' | t }}</option>
-          @for (e of paramilitaryEmployers; track e) {
-            <option [value]="e">{{ e }}</option>
-          }
-        </select>
+        <app-select-field inputId="employer" [options]="employerOptions" [title]="'step.salary.employer.label' | t" [placeholder]="'step.salary.employer.placeholder' | t" [invalid]="invalid('employer')" formControlName="employer" />
       </div>
     }
 
