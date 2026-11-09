@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| **Document version** | 1.0.0 (draft for review) |
+| **Document version** | 1.1.0 (draft for review) |
 | **Status** | Draft. Not yet approved by Engineering or Compliance |
 | **Owner** | Product (CPO) |
 | **Last updated** | 2026-11-09 |
@@ -10,8 +10,8 @@
 | **Related** | `FLOW-SPEC.md` (step-level edge cases), `DESIGN-SYSTEM.md`, `ACCESSIBILITY.md`, `SECURITY.md` |
 
 How to read this: sections 1–4 say *what and why*. Sections 5–9 say *how the
-product behaves*. Sections 10–13 cover *versioning, rules, gaps and open
-questions*. Anything marked **Decision** is settled; **Proposal** needs sign-off.
+product behaves*. Sections 10–13 cover *versioning, success, rules, gaps and what
+still needs a decision*. Anything marked **Decision** is settled; **Proposal** needs sign-off.
 
 ---
 
@@ -101,9 +101,8 @@ Self-Serve must follow. The app builds the journey from these settings.
 **Decision:** the number and order of steps can differ per customer, because the
 matched product changes what is needed. The app must not assume a fixed list.
 
-**Proposal:** treat a product's settings as a versioned configuration. The
-application records which product configuration version the customer applied
-against (section 10).
+Because the product is fetched fresh each time (section 6.5), a customer always
+applies against the current product settings.
 
 ## 6. The journey
 
@@ -116,7 +115,7 @@ matched product needs them.
 | --- | --- | --- |
 | 1 | **Language** | Choose English, Yoruba, Igbo or Hausa. Remembered. Switching mid-flow keeps everything entered |
 | 2 | **Contact and phone check** | Phone, email, OTP. A returning customer is recognised |
-| 3 | **Resume** (only if a saved application exists) | See section 7 |
+| 3 | **Resume** (only if a saved application exists on this device) | See section 7. Eligibility always re-runs before the customer continues |
 | 4 | **Bio data** | Name, date of birth, address, relationship status, and the identity checks required (BVN, NIN) |
 | 5 | **Employment** | Employment type, employer, salary processing partner, salary account, IPPIS number where relevant. This places the customer in the right eligibility group |
 | 6 | **Eligibility** | Calculated in the background. The customer sees a result, never a score |
@@ -137,8 +136,10 @@ customer correct, rather than retyping.
 
 ### 6.3 Documents and identity are part of the application
 Documents and the identity video are **not a side step**. They are submitted to
-Caltos as part of the same application. If a customer has uploaded them and then
-stops, they must still be there when the customer resumes.
+Caltos as part of the same application. Caltos receives
+nothing until the customer submits, so until then the files are held on the
+customer's device (section 7). If a customer has uploaded them and then stops, they
+must still be there when the customer resumes.
 
 ### 6.4 Identity video
 Configured per product (section 5):
@@ -146,15 +147,27 @@ Configured per product (section 5):
 - **Upload or link:** the customer provides a video another way.
 - **Both:** the customer chooses.
 
+The video typically includes the loan amount and repayment, so it is only valid for
+the offer it describes. If the offer changes (for example after resume), the customer
+records again.
+
 If the camera or microphone fails, offer the other option when the product allows
 it, and a human fallback when it does not.
 
 ### 6.5 Eligibility
-Calculated in the background from verified details, using Caltos rules.
+Calculated in the background by Caltos from verified details.
+
+**Decision: eligibility always runs.** It runs when the customer first reaches it,
+**and again every time a customer resumes a saved application**, before they are
+taken back to where they stopped. Eligibility is never trusted from an earlier
+session, because the customer's situation, the rules or the products may have
+changed.
+
 - The customer is never asked to understand a score.
-- A positive result leads to matching products.
+- A positive result leads to the matching products, fetched fresh.
 - A negative result is explained plainly and offers a next step: another product,
   the waitlist, or an agent.
+- While it runs, show a short, translated "Checking your options…" state.
 
 ### 6.6 Mandate and generated links
 The mandate step follows the product. **If the product is set up for it, the mandate
@@ -178,61 +191,101 @@ twice (section 13, question 5).
 
 ## 7. Resume: continue where you stopped
 
-**Decision:** application progress is saved. A customer who stops can resume.
+**Decision:** application progress is saved, and a customer who stops can resume.
 
-### 7.1 What to show: a dedicated "Welcome back" step, not a modal
+**Why Self-Serve saves it:** Caltos only receives an application at submission. It
+holds no drafts. So Self-Serve is responsible for keeping progress until then.
 
-You asked which UX is best. **Recommendation: after OTP, show a full-screen
-"Welcome back" step, with one clear primary action.**
+**Decision (version 1): the draft is saved on the customer's device**, inside the
+PWA, and is tied to the verified phone number. Resume works on the same device and
+browser. A customer who changes phone starts again; details Caltos already holds for
+a returning customer reduce the retyping. Cross-device resume would need a
+Self-Serve-owned draft service and is a later step (section 13).
+
+### 7.1 What the customer sees: a "Welcome back" step, not a modal
+
+After the customer verifies their OTP, if a saved application exists, show a
+**full-screen "Welcome back" step** with one clear primary action.
 
 | Option | Verdict |
 | --- | --- |
 | Silently jump to the last step | Rejected. Disorienting, and the customer may want to correct something |
-| Modal over the next screen | Rejected. Easy to dismiss by accident, awkward on small screens, focus and screen-reader handling is harder, and it hides what is being resumed |
-| **Dedicated step after OTP** | **Recommended.** Calm, translatable, accessible, shows what was saved |
+| Modal over the next screen | Rejected. Easy to dismiss by accident, awkward on small screens, harder for screen readers, and hides what is being resumed |
+| **Dedicated step after OTP** | **Chosen.** Calm, translatable, accessible, shows what was saved |
 
 The step shows:
 - A friendly line: "Welcome back. You have an application in progress."
 - What is saved: the product and amount if chosen, the step reached, and when
   (for example "Last saved yesterday").
 - **Primary:** *Continue from [step name]*.
-- **Secondary:** *Start over*, with a confirmation that says what will be deleted.
+- **Secondary:** *Start over*, with a confirmation saying exactly what will be deleted.
 - A way to reach help.
 
-Why after OTP: the saved application contains personal data, so resuming is shown
-only after the phone number is verified. It also puts resume exactly where a
-returning customer already is in the journey.
+It appears only after OTP, because the saved application contains personal data and
+must not be shown before the phone number is verified.
 
-### 7.2 Where the draft is stored
+### 7.2 What happens when they tap Continue
 
-**Proposal:** store the draft **server-side, keyed to the verified phone number**,
-not only on the device. This lets a customer continue on another phone and avoids
-sensitive data sitting in browser storage.
-- The device keeps only a non-sensitive pointer (for example that a draft exists).
-- Sensitive fields (BVN, NIN, account number) live only on the server.
-- Uploaded documents and video are stored in Caltos as they are uploaded, and the
-  draft references them.
+1. Show "Checking your options…" and **run eligibility again** (section 6.5).
+2. Fetch the matching products again.
+3. Then one of three things happens:
+   - **Same result, same product terms:** take the customer to the step they stopped at.
+   - **Something changed** (eligibility, amount, rate, tenor, mandate, required
+     documents or video): tell the customer plainly what changed, keep every answer
+     they gave, and take them to the first step affected. If the offer changed, any
+     recorded identity video is discarded and recorded again.
+   - **No longer eligible:** explain plainly and offer a next step (another product,
+     the waitlist or an agent). Their saved answers are kept until the draft expires.
 
-This needs a draft capability from Caltos or a Princeps service (section 13, question 3).
+Identity and bank verification results are kept in the draft. They are repeated only
+if the customer edits those details, or Caltos rejects them during the eligibility
+check.
 
-### 7.3 Rules for resuming
+### 7.3 What is saved
+
+| Saved on the device | Never saved |
+| --- | --- |
+| Answers to every completed step (bio data, employment, salary account, BVN, NIN) | OTP codes |
+| The step reached, the language, and when it was saved | Eligibility results, product lists and offers (always re-fetched) |
+| The product the customer chose | |
+| Documents and the identity video, held until submission | |
+| Mandate link state, if one was generated | |
+| The web app version that wrote the draft | |
+
+BVN, NIN and the account number are needed at submission, so they must be kept in the
+draft. See protections below.
+
+### 7.4 Rules
+
 - **Save as they go.** Save at the end of each step, not only at the end.
-- **Draft lifetime:** *proposal* 14 days of inactivity, then expire with a clear
-  message and an easy restart.
-- **Re-check what can go stale.** On resume, re-run eligibility and re-fetch the
-  matching product if the draft is older than a threshold or the product
-  configuration version changed. Tell the customer if the offer changed.
-- **Terms:** if the terms version changed since acceptance, ask the customer to
+- **Draft lifetime: 7 days of inactivity**, then delete it and say so. Some mobile
+  browsers clear site storage after about a week of non-use for sites that are not
+  installed, so installing the PWA also makes saved progress more reliable.
+- **Cleared on submit and on "Start over".** Nothing sensitive stays on the device
+  after a successful submission.
+- **Terms:** if the terms text changed since the customer accepted, ask them to
   accept again.
-- **OTP:** an OTP is never reused. The customer verifies again to resume.
-- **Language:** resume in the language the customer last used, switchable.
-- **Mandate:** if a link was generated and is pending, resume to the waiting or
+- **Mandate link:** if a link was generated and is pending, resume to the waiting or
   completed state, not to a blank mandate step.
-- **App updates:** a draft saved by an older app version is migrated or, if that
-  is not possible, the customer is told clearly and the safe parts are kept
-  (section 10.2).
-- **One active application per customer** unless the business decides otherwise
-  (question 4).
+- **Language:** resume in the language last used, switchable.
+- **One draft per verified phone number on a device.**
+- **App updates:** the draft records the app version. When a release changes the
+  shape of a draft, the app migrates it. If it cannot, the customer is told clearly
+  and the parts that are safe to keep are kept (section 10).
+
+### 7.5 Protections for data kept on the device
+
+- Resume is possible only after OTP verification of the **same phone number**.
+- Sensitive values are masked on screen and never written to logs or analytics.
+- The draft is deleted on expiry, on submit and on "Start over".
+- The customer is told, in plain language, that progress is saved on this device and
+  how to delete it. This matters on a shared phone.
+- **Proposal:** encrypt the draft at rest with a key held by the browser, as defence
+  in depth. This does not stop a script running in the page, so it does not replace
+  the other protections.
+- **Needs Compliance sign-off (NDPR):** keeping BVN, NIN and the account number on
+  the device until submission. If it is not approved, the fallback is to leave those
+  out of the draft and ask the customer to enter and verify them again on resume.
 
 ## 8. Language
 
@@ -254,9 +307,10 @@ This is a product requirement, not polish.
 ## 9. Integration and system behaviour
 
 ### 9.1 Submission
-On submit, the full application goes to Caltos: bio data, employment, the chosen
-product and its configuration version, the eligibility result, mandate state,
-documents, identity video, accepted terms and language, and the app version.
+The application reaches Caltos **only at submission**. Until then it lives on the
+customer's device (section 7). On submit, the full application goes to Caltos: bio
+data, employment, the chosen product, the eligibility result, mandate state,
+documents, identity video, accepted terms and language, and the web app version.
 
 ### 9.2 Failure behaviour
 - If submission fails, the customer is told it did **not** go through, keeps their
@@ -275,7 +329,6 @@ names.
 | List products matching a customer | Product match, with display fields |
 | Product settings | Mandate type, video option, required documents, configuration version |
 | Eligibility calculation | Background eligibility result and reasons |
-| Create and update draft application | Resume (section 7) |
 | Create application (submit) | Final submission, idempotent, returns a reference |
 | Upload document and upload identity video | Part of the application |
 | Generate mandate link and read mandate status | Mandate step |
@@ -286,43 +339,49 @@ they come from Caltos or a partner. Who provides each is an open question.
 
 ## 10. Versioning
 
-You asked for this to be versioned even though it is a PWA. A PWA changes how
-versioning has to work: users run **old copies of the app that keep working
-offline and update in the background**. So versioning has to cover several things.
+**Versioning is based on the web app.** Self-Serve ships as one PWA, with one
+semantic version: MAJOR.MINOR.PATCH.
 
-### 10.1 What is versioned
+| Change | Bump |
+| --- | --- |
+| A change to the journey, a rule, or anything that alters a saved draft | MAJOR or MINOR |
+| A new capability or screen | MINOR |
+| A fix or a text correction | PATCH |
 
-| Thing | Scheme | Why |
-| --- | --- | --- |
-| **This document** | Semantic: MAJOR.MINOR.PATCH, with a changelog at the end | MAJOR when a journey or rule changes, MINOR when a capability is added, PATCH for clarifications |
-| **App release** | Semantic version stamped into the build and shown in the app footer or help panel | Support can ask "which version are you on?" |
-| **Application schema** | Integer, in every saved draft and every submission | Lets old drafts be migrated or rejected safely |
-| **API contract with Caltos** | Version in the path (for example `/v1`) | Backend and app can change independently |
-| **Product configuration** | Version from Caltos on each product | Know which rules a customer applied under, and detect change on resume |
-| **Terms, mandate and consent text** | Version per document, per language | Legal record of exactly what was accepted |
-| **Translations** | Released with the app, with a content version | Know what text a customer saw |
+That one version covers the code, the translations, and the terms, mandate and
+consent text, because they ship together inside the app.
 
-Each submission records: app version, schema version, product configuration
-version, terms version, and language.
+- The version is built into the app and shown in the help panel, so support can ask
+  "which version are you on?"
+- **Every submission records the web app version** and the language and terms the
+  customer saw.
+- **Every saved draft records the web app version** that wrote it, so a newer
+  version can migrate it.
+- This document has its own version. It tracks product decisions, not releases.
+  Release notes name the document version they implement.
+- Product rules and prices come from Caltos at the time of use, so they are not part
+  of the app version.
 
-### 10.2 PWA update behaviour
-**Today the app is not yet a PWA.** It has no manifest or service worker. Making it
-one is a separate piece of work, and these rules apply when it is built.
+### 10.1 PWA behaviour
 
-- **Never interrupt a customer mid-step with a forced reload.** Updates apply at a
-  safe point: after submit, on returning to the start, or when the customer
-  taps "Update".
-- Show a calm, translated "A new version is ready" notice. Never lose entered data.
-- **Minimum supported version:** the server can mark an old version as too old
-  (for example after a security or pricing fix). Such a client is asked to update
-  before it can submit.
-- Submission is always checked by the server, so an old cached app can never bypass
-  current rules.
-- Offline support is for resilience (reopening the app, keeping the draft), **not**
-  for submitting offline. Submitting needs a connection and says so.
-- Drafts survive updates through the schema version and migrations.
-- Release notes are kept for every release, with the doc changelog for product
-  changes.
+Customers keep running an old copy of the app until it updates in the background.
+So:
+
+- **Never reload a customer mid-step.** A new version is applied at a safe point:
+  after submit, on the start screen, or when the customer taps "Update". A calm,
+  translated notice says a new version is ready.
+- Entered data is never lost by an update.
+- **Minimum supported version:** the server can mark an old version as too old (for
+  example after a security or pricing fix). That version must update before it can
+  submit.
+- Caltos always checks the submission, so an old cached app can never bypass current
+  rules.
+- **Offline is for resilience**: reopening the app, keeping the draft, showing a clear
+  "you're offline" message. **Submitting needs a connection** and says so.
+- Installable on the home screen with the Princeps name, icon and colours.
+
+**Built:** the app has a web manifest and a service worker (installable, caches the
+app for fast and offline reopening, and detects new versions). See the changelog.
 
 ## 11. Success
 
@@ -340,6 +399,8 @@ next? What happens if this goes wrong?*
 | Drop-off by step and by language | Find where customers get stuck |
 | Time from first tap to submit | Speed and friction |
 | Resume rate and resume completion rate | Is saving progress working |
+| Share of resumes that need changes after eligibility re-runs | How often offers change under customers |
+| PWA installs and share of sessions on the latest version | Is the app updating properly |
 | Error rate by type (OTP, BVN, NIN, salary, submit) | Find unhappy paths that fail |
 | Support contact rate during application | Customers who needed help |
 | Submission failure and retry rate | Reliability of the Caltos link |
@@ -381,48 +442,66 @@ customer, never show a raw error or key, always offer help.
 | --- | --- |
 | Products come from Caltos, matched per customer | Four products hard-coded in `src/shared/pricing.ts` |
 | Eligibility by partner (WACS, Remita), gender, corper, pensioner | Matched on employment type and channel (`ippis`, `remita`, `dedukt`) only |
-| Eligibility calculated in the background by Caltos | Calculated in the browser |
+| Eligibility calculated in the background by Caltos, always re-run on resume | Calculated in the browser |
 | Mandate follows product settings, including generated links | Mandate channel derived from employment type; no link flow |
 | Video option per product (record, upload/link, both) | One fixed record-on-site step |
 | Required documents per product | One fixed document list |
 | Steps vary by product | Fixed 14-step journey |
-| Documents and video are sent to Caltos as part of the application | Only file names and sizes are sent; video is kept in memory |
-| Progress is saved and resumable after OTP | Progress lives in memory only and is lost on refresh |
+| Documents and video are sent to Caltos with the application | Only file names and sizes are sent; video is kept in memory |
+| Progress saved on the device and resumable after OTP | Progress lives in memory only and is lost on refresh |
 | Submits to Caltos | Code and the integration contract call the target a "backoffice"; rename and repoint to Caltos |
-| Success screen with "Track your loan" to the customer module | Status page shows a simulated or interim outcome and no hand-off |
-| Versioning, drafts and PWA update behaviour | None. Not yet a PWA |
+| Success screen with "Track your loan" to the customer module | Status page shows an interim outcome and no hand-off |
+| One web app version, shown in help and sent on submit | Added with the PWA work; not yet sent on submit |
 | Pensioners, private sector, self-employed | "Coming soon" or absent |
 
-### 13.2 Open questions
+### 13.2 Decisions made in this version (please confirm)
 
-1. **Caltos API:** which team owns it, and which of the capabilities in 9.3 exist
-   today? What authentication does Self-Serve use?
-2. **Identity and bank checks:** who provides OTP, BVN, NIN and salary account
-   verification: Caltos or direct partners?
-3. **Drafts:** can Caltos store draft applications, or does Self-Serve need its own
-   small service? (This is also where the Princeps Console could later read from.)
-4. **One active application:** may a customer have more than one application or
-   loan at once, across products? What is the rule?
-5. **Customer module access:** how does "Track your loan" log the customer in
-   without a second login (shared session, one-time link, or sign-in)?
-6. **Mandate link:** what does the link open, who hosts it, and how does Caltos tell
-   Self-Serve the mandate is complete (callback, polling)?
-7. **Eligibility timing:** is the background calculation instant or asynchronous?
-   If it can take time, what does the customer see while waiting?
-8. **Returning customers:** which saved details can be reused, and what is the rule
-   for a customer who was previously declined?
-9. **Gender-restricted products:** where does gender come from (BVN, bio data,
-   Caltos) and how is it asked without confusion?
-10. **Draft lifetime and data retention:** is 14 days right, and what does
-    compliance require?
-11. **Translations:** who is the native reviewer for each language, and how do
-    approvals get recorded?
-12. **Princeps Console (later):** which customer details does Console need, and from
-    which moment (draft, submitted, both)?
+These came from your answers. Tell me if any is wrong.
+
+1. **Caltos holds no drafts**, so progress is saved by Self-Serve on the device, in
+   version 1. Cross-device resume is later.
+2. **Eligibility always re-runs on resume**, before the customer continues, and
+   again at product match.
+3. **Draft lifetime is 7 days.**
+4. **Identity and bank verification are not repeated on resume** unless the
+   customer edits those details or Caltos rejects them.
+5. **The identity video is re-recorded if the offer changes**, because it states the
+   amount.
+6. **Versioning follows the web app**, as one semantic version.
+
+### 13.3 Still needs a product decision
+
+Your answers did not cover these.
+
+1. **More than one application or loan at a time.** May a customer have more than
+   one active application or loan across products, and what does Caltos allow?
+2. **Previously declined customers.** Show their history, or let them apply fresh?
+3. **Gender-restricted products.** Where does gender come from (BVN, bio data, Caltos),
+   and how do we ask for it without confusion?
+4. **Native reviewers.** Who reviews and signs off Yoruba, Igbo and Hausa, and how is
+   the approval recorded?
+5. **Compliance.** Is keeping BVN, NIN and the account number on the device until
+   submission acceptable under NDPR (section 7.5)?
+
+### 13.4 Integration details for the Caltos developers
+
+These are engineering details to settle while connecting the endpoints. They are not
+product decisions.
+
+- How Self-Serve authenticates to Caltos.
+- Who provides OTP, BVN, NIN and salary-account verification: Caltos or direct
+  partners.
+- How "Track your loan" signs the customer in to the customer module without a second
+  login.
+- How Self-Serve learns a mandate link was completed (callback or polling).
+- Idempotent submission, so a retry cannot create two applications.
+- Whether eligibility is instant or asynchronous, and what the customer sees while
+  waiting.
 
 ## Changelog
 
 | Version | Date | Change |
 | --- | --- | --- |
+| 1.1.0 | 2026-11-09 | Versioning is now based on the single web app version. Eligibility always re-runs on resume. Caltos holds no drafts, so progress is saved on the device in v1 (cross-device later). Added PWA manifest and service worker. Replaced the open-questions list with confirmed decisions, five remaining product decisions, and a separate list of integration details for developers |
 | 1.0.0 | 2026-11-09 | First full version. Caltos is the source of truth and submission target. Added resume, mandate links, documents and video as part of the application, success and tracking hand-off, versioning and PWA update rules, measures, gaps and open questions |
 | 0.1.0 | 2026-11-09 | Initial draft from the product owner's description |
