@@ -6,4 +6,6 @@ export const environment = {
   /** Caltos customer module: where "Track your loan" sends the customer. */
   customerModuleUrl: 'https://caltos-rho.vercel.app/portal',
   useMockApi: true,
+  /** Shows a "Demo" strip and the demo OTP hint. */
+  demoBanner: true,
 };

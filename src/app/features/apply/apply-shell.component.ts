@@ -47,7 +47,7 @@ const NO_BACK_ROUTES = new Set<string>([
 
       <footer class="foot">
         <p class="foot-trust">{{ 'trust.cbn' | t }}</p>
-        <button type="button" class="foot-link" (click)="privacy.open()">{{ 'consent.link' | t }}</button>
+        <button type="button" class="foot-link" (click)="privacy.open()">{{ 'privacy.link' | t }}</button>
       </footer>
     </div>
   `,

@@ -36,12 +36,12 @@
       @for (f of o.fees; track f.name) {
         <li><span>{{ f.name }}</span><strong>{{ formatNaira(f.amount) }}</strong></li>
       }
-      <li class="fees-total"><span>Total fees</span><strong>{{ formatNaira(totalFees()) }}</strong></li>
+      <li class="fees-total"><span>{{ 'step.terms.fees.total' | t }}</span><strong>{{ formatNaira(totalFees()) }}</strong></li>
     </ul>
   </section>
 
-  <section class="block">
-    <h2 class="block-title">{{ 'step.terms.schedule' | t }}</h2>
+  <details class="block schedule-block">
+    <summary class="block-title">{{ 'step.terms.schedule' | t }}</summary>
     <div class="payday-callout" role="note">
       <strong>{{ 'step.terms.payday.first' | t }}: {{ formatDueDate(firstDueDate()) }}</strong>
       <span>{{ 'step.terms.payday.note' | t }}</span>
@@ -72,7 +72,7 @@
         </tbody>
       </table>
     </div>
-  </section>
+  </details>
 
   <label class="agree">
     <input type="checkbox"

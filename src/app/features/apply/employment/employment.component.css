@@ -164,3 +164,7 @@
   min-height: 44px; display: inline-flex; align-items: center;
   color: var(--action-primary); font-weight: 600; text-decoration: underline; text-underline-offset: 3px;
 }
+
+.other { margin: 0; font-size: 14px; color: var(--ink-soft); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); }
+.other-link { min-height: 44px; padding: 0; border: 0; background: none; color: var(--action-primary); font: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.other-link:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); border-radius: 4px; }

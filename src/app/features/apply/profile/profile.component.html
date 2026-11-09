@@ -50,12 +50,6 @@
       </select>
     </div>
 
-    <div class="field">
-      <label class="label label--optional" for="religion">{{ 'step.profile.religion.label' | t }}</label>
-      <input id="religion" class="input" type="text" formControlName="religion" />
-      <p class="msg">{{ 'step.profile.religion.hint' | t }}</p>
-    </div>
-
     @if (attempted() && !canContinue()) {
       <p class="msg--error" role="alert">{{ 'form.fix.required' | t }}</p>
     }

@@ -20,8 +20,11 @@ If a required variable is missing the functions answer `503` (fail closed).
 ## Build modes
 
 - `ng serve` (development): `useMockApi = true`, the whole wizard runs on an in-process mock.
-- `ng build` (production): `useMockApi = false`. Nothing is faked: a failed call shows an error and a
-  verification failure is never reported as success.
+- `ng build` (production): **demo period** (until Caltos is connected) the deployed app also runs on the mock
+  (OTP `123456`) and shows a "Demo version. No real application is sent." strip. Switch both flags in
+  `src/environments/environment.production.ts` (`useMockApi: false`, `demoBanner: false`) before real customers.
+  With the mock off, nothing is faked: a failed call shows an error and a verification failure is never
+  reported as success.
 
 ## The journey the API supports
 

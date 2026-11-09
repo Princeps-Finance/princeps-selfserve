@@ -38,7 +38,8 @@ export class EmploymentComponent {
   private readonly state = inject(ApplicationStateService);
   private readonly router = inject(Router);
 
-  readonly options = OPTIONS;
+  /** Only segments we can serve now are options. The rest are a single waitlist link, not disabled-looking rows. */
+  readonly options = OPTIONS.filter((o) => o.live);
   readonly selected = signal<EmploymentType | null>(this.state.employment()?.type ?? null);
   readonly submitting = signal(false);
   readonly attempted = signal(false);
@@ -69,6 +70,10 @@ export class EmploymentComponent {
     if (opt.type === 'corper') return this.nyscMonths.valid && !this.tooShort();
     return true;
   });
+
+  joinWaitlist(): void {
+    void this.router.navigate(['/apply/waitlist'], { queryParams: { type: 'private-sector' } });
+  }
 
   onMonthsInput(): void {
     this.months.set(this.nyscMonths.value);

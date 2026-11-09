@@ -25,6 +25,18 @@ interface OfferView {
   quote: LoanQuote;
 }
 
+/**
+ * A few round choices (3, 6, 9, 12 months) plus the longest allowed, instead of every month:
+ * ten buttons is noise, and nobody needs to choose between 7 and 8 months.
+ */
+function tenorChoices(limits: Limits, current: number): number[] {
+  const set = new Set<number>();
+  for (let t = 3; t <= limits.maxTenor; t += 3) if (t >= limits.minTenor) set.add(t);
+  set.add(limits.maxTenor);
+  set.add(current);
+  return [...set].sort((a, b) => a - b);
+}
+
 interface Choice {
   amount: number;
   tenor: number;
@@ -53,13 +65,20 @@ export class OffersComponent implements OnInit {
   readonly whatsapp = whatsappLink('Hello Princeps, I could not find a loan that fits my details and would like help.');
   readonly tel = telLink();
   readonly ready = signal(false);
+  /** Only one product is open at a time; the others are a single line. */
+  readonly expanded = signal<string | null>(null);
 
   readonly offers = computed<OfferView[]>(() =>
     this.catalogue().map(({ product, limits }) => {
       const c = this.choices()[product.id] ?? { amount: limits.maxAmount, tenor: limits.maxTenor };
-      const tenors: number[] = [];
-      for (let t = limits.minTenor; t <= limits.maxTenor; t++) tenors.push(t);
-      return { product, limits, amount: c.amount, tenor: c.tenor, tenors, quote: quoteLoan(product, c.amount, c.tenor) };
+      return {
+        product,
+        limits,
+        amount: c.amount,
+        tenor: c.tenor,
+        tenors: tenorChoices(limits, c.tenor),
+        quote: quoteLoan(product, c.amount, c.tenor),
+      };
     }),
   );
 
@@ -93,6 +112,7 @@ export class OffersComponent implements OnInit {
     }
     this.catalogue.set(catalogue);
     this.choices.set(choices);
+    this.expanded.set((pref && catalogue.find((c) => c.product.id === pref.productId)?.product.id) || catalogue[0]?.product.id || null);
     this.ready.set(true);
   }
 
@@ -129,8 +149,8 @@ export class OffersComponent implements OnInit {
     this.setAmount(o, Number((event.target as HTMLInputElement).value));
   }
 
-  nudge(o: OfferView, direction: 1 | -1): void {
-    this.setAmount(o, o.amount + direction * o.product.amountStep);
+  toggle(id: string): void {
+    this.expanded.update((cur) => (cur === id ? null : id));
   }
 
   setTenor(o: OfferView, tenor: number): void {

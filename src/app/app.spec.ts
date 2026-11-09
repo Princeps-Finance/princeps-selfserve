@@ -21,6 +21,7 @@ describe('App', () => {
     expect(el.querySelector('router-outlet')).toBeTruthy();
     expect(el.querySelector('app-privacy-dialog')).toBeTruthy();
     expect(el.querySelector('app-pwa-banner')).toBeTruthy();
+    expect(el.querySelector('app-demo-banner')).toBeTruthy();
     expect(el.querySelector('app-toast-host')).toBeTruthy();
   });
 });

@@ -15,6 +15,7 @@ import { Router } from '@angular/router';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { LangService } from '../../../core/i18n/lang.service';
 import { WizardProgressComponent } from '../wizard-progress.component';
+import { environment } from '../../../../environments/environment';
 import { API_CLIENT } from '../../../core/api/api-client';
 import { CaptchaService } from '../../../core/captcha/captcha.service';
 import { DraftService } from '../../../core/application/draft.service';
@@ -37,6 +38,7 @@ type OtpError =
   styleUrl: './verify-phone.component.css',
 })
 export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
+  readonly demo = environment.demoBanner;
   private readonly api = inject(API_CLIENT);
   private readonly captcha = inject(CaptchaService);
   private readonly drafts = inject(DraftService);

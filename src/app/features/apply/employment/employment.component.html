@@ -37,6 +37,11 @@
     }
   </ul>
 
+  <p class="other">
+    {{ 'step.employment.other' | t }}
+    <button type="button" class="other-link" (click)="joinWaitlist()">{{ 'step.employment.other.cta' | t }}</button>
+  </p>
+
   @if (attempted() && !selectedOption()) {
     <p class="msg msg--error" role="alert">{{ 'form.choose.required' | t }}</p>
   }

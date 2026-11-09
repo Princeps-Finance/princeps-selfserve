@@ -6,11 +6,6 @@
     <p class="subtitle">{{ 'step.mandate.subtitle' | t: { channel: (channelKey() | t) } }}</p>
   </header>
 
-  <aside class="channel-explainer" role="note">
-    <span class="channel-badge">{{ channelKey() | t }}</span>
-    <p class="channel-desc">{{ channelDescKey() | t }}</p>
-  </aside>
-
   @if (isCorperMonoCharge()) {
     <aside class="mono-notice" role="note">
       <div class="mono-icon" aria-hidden="true">
