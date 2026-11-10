@@ -23,7 +23,7 @@ function fill(c: SalaryComponent): void {
 
 describe('SalaryComponent in the no-identity check', () => {
   it('runs the real check from the account details, keeps the account, and shows the result without asking for pay', async () => {
-    const { go, api, state } = setup(vi.fn().mockResolvedValue({ status: 'ok', decision: 'approved', maxAmount: 300000, tenorMonths: 12 }));
+    const { go, api, state } = setup(vi.fn().mockResolvedValue({ status: 'ok', decision: 'approved', maxAmount: 347500, tenorMonths: 12, monthlyIncome: 250000 }));
     state.setIntent('check');
     state.setEmployment({ type: 'government', governmentLevel: 'federal' });
     const c = TestBed.createComponent(SalaryComponent).componentInstance;
@@ -33,8 +33,8 @@ describe('SalaryComponent in the no-identity check', () => {
 
     expect(api.verifySalary).not.toHaveBeenCalled();
     expect(api.checkEligibility).toHaveBeenCalledWith(expect.objectContaining({ employmentType: 'government', governmentLevel: 'federal', channel: 'ippis', accountNumber: '0123456789' }));
-    expect(state.salary()).toMatchObject({ accountNumber: '0123456789', fromCheck: true, monthlyIncome: 0 });
-    expect(state.eligibility()).toMatchObject({ decision: 'approved', maxEligibleAmount: 300000, tenorMonths: 12 });
+    expect(state.salary()).toMatchObject({ accountNumber: '0123456789', fromCheck: true, monthlyIncome: 250000 });
+    expect(state.eligibility()).toMatchObject({ decision: 'approved', maxEligibleAmount: 347500, tenorMonths: 12 });
     expect(go).toHaveBeenCalledWith(APPLY.checkResult);
   });
 
@@ -47,6 +47,17 @@ describe('SalaryComponent in the no-identity check', () => {
     fill(c);
     await c.submit();
     expect(c.errorKey()).toBe('step.salary.error.not.found');
+    expect(go).not.toHaveBeenCalled();
+  });
+
+  it('opens a window, and goes nowhere, when the limit on checks is reached', async () => {
+    const { go, state } = setup(vi.fn().mockResolvedValue({ status: 'rate-limited' }));
+    state.setIntent('check');
+    state.setEmployment({ type: 'government', governmentLevel: 'federal' });
+    const c = TestBed.createComponent(SalaryComponent).componentInstance;
+    fill(c);
+    await c.submit();
+    expect(c.limited()).toBe(true);
     expect(go).not.toHaveBeenCalled();
   });
 

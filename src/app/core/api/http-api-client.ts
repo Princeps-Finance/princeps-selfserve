@@ -274,8 +274,12 @@ return []; // The user can type it.
     return bytes;
   }
 
-  checkEligibility(input: EligibilityCheckInput): Promise<EligibilityCheckResult> {
-    return this.opOr<EligibilityCheckResult>('eligibility-check', input, { status: 'service-down' });
+  async checkEligibility(input: EligibilityCheckInput): Promise<EligibilityCheckResult> {
+    const r = await this.post<EligibilityCheckResult>('/api/selfserve/eligibility-check', input);
+    // 429 is the limit on checks (per account and per address): the screen explains it in a window.
+    if (r.status === 429) return { status: 'rate-limited' };
+    if (!r.ok || !r.data) return { status: 'service-down' };
+    return r.data;
   }
 
   async getEmploymentTypes(): Promise<EmploymentAvailability[] | null> {

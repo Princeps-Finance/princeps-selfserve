@@ -32,6 +32,9 @@ import { ProductMarkComponent } from '../../../shared/product-mark.component';
         <header class="head">
           <h1 class="title">{{ 'check.result.title' | t: { amount: money(max()) } }}</h1>
           <p class="subtitle">{{ 'check.result.sub' | t: { months: months() } }}</p>
+          @if (income() > 0) {
+            <p class="income">{{ 'check.result.income' | t: { amount: money(income()) } }}</p>
+          }
         </header>
 
         @if (products().length) {
@@ -70,6 +73,7 @@ import { ProductMarkComponent } from '../../../shared/product-mark.component';
       .head { display: flex; flex-direction: column; gap: var(--space-2); }
       .title { font-size: clamp(26px, 7vw, 34px); line-height: 1.1; letter-spacing: -0.02em; }
       .subtitle { margin: 0; color: var(--ink-soft); line-height: 1.5; }
+      .income { margin: 0; font-weight: 600; }
       .products-title { margin: 0 0 var(--space-2); font-size: var(--fs-lg); }
       .list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
       .item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); border-radius: var(--radius-md); background: var(--grey-100); }
@@ -92,6 +96,7 @@ export class CheckResultComponent {
   protected readonly whatsapp = whatsappLink('Hello Princeps, I checked how much I can get and I would like help.');
   protected readonly tel = telLink();
   protected readonly max = computed(() => this.state.eligibility()?.maxEligibleAmount ?? 0);
+  protected readonly income = computed(() => this.state.salary()?.monthlyIncome ?? 0);
   protected readonly months = computed(() => this.state.eligibility()?.tenorMonths ?? 0);
 
   /** The loans that match what the customer told us, each capped at what they can get. */

@@ -196,7 +196,7 @@ const OPS: Record<string, OpDef> = {
     needsToken: true,
   },
   // The "how much can I get" check: no identity, so it is bot-checked and limited per account. The back end does the real
-  // employment and salary check and must answer only a decision and a maximum (rounded down), never an income or a name.
+  // employment and salary check and answers a decision, the maximum and the verified monthly pay (never the account name).
   'eligibility-check': {
     schema: z
       .object({
@@ -212,8 +212,8 @@ const OPS: Record<string, OpDef> = {
       })
       .strict(),
     limit: 6,
-    allow: ['status', 'decision', 'maxAmount', 'tenorMonths'],
-    subjectLimit: { count: 4, windowMs: 60 * 60_000 },
+    allow: ['status', 'decision', 'maxAmount', 'tenorMonths', 'monthlyIncome'],
+    subjectLimit: { count: 4, windowMs: 30 * 60_000 },
   },
   waitlist: {
     schema: z

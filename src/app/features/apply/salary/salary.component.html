@@ -135,3 +135,12 @@
     </button>
   </form>
 </section>
+
+<app-modal [open]="limited()" [title]="'check.limit.title' | t" (closed)="limited.set(false)">
+  <h2 class="limit-title">{{ 'check.limit.title' | t }}</h2>
+  <p class="limit-body">{{ 'check.limit.body' | t }}</p>
+  <div class="limit-actions">
+    <a class="alt" [attr.href]="whatsapp" target="_blank" rel="noopener">{{ 'step.eligibility.declined.whatsapp' | t }}</a>
+    <a class="alt" [attr.href]="tel">{{ 'step.eligibility.declined.call' | t }}</a>
+  </div>
+</app-modal>

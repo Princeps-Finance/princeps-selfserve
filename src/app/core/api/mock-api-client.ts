@@ -194,8 +194,15 @@ export class MockApiClient implements ApiClient {
     return { status: 'ok', monthlyIncome: 180_000, accountName: 'A. Adeyemi' };
   }
 
+  /** Demo of the limit: 4 checks per account in 30 minutes, like the real server. */
+  private readonly checkTimes = new Map<string, number[]>();
+
   async checkEligibility(input: EligibilityCheckInput): Promise<EligibilityCheckResult> {
     await delay(900);
+    const now = Date.now();
+    const recent = (this.checkTimes.get(input.accountNumber) ?? []).filter((t) => now - t < 30 * 60_000);
+    if (recent.length >= 4) return { status: 'rate-limited' };
+    this.checkTimes.set(input.accountNumber, [...recent, now]);
     if (input.accountNumber === '9999999999') return { status: 'service-down' };
     if (input.accountNumber === '0000000000') return { status: 'not-found' };
     // Demo: a made-up pay by channel, scored the same way the app scores a verified one.
@@ -210,7 +217,7 @@ export class MockApiClient implements ApiClient {
       repaymentHistory: { isRepeatBorrower: false },
       exposure: { hasActiveLoanElsewhere: false },
     });
-    return { status: 'ok', decision: r.decision, maxAmount: r.maxEligibleAmount, tenorMonths: r.tenorMonths };
+    return { status: 'ok', decision: r.decision, maxAmount: r.maxEligibleAmount, tenorMonths: r.tenorMonths, monthlyIncome: monthlyAmount };
   }
 
   async verifyBvn(bvn: string, _fullName: string, _dateOfBirth: string): Promise<BvnVerifyResult> {

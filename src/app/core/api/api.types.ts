@@ -26,7 +26,7 @@ export interface SalaryVerifyInput {
 
 /**
  * The "how much can I get" check, before any identity. The back end does the real employment and salary check
- * from the account details and answers only with a decision and a maximum, never an income or a name.
+ * from the account details and answers with a decision, the maximum and the verified monthly pay.
  */
 export interface EligibilityCheckInput {
   employmentType: 'government' | 'paramilitary' | 'corper';
@@ -41,8 +41,9 @@ export interface EligibilityCheckInput {
 }
 
 export type EligibilityCheckResult =
-  | { status: 'ok'; decision: 'approved' | 'review' | 'declined'; maxAmount: number; tenorMonths: number }
+  | { status: 'ok'; decision: 'approved' | 'review' | 'declined'; maxAmount: number; tenorMonths: number; monthlyIncome: number }
   | { status: 'not-found' }
+  | { status: 'rate-limited' }
   | { status: 'service-down' };
 
 export type SalaryVerifyResult =

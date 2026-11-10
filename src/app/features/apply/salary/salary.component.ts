@@ -12,6 +12,8 @@ import {
 } from '../../../core/application/application-state.service';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
+import { ModalComponent } from '../../../shared/modal.component';
+import { telLink, whatsappLink } from '../../../core/support';
 import { CaptchaService } from '../../../core/captcha/captcha.service';
 
 const PARAMILITARY_EMPLOYERS = [
@@ -24,7 +26,7 @@ const PARAMILITARY_EMPLOYERS = [
 
 @Component({
   selector: 'app-salary',
-  imports: [TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent],
+  imports: [TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent, ModalComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './salary.component.html',
   styleUrl: './salary.component.css',
@@ -80,6 +82,10 @@ export class SalaryComponent {
   });
 
   readonly submitting = signal(false);
+  /** True when the limit on checks was reached: a window explains it. */
+  readonly limited = signal(false);
+  readonly whatsapp = whatsappLink('Hello Princeps, I reached the limit on checking how much I can get and I would like help.');
+  readonly tel = telLink();
   readonly serverError = signal<'not-found' | 'name-mismatch' | 'service-down' | null>(null);
 
   readonly statusChanges = toSignal(this.form.statusChanges, { initialValue: this.form.status });
@@ -212,6 +218,10 @@ export class SalaryComponent {
           employer: v.employer || undefined,
           captchaToken: await this.captcha.token(),
         });
+        if (res.status === 'rate-limited') {
+          this.limited.set(true);
+          return;
+        }
         if (res.status !== 'ok') {
           this.serverError.set(res.status);
           return;
@@ -224,7 +234,7 @@ export class SalaryComponent {
           accountNumber: v.accountNumber,
           ippisNumber: v.ippisNumber || undefined,
           paramilitaryEmployer: v.employer || undefined,
-          monthlyIncome: 0,
+          monthlyIncome: res.monthlyIncome,
           fromCheck: true,
         });
         this.state.setEligibility({ score: 0, decision: res.decision, maxEligibleAmount: res.maxAmount, tenorMonths: res.tenorMonths, reasons: [] });
