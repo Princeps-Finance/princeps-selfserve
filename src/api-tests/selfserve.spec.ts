@@ -148,6 +148,14 @@ describe('POST /api/selfserve/[op]', () => {
     expect(await ok.json()).toEqual({ status: 'ok' });
   });
 
+  it('reviews a private-sector statement without a token and passes on only the answer', async () => {
+    fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ status: 'ok', decision: 'approved', maxAmount: 250000, tenorMonths: 6, monthlyIncome: 200000, accountName: 'Ada Obi' }))));
+    const body = { employer: 'Acme Ltd', bankCode: '058', fileName: 'statement.pdf', sizeBytes: 120000 };
+    const res = await handler(req('statement-check', body));
+    expect(await res.json()).toEqual({ status: 'ok', decision: 'approved', maxAmount: 250000, tenorMonths: 6, monthlyIncome: 200000 });
+    expect((await handler(req('statement-check', { ...body, sizeBytes: 50 * 1024 * 1024 }))).status).toBe(400);
+  });
+
   it('returns a generic 502 when the backoffice errors', async () => {
     fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ stack: 'at db.ts:1' }), { status: 500 }));
     const res = await handler(req('banks', {}));

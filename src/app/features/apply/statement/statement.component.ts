@@ -13,6 +13,9 @@ import { ApplicationStateService } from '../../../core/application/application-s
 import { SelectFieldComponent, SelectOption } from '../../../core/ui/select-field.component';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { DraftService } from '../../../core/application/draft.service';
+import { ModalComponent } from '../../../shared/modal.component';
+import { telLink, whatsappLink } from '../../../core/support';
+import { CaptchaService } from '../../../core/captcha/captcha.service';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 const MAX_BYTES = MAX_UPLOAD_BYTES;
@@ -23,7 +26,7 @@ const MAX_BYTES = MAX_UPLOAD_BYTES;
  */
 @Component({
   selector: 'app-statement',
-  imports: [IllustrationComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent],
+  imports: [IllustrationComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent, ModalComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './statement.component.html',
   styleUrl: './statement.component.css',
@@ -33,6 +36,13 @@ export class StatementComponent implements OnInit {
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
   private readonly drafts = inject(DraftService);
+  private readonly captcha = inject(CaptchaService);
+
+  /** The no-identity "how much can I get" check: the statement is reviewed automatically and no BVN or code is asked. */
+  readonly checking = this.state.intent() === 'check';
+  readonly limited = signal(false);
+  readonly whatsapp = whatsappLink('Hello Princeps, I reached the limit on checking how much I can get and I would like help.');
+  readonly tel = telLink();
 
   readonly banks = signal<Bank[]>(NG_BANKS);
   readonly bankOptions = computed<SelectOption[]>(() => this.banks().map((b) => ({ value: b.code, label: b.name })));
@@ -72,7 +82,7 @@ export class StatementComponent implements OnInit {
     if (!f) this.fileError.set('missing');
     const contact = this.state.contact();
     const bvn = this.state.bvn();
-    if (this.form.invalid || !f || !contact || !bvn) {
+    if (this.form.invalid || !f || (!this.checking && (!contact || !bvn))) {
       setTimeout(() => (this.form.invalid ? focusFirstInvalid() : document.getElementById('statement-file')?.focus()));
       return;
     }
@@ -80,8 +90,26 @@ export class StatementComponent implements OnInit {
     this.failed.set(false);
     try {
       const v = this.form.getRawValue();
+      if (this.checking) {
+        const res = await this.api.checkStatement({
+          employer: v.employer.trim(), bankCode: v.bankCode, fileName: f.name, sizeBytes: f.size, captchaToken: await this.captcha.token(),
+        });
+        if (res.status === 'rate-limited') {
+          this.limited.set(true);
+          return;
+        }
+        if (res.status !== 'ok') {
+          this.failed.set(true);
+          return;
+        }
+        // No salary account for a private-sector worker: the statement gave the pay.
+        this.state.setSalary({ channel: 'ippis', bankCode: v.bankCode, bankName: '', accountNumber: '', monthlyIncome: res.monthlyIncome, fromCheck: true });
+        this.state.setEligibility({ score: 0, decision: res.decision, maxEligibleAmount: res.maxAmount, tenorMonths: res.tenorMonths, reasons: [] });
+        await this.flow.go(APPLY.checkResult);
+        return;
+      }
       const res = await this.api.submitStatementReview({
-        contact, bvn: bvn.value, employer: v.employer.trim(), bankCode: v.bankCode, fileName: f.name, sizeBytes: f.size,
+        contact: contact!, bvn: bvn!.value, employer: v.employer.trim(), bankCode: v.bankCode, fileName: f.name, sizeBytes: f.size,
       });
       this.state.setSubmission({ status: 'received', referenceId: res.referenceId });
       this.drafts.clear();

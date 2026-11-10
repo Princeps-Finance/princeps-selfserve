@@ -97,7 +97,7 @@ export const routes: Routes = [
       },
       {
         path: 'statement',
-        canMatch: [requiresContactGuard, requiresPhoneVerifiedGuard, requiresEmploymentGuard],
+        canMatch: [requiresIdentityOrCheckGuard, requiresEmploymentGuard],
         loadComponent: () =>
           import('./features/apply/statement/statement.component').then((m) => m.StatementComponent),
       },

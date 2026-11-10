@@ -23,6 +23,7 @@ import {
   StatementReviewInput,
   EligibilityCheckInput,
   EligibilityCheckResult,
+  StatementCheckInput,
   SubmitPayload,
   SubmitResult,
   WaitlistInput,
@@ -277,6 +278,13 @@ return []; // The user can type it.
   async checkEligibility(input: EligibilityCheckInput): Promise<EligibilityCheckResult> {
     const r = await this.post<EligibilityCheckResult>('/api/selfserve/eligibility-check', input);
     // 429 is the limit on checks (per account and per address): the screen explains it in a window.
+    if (r.status === 429) return { status: 'rate-limited' };
+    if (!r.ok || !r.data) return { status: 'service-down' };
+    return r.data;
+  }
+
+  async checkStatement(input: StatementCheckInput): Promise<EligibilityCheckResult> {
+    const r = await this.post<EligibilityCheckResult>('/api/selfserve/statement-check', input);
     if (r.status === 429) return { status: 'rate-limited' };
     if (!r.ok || !r.data) return { status: 'service-down' };
     return r.data;

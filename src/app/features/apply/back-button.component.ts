@@ -32,6 +32,7 @@ const CHECK_BACK: Record<string, string> = {
   [APPLY.employment]: APPLY.welcome,
   [APPLY.salary]: APPLY.employment,
   [APPLY.eligibility]: APPLY.salary,
+  [APPLY.statement]: APPLY.employment,
 };
 
 @Component({
@@ -72,6 +73,7 @@ export class BackButtonComponent {
     const here = this.router.url.split('?')[0];
     const checking = this.state.intent() === 'check';
     let target = (checking ? CHECK_BACK[here] : undefined) ?? BACK_MAP[here] ?? (here.startsWith(`${APPLY.loans}/`) ? APPLY.loans : APPLY.welcome);
+    if (here === APPLY.checkResult && this.state.employment()?.type === 'private-sector') target = APPLY.statement;
     if (here === APPLY.documents) {
       const needsNin = productById(this.state.offer()?.productId ?? '')?.settings.requiresNin ?? false;
       target = needsNin ? APPLY.nin : APPLY.terms;

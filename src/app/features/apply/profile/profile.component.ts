@@ -122,7 +122,8 @@ export class ProfileComponent {
       relationshipStatus: v.relationshipStatus,
     });
     // Work details already given in the check are not asked again; only the salary account is confirmed.
-    void this.flow.go(this.state.salary()?.fromCheck ? APPLY.salary : APPLY.employment);
+    const checkedPrivate = this.state.employment()?.type === 'private-sector' && !!this.state.eligibility();
+    void this.flow.go(checkedPrivate ? APPLY.statement : this.state.salary()?.fromCheck ? APPLY.salary : APPLY.employment);
   }
 }
 

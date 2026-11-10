@@ -2,7 +2,7 @@ import { InjectionToken } from '@angular/core';
 import type { EmploymentAvailability } from './employment-availability';
 import type { ReferralDraft } from '../application/application-state.service';
 import type {
-  Bank, BvnContactsResult, EligibilityCheckInput, EligibilityCheckResult, BvnOtpSendResult, BvnOtpVerifyResult, BvnVerifyResult, DocUploadInput, DocUploadResult,
+  Bank, BvnContactsResult, EligibilityCheckInput, EligibilityCheckResult, StatementCheckInput, BvnOtpSendResult, BvnOtpVerifyResult, BvnVerifyResult, DocUploadInput, DocUploadResult,
   LoanSummary, LookupResult, MandateLink, OfferLetterRequest, MandateStatus, OtpDestination, SalaryVerifyInput, SalaryVerifyResult,
   StatementReviewInput, SubmitPayload, SubmitResult, WaitlistInput, WaitlistResult,
 } from './api.types';
@@ -58,6 +58,8 @@ export interface ApiClient {
   checkEligibility(input: EligibilityCheckInput): Promise<EligibilityCheckResult>;
   /** Gives the back end this device's push subscription, so it can send updates about the application. */
   registerPush(subscription: PushSubscriptionJSON): Promise<void>;
+  /** Reviews a private-sector worker's bank statement automatically, with no identity. Same answer as the salary check. */
+  checkStatement(input: StatementCheckInput): Promise<EligibilityCheckResult>;
   getEmploymentTypes(): Promise<EmploymentAvailability[] | null>;
   /** Checks a referral code with the server. Null when the code is not valid or the check could not be made. */
   checkReferral(code: string): Promise<ReferralDraft | null>;

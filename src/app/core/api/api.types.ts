@@ -40,6 +40,15 @@ export interface EligibilityCheckInput {
   captchaToken?: string;
 }
 
+/** The same check for private-sector workers: the bank statement is reviewed automatically, with no identity. */
+export interface StatementCheckInput {
+  employer: string;
+  bankCode: string;
+  fileName: string;
+  sizeBytes: number;
+  captchaToken?: string;
+}
+
 export type EligibilityCheckResult =
   | { status: 'ok'; decision: 'approved' | 'review' | 'declined'; maxAmount: number; tenorMonths: number; monthlyIncome: number }
   | { status: 'not-found' }

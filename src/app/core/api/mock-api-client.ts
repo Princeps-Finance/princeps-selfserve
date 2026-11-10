@@ -23,6 +23,7 @@ import type {
   WaitlistResult,
   EligibilityCheckInput,
   EligibilityCheckResult,
+  StatementCheckInput,
 } from './api.types';
 import type { ApiClient } from './api-client';
 import { buildSimplePdf } from '../pdf/simple-pdf';
@@ -218,6 +219,12 @@ export class MockApiClient implements ApiClient {
       exposure: { hasActiveLoanElsewhere: false },
     });
     return { status: 'ok', decision: r.decision, maxAmount: r.maxEligibleAmount, tenorMonths: r.tenorMonths, monthlyIncome: monthlyAmount };
+  }
+
+  async checkStatement(input: StatementCheckInput): Promise<EligibilityCheckResult> {
+    await delay(1200);
+    if (input.fileName.toLowerCase().startsWith('fail')) return { status: 'service-down' };
+    return { status: 'ok', decision: 'approved', maxAmount: 250_000, tenorMonths: 6, monthlyIncome: 200_000 };
   }
 
   async verifyBvn(bvn: string, _fullName: string, _dateOfBirth: string): Promise<BvnVerifyResult> {
