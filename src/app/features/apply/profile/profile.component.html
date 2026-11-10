@@ -14,7 +14,7 @@
     @if (!identity) {
       <div class="field">
         <label class="label" for="name">{{ 'step.profile.name.label' | t }}</label>
-        <input id="name" [attr.aria-invalid]="invalid('fullName')" class="input" type="text" formControlName="fullName" autocomplete="name" />
+        <input id="name" [attr.aria-invalid]="invalid('fullName')" [attr.aria-describedby]="invalid('fullName') ? 'form-error' : null" class="input" type="text" formControlName="fullName" autocomplete="name" />
         <p class="msg">{{ 'step.profile.name.hint' | t }}</p>
       </div>
 
@@ -26,7 +26,7 @@
 
     <div class="field">
       <label class="label" for="street">{{ 'step.profile.address.label' | t }}</label>
-      <input id="street" [attr.aria-invalid]="invalid('street')" class="input" type="text" formControlName="street" autocomplete="street-address" />
+      <input id="street" [attr.aria-invalid]="invalid('street')" [attr.aria-describedby]="invalid('street') ? 'form-error' : null" class="input" type="text" formControlName="street" autocomplete="street-address" />
     </div>
 
     <div class="field">
@@ -39,7 +39,7 @@
       @if (lgas().length) {
         <app-select-field inputId="lga" [options]="lgaOptions()" [title]="'step.profile.lga.label' | t" [searchable]="true" [invalid]="invalid('lga')" formControlName="lga" autocomplete="address-level2" />
       } @else {
-        <input id="lga" [attr.aria-invalid]="invalid('lga')" class="input" type="text" formControlName="lga" autocomplete="address-level2" />
+        <input id="lga" [attr.aria-invalid]="invalid('lga')" [attr.aria-describedby]="invalid('lga') ? 'form-error' : null" class="input" type="text" formControlName="lga" autocomplete="address-level2" />
       }
     </div>
 
@@ -55,7 +55,7 @@
     </div>
 
     @if (attempted() && !canContinue()) {
-      <p class="msg--error" role="alert">{{ 'form.fix.required' | t }}</p>
+      <p class="msg--error" id="form-error" role="alert">{{ 'form.fix.required' | t }}</p>
     }
 
     <button type="submit" class="cta" [disabled]="submitting()">
