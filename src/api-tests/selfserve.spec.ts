@@ -69,6 +69,64 @@ describe('POST /api/selfserve/[op]', () => {
     expect(perPhone.filter((s) => s === 429).length).toBeGreaterThan(0);
   });
 
+  it('caps guesses at a code per number from any address, so rotating addresses does not help', async () => {
+    fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ status: 'wrong' }))));
+    const phone = '+2348055550001';
+    const codes: number[] = [];
+    for (let i = 0; i < 7; i++) codes.push((await handler(req('verify-otp', { phone, code: '000000' }))).status);
+    expect(codes).toEqual([200, 200, 200, 200, 200, 429, 429]);
+  });
+
+  it('limits identity checks per BVN and per token, not only per address', async () => {
+    fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ status: 'name-mismatch' }))));
+    const body = { bvn: '22222222221', fullName: 'Ada Obi', dateOfBirth: '1990-01-01' };
+    const perBvn: number[] = [];
+    for (let i = 0; i < 12; i++) perBvn.push((await handler(req('verify-bvn', body, { 'x-application-token': `tok-a${i}` }))).status);
+    expect(perBvn.filter((s) => s === 429).length).toBeGreaterThan(0);
+
+    const perToken: number[] = [];
+    for (let i = 0; i < 20; i++) {
+      const b = { ...body, bvn: `3333333${String(1000 + i)}` };
+      perToken.push((await handler(req('verify-bvn', b, { 'x-application-token': 'tok-same' }))).status);
+    }
+    expect(perToken.filter((s) => s === 429).length).toBeGreaterThan(0);
+  });
+
+  describe('shared limit store', () => {
+    afterEach(() => {
+      delete process.env['VERCEL_ENV'];
+      delete process.env['UPSTASH_REDIS_REST_URL'];
+      delete process.env['UPSTASH_REDIS_REST_TOKEN'];
+    });
+
+    it('refuses every limited call in production when the store is not configured', async () => {
+      process.env['VERCEL_ENV'] = 'production';
+      const res = await handler(req('banks', {}));
+      expect(res.status).toBe(429);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('counts in Redis when it is configured, with hashed keys, and refuses when the store is down', async () => {
+      process.env['UPSTASH_REDIS_REST_URL'] = 'https://redis.test';
+      process.env['UPSTASH_REDIS_REST_TOKEN'] = 'rt';
+      fetchMock.mockImplementation((url: string) =>
+        Promise.resolve(
+          String(url).startsWith('https://redis.test')
+            ? new Response(JSON.stringify([{ result: 1 }, { result: 1 }]))
+            : new Response(JSON.stringify({ lgas: [] })),
+        ),
+      );
+      const ok = await handler(req('lgas', { state: 'Lagos' }));
+      expect(ok.status).toBe(200);
+      const redisCall = fetchMock.mock.calls.find((c) => String(c[0]).startsWith('https://redis.test'));
+      expect(String(redisCall?.[1].body)).not.toContain('Lagos');
+
+      fetchMock.mockImplementation(() => Promise.reject(new Error('down')));
+      const down = await handler(req('lgas', { state: 'Lagos' }));
+      expect(down.status).toBe(429);
+    });
+  });
+
   it('returns a generic 502 when the backoffice errors', async () => {
     fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ stack: 'at db.ts:1' }), { status: 500 }));
     const res = await handler(req('banks', {}));
