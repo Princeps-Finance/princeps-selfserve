@@ -25,6 +25,59 @@
     </div>
   }
 
+  <div class="referral">
+    @if (referral(); as r) {
+      <div class="referral-applied" role="status">
+        <div class="referral-applied-main">
+          <span class="referral-check" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+              <path d="M5 10.5L8.5 14L15 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <div>
+            <div class="referral-code">{{ r.code }}</div>
+            <div class="referral-label">{{ r.label }} applied</div>
+          </div>
+        </div>
+        <button type="button" class="referral-remove" (click)="removeReferral()">Remove</button>
+      </div>
+    } @else {
+      @if (!referralOpen()) {
+        <button type="button" class="referral-toggle" (click)="toggleReferral()">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M4 8h12M8 4v12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          <span>Have a referral code?</span>
+        </button>
+      } @else {
+        <div class="referral-form">
+          <label class="referral-input-wrap">
+            <span class="referral-input-label">Referral code</span>
+            <input
+              class="referral-input"
+              type="text"
+              autocomplete="off"
+              autocapitalize="characters"
+              placeholder="e.g. PRINCEPS10"
+              [value]="referralInput()"
+              (input)="onReferralInput($any($event.target).value.toUpperCase())"
+              (keyup.enter)="applyReferral()"
+              aria-label="Referral code"
+            />
+          </label>
+          <div class="referral-actions">
+            <button type="button" class="referral-cancel" (click)="toggleReferral()">Cancel</button>
+            <button type="button" class="referral-apply" (click)="applyReferral()" [disabled]="!referralInput().trim()">Apply</button>
+          </div>
+          @if (referralError(); as err) {
+            <p class="referral-error" role="alert">{{ err }}</p>
+          }
+        </div>
+      }
+    }
+  </div>
+
+
   <ul class="offers">
     @for (o of offers(); track o.product.id; let i = $index) {
       <li class="offer" [class.is-open]="expanded() === o.product.id" [style.--i]="i">
