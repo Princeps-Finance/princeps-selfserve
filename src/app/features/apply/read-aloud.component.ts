@@ -46,7 +46,7 @@ const VOICE_LOCALE: Record<string, string> = {
         cursor: pointer;
         transition: background 160ms ease, color 160ms ease, border-color 160ms ease, transform 120ms ease-out;
       }
-      .tts:hover:not(:disabled) { background: rgba(11, 43, 85, 0.06); }
+      .tts:hover:not(:disabled) { background: var(--hover-tint); }
       .tts:active:not(:disabled) { transform: scale(0.96); }
       .tts:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
       .tts:disabled { opacity: 0.4; cursor: not-allowed; }

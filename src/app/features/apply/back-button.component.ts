@@ -48,7 +48,7 @@ const BACK_MAP: Record<string, string> = {
       /* Icon only; the accessible name stays. */
       .back span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
       .back svg { transition: transform 160ms cubic-bezier(0.2, 0.7, 0.1, 1); }
-      .back:hover { background: rgba(11, 43, 85, 0.04); border-color: var(--ink); }
+      .back:hover { background: var(--hover-tint); border-color: var(--ink); }
       .back:hover svg { transform: translateX(-2px); }
       .back:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
       @media (prefers-reduced-motion: reduce) {

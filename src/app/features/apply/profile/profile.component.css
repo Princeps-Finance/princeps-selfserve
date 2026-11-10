@@ -58,7 +58,7 @@
 
 .cta {
   align-self: stretch;
-  min-height: 56px;
+  min-height: var(--btn-height);
   margin-top: var(--space-3);
   padding: 0 var(--space-6);
   display: inline-flex; align-items: center; justify-content: center;
@@ -66,7 +66,7 @@
   background: var(--action-primary);
   color: var(--action-on-primary);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--btn-radius);
   font-family: var(--font-sans); font-size: 16px; font-weight: 500;
   cursor: pointer;
   transition: transform 120ms ease-out, background 160ms ease, opacity 160ms ease;
@@ -85,6 +85,6 @@
 .locked dt { font-size: 12px; color: var(--ink-soft); }
 .locked dd { margin: 0; font-size: 17px; font-weight: 600; color: var(--ink); }
 .locked-note { margin: 0; display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); font-size: 13px; color: var(--ink-soft); }
-.locked-note .link { color: var(--action-primary); font-weight: 600; text-underline-offset: 3px; min-height: 44px; display: inline-flex; align-items: center; }
+.locked-note .link { color: var(--text-accent); font-weight: 600; text-underline-offset: 3px; min-height: 44px; display: inline-flex; align-items: center; }
 
-.subtitle .link { margin-inline-start: var(--space-2); color: var(--action-primary); font-weight: 600; text-underline-offset: 3px; }
+.subtitle .link { margin-inline-start: var(--space-2); color: var(--text-accent); font-weight: 600; text-underline-offset: 3px; }

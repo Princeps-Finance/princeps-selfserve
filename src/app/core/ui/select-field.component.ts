@@ -101,7 +101,7 @@ export interface SelectOption {
         border-radius: 20px 20px 0 0; background: var(--surface-0); color: var(--ink); box-shadow: var(--shadow-4);
       }
       @media (min-width: 560px) { .sheet { margin: auto; max-width: 480px; border-radius: var(--radius-lg); } }
-      .sheet::backdrop { background: rgba(7, 30, 61, 0.5); }
+      .sheet::backdrop { background: var(--overlay); }
       .panel { display: flex; flex-direction: column; max-height: 82dvh; padding: var(--space-4) var(--space-4) var(--space-3); gap: var(--space-3); }
       .bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
       .sheet-title { margin: 0; font-family: var(--font-display); font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
@@ -109,7 +109,7 @@ export interface SelectOption {
         flex: none; width: 44px; height: 44px; display: grid; place-items: center;
         border: 0; border-radius: 50%; background: transparent; color: var(--ink); cursor: pointer;
       }
-      .x:hover { background: rgba(11, 43, 85, 0.06); }
+      .x:hover { background: var(--hover-tint); }
       .search {
         width: 100%; min-height: 48px; padding: 0 var(--space-4); border: 1px solid var(--input-border);
         border-radius: var(--input-radius); background: var(--input-bg); font: inherit; font-size: 16px; color: var(--ink);
@@ -120,8 +120,8 @@ export interface SelectOption {
         min-height: 52px; padding: 0 var(--space-2); border: 0; border-bottom: 1px solid var(--hairline);
         background: transparent; font: inherit; font-size: 16px; color: var(--ink); text-align: start; cursor: pointer;
       }
-      .opt[aria-selected='true'] { font-weight: 600; color: var(--action-primary); }
-      .opt:hover { background: rgba(11, 43, 85, 0.04); }
+      .opt[aria-selected='true'] { font-weight: 600; color: var(--text-accent); }
+      .opt:hover { background: var(--hover-tint); }
       .x:focus-visible, .opt:focus-visible, .search:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
       .none { margin: 0; padding: var(--space-5) var(--space-2); color: var(--ink-soft); }
     `,

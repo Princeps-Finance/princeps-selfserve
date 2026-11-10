@@ -6,12 +6,14 @@ import { NavigationEnd } from '@angular/router';
 import { LanguageMenuComponent } from './language-menu.component';
 import { BackButtonComponent } from './back-button.component';
 import { ReadAloudComponent } from './read-aloud.component';
+import { BrandLogoComponent } from '../../shared/brand-logo.component';
+import { ThemeToggleComponent } from '../../shared/theme-toggle.component';
 
 const NO_BACK_ROUTES = new Set<string>(['/apply', '/apply/', '/apply/status', '/apply/welcome-back']);
 
 @Component({
   selector: 'app-apply-shell',
-  imports: [RouterOutlet, LanguageMenuComponent, BackButtonComponent, ReadAloudComponent],
+  imports: [RouterOutlet, LanguageMenuComponent, BackButtonComponent, ReadAloudComponent, ThemeToggleComponent, BrandLogoComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -21,17 +23,11 @@ const NO_BACK_ROUTES = new Set<string>(['/apply', '/apply/', '/apply/status', '/
           @if (showBack()) {
             <app-back-button class="back-phone" />
           }
-          <img
-            class="brand-logo"
-            [class.brand-logo--desktop-only]="showBack()"
-            src="/brand/princeps-logo.svg"
-            alt="Princeps Credit Systems Limited"
-            width="150"
-            height="34"
-          />
+          <app-brand-logo class="brand-logo" [class.brand-logo--desktop-only]="showBack()" />
         </div>
         <div class="topbar-right">
           <app-read-aloud />
+          <app-theme-toggle />
           <app-language-menu />
         </div>
       </header>

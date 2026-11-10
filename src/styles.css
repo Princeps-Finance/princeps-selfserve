@@ -11,6 +11,22 @@
   font-display: swap;
 }
 
+/* Agrandir: body face (Regular + Text Bold). Free-for-personal-use build; no Yoruba/Igbo/Hausa letters or ₦, so those languages use Google Sans (see tokens.css). */
+@font-face {
+  font-family: 'Agrandir';
+  src: url('/fonts/agrandir-regular.woff2') format('woff2');
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Agrandir';
+  src: url('/fonts/agrandir-bold.woff2') format('woff2');
+  font-weight: 600 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* NaN SuperX Sans Display (TRIAL build): headings. No Yoruba/Igbo/Hausa letters (ẹ ọ ṣ, tone marks), so those fall back to Google Sans. */
 @font-face {
   font-family: 'SuperX Sans';
@@ -38,11 +54,6 @@ body {
   margin: 0;
   padding: 0;
   background-color: var(--canvas);
-  background-image:
-    radial-gradient(rgba(11, 46, 91, 0.055) 1px, transparent 1px),
-    radial-gradient(rgba(11, 46, 91, 0.035) 1px, transparent 1px);
-  background-size: 22px 22px, 22px 22px;
-  background-position: 0 0, 11px 11px;
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: 16px;
@@ -118,7 +129,7 @@ input[type='checkbox'] {
   margin: 0;
   display: inline-grid;
   place-content: center;
-  background: var(--surface, #fff);
+  background: var(--surface-0);
   border: 1.5px solid var(--input-border);
   border-radius: 7px;
   cursor: pointer;
@@ -128,8 +139,8 @@ input[type='checkbox']::before {
   content: '';
   width: 12px;
   height: 7px;
-  border-left: 2.5px solid #fff;
-  border-bottom: 2.5px solid #fff;
+  border-left: 2.5px solid var(--action-on-primary);
+  border-bottom: 2.5px solid var(--action-on-primary);
   transform: translateY(-1px) rotate(-45deg) scale(0);
   transition: transform 140ms ease;
 }

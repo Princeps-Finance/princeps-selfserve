@@ -91,13 +91,13 @@
 .link-btn:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 
 .cta {
-  min-height: 56px;
+  min-height: var(--btn-height);
   padding: 0 var(--space-6);
   display: inline-flex; align-items: center; gap: var(--space-4);
   background: var(--action-primary);
   color: var(--action-on-primary);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--btn-radius);
   font-family: var(--font-sans); font-size: 16px; font-weight: 500;
   cursor: pointer;
   transition: background 160ms ease, transform 120ms ease-out, opacity 160ms ease;

@@ -42,14 +42,14 @@
 
 .cta {
   align-self: stretch;
-  min-height: 56px;
+  min-height: var(--btn-height);
   padding: 0 var(--space-6);
   display: inline-flex; align-items: center; justify-content: center;
   gap: var(--space-4);
   background: var(--action-primary);
   color: var(--action-on-primary);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--btn-radius);
   font-family: var(--font-sans); font-size: 16px; font-weight: 500;
   cursor: pointer;
   transition: transform 120ms ease-out, background 160ms ease, opacity 160ms ease;

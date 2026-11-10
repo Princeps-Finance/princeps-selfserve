@@ -34,7 +34,7 @@
   display: inline-flex; align-items: center; justify-content: center;
   min-height: 44px;
   padding: 0 var(--space-4);
-  border-radius: var(--radius-pill);
+  border-radius: var(--btn-radius);
   font-family: var(--font-sans);
   font-size: 13px; font-weight: 500;
   cursor: pointer;
@@ -45,15 +45,15 @@
 /* Secondary action: outline, so the page's one filled button (Continue) stays the main thing. */
 .pill-btn {
   background: transparent;
-  color: var(--action-primary);
+  color: var(--text-accent);
   border-color: var(--action-primary);
   min-height: 44px; padding-inline: var(--space-5);
 }
-.pill-btn:hover { background: rgba(11, 43, 85, 0.06); }
+.pill-btn:hover { background: var(--hover-tint); }
 
 .ghost-btn {
   background: transparent;
-  color: var(--action-primary);
+  color: var(--text-accent);
   border-color: var(--action-primary);
 }
 .ghost-btn:hover { border-color: var(--input-border-hover); }
@@ -67,18 +67,18 @@
 }
 
 .badge--ok { background: var(--success-soft); color: var(--success-text); }
-.badge--pending { background: var(--info-soft); color: var(--action-primary); }
+.badge--pending { background: var(--info-soft); color: var(--text-accent); }
 
 .cta {
   align-self: stretch;
-  min-height: 56px;
+  min-height: var(--btn-height);
   padding: 0 var(--space-6);
   display: inline-flex; align-items: center; justify-content: center;
   gap: var(--space-4);
   background: var(--action-primary);
   color: var(--action-on-primary);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--btn-radius);
   font-family: var(--font-sans); font-size: 16px; font-weight: 500;
   cursor: pointer;
   transition: transform 120ms ease-out, background 160ms ease, opacity 160ms ease;

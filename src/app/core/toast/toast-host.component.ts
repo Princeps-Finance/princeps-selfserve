@@ -62,17 +62,17 @@ import { ToastService } from './toast.service';
         display: flex; align-items: flex-start; gap: 10px;
         padding: 12px 12px 12px 14px;
         border-radius: 12px;
-        background: var(--surface, #ffffff);
+        background: var(--surface-0);
         color: var(--ink);
         border: 1px solid var(--hairline);
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
         animation: slide-in 220ms cubic-bezier(0.2, 0.7, 0.1, 1);
       }
-      .toast[data-tone='success'] { border-color: color-mix(in srgb, var(--success, #10b981) 40%, transparent); }
-      .toast[data-tone='success'] .icon { color: var(--success, #10b981); }
-      .toast[data-tone='error']   { border-color: color-mix(in srgb, var(--danger, #dc2626) 40%, transparent); }
-      .toast[data-tone='error']   .icon { color: var(--danger, #dc2626); }
-      .toast[data-tone='info']    .icon { color: var(--action-primary); }
+      .toast[data-tone='success'] { border-color: color-mix(in srgb, var(--success) 40%, transparent); }
+      .toast[data-tone='success'] .icon { color: var(--success); }
+      .toast[data-tone='error']   { border-color: color-mix(in srgb, var(--danger) 40%, transparent); }
+      .toast[data-tone='error']   .icon { color: var(--danger); }
+      .toast[data-tone='info']    .icon { color: var(--text-accent); }
       .icon { flex: none; display: inline-flex; margin-top: 1px; }
       .msg { flex: 1; font-size: 14px; line-height: 1.45; color: var(--ink); }
       .close {
@@ -83,7 +83,7 @@ import { ToastService } from './toast.service';
         color: var(--ink-muted);
         cursor: pointer; border-radius: 6px;
       }
-      .close:hover { background: rgba(11, 43, 85, 0.06); color: var(--ink); }
+      .close:hover { background: var(--hover-tint); color: var(--ink); }
       .close:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
       @keyframes slide-in {
         from { opacity: 0; transform: translateY(-8px); }

@@ -20,7 +20,7 @@
 .seg {
   display: inline-flex;
   padding: 4px;
-  background: rgba(11, 43, 85, 0.05);
+  background: var(--hover-tint);
   border-radius: var(--radius-pill);
   gap: 2px;
   align-self: flex-start;
@@ -109,12 +109,12 @@
 .listbox-item.is-active,
 .listbox-item[aria-selected="true"] {
   background: var(--info-soft);
-  color: var(--action-primary);
+  color: var(--text-accent);
 }
 
 .cta {
   align-self: stretch;
-  min-height: 56px;
+  min-height: var(--btn-height);
   margin-top: var(--space-3);
   padding: 0 var(--space-6);
   display: inline-flex; align-items: center; justify-content: center;
@@ -122,7 +122,7 @@
   background: var(--action-primary);
   color: var(--action-on-primary);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--btn-radius);
   font-family: var(--font-sans); font-size: 16px; font-weight: 500;
   cursor: pointer;
   transition: transform 120ms ease-out, background 160ms ease, opacity 160ms ease;

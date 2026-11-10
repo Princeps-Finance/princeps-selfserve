@@ -22,7 +22,7 @@
 .channel-badge {
   align-self: flex-start;
   font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
-  font-weight: 600; color: var(--action-primary);
+  font-weight: 600; color: var(--text-accent);
   padding: 4px 10px;
   border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--action-primary) 12%, transparent);
@@ -95,14 +95,14 @@
 
 .cta {
   align-self: stretch;
-  min-height: 56px;
+  min-height: var(--btn-height);
   padding: 0 var(--space-6);
   display: inline-flex; align-items: center; justify-content: center;
   gap: var(--space-4);
   background: var(--action-primary);
   color: var(--action-on-primary);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--btn-radius);
   font-family: var(--font-sans); font-size: 16px; font-weight: 500;
   cursor: pointer;
   transition: transform 120ms ease-out, background 160ms ease, opacity 160ms ease;
@@ -126,8 +126,8 @@
 .link-status[data-status='completed'] { color: var(--success-text); }
 .link-status[data-status='failed'] { color: var(--danger-text); }
 .alt-btn {
-  min-height: 52px; padding: 0 var(--space-5); display: inline-flex; align-items: center; justify-content: center;
-  border: 0; border-radius: var(--radius-md); background: var(--grey-100); color: var(--ink);
+  min-height: var(--btn-height); padding: 0 var(--space-5); display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: var(--btn-radius); background: var(--grey-100); color: var(--ink);
   font: inherit; font-weight: 500; text-decoration: none; cursor: pointer;
 }
 .alt-btn:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
@@ -143,9 +143,9 @@ a.cta { text-decoration: none; justify-content: center; }
 .text-btn {
   min-height: 48px; padding: 0 var(--space-4); border: 0; background: none; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center; text-align: center;
-  font: inherit; font-size: 15px; font-weight: 600; color: var(--action-primary);
-  text-decoration: underline; text-underline-offset: 4px; border-radius: var(--radius-pill);
+  font: inherit; font-size: 15px; font-weight: 600; color: var(--text-accent);
+  text-decoration: underline; text-underline-offset: 4px; border-radius: var(--btn-radius);
 }
-.text-btn:hover { background: rgba(11, 43, 85, 0.05); }
+.text-btn:hover { background: var(--hover-tint); }
 .text-btn:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
 .link-actions .cta { justify-content: center; text-decoration: none; }

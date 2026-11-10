@@ -49,7 +49,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         transition: background 120ms ease;
       }
       .close:hover { background: rgba(17, 18, 20, 0.7); }
-      .close:focus-visible, .cta:focus-visible { outline: 2px solid var(--navy-900); outline-offset: 2px; }
+      .close:focus-visible, .cta:focus-visible { outline: 2px solid var(--focus-color); outline-offset: 2px; }
       .close:focus-visible { outline-color: #fff; }
       .body { padding: var(--space-4); }
       .title {
@@ -64,13 +64,13 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
       .desc { margin: var(--space-2) 0 var(--space-3); font: 400 13px/1.5 var(--font-sans); color: var(--grey-500); }
       .cta {
         display: flex; align-items: center; justify-content: center;
-        width: 100%; height: 44px; padding: 0; border: 0; border-radius: var(--radius-md);
-        background: var(--action-neutral); color: var(--action-on-neutral);
+        width: 100%; height: 44px; padding: 0; border: 0; border-radius: var(--btn-radius);
+        background: var(--action-primary); color: var(--action-on-primary);
         font: 500 14px/1 var(--font-sans); cursor: pointer;
         transition: background 120ms ease;
       }
-      .cta:hover { background: var(--action-neutral-hover); }
-      .cta:active { background: var(--action-neutral-active); }
+      .cta:hover { background: var(--action-primary-hover); }
+      .cta:active { background: var(--action-primary-active); }
       @media (prefers-reduced-motion: reduce) { .close, .cta { transition: none; } }
     `,
   ],

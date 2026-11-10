@@ -63,7 +63,7 @@ import { DraftData, DraftService } from '../../../core/application/draft.service
       .actions { margin-top: auto; display: flex; flex-direction: column; gap: var(--space-3); padding-top: var(--space-4); }
       .confirm { margin: 0; padding: var(--space-4); border-radius: var(--radius-md); background: var(--warning-soft); }
       .cta, .alt {
-        min-height: 56px; padding: 0 var(--space-6); border-radius: var(--radius-pill); cursor: pointer;
+        min-height: var(--btn-height); padding: 0 var(--space-6); border-radius: var(--btn-radius); cursor: pointer;
         font-family: var(--font-sans); font-size: 16px; font-weight: 600;
         display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3);
       }

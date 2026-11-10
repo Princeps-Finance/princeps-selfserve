@@ -33,11 +33,11 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
       .desc { margin: 2px 0 0; font: 400 13px/1.4 var(--font-sans); color: var(--grey-500); }
       .cta {
         flex: none; display: flex; align-items: center; justify-content: center;
-        height: 44px; padding: 0 var(--space-4); border: 0; border-radius: var(--radius-md);
-        background: var(--action-neutral); color: var(--action-on-neutral);
+        height: 44px; padding: 0 var(--space-4); border: 0; border-radius: var(--btn-radius);
+        background: var(--action-primary); color: var(--action-on-primary);
         font: 500 15px/1 var(--font-sans); cursor: pointer;
       }
-      .cta:hover { background: var(--action-neutral-hover); }
+      .cta:hover { background: var(--action-primary-hover); }
       .close {
         flex: none; width: 28px; height: 28px; margin-right: calc(var(--space-1) * -1); border: 0; border-radius: 50%;
         display: grid; place-items: center; background: transparent; color: var(--grey-500); cursor: pointer;

@@ -87,10 +87,10 @@
 .lang-card:hover { background: var(--grey-200); }
 .lang-card:active { transform: scale(0.98); }
 .lang-card:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
-.lang-card.is-current { border-color: var(--action-secondary); background: var(--accent-secondary-soft); }
+.lang-card.is-current { border-color: var(--action-primary); background: var(--action-primary-soft); }
 .lang-endonym { font-family: var(--font-sans); font-size: 22px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.15; }
 .lang-english { font-size: 13px; color: var(--ink-soft); }
-.lang-check { position: absolute; top: var(--space-3); right: var(--space-3); color: var(--action-primary); }
+.lang-check { position: absolute; top: var(--space-3); right: var(--space-3); color: var(--text-accent); }
 @media (prefers-reduced-motion: reduce) { .lang-card { transition: none; } .lang-card:active { transform: none; } }
 
 /* Footer — CTA is a black pill with arrow, tagline in fine print */
@@ -103,7 +103,7 @@
 
 .cta {
   align-self: stretch;
-  min-height: 56px;
+  min-height: var(--btn-height);
   padding: 0 var(--space-6);
   display: inline-flex;
   align-items: center;
@@ -112,7 +112,7 @@
   background: var(--action-primary);
   color: var(--action-on-primary);
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--btn-radius);
   font-family: var(--font-sans);
   font-size: 16px;
   font-weight: 500;
@@ -146,7 +146,7 @@
   color: var(--ink-soft);
   text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px;
 }
-.trust-link:hover { color: var(--action-primary); }
+.trust-link:hover { color: var(--text-accent); }
 .trust-link:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); border-radius: 2px; }
 .trust-sep { color: var(--ink-muted); }
 @media (max-width: 380px) { .trust-item { font-size: 11px; } }

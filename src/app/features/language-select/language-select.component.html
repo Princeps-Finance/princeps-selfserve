@@ -1,7 +1,7 @@
 <main class="screen">
   <header class="brand-row">
-    <img class="brand-logo" src="/brand/princeps-logo.svg" alt="Princeps Credit Systems Limited" width="180" height="40" />
-    <span class="tools"><app-read-aloud /></span>
+    <app-brand-logo class="brand-logo" />
+    <span class="tools"><app-read-aloud /><app-theme-toggle /></span>
   </header>
 
   @if (install.offer()) {

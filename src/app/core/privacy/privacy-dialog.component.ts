@@ -39,14 +39,14 @@ import { SUPPORT_EMAIL, telLink, whatsappLink } from '../support';
         padding: 0; border: 0; border-radius: var(--radius-lg);
         background: var(--surface-0); color: var(--ink); box-shadow: var(--shadow-4);
       }
-      .dlg::backdrop { background: rgba(7, 30, 61, 0.5); }
+      .dlg::backdrop { background: var(--overlay); }
       .body { padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-4); overflow-y: auto; max-height: calc(100dvh - 24px); }
       .title { margin: 0; font-size: 24px; }
       .intro { margin: 0; color: var(--ink-soft); line-height: 1.5; }
       .sec h3 { margin: 0 0 4px; font-size: 16px; }
       .sec p { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); }
       .contact { margin: 0; font-size: 14px; }
-      .contact a { color: var(--action-primary); font-weight: 600; text-underline-offset: 3px; }
+      .contact a { color: var(--text-accent); font-weight: 600; text-underline-offset: 3px; }
       .close {
         align-self: stretch; min-height: 52px; border: 0; border-radius: var(--radius-md);
         background: var(--action-primary); color: var(--action-on-primary); font: inherit; font-weight: 500; cursor: pointer;

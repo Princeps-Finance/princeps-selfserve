@@ -39,7 +39,7 @@ import { ApplicationStateService, ApplyIntent } from '../../../core/application/
       .choice { display: flex; flex-direction: column; gap: var(--space-2); }
       .hint { margin: 0; text-align: center; font-size: 14px; color: var(--ink-soft); }
       .cta, .alt {
-        min-height: 56px; padding: 0 var(--space-6); border-radius: var(--radius-pill); cursor: pointer;
+        min-height: var(--btn-height); padding: 0 var(--space-6); border-radius: var(--btn-radius); cursor: pointer;
         font-family: var(--font-sans); font-size: 16px; font-weight: 600;
         display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3);
         transition: background 160ms ease, transform 120ms ease-out;
@@ -47,7 +47,7 @@ import { ApplicationStateService, ApplyIntent } from '../../../core/application/
       .cta { background: var(--action-primary); color: var(--action-on-primary); border: 0; justify-content: center; margin-top: 0 !important; }
       .cta:hover { background: var(--action-primary-hover); }
       .alt { background: var(--grey-100); color: var(--ink); border: 0; }
-      .alt:hover { background: rgba(11, 43, 85, 0.06); }
+      .alt:hover { background: var(--hover-tint); }
       .cta:active, .alt:active { transform: scale(0.99); }
       .cta:focus-visible, .alt:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
       @media (prefers-reduced-motion: reduce) { .cta, .alt { transition: none; } }

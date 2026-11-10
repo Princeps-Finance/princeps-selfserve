@@ -46,7 +46,7 @@
 .tenor-num { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .tenor-unit { font-size: 11px; color: var(--ink-muted); }
 .tenor[aria-checked='true'] { background: var(--action-primary); border-color: var(--action-primary); color: var(--action-on-primary); }
-.tenor[aria-checked='true'] .tenor-unit { color: rgba(255, 255, 255, 0.85); }
+.tenor[aria-checked='true'] .tenor-unit { color: var(--action-on-primary); opacity: 0.85; }
 .tenor:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 
 .summary { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-md); background: var(--surface-0); border: 1px solid var(--hairline); }
@@ -59,12 +59,12 @@
 .row dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 500; }
 .row--sub { padding-left: var(--space-4); font-size: 13px; }
 .row--sub dt, .row--sub dd { color: var(--ink-muted); font-weight: 400; }
-.row--accent dd { color: var(--action-primary); font-weight: 600; }
+.row--accent dd { color: var(--text-accent); font-weight: 600; }
 
 .pick {
-  align-self: stretch; min-height: 56px; padding: 0 var(--space-6);
+  align-self: stretch; min-height: var(--btn-height); padding: 0 var(--space-6);
   display: inline-flex; align-items: center; justify-content: center;
-  border: none; border-radius: var(--radius-md);
+  border: none; border-radius: var(--btn-radius);
   background: var(--action-primary); color: var(--action-on-primary);
   font: inherit; font-size: 16px; font-weight: 500; cursor: pointer;
   transition: transform 120ms ease-out, background 160ms ease;
@@ -78,9 +78,9 @@
 .none-body { margin: 0; color: var(--ink-soft); line-height: 1.5; }
 .none-actions { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-2); }
 .alt {
-  min-height: 52px; padding: 0 var(--space-5);
+  min-height: var(--btn-height); padding: 0 var(--space-5);
   display: inline-flex; align-items: center; justify-content: center;
-  border: 0; border-radius: var(--radius-md);
+  border: 0; border-radius: var(--btn-radius);
   background: var(--grey-100); color: var(--ink); font: inherit; font-weight: 500; text-decoration: none; cursor: pointer;
 }
 .alt:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
@@ -124,26 +124,25 @@
 }
 .referral-form, .referral-applied {
   display: flex; gap: 8px; padding: 14px; border-radius: var(--radius-md);
-  background: #fff; border: 1px solid var(--hairline);
+  background: var(--surface-0); border: 1px solid var(--hairline);
 }
 .referral-form { flex-direction: column; }
 .referral-input-wrap { display: flex; flex-direction: column; gap: 4px; }
 .referral-input-label { font-size: 12px; color: var(--ink-soft); }
 .referral-input {
   height: 44px; padding: 0 12px; border: 1px solid var(--hairline-strong); border-radius: var(--radius-sm);
-  font: inherit; letter-spacing: 0.05em;
+  font: inherit;
 }
 .referral-actions { display: flex; gap: 8px; justify-content: flex-end; }
 .referral-cancel, .referral-apply {
-  height: 40px; padding: 0 16px; border-radius: var(--radius-sm); font: 500 14px var(--font-sans);
-  border: 1px solid var(--hairline-strong); background: #fff; cursor: pointer;
+  height: 40px; padding: 0 16px; border-radius: var(--btn-radius); font: 500 14px var(--font-sans);
+  border: 1px solid var(--hairline-strong); background: var(--surface-0); cursor: pointer;
 }
-.referral-apply { background: var(--action-primary); border-color: var(--action-primary); color: #fff; }
+.referral-apply { background: var(--action-primary); border-color: var(--action-primary); color: var(--action-on-primary); }
 .referral-apply:disabled { opacity: 0.4; cursor: not-allowed; }
 .referral-error { font-size: 13px; color: var(--danger); }
 .referral-applied { align-items: center; justify-content: space-between; background: var(--success-soft); }
 .referral-applied-main { display: flex; align-items: center; gap: 12px; }
 .referral-check { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--success); color: #fff; }
-.referral-code { font: 600 14px var(--font-mono); letter-spacing: 0.06em; }
-.referral-label { font-size: 13px; color: var(--ink-soft); }
+.referral-code { font: 600 14px var(--font-mono); }
 .referral-remove { border: 0; background: none; color: var(--ink-soft); text-decoration: underline; cursor: pointer; }

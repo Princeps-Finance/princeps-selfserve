@@ -74,7 +74,7 @@ import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_ZOHO_URL, telLink, whatsappLink }
       }
       .help-btn:hover { background: var(--grey-100); }
       .help-btn:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
-      .backdrop { position: fixed; inset: 0; z-index: 79; background: rgba(7, 30, 61, 0.45); }
+      .backdrop { position: fixed; inset: 0; z-index: 79; background: var(--overlay); }
       .sheet {
         position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
         max-width: 520px; margin: 0 auto;
@@ -99,7 +99,7 @@ import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_ZOHO_URL, telLink, whatsappLink }
       }
       .row:hover { background: var(--surface-2); }
       .row:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
-      .row-icon { display: inline-flex; width: 32px; height: 32px; border-radius: 50%; align-items: center; justify-content: center; background: var(--cyan-100); color: var(--navy-900); }
+      .row-icon { display: inline-flex; width: 32px; height: 32px; border-radius: 50%; align-items: center; justify-content: center; background: var(--grey-100); color: var(--ink); }
       .sheet-version { margin: var(--space-2) 0 0; font-size: 12px; color: var(--ink-muted); }
       @media (prefers-reduced-motion: reduce) { .sheet { animation: none; } .help-btn { transition: none; } }
     `,
