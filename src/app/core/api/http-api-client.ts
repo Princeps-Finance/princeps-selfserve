@@ -24,6 +24,8 @@ import {
   EligibilityCheckInput,
   EligibilityCheckResult,
   StatementCheckInput,
+  RequiredDocument,
+  RequiredDocumentsInput,
   SubmitPayload,
   SubmitResult,
   WaitlistInput,
@@ -288,6 +290,14 @@ return []; // The user can type it.
     if (r.status === 429) return { status: 'rate-limited' };
     if (!r.ok || !r.data) return { status: 'service-down' };
     return r.data;
+  }
+
+  async getRequiredDocuments(input: RequiredDocumentsInput): Promise<RequiredDocument[]> {
+    const r = await this.op<{ documents?: unknown }>('required-documents', input);
+    if (!Array.isArray(r.documents)) throw new ApiUnavailableError('required-documents', 502);
+    return r.documents
+      .filter((d): d is { key: string; optional?: boolean } => !!d && typeof (d as { key?: unknown }).key === 'string')
+      .map((d) => ({ key: d.key.slice(0, 40), optional: d.optional === true }));
   }
 
   async registerPush(subscription: PushSubscriptionJSON): Promise<void> {

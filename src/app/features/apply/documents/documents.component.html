@@ -7,6 +7,13 @@
     <app-why-ask [text]="'reason.docs' | t" />
   </header>
 
+  @if (loadState() === 'loading') {
+    <p class="msg" role="status">{{ 'step.docs.loading' | t }}</p>
+  } @else if (loadState() === 'error') {
+    <p class="msg msg--error" role="alert">{{ 'step.docs.load.error' | t }}</p>
+    <button type="button" class="alt" (click)="loadList()">{{ 'common.retry' | t }}</button>
+  }
+
   <ul class="docs">
     @for (spec of specs(); track spec.id) {
       @let d = docFor(spec.id);

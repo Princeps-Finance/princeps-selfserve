@@ -241,6 +241,18 @@ const OPS: Record<string, OpDef> = {
     limit: 4,
     allow: ['status', 'decision', 'maxAmount', 'tenorMonths', 'monthlyIncome'],
   },
+  // The documents to ask for. In production the app asks for exactly what the back end returns here.
+  'required-documents': {
+    schema: z
+      .object({
+        productId: z.string().max(64),
+        employmentType: z.enum(['government', 'paramilitary', 'corper', 'private-sector']),
+      })
+      .strict(),
+    limit: 20,
+    allow: ['documents'],
+    needsToken: true,
+  },
   waitlist: {
     schema: z
       .object({
