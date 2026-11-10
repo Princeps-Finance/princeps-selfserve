@@ -22,6 +22,7 @@ export const APPLY = {
   terms: '/apply/terms',
   nin: '/apply/nin',
   documents: '/apply/documents',
+  offerLetter: '/apply/offer-letter',
   verifyIdentity: '/apply/verify-identity',
   mandate: '/apply/mandate',
   submit: '/apply/submit',

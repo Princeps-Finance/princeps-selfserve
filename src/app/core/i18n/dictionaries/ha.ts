@@ -339,6 +339,9 @@ export const ha: Dictionary = {
   'step.verify.script.l5': 'Adadin riba shi ne kashi {rate} cikin ɗari, kuɗaɗen kuma su ne {fees}.',
   'step.verify.script.l6': 'A jimilce, zan biya {total}.',
   'step.verify.script.l7': 'Na fahimci za a cire shi daga albashina ta {channel}, kuma ina ɗaukar wannan rancen da yardar kaina.',
+  'step.offerletter.title': 'Wasiƙar tayinka',
+  'step.offerletter.subtitle': 'Karanta dukkan wasiƙar, sannan ka karɓe ta don saita biyanka.',
+  'step.offerletter.accept': 'Karɓa ka ci gaba',
   'common.close': 'Rufe',
   'common.retry': 'Sake gwadawa',
   'common.dismiss': 'Ƙyale',
@@ -491,7 +494,7 @@ export const ha: Dictionary = {
   'step.terms.payday.first': 'Biya na farko',
   'step.terms.payday.note': 'Ana cire kuɗi ne lokacin da aka biya albashinka, don kada wani abu ya fita daga asusunka kafin albashinka ya shigo.',
   'step.terms.agree': 'Na karanta wasiƙar tayin, na kuma yarda da ita.',
-  'step.terms.take': 'Karɓi wannan tayin',
+  'step.terms.take': 'Ci gaba',
   'step.terms.change': 'Zaɓi wani tayi',
 
   'step.profile.eyebrow': 'Kaɗan game da kai',

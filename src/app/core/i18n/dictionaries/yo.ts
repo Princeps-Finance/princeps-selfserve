@@ -339,6 +339,9 @@ export const yo: Dictionary = {
   'step.verify.script.l5': 'Ìpín èlé jẹ́ {rate} nínú ọgọ́rùn-ún, owó àfikún sì jẹ́ {fees}.',
   'step.verify.script.l6': 'Lápapọ̀, èmi yóò san {total} padà.',
   'step.verify.script.l7': 'Mo mọ̀ pé a ó yọ ọ́ kúrò nínú owó oṣù mi nípasẹ̀ {channel}, mo sì gba ìgbèsè yìí fínnúfíndọ̀.',
+  'step.offerletter.title': 'Lẹ́tà ìfilọ̀ rẹ',
+  'step.offerletter.subtitle': 'Ka gbogbo lẹ́tà náà, lẹ́yìn náà gbà á láti ṣètò ìsanwó rẹ.',
+  'step.offerletter.accept': 'Gbà á kí o tẹ̀síwájú',
   'common.close': 'Tì í',
   'common.retry': 'Tún gbìyànjú',
   'common.dismiss': 'Pa á tì',
@@ -491,7 +494,7 @@ export const yo: Dictionary = {
   'step.terms.payday.first': 'Ìsanpadà àkọ́kọ́',
   'step.terms.payday.note': 'A máa yọ owó nígbà tí wọ́n bá san owó oṣù rẹ, kí nǹkan má lọ kúrò nínú àkáǹtì rẹ kí owó oṣù rẹ tó dé.',
   'step.terms.agree': 'Mo ti ka lẹ́tà ìfilọ̀ náà, mo sì gbà á.',
-  'step.terms.take': 'Gba ìfilọ̀ yìí',
+  'step.terms.take': 'Tẹ̀síwájú',
   'step.terms.change': 'Yan ìfilọ̀ mìíràn',
 
   'step.profile.eyebrow': 'Díẹ̀ nípa rẹ',

@@ -1,15 +1,13 @@
 import { estimateApr } from '../../../../shared/pricing';
 import { dueDateOf, firstPaydayAfter } from '../../../core/products/payday';
 import { CardComponent } from '../../../shared/card.component';
-import { CheckboxComponent } from '../../../shared/checkbox.component';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { productById } from '../../../core/products/products';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { formatNaira } from '../../../core/money.util';
 import { APPLY } from '../../../core/flow/apply-routes';
-import { OfferLetterComponent } from './offer-letter.component';
 import { buildRepaymentSchedule } from '../../../../shared/pricing';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
@@ -24,7 +22,7 @@ interface ScheduleRow {
 
 @Component({
   selector: 'app-terms',
-  imports: [CardComponent, CheckboxComponent, TPipe, WizardProgressComponent, OfferLetterComponent],
+  imports: [CardComponent, TPipe, WizardProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './terms.component.html',
   styleUrl: './terms.component.css',
@@ -34,10 +32,6 @@ export class TermsComponent {
   private readonly flow = inject(FlowNavigator);
 
   readonly offer = this.state.offer;
-  readonly agreed = signal(false);
-  /** Set when the offer letter has been scrolled to the end. The agreement box stays locked until then. */
-  readonly letterRead = signal(false);
-  readonly attempted = signal(false);
   readonly formatNaira = formatNaira;
 
   modelKey(m: string): string {
@@ -68,19 +62,6 @@ export class TermsComponent {
     this.schedule().reduce((acc, r) => acc + r.payment, 0),
   );
 
-  /** What the offer letter is generated for. */
-  readonly letterRequest = computed(() => {
-    const o = this.offer();
-    return {
-      productId: o?.productId ?? '',
-      productName: o?.productName ?? '',
-      amount: o?.amount ?? 0,
-      tenorMonths: o?.tenorMonths ?? 0,
-      monthlyRepayment: o?.monthlyRepayment ?? 0,
-      ratePercent: o?.ratePercent ?? 0,
-    };
-  });
-
   /** Interest over the whole loan, and the yearly rate it works out to once fees are counted. */
   readonly totalInterest = computed(() => Math.max(0, this.totalRepayable() - (this.offer()?.amount ?? 0)));
   readonly apr = computed(() => {
@@ -92,23 +73,12 @@ export class TermsComponent {
     (this.offer()?.fees ?? []).reduce((acc, f) => acc + f.amount, 0),
   );
 
-  toggleAgree(v: boolean): void {
-    if (v && !this.letterRead()) return;
-    this.agreed.set(v);
-    if (v) this.attempted.set(false);
-  }
-
   back(): void {
     void this.flow.go(APPLY.offers);
   }
 
+  /** On to the documents. The offer letter comes after them, right before the repayment set-up. */
   take(): void {
-    if (!this.agreed()) {
-      this.attempted.set(true);
-      document.querySelector<HTMLElement>('.agree input')?.focus();
-      return;
-    }
-    this.state.setTermsAccepted(new Date().toISOString());
     const needsNin = productById(this.offer()?.productId ?? '')?.settings.requiresNin ?? false;
     void this.flow.afterTerms(needsNin);
   }

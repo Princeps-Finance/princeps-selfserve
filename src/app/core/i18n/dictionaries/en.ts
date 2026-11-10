@@ -339,6 +339,9 @@ export const en: Dictionary = {
   'step.verify.script.l5': 'The interest rate is {rate} percent, and the fees are {fees}.',
   'step.verify.script.l6': 'In total, I will repay {total}.',
   'step.verify.script.l7': 'I understand this will be deducted from my salary through {channel}, and I am taking this loan of my own free will.',
+  'step.offerletter.title': 'Your offer letter',
+  'step.offerletter.subtitle': 'Read the whole letter, then accept it to set up your repayment.',
+  'step.offerletter.accept': 'Accept and continue',
   'common.close': 'Close',
   'common.retry': 'Try again',
   'common.dismiss': 'Dismiss',
@@ -491,7 +494,7 @@ export const en: Dictionary = {
   'step.terms.payday.first': 'First payment',
   'step.terms.payday.note': 'Deductions are taken when your salary is paid, so nothing leaves your account before your salary arrives.',
   'step.terms.agree': 'I have read the offer letter and I agree to it.',
-  'step.terms.take': 'Take this offer',
+  'step.terms.take': 'Continue',
   'step.terms.change': 'Pick a different offer',
 
   'step.profile.eyebrow': 'A bit about you',

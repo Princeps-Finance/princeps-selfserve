@@ -339,6 +339,9 @@ export const ig: Dictionary = {
   'step.verify.script.l5': 'Ọnụọgụgụ ọmụrụ bụ pasent {rate}, ụgwọ ndị ọzọ bụkwa {fees}.',
   'step.verify.script.l6': "N'ozuzu, aga m akwụghachi {total}.",
   'step.verify.script.l7': "Aghọtara m na a ga-ewepụ ya n'ụgwọ ọrụ m site na {channel}, ana m ewere mgbazinye ego a n'uche m.",
+  'step.offerletter.title': 'Akwụkwọ onyinye gị',
+  'step.offerletter.subtitle': 'Gụọ akwụkwọ ahụ niile, mgbe ahụ nabata ya ka ị setịpụ ịkwụghachi gị.',
+  'step.offerletter.accept': "Nabata ma gaa n'ihu",
   'common.close': 'Mechie',
   'common.retry': 'Nwaa ọzọ',
   'common.dismiss': 'Wepụ',
@@ -491,7 +494,7 @@ export const ig: Dictionary = {
   'step.terms.payday.first': 'Nkwụghachi mbụ',
   'step.terms.payday.note': 'A na-ewepụ ego mgbe a kwụrụ gị ụgwọ ọrụ, ya mere ọ dịghị ihe na-apụ n\'akaụntụ gị tupu ụgwọ ọrụ gị abịa.',
   'step.terms.agree': 'Agụọla m akwụkwọ onyinye ahụ, ekwenyere m na ya.',
-  'step.terms.take': 'Nara onyinye a',
+  'step.terms.take': "Gaa n'ihu",
   'step.terms.change': 'Họrọ onyinye ọzọ',
 
   'step.profile.eyebrow': 'Ntakịrị gbasara gị',

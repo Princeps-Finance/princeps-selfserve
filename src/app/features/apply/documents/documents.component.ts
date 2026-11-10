@@ -124,6 +124,6 @@ res = { status: 'network' };
       setTimeout(() => document.getElementById('docs-error')?.focus());
       return;
     }
-    void this.flow.go(APPLY.verifyIdentity);
+    void this.flow.go(APPLY.offerLetter);
   }
 }
