@@ -294,6 +294,7 @@ export const ha: Dictionary = {
   'offers.more.body': 'A kan intanet, wannan rancen yana kaiwa {max}. Don adadi mafi girma, wakili zai iya taimaka maka.',
   'offers.more.agent': 'Yi magana da wakili',
   'offers.more.call': 'Kira mu maimakon haka',
+  'common.back': 'Koma',
   'common.close': 'Rufe',
   'common.retry': 'Sake gwadawa',
   'common.dismiss': 'Ƙyale',
