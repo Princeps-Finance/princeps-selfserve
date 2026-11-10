@@ -13,6 +13,7 @@ export const en: Dictionary = {
   'form.docs.required': 'Upload all documents to continue.',
   'form.identity.required': 'Add your photo and video to continue.',
   'submit.error.failed': 'Not submitted. Check your connection and try again.',
+  'pwa.update.title': 'Update available',
   'pwa.update.ready': 'A new version is ready.',
   'pwa.update.action': 'Update',
   'pwa.offline': "You're offline. Reconnect to continue.",

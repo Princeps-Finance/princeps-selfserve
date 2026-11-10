@@ -39,7 +39,7 @@ describe('PwaBannerComponent', () => {
     updateReady.set(true);
     for (const path of ['/apply/profile', '/apply/employment', '/apply/offers', '/apply/documents']) {
       const el = await at(path);
-      expect(el.querySelector('.banner--update')).toBeNull();
+      expect(el.querySelector('app-promo-banner')).toBeNull();
     }
     expect(apply).not.toHaveBeenCalled();
   });
@@ -47,7 +47,7 @@ describe('PwaBannerComponent', () => {
   it('only offers (never forces) the update on the BVN screen, where something may be typed', async () => {
     updateReady.set(true);
     const el = await at('/apply/bvn');
-    expect(el.querySelector('.banner--update')).not.toBeNull();
+    expect(el.querySelector('app-promo-banner')).not.toBeNull();
     expect(apply).not.toHaveBeenCalled();
   });
 
@@ -61,8 +61,8 @@ describe('PwaBannerComponent', () => {
   it('shows the Update button after submission, on the status page', async () => {
     updateReady.set(true);
     const el = await at('/apply/status');
-    expect(el.querySelector('.banner--update')).not.toBeNull();
-    el.querySelector<HTMLButtonElement>('.action')!.click();
+    expect(el.querySelector('app-promo-banner')).not.toBeNull();
+    el.querySelector<HTMLButtonElement>('.promo-cta')!.click();
     expect(apply).toHaveBeenCalledTimes(1);
   });
 

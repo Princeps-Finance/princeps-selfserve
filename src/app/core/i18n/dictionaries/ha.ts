@@ -13,6 +13,7 @@ export const ha: Dictionary = {
   'form.docs.required': 'Ɗora duk takardu domin ci gaba.',
   'form.identity.required': 'Ƙara hotonka da bidiyo domin ci gaba.',
   'submit.error.failed': 'Ba a aika ba. Duba hanyar sadarwarka ka sake gwadawa.',
+  'pwa.update.title': 'Akwai sabuntawa',
   'pwa.update.ready': 'Sabon sigar ya shirya.',
   'pwa.update.action': 'Sabunta',
   'pwa.offline': 'Ba ka kan layi. Sake haɗa domin ci gaba.',
