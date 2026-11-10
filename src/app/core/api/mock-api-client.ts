@@ -27,6 +27,7 @@ import { buildSimplePdf } from '../pdf/simple-pdf';
 import { maskPhoneNg } from './contact.util';
 import { NG_BANKS } from './ng-banks';
 import type { EmploymentAvailability } from './employment-availability';
+import type { ReferralDraft } from '../application/application-state.service';
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -246,5 +247,11 @@ export class MockApiClient implements ApiClient {
   async joinWaitlist(_input: WaitlistInput): Promise<WaitlistResult> {
     await delay(600);
     return { status: 'ok', referenceId: 'WL-' + randomRef() };
+  }
+
+  /** Demo only: one made-up code. The real codes live on the server and are never in the app bundle. */
+  async checkReferral(code: string): Promise<ReferralDraft | null> {
+    await delay(300);
+    return code.trim().toUpperCase() === 'DEMO10' ? { code: 'DEMO10', rateDiscountPct: 1, label: '1.0% rate discount' } : null;
   }
 }

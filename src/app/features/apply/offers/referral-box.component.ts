@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, type OnInit } from '@angular/core';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { LangService } from '../../../core/i18n/lang.service';
 import { TPipe } from '../../../core/i18n/t.pipe';
-import { validateReferralCode } from '../../../core/referral/referral-codes';
+import { ReferralLinkService } from '../../../core/referral/referral-link.service';
+import { API_CLIENT } from '../../../core/api/api-client';
 
 /** "Have a referral code?" on the offers step. The server re-checks the code; this only previews the discount. */
 @Component({
@@ -52,7 +53,7 @@ import { validateReferralCode } from '../../../core/referral/referral-codes';
           </label>
           <div class="referral-actions">
             <button type="button" class="referral-cancel" (click)="toggle()">{{ 'common.cancel' | t }}</button>
-            <button type="button" class="referral-apply" (click)="apply()" [disabled]="!input().trim()">{{ 'common.apply' | t }}</button>
+            <button type="button" class="referral-apply" (click)="apply()" [disabled]="!input().trim() || checking()">{{ 'common.apply' | t }}</button>
           </div>
           @if (error(); as err) {
             <p class="referral-error" role="alert">{{ err }}</p>
@@ -99,14 +100,22 @@ import { validateReferralCode } from '../../../core/referral/referral-codes';
     `,
   ],
 })
-export class ReferralBoxComponent {
+export class ReferralBoxComponent implements OnInit {
   private readonly state = inject(ApplicationStateService);
   private readonly lang = inject(LangService);
+  private readonly api = inject(API_CLIENT);
+  private readonly link = inject(ReferralLinkService);
 
   protected readonly referral = this.state.referral;
   protected readonly open = signal(false);
   protected readonly input = signal('');
   protected readonly error = signal<string | null>(null);
+  protected readonly checking = signal(false);
+
+  /** A code that came in with the link is applied here, so the customer is never asked for it. */
+  ngOnInit(): void {
+    void this.link.applyPending();
+  }
 
   protected toggle(): void {
     this.open.update((v) => !v);
@@ -118,8 +127,11 @@ export class ReferralBoxComponent {
     if (this.error()) this.error.set(null);
   }
 
-  protected apply(): void {
-    const parsed = validateReferralCode(this.input());
+  protected async apply(): Promise<void> {
+    if (this.checking() || !this.input().trim()) return;
+    this.checking.set(true);
+    const parsed = await this.api.checkReferral(this.input().trim());
+    this.checking.set(false);
     if (!parsed) {
       this.error.set(this.lang.t('referral.invalid'));
       return;

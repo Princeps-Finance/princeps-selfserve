@@ -1,5 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import type { EmploymentAvailability } from './employment-availability';
+import type { ReferralDraft } from '../application/application-state.service';
 import type {
   Bank, BvnContactsResult, BvnOtpSendResult, BvnOtpVerifyResult, BvnVerifyResult, DocUploadInput, DocUploadResult,
   LoanSummary, LookupResult, MandateLink, OfferLetterRequest, MandateStatus, OtpDestination, SalaryVerifyInput, SalaryVerifyResult,
@@ -54,6 +55,8 @@ export interface ApiClient {
   joinWaitlist(input: WaitlistInput): Promise<WaitlistResult>;
   /** Which employment types the back end can serve now. Null when it cannot be reached: the app then keeps its own defaults. */
   getEmploymentTypes(): Promise<EmploymentAvailability[] | null>;
+  /** Checks a referral code with the server. Null when the code is not valid or the check could not be made. */
+  checkReferral(code: string): Promise<ReferralDraft | null>;
 }
 
 export const API_CLIENT = new InjectionToken<ApiClient>('ApiClient');

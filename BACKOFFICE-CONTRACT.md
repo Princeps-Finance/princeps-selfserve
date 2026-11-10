@@ -10,6 +10,8 @@ code reads today.)
 | `BACKOFFICE_API_URL` | Base URL of the Caltos API. **Required** (no default). |
 | `SELFSERVE_INGEST_TOKEN` | Bearer token sent to Caltos. **Required.** |
 | `ALLOWED_ORIGINS` | Optional comma-separated origins allowed to call `/api/*`. Defaults to same-origin. |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Shared rate-limit store (Upstash Redis). **Required in production**: without them every limited call is refused, so the app cannot go live by accident without limits. Keys are hashed; no BVN, phone or token is stored. |
+| `SMS_HOURLY_CAP` | Optional. Texts per hour across all customers (default 1000). Caps the SMS bill. |
 | `TURNSTILE_SECRET` | Optional. When set, `send-otp` requires a valid Cloudflare Turnstile token. **Set before launch.** |
 
 Client-side (`src/environments/*`): `turnstileSiteKey` (empty disables the bot check) and
@@ -98,8 +100,8 @@ These come from thinking like someone using stolen details. The browser cannot e
 8. **Document verification** (authenticity, name match to BVN).
 9. **Step-up for returning customers** (SIM-swap check, date of birth) before showing saved details.
 10. **Active mandate and salary history before disbursement**, to limit default fraud.
-11. **Rate limits that hold across instances** (Vercel Firewall or Upstash). The in-function limiter is per
-    serverless instance only.
+11. **Rate limits that hold across instances.** Done in the proxy with Upstash (see the env table). Caltos must still lock a
+    code after repeated wrong guesses per BVN and phone, because that is the last line of defence.
 
 ## What `/api/submit-loan` guarantees
 

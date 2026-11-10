@@ -267,7 +267,8 @@ export const yo: Dictionary = {
   'reason.salary': 'Why we ask: to confirm your salary is paid into this account, so your repayments can be taken from it.',
   'reason.docs': 'Why we ask: these show your employment, so we can offer you a safe amount to borrow.',
   'reason.selfie': 'Why we ask: a short photo and video prove it is really you applying, and protect you from someone else using your details.',
-  'trust.official': 'Only apply on this official Princeps site. We never ask for your PIN, password or card details by phone or WhatsApp.',
+  'trust.licence': 'Licence no.',
+  'trust.official': 'Only apply on this official Princeps site. We never ask for your PIN, password, card details or the code we text you, by phone or WhatsApp.',
   // TODO(translate)
   'offers.quick': 'Quick amounts',
   // TODO(translate)
@@ -310,7 +311,7 @@ export const yo: Dictionary = {
   'support.label': 'Support',
   'referral.toggle': 'Have a referral code?',
   'referral.label': 'Referral code',
-  'referral.placeholder': 'e.g. PRINCEPS10',
+  'referral.placeholder': 'e.g. ABC123',
   'referral.invalid': 'This code isn’t valid. Check it and try again.',
   'referral.applied': 'applied',
   'install.banner.title': 'Get Princeps on your phone',
@@ -322,6 +323,8 @@ export const yo: Dictionary = {
   'install.badge': 'New',
   'install.hint.ios': 'Tap the Share icon, then "Add to Home Screen".',
   'install.hint.other': 'Open your browser menu and choose "Install app" or "Add to Home screen".',
+  // TODO(translate): English until a native speaker reviews it.
+  'step.otp.warn': 'Never share this code with anyone. Princeps staff will never ask you for it.',
   'step.otp.subtitle': 'A fi ránṣẹ́ sí {target}. Ó wúlò fún ìṣẹ́jú 5.',
   'step.otp.resend': 'Fi kóòdù ránṣẹ́ lẹ́ẹ̀kansi',
   'step.otp.resend.wait': 'Fi ránṣẹ́ lẹ́yìn {seconds}s',

@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, self-service-production]
 
 permissions:
   contents: read
@@ -26,3 +26,6 @@ jobs:
         run: npm run build
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
+      - name: Go-live gate (production branch only)
+        if: github.base_ref == 'self-service-production' || github.ref_name == 'self-service-production'
+        run: npm run check:live

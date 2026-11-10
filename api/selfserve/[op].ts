@@ -33,9 +33,18 @@ interface OpDef {
   allow: string[];
   /** Needs the application token issued after a verified OTP. Stops anonymous probing. */
   needsToken?: boolean;
+  /** Allowance per window for one phone number, BVN, NIN or account number, from any address. Defaults to twice `limit` per 10 minutes. */
+  subjectLimit?: { count: number; windowMs: number };
   /** Creates something, so the caller must send an Idempotency-Key and the back office must honour it. */
   idempotent?: boolean;
 }
+
+/** A code can be sent to one number 3 times in 15 minutes, however many addresses the caller uses. */
+const SEND_LIMIT = { count: 3, windowMs: 15 * 60_000 };
+/** A 6-digit code allows 5 guesses in 15 minutes per number or BVN, from any address. */
+const GUESS_LIMIT = { count: 5, windowMs: 15 * 60_000 };
+/** Texts across all customers per hour. Caps the SMS bill if every other defence is beaten. Set SMS_HOURLY_CAP to change it. */
+const SMS_HOURLY_CAP = () => Number(process.env['SMS_HOURLY_CAP']) || 1000;
 
 const OPS: Record<string, OpDef> = {
   'lookup-contact': {
@@ -53,12 +62,14 @@ const OPS: Record<string, OpDef> = {
     schema: z.object({ phone, code: digits(6) }).strict(),
     limit: 6,
     allow: ['status', 'retryAfterSeconds', 'token'],
+    subjectLimit: GUESS_LIMIT,
   },
   // Masked phones and emails tied to a BVN, so the customer can choose where the code goes. Only masked values ever leave the server.
   'bvn-contacts': {
     schema: z.object({ bvn: digits(11), captchaToken: z.string().max(2048).optional() }).strict(),
     limit: 3,
     allow: ['status', 'phones', 'emails'],
+    subjectLimit: SEND_LIMIT,
   },
   'send-bvn-otp': {
     schema: z
@@ -75,12 +86,14 @@ const OPS: Record<string, OpDef> = {
       .strict(),
     limit: 3,
     allow: ['status', 'target', 'expiresInSeconds'],
+    subjectLimit: SEND_LIMIT,
   },
   'verify-bvn-otp': {
     schema: z.object({ bvn: digits(11), code: digits(6) }).strict(),
     limit: 6,
     // identity carries name, date of birth and address. The BVN photo is never passed through.
     allow: ['status', 'retryAfterSeconds', 'token', 'identity'],
+    subjectLimit: GUESS_LIMIT,
   },
   'statement-review': {
     schema: z
@@ -209,7 +222,7 @@ export default async function handler(req: Request): Promise<Response> {
   if (!def) return fail('NOT_FOUND', 'Unknown operation.', 404);
 
   const ip = clientIp(req);
-  if (rateLimited(`${op}:${ip}`, def.limit)) {
+  if (await rateLimited(`${op}:${ip}`, def.limit)) {
     return fail('RATE_LIMITED', 'Too many attempts. Try again shortly.', 429);
   }
 
@@ -250,10 +263,21 @@ export default async function handler(req: Request): Promise<Response> {
     payload = rest;
   }
 
-  // Per-phone limits stop one number being hammered from many IPs.
-  const target = (parsed.data as { phone?: string; bvn?: string }).phone ?? (parsed.data as { bvn?: string }).bvn;
-  if (target && (op === 'send-otp' || op === 'verify-otp' || op === 'send-bvn-otp' || op === 'verify-bvn-otp' || op === 'bvn-contacts') && rateLimited(`${op}:${target}`, def.limit * 2, 10 * 60_000)) {
+  // Limits that do not depend on the caller's address, so rotating addresses does not help:
+  // per phone number, BVN, NIN or account number, and per application token.
+  const subject = ['phone', 'bvn', 'nin', 'accountNumber']
+    .map((k) => (parsed.data as Record<string, unknown>)[k])
+    .find((v): v is string => typeof v === 'string');
+  const per = def.subjectLimit ?? { count: def.limit * 2, windowMs: 10 * 60_000 };
+  if (subject && (await rateLimited(`${op}:s:${subject}`, per.count, per.windowMs))) {
     return fail('RATE_LIMITED', 'Too many attempts. Try again shortly.', 429);
+  }
+  if (def.needsToken && token && (await rateLimited(`${op}:t:${token}`, def.limit * 3, 10 * 60_000))) {
+    return fail('RATE_LIMITED', 'Too many attempts. Try again shortly.', 429);
+  }
+  if (def.subjectLimit === SEND_LIMIT && (await rateLimited('sms:global', SMS_HOURLY_CAP(), 60 * 60_000))) {
+    console.error('selfserve: hourly SMS cap reached');
+    return fail('RATE_LIMITED', 'We are very busy. Please try again later.', 429);
   }
 
   const upstream = await callBackoffice(
