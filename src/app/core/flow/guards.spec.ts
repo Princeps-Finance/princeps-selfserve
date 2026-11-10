@@ -35,7 +35,7 @@ describe('flow guards', () => {
   });
 
   it('opens the work questions without identity only for the how-much-can-I-get check', () => {
-    expect(router.serializeUrl(run(requiresIdentityOrCheckGuard) as UrlTree)).toBe(APPLY.bvn);
+    expect(router.serializeUrl(run(requiresIdentityOrCheckGuard) as UrlTree)).toBe(APPLY.welcome);
     state.setIntent('check');
     expect(run(requiresIdentityOrCheckGuard)).toBe(true);
   });

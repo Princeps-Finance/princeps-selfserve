@@ -25,7 +25,7 @@ export const requiresProfileGuard = requires((s) => !!s.profile(), APPLY.profile
 /** The work questions open for the no-identity "how much can I get" check, or after identity is verified. */
 export const requiresIdentityOrCheckGuard = requires(
   (s) => s.intent() === 'check' || (!!s.contact() && s.phoneVerified() && !!s.profile()),
-  APPLY.bvn,
+  APPLY.welcome,
 );
 export const requiresCheckResultGuard = requires((s) => s.intent() === 'check' && !!s.eligibility(), APPLY.welcome);
 export const requiresEmploymentGuard = requires((s) => !!s.employment(), APPLY.employment);
