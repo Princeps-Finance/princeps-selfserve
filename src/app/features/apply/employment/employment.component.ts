@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, type OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
+import { API_CLIENT } from '../../../core/api/api-client';
+import { availabilityByType } from '../../../core/api/employment-availability';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { focusFirstInvalid } from '../../../core/a11y/focus';
 import { DEFAULT_ELIGIBILITY_CONFIG } from '../../../core/eligibility/eligibility-scoring';
@@ -34,12 +36,15 @@ const OPTIONS: Option[] = [
   templateUrl: './employment.component.html',
   styleUrl: './employment.component.css',
 })
-export class EmploymentComponent {
+export class EmploymentComponent implements OnInit {
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
+  private readonly api = inject(API_CLIENT);
 
   /** Only segments we can serve now are options. The rest are a single waitlist link, not disabled-looking rows. */
-  readonly options = OPTIONS;
+  /** What the back end says is open right now. Empty until it answers, or for good if it cannot be reached. */
+  private readonly open = signal<Partial<Record<EmploymentType, boolean>>>({});
+  readonly options = computed(() => OPTIONS.map((o) => ({ ...o, live: this.open()[o.type] ?? o.live })));
   readonly selected = signal<EmploymentType | null>(this.state.employment()?.type ?? null);
   readonly submitting = signal(false);
   readonly attempted = signal(false);
@@ -61,7 +66,7 @@ export class EmploymentComponent {
 
   readonly showCorperMonths = computed(() => this.selected() === 'corper');
   readonly selectedOption = computed(() =>
-    OPTIONS.find((o) => o.type === this.selected()) ?? null,
+    this.options().find((o) => o.type === this.selected()) ?? null,
   );
   readonly canContinue = computed(() => {
     const opt = this.selectedOption();
@@ -70,6 +75,11 @@ export class EmploymentComponent {
     if (opt.type === 'corper') return this.nyscMonths.valid && !this.tooShort();
     return true;
   });
+
+  async ngOnInit(): Promise<void> {
+    const rows = await this.api.getEmploymentTypes();
+    if (rows) this.open.set(availabilityByType(rows));
+  }
 
   onMonthsInput(): void {
     this.months.set(this.nyscMonths.value);

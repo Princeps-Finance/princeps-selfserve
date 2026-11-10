@@ -1,4 +1,5 @@
 import { InjectionToken } from '@angular/core';
+import type { EmploymentAvailability } from './employment-availability';
 import type {
   Bank, BvnContactsResult, BvnOtpSendResult, BvnOtpVerifyResult, BvnVerifyResult, DocUploadInput, DocUploadResult,
   LoanSummary, LookupResult, MandateLink, OfferLetterRequest, MandateStatus, OtpDestination, SalaryVerifyInput, SalaryVerifyResult,
@@ -51,6 +52,8 @@ export interface ApiClient {
   getOfferLetter(request: OfferLetterRequest): Promise<Uint8Array>;
   submitApplication(payload: SubmitPayload): Promise<SubmitResult>;
   joinWaitlist(input: WaitlistInput): Promise<WaitlistResult>;
+  /** Which employment types the back end can serve now. Null when it cannot be reached: the app then keeps its own defaults. */
+  getEmploymentTypes(): Promise<EmploymentAvailability[] | null>;
 }
 
 export const API_CLIENT = new InjectionToken<ApiClient>('ApiClient');

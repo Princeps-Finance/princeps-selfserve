@@ -7,7 +7,7 @@
   </header>
 
   <ul class="options" [attr.aria-label]="'step.employment.title' | t">
-    @for (opt of options; track opt.type) {
+    @for (opt of options(); track opt.type) {
       <li>
         <button
           type="button"

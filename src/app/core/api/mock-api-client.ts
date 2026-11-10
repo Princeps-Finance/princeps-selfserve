@@ -26,6 +26,7 @@ import type { ApiClient } from './api-client';
 import { buildSimplePdf } from '../pdf/simple-pdf';
 import { maskPhoneNg } from './contact.util';
 import { NG_BANKS } from './ng-banks';
+import type { EmploymentAvailability } from './employment-availability';
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -235,6 +236,11 @@ export class MockApiClient implements ApiClient {
   async submitApplication(_payload: SubmitPayload): Promise<SubmitResult> {
     await delay(1200);
     return { status: 'received', referenceId: 'PR-' + randomRef() };
+  }
+
+  /** Demo: no back end, so the app keeps its own defaults. */
+  async getEmploymentTypes(): Promise<EmploymentAvailability[] | null> {
+    return null;
   }
 
   async joinWaitlist(_input: WaitlistInput): Promise<WaitlistResult> {

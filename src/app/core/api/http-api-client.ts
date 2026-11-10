@@ -27,6 +27,7 @@ import {
   WaitlistResult,
 } from './api-client';
 import { NG_BANKS } from './ng-banks';
+import type { EmploymentAvailability } from './employment-availability';
 
 /** The service could not be reached or returned something unusable. */
 export class ApiUnavailableError extends Error {
@@ -268,6 +269,17 @@ return []; // The user can type it.
     // Never hand the viewer anything that is not a PDF, whatever the server returned.
     if (new TextDecoder().decode(bytes.slice(0, 5)) !== '%PDF-') throw new ApiUnavailableError('offer-letter', 502);
     return bytes;
+  }
+
+  async getEmploymentTypes(): Promise<EmploymentAvailability[] | null> {
+    try {
+      const res = await fetch('/api/employment-types', { credentials: 'same-origin', signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+      const data = (await res.json().catch(() => null)) as { types?: EmploymentAvailability[] } | null;
+      return res.ok && Array.isArray(data?.types) ? data.types : null;
+    } catch (err) {
+      logWarn('employment types unavailable', err);
+      return null;
+    }
   }
 
   joinWaitlist(input: WaitlistInput): Promise<WaitlistResult> {
