@@ -48,7 +48,7 @@ import { SUPPORT_EMAIL, telLink, whatsappLink } from '../support';
       .contact { margin: 0; font-size: 14px; }
       .contact a { color: var(--action-primary); font-weight: 600; text-underline-offset: 3px; }
       .close {
-        align-self: stretch; min-height: 52px; border: 0; border-radius: var(--radius-pill);
+        align-self: stretch; min-height: 52px; border: 0; border-radius: var(--radius-md);
         background: var(--action-primary); color: var(--action-on-primary); font: inherit; font-weight: 500; cursor: pointer;
       }
       .close:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }

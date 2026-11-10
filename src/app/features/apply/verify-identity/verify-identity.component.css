@@ -154,10 +154,10 @@
 .ghost {
   min-height: 56px;
   padding: 0 var(--space-5);
-  background: transparent;
-  color: var(--action-primary);
-  border: 1.5px solid var(--action-primary);
-  border-radius: var(--radius-pill);
+  background: var(--grey-100);
+  color: var(--ink);
+  border: 0;
+  border-radius: var(--radius-md);
   font-family: var(--font-sans); font-size: 14px; font-weight: 500;
   cursor: pointer;
   transition: background 160ms ease;

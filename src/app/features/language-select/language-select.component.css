@@ -107,7 +107,7 @@
   padding: 0 var(--space-6);
   display: inline-flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: var(--space-4);
   background: var(--action-primary);
   color: var(--action-on-primary);

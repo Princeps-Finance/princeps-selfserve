@@ -63,7 +63,7 @@
 
 .pick {
   align-self: stretch; min-height: 56px; padding: 0 var(--space-6);
-  display: inline-flex; align-items: center; justify-content: space-between;
+  display: inline-flex; align-items: center; justify-content: center;
   border: none; border-radius: var(--radius-md);
   background: var(--action-primary); color: var(--action-on-primary);
   font: inherit; font-size: 16px; font-weight: 500; cursor: pointer;

@@ -13,9 +13,9 @@
   display: inline-flex; align-items: center; gap: var(--space-4);
   transition: background 160ms ease, transform 120ms ease-out;
 }
-.cta { justify-content: space-between; background: var(--action-primary); color: var(--action-on-primary); border: 0; margin-top: 0 !important; }
+.cta { justify-content: center; background: var(--action-primary); color: var(--action-on-primary); border: 0; margin-top: 0 !important; }
 .cta:hover { background: var(--action-primary-hover); }
-.secondary { justify-content: center; background: transparent; color: var(--action-primary); border: 1.5px solid var(--action-primary); }
+.secondary { justify-content: center; background: var(--grey-100); color: var(--ink); border: 0; }
 .secondary:hover { background: rgba(11, 43, 85, 0.06); }
 .cta:active, .secondary:active { transform: scale(0.99); }
 .cta:focus-visible, .secondary:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }

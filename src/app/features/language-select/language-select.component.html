@@ -1,14 +1,14 @@
 <main class="screen">
   <header class="brand-row">
     <img class="brand-logo" src="/brand/princeps-logo.svg" alt="Princeps Credit Systems Limited" width="180" height="40" />
-    <span class="tools"><app-read-aloud /><app-help-launcher /></span>
+    <span class="tools"><app-read-aloud /></span>
   </header>
 
   @if (install.offer()) {
     <div class="install">
       <app-promo-banner
         title="Get Princeps on your phone"
-        description="Track your loan and get repayment reminders."
+        description="Track your loan and get reminders."
         ctaLabel="Install"
         (action)="install.install()"
         (dismissed)="install.dismiss()"
@@ -41,26 +41,5 @@
     </ul>
   </section>
 
-  <footer class="footer">
-    <ul class="trust" [attr.aria-label]="'trust.aria' | t">
-      <li class="trust-item">
-        <svg class="trust-icon" width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="M10 2L3 5v5c0 4.5 3 7.5 7 8 4-.5 7-3.5 7-8V5l-7-3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
-          <path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-        <span>{{ 'trust.cbn' | t }}</span>
-      </li>
-      <li class="trust-item">
-        <svg class="trust-icon" width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <rect x="3" y="7" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.5" />
-          <path d="M7 7V5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-        </svg>
-        <span>{{ 'trust.ndpr' | t }}</span>
-      </li>
-      <li class="trust-links">
-        <button type="button" class="trust-link trust-btn" (click)="privacy.open()">{{ 'privacy.link' | t }}</button>
-        <a class="trust-link" href="mailto:complaints@princeps.ng?subject=Complaint" rel="noopener">{{ 'trust.complaints' | t }}</a>
-      </li>
-    </ul>
-  </footer>
+  
 </main>

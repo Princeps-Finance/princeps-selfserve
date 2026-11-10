@@ -1,17 +1,13 @@
+import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 @Component({
   selector: 'app-promo-banner',
+  imports: [NgOptimizedImage],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="banner" aria-labelledby="banner-title">
-      <svg class="mark" width="44" height="44" viewBox="0 0 56 56" aria-hidden="true">
-        <g transform="translate(28 28)">
-          @for (r of rotations; track r; let i = $index) {
-            <rect x="-4" y="-26" width="8" height="18" rx="4" [attr.transform]="'rotate(' + r + ')'" [attr.fill]="colors[i % 3]" />
-          }
-        </g>
-      </svg>
+      <img class="thumb" [ngSrc]="imageSrc()" width="664" height="420" alt="" />
       <div class="text">
         <h2 id="banner-title" class="title">{{ title() }}</h2>
         <p class="desc">{{ description() }}</p>
@@ -28,30 +24,28 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
     `
       :host { display: block; }
       .banner {
-        position: relative; display: flex; align-items: center; gap: var(--space-3);
+        display: flex; align-items: center; gap: var(--space-3);
         padding: var(--space-4); background: var(--banner-bg); border-radius: var(--radius-lg);
       }
-      .mark { flex: none; }
+      .thumb { flex: none; width: 48px; height: 48px; border-radius: var(--radius-sm); object-fit: cover; object-position: 50% 8%; }
       .text { flex: 1; min-width: 0; padding-right: var(--space-2); }
       .title { margin: 0; font: 600 15px/1.3 var(--font-sans); color: var(--text-primary); }
       .desc { margin: 2px 0 0; font: 400 13px/1.4 var(--font-sans); color: var(--grey-500); }
       .cta {
         flex: none; display: flex; align-items: center; justify-content: center;
-        height: 44px; padding: 0 var(--space-5); border: 0; border-radius: var(--radius-md);
+        height: 44px; padding: 0 var(--space-4); border: 0; border-radius: var(--radius-md);
         background: var(--action-neutral); color: var(--action-on-neutral);
         font: 500 15px/1 var(--font-sans); cursor: pointer;
       }
       .cta:hover { background: var(--action-neutral-hover); }
       .close {
-        position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border: 0; border-radius: 50%;
+        flex: none; width: 28px; height: 28px; margin-right: calc(var(--space-1) * -1); border: 0; border-radius: 50%;
         display: grid; place-items: center; background: transparent; color: var(--grey-500); cursor: pointer;
       }
       .close:hover { background: var(--grey-200); }
       .cta:focus-visible, .close:focus-visible { outline: 2px solid var(--grey-900); outline-offset: 2px; }
       @media (max-width: 359px) {
-        .banner { flex-wrap: wrap; }
-        .text { flex-basis: calc(100% - 60px); }
-        .cta { width: 100%; }
+        .thumb { display: none; }
       }
     `,
   ],
@@ -60,8 +54,7 @@ export class PromoBannerComponent {
   readonly title = input.required<string>();
   readonly description = input.required<string>();
   readonly ctaLabel = input.required<string>();
+  readonly imageSrc = input('brand/promo-illustration.svg');
   readonly action = output<void>();
   readonly dismissed = output<void>();
-  protected readonly rotations = [0, 45, 90, 135, 180, 225, 270, 315];
-  protected readonly colors = ['#f16522', '#51c4d9', '#0b2b55'];
 }

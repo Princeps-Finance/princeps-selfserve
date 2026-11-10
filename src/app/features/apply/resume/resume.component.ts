@@ -67,8 +67,8 @@ import { DraftData, DraftService } from '../../../core/application/draft.service
         font-family: var(--font-sans); font-size: 16px; font-weight: 600;
         display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3);
       }
-      .cta { border: 0; background: var(--action-primary); color: var(--action-on-primary); justify-content: space-between; margin-top: 0 !important; }
-      .alt { border: 1.5px solid var(--action-primary); background: transparent; color: var(--action-primary); }
+      .cta { border: 0; background: var(--action-primary); color: var(--action-on-primary); justify-content: center; margin-top: 0 !important; }
+      .alt { border: 0; background: var(--grey-100); color: var(--ink); }
       .alt--danger { border-color: var(--danger-text); color: var(--danger-text); }
       .cta:focus-visible, .alt:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
     `,

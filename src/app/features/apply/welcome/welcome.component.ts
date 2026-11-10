@@ -44,9 +44,9 @@ import { ApplicationStateService, ApplyIntent } from '../../../core/application/
         display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3);
         transition: background 160ms ease, transform 120ms ease-out;
       }
-      .cta { background: var(--action-primary); color: var(--action-on-primary); border: 0; justify-content: space-between; margin-top: 0 !important; }
+      .cta { background: var(--action-primary); color: var(--action-on-primary); border: 0; justify-content: center; margin-top: 0 !important; }
       .cta:hover { background: var(--action-primary-hover); }
-      .alt { background: transparent; color: var(--action-primary); border: 1.5px solid var(--action-primary); }
+      .alt { background: var(--grey-100); color: var(--ink); border: 0; }
       .alt:hover { background: rgba(11, 43, 85, 0.06); }
       .cta:active, .alt:active { transform: scale(0.99); }
       .cta:focus-visible, .alt:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
