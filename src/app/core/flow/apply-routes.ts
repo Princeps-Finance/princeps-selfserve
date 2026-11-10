@@ -10,7 +10,7 @@ export const APPLY = {
   verify: '/apply/verify',
   resume: '/apply/resume',
   saved: '/apply/saved',
-  welcomeBack: '/apply/welcome-back',
+  loans: '/apply/loans',
   profile: '/apply/profile',
   employment: '/apply/employment',
   waitlist: '/apply/waitlist',
@@ -26,5 +26,8 @@ export const APPLY = {
   submit: '/apply/submit',
   status: '/apply/status',
 } as const;
+
+/** The detail screen for one existing loan. */
+export const loanRoute = (id: string): string => `${APPLY.loans}/${encodeURIComponent(id)}`;
 
 export type ApplyRoute = (typeof APPLY)[keyof typeof APPLY];

@@ -37,7 +37,7 @@ export interface SelectOption {
       </svg>
     </button>
 
-    <dialog #dlg class="sheet" [attr.aria-label]="title()" (close)="onClosed()" (click)="onBackdrop($event)">
+    <dialog #dlg class="sheet glass" [attr.aria-label]="title()" (close)="onClosed()" (click)="onBackdrop($event)">
       <div class="panel">
         <div class="bar">
           <h2 class="sheet-title">{{ title() }}</h2>
@@ -98,7 +98,7 @@ export interface SelectOption {
 
       .sheet {
         width: min(480px, 100vw); max-width: 100vw; max-height: 82dvh; margin: auto auto 0; padding: 0; border: 0;
-        border-radius: var(--radius-lg) 20px 0 0; background: var(--surface-0); color: var(--ink); box-shadow: var(--shadow-4);
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0; color: var(--ink); box-shadow: var(--shadow-4);
       }
       @media (min-width: 560px) { .sheet { margin: auto; max-width: 480px; border-radius: var(--radius-lg); } }
       .sheet::backdrop { background: var(--overlay); }

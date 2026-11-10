@@ -10,7 +10,7 @@ import { ReadAloudComponent } from './read-aloud.component';
 import { BrandLogoComponent } from '../../shared/brand-logo.component';
 import { ThemeToggleComponent } from '../../shared/theme-toggle.component';
 
-const NO_BACK_ROUTES = new Set<string>([APPLY.root, `${APPLY.root}/`, APPLY.status, APPLY.welcomeBack]);
+const NO_BACK_ROUTES = new Set<string>([APPLY.root, `${APPLY.root}/`, APPLY.status, APPLY.loans]);
 
 @Component({
   selector: 'app-apply-shell',
@@ -18,18 +18,18 @@ const NO_BACK_ROUTES = new Set<string>([APPLY.root, `${APPLY.root}/`, APPLY.stat
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
-      <!-- Slim top bar. Phone: back chevron (or the logo on the first screens) + controls. Desktop: logo + controls, and the back chevron moves into the card. -->
+      <!-- Top bar: on a phone the back arrow comes first, and the logo sits under it on the same row as the controls. On wide screens the arrow moves into the card. -->
       <header class="topbar">
-        <div class="topbar-left">
-          @if (showBack()) {
-            <app-back-button class="back-phone" />
-          }
-          <app-brand-logo class="brand-logo" [class.brand-logo--desktop-only]="showBack()" />
-        </div>
-        <div class="topbar-right">
-          <app-read-aloud />
-          <app-theme-toggle />
-          <app-language-menu />
+        @if (showBack()) {
+          <app-back-button class="back-phone" />
+        }
+        <div class="topbar-row">
+          <app-brand-logo class="brand-logo" />
+          <div class="topbar-right">
+            <app-read-aloud />
+            <app-theme-toggle />
+            <app-language-menu />
+          </div>
         </div>
       </header>
 
@@ -48,15 +48,12 @@ const NO_BACK_ROUTES = new Set<string>([APPLY.root, `${APPLY.root}/`, APPLY.stat
   styles: [
     `
       :host { display: block; min-height: 100dvh; background: var(--surface-0); color: var(--ink); }
-      .page { min-height: 100dvh; display: flex; flex-direction: column; }
-      .topbar {
-        display: flex; align-items: center; justify-content: space-between;
-        width: 100%; box-sizing: border-box; padding: var(--space-2) var(--space-4); min-height: 56px;
-      }
-      .topbar-left { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; }
+      /* Room at the bottom so the floating Support button never sits on top of a step's main button. */
+      .page { min-height: 100dvh; display: flex; flex-direction: column; padding-bottom: calc(var(--tap-min) + var(--space-8)); box-sizing: border-box; }
+      .topbar { display: flex; flex-direction: column; align-items: stretch; width: 100%; box-sizing: border-box; padding: var(--space-2) var(--space-4) 0; }
+      .topbar-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 56px; }
       .topbar-right { display: inline-flex; align-items: center; gap: var(--space-1); }
       .brand-logo { height: 30px; width: auto; display: block; }
-      .brand-logo--desktop-only { display: none; }
       .card-top { display: none; }
       .shell { flex: 1; width: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; }
       .body { flex: 1; display: flex; flex-direction: column; padding: var(--space-2) var(--space-6) var(--space-6); }
@@ -68,7 +65,6 @@ const NO_BACK_ROUTES = new Set<string>([APPLY.root, `${APPLY.root}/`, APPLY.stat
         .page { padding-bottom: var(--space-8); }
         .topbar { max-width: 1040px; margin: 0 auto; padding: var(--space-5) var(--space-6); }
         .back-phone { display: none; }
-        .brand-logo--desktop-only { display: block; }
         .brand-logo { height: 34px; }
         .shell {
           flex: 0 0 auto; max-width: 480px; margin-top: var(--space-2); background: var(--surface-0);

@@ -62,12 +62,16 @@ export const routes: Routes = [
           import('./features/apply/saved/saved.component').then((m) => m.SavedComponent),
       },
       {
-        path: 'welcome-back',
+        path: 'loans',
         canMatch: [requiresContactGuard, requiresPhoneVerifiedGuard],
         loadComponent: () =>
-          import('./features/apply/welcome-back/welcome-back.component').then(
-            (m) => m.WelcomeBackComponent,
-          ),
+          import('./features/apply/loans/loans.component').then((m) => m.LoansComponent),
+      },
+      {
+        path: 'loans/:id',
+        canMatch: [requiresContactGuard, requiresPhoneVerifiedGuard],
+        loadComponent: () =>
+          import('./features/apply/loans/loan-detail.component').then((m) => m.LoanDetailComponent),
       },
       {
         path: 'employment',

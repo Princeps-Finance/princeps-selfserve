@@ -22,7 +22,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 .step { gap: var(--space-4); padding-top: var(--space-4); }
 .title { font-size: clamp(28px, 7vw, 38px); line-height: 1.1; }
       .body { margin: 0; color: var(--ink-soft); line-height: 1.5; }
-      .cta, .alt { min-height: var(--btn-height); border-radius: var(--btn-radius); font: inherit; font-weight: 500; cursor: pointer; }
+      .cta, .alt { min-height: var(--btn-height); border-radius: var(--btn-radius); font: inherit; font-weight: var(--btn-weight); cursor: pointer; }
 .cta { border: 0; }
 .alt { border: 1px solid var(--ink); background: transparent; }
       .cta:focus-visible, .alt:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }

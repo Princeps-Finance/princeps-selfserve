@@ -48,7 +48,7 @@ const OFFER_ROUTES = new Set([...AUTO_APPLY_ROUTES, '/apply/bvn', '/apply/status
         min-height: 44px; padding: 0 var(--space-4);
         border: 1px solid currentColor; border-radius: var(--btn-radius);
         background: transparent; color: inherit;
-        font: inherit; font-weight: 600; cursor: pointer;
+        font: inherit; font-weight: var(--btn-weight); cursor: pointer;
       }
       .action:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
     `,

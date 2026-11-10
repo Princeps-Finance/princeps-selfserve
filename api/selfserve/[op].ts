@@ -103,6 +103,13 @@ const OPS: Record<string, OpDef> = {
     allow: ['status'],
     needsToken: true,
   },
+  // The customer's loans from Caltos. The back office must answer POST /api/selfserve/list-loans for the token holder.
+  'list-loans': {
+    schema: z.object({}).strict(),
+    limit: 10,
+    allow: ['loans'],
+    needsToken: true,
+  },
   'verify-nin': {
     schema: z.object({ nin: digits(11), fullName: z.string().trim().min(2).max(120), dateOfBirth: isoDate }).strict(),
     limit: 5,

@@ -16,7 +16,7 @@ import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_ZOHO_URL, telLink, whatsappLink }
     <button
       #trigger
       type="button"
-      class="help-btn"
+      class="help-btn glass"
       (click)="toggle()"
       [attr.aria-expanded]="open()"
       aria-haspopup="dialog"
@@ -32,7 +32,7 @@ import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_ZOHO_URL, telLink, whatsappLink }
 
     @if (open()) {
       <div class="backdrop" (click)="close()"></div>
-      <div #sheet class="sheet" role="dialog" aria-modal="true" [attr.aria-label]="'help.dialog' | t">
+      <div #sheet class="sheet glass" role="dialog" aria-modal="true" [attr.aria-label]="'help.dialog' | t">
         <button type="button" class="sheet-close" [attr.aria-label]="'common.close' | t" (click)="close()">
           <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
             <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
@@ -68,8 +68,8 @@ import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_ZOHO_URL, telLink, whatsappLink }
       .help-btn {
         display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
         height: 44px; padding: 0 var(--space-4) 0 var(--space-3); border-radius: var(--radius-pill);
-        background: var(--surface-0); border: 1px solid var(--hairline); box-shadow: var(--shadow-2);
-        color: var(--ink); font: 600 15px/1 var(--font-sans); cursor: pointer;
+        box-shadow: var(--shadow-2);
+        color: var(--ink); font: var(--btn-weight) 15px/1 var(--font-sans); cursor: pointer;
         transition: background 160ms ease;
       }
       .help-btn:hover { background: var(--grey-100); }
@@ -79,7 +79,7 @@ import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_ZOHO_URL, telLink, whatsappLink }
         position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
         max-width: 520px; margin: 0 auto;
         padding: var(--space-6) var(--space-6) calc(var(--space-6) + env(safe-area-inset-bottom));
-        background: var(--surface-0); border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
         box-shadow: var(--shadow-4);
         display: flex; flex-direction: column; gap: var(--space-2);
         animation: sheet-in 200ms cubic-bezier(0.2, 0.7, 0.1, 1) both;

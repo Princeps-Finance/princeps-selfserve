@@ -1,5 +1,6 @@
 import {
   buildRepaymentSchedule,
+  estimateApr,
   PRICING_PRODUCTS,
   clampAmount,
   offerLimits,
@@ -64,14 +65,28 @@ describe('pricing catalogue', () => {
   });
 });
 
+describe('estimateApr', () => {
+  it('is zero for nonsense input and rises with fees', () => {
+    expect(estimateApr(0, 0, 100, 6)).toBe(0);
+    const noFees = estimateApr(200_000, 0, 35_000, 6);
+    const withFees = estimateApr(200_000, 4_000, 35_000, 6);
+    expect(noFees).toBeGreaterThan(0);
+    expect(withFees).toBeGreaterThan(noFees);
+  });
+
+  it('matches a loan repaid with no interest at 0%', () => {
+    expect(estimateApr(120_000, 0, 10_000, 12)).toBeCloseTo(0, 1);
+  });
+});
+
 describe('quoteLoan', () => {
-  it('adds up repayment, fees and the cost of credit', () => {
+  it('adds up repayment, interest and fees', () => {
     const p = pricingProductById('ippis-standard')!; // 5% flat, 2% processing fee
     const q = quoteLoan(p, 200_000, 6);
     expect(q.monthly).toBe(35_000);
     expect(q.totalRepayment).toBe(210_000);
     expect(q.totalFees).toBe(4_000);
-    expect(q.costOfCredit).toBe(210_000 - 200_000 + 4_000);
+    expect(q.interest).toBe(10_000);
     expect(q.fees).toEqual([{ name: 'Processing fee', amount: 4_000 }]);
   });
 

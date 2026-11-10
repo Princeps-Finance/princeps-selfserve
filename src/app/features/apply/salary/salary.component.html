@@ -4,6 +4,7 @@
   <header class="head">
     <h1 class="title">{{ titleKey() | t }}</h1>
     <p class="subtitle">{{ subtitleKey() | t }}</p>
+    <p class="reason">{{ 'reason.salary' | t }}</p>
   </header>
 
   <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>

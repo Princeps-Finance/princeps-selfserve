@@ -9,13 +9,29 @@
   font-size: var(--fs-md); line-height: 1.5;
 }
 
-.offers { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.block { display: flex; flex-direction: column; gap: var(--space-4); }
+.block-title { display: flex; align-items: center; gap: var(--space-3); margin: 0; font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 600; }
+.num {
+  display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--action-primary); color: var(--action-on-primary); font: var(--fw-bold) var(--fs-sm) var(--font-sans);
+}
 
-/* One offer: a calm block separated by space and a hairline, not a boxed card. */
-.offer { display: flex; flex-direction: column; border-top: 1px solid var(--hairline-strong); }
-.offer-name { margin: 0; font-size: 22px; }
-.offer-meta { margin: 2px 0 0; font-size: var(--fs-md); color: var(--ink-soft); }
-.offer-range { margin: 2px 0 0; font-size: var(--fs-sm); color: var(--ink-muted); }
+/* Product choice: one calm card per loan, the chosen one outlined in the brand colour. */
+.products { display: flex; flex-direction: column; gap: var(--space-3); }
+.product {
+  display: flex; flex-direction: column; gap: var(--space-1); width: 100%; padding: var(--space-4);
+  text-align: left; font: inherit; color: var(--ink); cursor: pointer;
+  background: var(--grey-100); border: 2px solid transparent; border-radius: var(--radius-md);
+  transition: border-color var(--dur-base) ease, background var(--dur-base) ease;
+}
+.product:hover { background: var(--grey-200); }
+.product[aria-checked='true'] { background: var(--action-primary-soft); border-color: var(--action-primary); }
+.product:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
+.product-top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+.product-name { font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 600; }
+.product-rate { font-weight: var(--fw-bold); white-space: nowrap; }
+.product-rate small { font-weight: 400; font-size: var(--fs-xs); color: var(--ink-soft); }
+.product-meta { font-size: var(--fs-sm); color: var(--ink-soft); line-height: 1.4; }
 
 .control { display: flex; flex-direction: column; gap: var(--space-2); }
 .control-label { font-size: var(--fs-md); font-weight: 500; color: var(--ink); }
@@ -33,7 +49,6 @@
   font-variant-numeric: tabular-nums; color: var(--ink);
 }
 
-.slider { width: 100%; height: 44px; margin: 0; accent-color: var(--action-primary); cursor: pointer; }
 .hint { margin: 0; min-height: 20px; font-size: var(--fs-sm); color: var(--ink-muted); }
 
 .tenors { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: var(--space-2); }
@@ -43,31 +58,31 @@
   background: var(--surface-0); color: var(--ink); cursor: pointer; font: inherit;
   transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
 }
-.tenor-num { font-size: var(--fs-lg); font-weight: 600; font-variant-numeric: tabular-nums; }
+.tenor-num { font-size: var(--fs-lg); font-weight: var(--btn-weight); font-variant-numeric: tabular-nums; }
 .tenor-unit { font-size: var(--fs-2xs); color: var(--ink-muted); }
 .tenor[aria-checked='true'] { background: var(--action-primary); border-color: var(--action-primary); color: var(--action-on-primary); }
 .tenor[aria-checked='true'] .tenor-unit { color: var(--action-on-primary); opacity: 0.85; }
 .tenor:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 
-.summary { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-md); background: var(--surface-0); border: 1px solid var(--hairline); }
+.summary { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-md); background: var(--grey-100); }
 .summary-main { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
 .summary-label { font-size: var(--fs-md); color: var(--ink-soft); }
-.summary-big { font-family: var(--font-display); font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.summary-big { font-family: var(--font-display); font-size: var(--fs-2xl); font-weight: 600; font-variant-numeric: tabular-nums; }
 .summary-rows { margin: 0; display: flex; flex-direction: column; }
-.row { display: flex; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) 0; border-top: 1px solid var(--hairline); font-size: var(--fs-md); }
+.row { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--hairline); font-size: var(--fs-md); }
 .row dt { color: var(--ink-soft); margin: 0; }
 .row dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 500; }
-.row--sub { padding-left: var(--space-4); font-size: var(--fs-sm); }
-.row--sub dt, .row--sub dd { color: var(--ink-muted); font-weight: 400; }
-.row--accent dd { color: var(--text-accent); font-weight: 600; }
+.summary-rows .row--total { border-top: 2px solid var(--hairline-strong); font-weight: 600; }
+.row--fees dt { display: block; }
+.fees summary { cursor: pointer; color: var(--ink-soft); min-height: 24px; }
+.fees ul { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--fs-sm); }
+.fees li { display: flex; justify-content: space-between; gap: var(--space-3); color: var(--ink-muted); }
+.note { margin: 0; font-size: var(--fs-sm); line-height: 1.5; color: var(--ink-muted); }
 
 .pick {
-  align-self: stretch; min-height: var(--btn-height); padding: 0 var(--space-6);
-  display: inline-flex; align-items: center; justify-content: center;
-  border: none; border-radius: var(--btn-radius);
-  background: var(--action-primary); color: var(--action-on-primary);
-  font: inherit; font-size: var(--fs-base); font-weight: 500; cursor: pointer;
-  transition: transform 120ms ease-out, background 160ms ease;
+  align-self: stretch; min-height: var(--btn-height); padding: 0 var(--space-6); gap: var(--space-3);
+  display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: var(--btn-radius);
+  background: var(--action-primary); color: var(--action-on-primary); font: inherit; font-size: var(--fs-base); font-weight: var(--btn-weight); cursor: pointer;
 }
 .pick:hover { background: var(--action-primary-hover); }
 .pick:active { transform: scale(0.99); }
@@ -80,33 +95,7 @@
 .alt { padding: 0 var(--space-5); font: inherit; text-decoration: none; }
 
 
-@media (prefers-reduced-motion: reduce) {
-  .tenor, .pick { transition: none; }
-}
-
 .later { align-self: stretch; }
-
-/* One line per product; only the open one shows the calculator. */
-.offer { padding-top: 0; gap: 0; }
-.offer-head {
-  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
-  width: 100%; min-height: 64px; padding: var(--space-4) 0; text-align: left;
-  background: none; border: 0; color: var(--ink); font: inherit; cursor: pointer;
-}
-.offer-head:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
-.offer-head-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.offer-name { font-family: var(--font-display); font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
-.offer-meta { font-size: var(--fs-sm); color: var(--ink-soft); line-height: 1.4; }
-.chev { flex: none; transition: transform 160ms ease; }
-.offer.is-open .chev { transform: rotate(180deg); }
-.panel { display: flex; flex-direction: column; gap: var(--space-5); padding-bottom: var(--space-6); }
-.amount-field { min-height: 60px; }
-.row--fees dt { display: block; }
-.fees summary { cursor: pointer; color: var(--ink-soft); min-height: 24px; }
-.fees ul { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--fs-sm); }
-.fees li { display: flex; justify-content: space-between; gap: var(--space-3); color: var(--ink-muted); }
-.fees summary:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); border-radius: 4px; }
-@media (prefers-reduced-motion: reduce) { .chev { transition: none; } }
 
 .alt--primary { background: var(--action-primary); color: var(--action-on-primary); border-color: var(--action-primary); }
 .alt--primary:hover { background: var(--action-primary-hover); }

@@ -35,7 +35,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         flex: none; display: flex; align-items: center; justify-content: center;
         height: 44px; padding: 0 var(--space-4); border: 0; border-radius: var(--btn-radius);
         background: var(--action-primary); color: var(--action-on-primary);
-        font: 500 15px/1 var(--font-sans); cursor: pointer;
+        font: var(--btn-weight) 15px/1 var(--font-sans); cursor: pointer;
       }
       .promo-cta:hover { background: var(--action-primary-hover); }
       .close {

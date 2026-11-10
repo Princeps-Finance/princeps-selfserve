@@ -195,7 +195,7 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
       const result = await this.api.lookupContact(contact);
       if (result.kind === 'returning') {
         this.state.setReturningCustomer(true, result.snapshot);
-        return APPLY.welcomeBack;
+        return APPLY.loans;
       }
     } catch {
       // A failed lookup must never block a new application.

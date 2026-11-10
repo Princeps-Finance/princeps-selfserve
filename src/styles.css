@@ -182,7 +182,7 @@ input[type='checkbox'][aria-invalid='true'] {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--space-4);
   background: var(--action-primary); color: var(--action-on-primary);
   border: none; border-radius: var(--btn-radius);
-  font-family: var(--font-sans); font-size: var(--fs-base); font-weight: 500; cursor: pointer;
+  font-family: var(--font-sans); font-size: var(--fs-base); font-weight: var(--btn-weight); cursor: pointer;
   transition: transform 120ms ease-out, background 160ms ease, opacity 160ms ease;
 }
 .cta:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -193,7 +193,7 @@ input[type='checkbox'][aria-invalid='true'] {
   align-self: stretch; min-height: var(--btn-height); padding: 0 var(--space-6);
   display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3);
   background: var(--grey-100); color: var(--ink); border: 0; border-radius: var(--btn-radius);
-  font-family: var(--font-sans); font-size: var(--fs-base); font-weight: 500; cursor: pointer;
+  font-family: var(--font-sans); font-size: var(--fs-base); font-weight: var(--btn-weight); cursor: pointer;
 }
 .alt:hover { background: var(--grey-200); }
 .step { display: flex; flex-direction: column; gap: var(--space-8); }
@@ -240,3 +240,19 @@ label:has(> .sr-only:focus-visible) { box-shadow: var(--focus-ring); }
 }
 /* The heading is focused after each navigation only so screen readers announce it; it is not a control, so it shows no outline. */
 h1[tabindex='-1']:focus { outline: none; }
+
+/* The one-line reason shown under a step that asks for an ID or personal data. */
+.step .reason { margin: 0; font-size: var(--fs-sm); line-height: 1.5; color: var(--ink-muted); }
+
+/* ===== Glass: frosted surface for small floating elements (Support, toasts, sheets, install card) =====
+   Solid by default. Frosted only where the browser can blur and the person has not asked for less transparency,
+   which also keeps older Android phones fast. */
+.glass { background: var(--glass-solid); border: 1px solid var(--hairline); }
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  @media (prefers-reduced-transparency: no-preference) {
+    .glass {
+      background: var(--glass-bg); border-color: var(--glass-border);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%); backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    }
+  }
+}

@@ -6,7 +6,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
   imports: [NgOptimizedImage],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="card" [attr.aria-labelledby]="'promo-title'">
+    <section class="card glass" [attr.aria-labelledby]="'promo-title'">
       <div class="media">
         <img [ngSrc]="imageSrc()" [width]="664" [height]="420" [alt]="imageAlt()" />
         @if (dismissible()) {
@@ -33,8 +33,6 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
     `
       :host { display: block; width: 268px; max-width: calc(100vw - 32px); }
       .card {
-        background: var(--card-bg);
-        border: 1px solid var(--card-border);
         border-radius: var(--radius-lg);
         box-shadow: var(--card-shadow);
         overflow: hidden;
@@ -66,7 +64,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         display: flex; align-items: center; justify-content: center;
         width: 100%; height: 44px; padding: 0; border: 0; border-radius: var(--btn-radius);
         background: var(--action-primary); color: var(--action-on-primary);
-        font: 500 14px/1 var(--font-sans); cursor: pointer;
+        font: var(--btn-weight) 14px/1 var(--font-sans); cursor: pointer;
         transition: background 120ms ease;
       }
       .promo-cta:hover { background: var(--action-primary-hover); }

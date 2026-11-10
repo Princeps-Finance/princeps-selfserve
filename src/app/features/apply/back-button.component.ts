@@ -66,7 +66,7 @@ export class BackButtonComponent {
 
   goBack(): void {
     const here = this.router.url.split('?')[0];
-    let target = BACK_MAP[here] ?? APPLY.welcome;
+    let target = BACK_MAP[here] ?? (here.startsWith(`${APPLY.loans}/`) ? APPLY.loans : APPLY.welcome);
     if (here === APPLY.documents) {
       const needsNin = productById(this.state.offer()?.productId ?? '')?.settings.requiresNin ?? false;
       target = needsNin ? APPLY.nin : APPLY.terms;

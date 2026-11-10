@@ -27,7 +27,7 @@ describe('wizard route guards (bio data → work → offer → loan documentatio
   }
 
   const PROTECTED = [
-    'verify', 'resume', 'welcome-back', 'profile', 'employment', 'waitlist', 'salary', 'eligibility',
+    'verify', 'resume', 'loans', 'loans/:id', 'profile', 'employment', 'waitlist', 'salary', 'eligibility',
     'offers', 'saved', 'terms', 'nin', 'documents', 'verify-identity', 'mandate', 'submit', 'status',
   ];
 

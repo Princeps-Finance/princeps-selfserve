@@ -71,7 +71,9 @@ export class SubmitComponent {
       // Never invent an outcome: tell the user it did not go through and let them retry.
       this.state.setSubmission({ status: 'idle' });
       this.failed.set(true);
-      this.toast.error(this.lang.t('submit.error.failed'));
+      this.toast.error(this.lang.t('submit.error.failed'), {
+        action: { label: this.lang.t('common.retry'), run: () => void this.submit() },
+      });
     } finally {
       this.submitting.set(false);
     }

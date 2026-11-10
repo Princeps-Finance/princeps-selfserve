@@ -65,7 +65,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
       .confirm { margin: 0; padding: var(--space-4); border-radius: var(--radius-md); background: var(--warning-soft); }
       .cta, .alt {
         min-height: var(--btn-height); padding: 0 var(--space-6); border-radius: var(--btn-radius); cursor: pointer;
-        font-family: var(--font-sans); font-size: var(--fs-base); font-weight: 600;
+        font-family: var(--font-sans); font-size: var(--fs-base); font-weight: var(--btn-weight);
         display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3);
       }
 .cta { border: 0; margin-top: 0 !important; }

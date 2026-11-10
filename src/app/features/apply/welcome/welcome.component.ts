@@ -30,6 +30,11 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
           <p class="hint">{{ 'welcome.intent.check.hint' | t }}</p>
         </div>
       </div>
+
+      <div class="trust">
+        <p>{{ 'trust.cbn' | t }}</p>
+        <p>{{ 'trust.official' | t }}</p>
+      </div>
     </section>
   `,
   styles: [
@@ -38,10 +43,12 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 .title { text-align: center; font-size: clamp(24px, 6.5vw, 30px); line-height: 1.15; letter-spacing: -0.02em; }
       .actions { margin-top: auto; display: flex; flex-direction: column; gap: var(--space-5); padding-top: var(--space-6); }
       .choice { display: flex; flex-direction: column; gap: var(--space-2); }
+      .trust { display: flex; flex-direction: column; gap: var(--space-2); text-align: center; font-size: var(--fs-sm); line-height: 1.5; color: var(--ink-muted); }
+      .trust p { margin: 0; }
       .hint { margin: 0; text-align: center; font-size: var(--fs-md); color: var(--ink-soft); }
       .cta, .alt {
         min-height: var(--btn-height); padding: 0 var(--space-6); border-radius: var(--btn-radius); cursor: pointer;
-        font-family: var(--font-sans); font-size: var(--fs-base); font-weight: 600;
+        font-family: var(--font-sans); font-size: var(--fs-base); font-weight: var(--btn-weight);
         display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3);
         transition: background 160ms ease, transform 120ms ease-out;
       }

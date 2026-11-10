@@ -10,6 +10,7 @@ import {
   BvnVerifyResult,
   DocUploadInput,
   DocUploadResult,
+  LoanSummary,
   LookupResult,
   MandateLink,
   MandateStatus,
@@ -225,6 +226,11 @@ export class HttpApiClient implements ApiClient {
     }
     // Caltos records the loan and decides; the browser never claims an outcome.
     return { status: 'received', referenceId: r.data.id };
+  }
+
+  async listLoans(): Promise<LoanSummary[]> {
+    const r = await this.op<{ loans?: LoanSummary[] }>('list-loans', {});
+    return Array.isArray(r.loans) ? r.loans : [];
   }
 
   joinWaitlist(input: WaitlistInput): Promise<WaitlistResult> {

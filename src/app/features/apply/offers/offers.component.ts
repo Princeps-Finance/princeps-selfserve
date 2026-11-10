@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
@@ -5,11 +6,12 @@ import { RadioGroupDirective } from '../../../core/a11y/radio-group.directive';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { Product, RepaymentFrequency, productsFor } from '../../../core/products/products';
-import { LoanQuote, clampAmount, offerLimits, quoteLoan } from '../../../../shared/pricing';
+import { LoanQuote, clampAmount, estimateApr, offerLimits, quoteLoan } from '../../../../shared/pricing';
 import { formatNaira } from '../../../core/money.util';
 import { telLink, whatsappLink } from '../../../core/support';
 import { LangService } from '../../../core/i18n/lang.service';
 import { discountedRate } from '../../../../shared/referral';
+import { AmountSliderComponent } from '../../../shared/amount-slider.component';
 import { ReferralBoxComponent } from './referral-box.component';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
@@ -28,6 +30,8 @@ interface OfferView {
   tenor: number;
   tenors: number[];
   quote: LoanQuote;
+  /** Estimated yearly rate including fees, for comparing offers. */
+  apr: number;
 }
 
 /**
@@ -49,7 +53,7 @@ interface Choice {
 
 @Component({
   selector: 'app-offers',
-  imports: [IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective, ReferralBoxComponent],
+  imports: [IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective, ReferralBoxComponent, AmountSliderComponent, DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './offers.component.html',
   styleUrl: './offers.component.css',
@@ -74,20 +78,24 @@ export class OffersComponent implements OnInit {
   readonly tel = telLink();
   readonly ready = signal(false);
   /** Only one product is open at a time; the others are a single line. */
-  readonly expanded = signal<string | null>(null);
+  readonly selectedId = signal<string | null>(null);
+  /** The product being configured: the one the customer chose, or the only one there is. */
+  readonly selected = computed(() => this.offers().find((o) => o.product.id === this.selectedId()) ?? null);
 
   readonly offers = computed<OfferView[]>(() =>
     this.catalogue().map(({ product: base, limits }) => {
       const r = this.referral();
       const product = r ? { ...base, ratePercent: discountedRate(base.ratePercent, r) } : base;
       const c = this.choices()[product.id] ?? { amount: limits.maxAmount, tenor: limits.maxTenor };
+      const quote = quoteLoan(product, c.amount, c.tenor);
       return {
         product,
         limits,
         amount: c.amount,
         tenor: c.tenor,
         tenors: tenorChoices(limits, c.tenor),
-        quote: quoteLoan(product, c.amount, c.tenor),
+        quote,
+        apr: estimateApr(c.amount, quote.totalFees, quote.monthly, c.tenor),
       };
     }),
   );
@@ -120,7 +128,7 @@ export class OffersComponent implements OnInit {
     }
     this.catalogue.set(catalogue);
     this.choices.set(choices);
-    this.expanded.set((pref && catalogue.find((c) => c.product.id === pref.productId)?.product.id) || catalogue[0]?.product.id || null);
+    this.selectedId.set((pref && catalogue.find((c) => c.product.id === pref.productId)?.product.id) || catalogue[0]?.product.id || null);
     this.ready.set(true);
   }
 
@@ -153,12 +161,13 @@ export class OffersComponent implements OnInit {
     el.value = Number(this.choices()[o.product.id].amount).toLocaleString('en-NG');
   }
 
-  onSlider(o: OfferView, event: Event): void {
-    this.setAmount(o, Number((event.target as HTMLInputElement).value));
+  select(id: string): void {
+    this.selectedId.set(id);
   }
 
-  toggle(id: string): void {
-    this.expanded.update((cur) => (cur === id ? null : id));
+  /** Only the chosen product is in the tab order; arrow keys move between the others. */
+  productTab(id: string): number {
+    return this.selectedId() === id ? 0 : -1;
   }
 
   setTenor(o: OfferView, tenor: number): void {

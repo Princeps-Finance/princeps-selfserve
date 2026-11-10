@@ -84,7 +84,7 @@ import { validateReferralCode } from '../../../core/referral/referral-codes';
 }
 .referral-actions { display: flex; gap: var(--space-2); justify-content: flex-end; }
 .referral-cancel, .referral-apply {
-  height: 40px; padding: 0 var(--space-4); border-radius: var(--btn-radius); font: 500 14px var(--font-sans);
+  height: 40px; padding: 0 var(--space-4); border-radius: var(--btn-radius); font: var(--btn-weight) 14px var(--font-sans);
   border: 1px solid var(--hairline-strong); background: var(--surface-0); cursor: pointer;
 }
 .referral-apply { background: var(--action-primary); border-color: var(--action-primary); color: var(--action-on-primary); }

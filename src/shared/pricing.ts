@@ -193,8 +193,8 @@ export interface LoanQuote {
   totalRepayment: number;
   fees: { name: string; amount: number }[];
   totalFees: number;
-  /** Interest plus fees: what the loan costs on top of the amount borrowed. */
-  costOfCredit: number;
+  /** Interest alone: total repayment minus the amount borrowed. Fees are listed separately. */
+  interest: number;
 }
 
 export function quoteLoan(
@@ -213,7 +213,7 @@ export function quoteLoan(
     totalRepayment,
     fees,
     totalFees,
-    costOfCredit: totalRepayment - amount + totalFees,
+    interest: totalRepayment - amount,
   };
 }
 
@@ -234,4 +234,27 @@ export function clampAmount(product: PricingProduct, amount: number, limits: { m
   const step = product.amountStep;
   const rounded = Math.round(amount / step) * step;
   return Math.min(limits.maxAmount, Math.max(limits.minAmount, rounded));
+}
+
+/**
+ * Estimated yearly rate (APR) from the cash flows: the customer receives the amount minus any fees, then pays
+ * `monthly` each month. Found by bisection on the monthly rate and compounded to a year. It is an estimate for
+ * comparison; the offer Princeps confirms before acceptance is the one that counts.
+ */
+export function estimateApr(amount: number, totalFees: number, monthly: number, tenorMonths: number): number {
+  const received = amount - totalFees;
+  if (!(received > 0) || !(monthly > 0) || tenorMonths < 1) return 0;
+  const presentValue = (rate: number): number => {
+    let pv = 0;
+    for (let k = 1; k <= tenorMonths; k++) pv += monthly / Math.pow(1 + rate, k);
+    return pv;
+  };
+  let low = 0;
+  let high = 2; // 200% a month is far beyond any product
+  for (let i = 0; i < 60; i++) {
+    const mid = (low + high) / 2;
+    if (presentValue(mid) > received) low = mid;
+    else high = mid;
+  }
+  return (Math.pow(1 + (low + high) / 2, 12) - 1) * 100;
 }
