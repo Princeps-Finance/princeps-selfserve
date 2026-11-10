@@ -16,7 +16,7 @@ import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_ZOHO_URL, telLink, whatsappLink }
     <button
       #trigger
       type="button"
-      class="help-btn glass"
+      class="help-btn glass-pill"
       (click)="toggle()"
       [attr.aria-expanded]="open()"
       aria-haspopup="dialog"
@@ -65,15 +65,7 @@ import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_ZOHO_URL, telLink, whatsappLink }
   styles: [
     `
       :host { position: fixed; right: calc(var(--space-4) + env(safe-area-inset-right)); bottom: calc(var(--space-4) + env(safe-area-inset-bottom)); z-index: 60; }
-      .help-btn {
-        display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
-        height: 44px; padding: 0 var(--space-4) 0 var(--space-3); border-radius: var(--radius-pill);
-        box-shadow: var(--shadow-2);
-        color: var(--ink); font: var(--btn-weight) 15px/1 var(--font-sans); cursor: pointer;
-        transition: background 160ms ease;
-      }
-      .help-btn:hover { background: var(--grey-100); }
-      .help-btn:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
+      .help-btn { font: var(--btn-weight) 15px/1 var(--font-sans); }
       .backdrop { position: fixed; inset: 0; z-index: 79; background: var(--overlay); }
       .sheet {
         position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;

@@ -52,7 +52,7 @@ const NO_BACK_ROUTES = new Set<string>([APPLY.root, `${APPLY.root}/`, APPLY.stat
       .page { min-height: 100dvh; display: flex; flex-direction: column; padding-bottom: calc(var(--tap-min) + var(--space-8)); box-sizing: border-box; }
       .topbar { display: flex; flex-direction: column; align-items: stretch; width: 100%; box-sizing: border-box; padding: var(--space-2) var(--space-4) 0; }
       .topbar-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 56px; }
-      .topbar-right { display: inline-flex; align-items: center; gap: var(--space-1); }
+      .topbar-right { display: inline-flex; align-items: center; gap: var(--space-2); }
       .brand-logo { height: 30px; width: auto; display: block; }
       .card-top { display: none; }
       .shell { flex: 1; width: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; }

@@ -14,7 +14,7 @@ const VOICE_LOCALE: Record<string, string> = {
   template: `
     <button
       type="button"
-      class="tts"
+      class="tts glass-btn"
       (click)="toggle()"
       [class.is-speaking]="speaking()"
       [class.is-unavailable]="!hasVoice()"
@@ -41,12 +41,10 @@ const VOICE_LOCALE: Record<string, string> = {
       .tts {
         display: inline-flex; align-items: center; justify-content: center;
         width: 44px; height: 44px;
-        background: transparent; border: 0;
-        color: var(--ink); border-radius: 50%;
+        color: var(--ink);
         cursor: pointer;
         transition: background 160ms ease, color 160ms ease, border-color 160ms ease, transform 120ms ease-out;
       }
-      .tts:hover:not(:disabled) { background: var(--hover-tint); }
       .tts:active:not(:disabled) { transform: scale(0.96); }
       .tts:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
       .tts:disabled { opacity: 0.4; cursor: not-allowed; }

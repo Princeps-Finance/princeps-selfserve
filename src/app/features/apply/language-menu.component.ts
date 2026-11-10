@@ -24,7 +24,7 @@ import { TPipe } from '../../core/i18n/t.pipe';
       <button
         #trigger
         type="button"
-        class="trigger"
+        class="trigger glass-pill"
         [attr.aria-haspopup]="'listbox'"
         [attr.aria-expanded]="open()"
         [attr.aria-label]="'apply.language' | t"
@@ -68,15 +68,12 @@ import { TPipe } from '../../core/i18n/t.pipe';
       .trigger {
         display: inline-flex; align-items: center; gap: var(--space-2);
         min-height: 44px; min-width: 44px; padding: 0 var(--space-2);
-        background: transparent; border: 0;
-        border-radius: var(--radius-pill);
         letter-spacing: 0.04em;
         font-family: var(--font-sans);
         font-size: var(--fs-sm); font-weight: 500; color: var(--ink);
         cursor: pointer;
         transition: background 160ms ease, border-color 160ms ease;
       }
-      .trigger:hover { background: var(--hover-tint); border-color: var(--ink); }
       .trigger:focus-visible {
         outline: 2px solid transparent; outline-offset: 2px;
         box-shadow: var(--focus-ring);
