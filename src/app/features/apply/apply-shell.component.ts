@@ -27,7 +27,7 @@ const NO_BACK_ROUTES = new Set<string>(['/apply', '/apply/', '/apply/status', '/
           <img
             class="brand-logo"
             [class.brand-logo--desktop-only]="showBack()"
-            src="/princeps-logo.png"
+            src="/brand/princeps-logo.svg"
             alt="Princeps Credit Systems Limited"
             width="150"
             height="34"
@@ -85,12 +85,11 @@ const NO_BACK_ROUTES = new Set<string>(['/apply', '/apply/', '/apply/status', '/
         .brand-logo--desktop-only { display: block; }
         .brand-logo { height: 34px; }
         .shell {
-          flex: 0 0 auto; max-width: 560px; margin-top: var(--space-2);
-          background: var(--surface-0); border: 1px solid var(--hairline); border-radius: 24px; box-shadow: var(--shadow-3);
+          flex: 0 0 auto; max-width: 480px; margin-top: var(--space-2); background: var(--surface-0);
         }
-        .card-top { display: block; padding: var(--space-5) var(--space-8) 0; }
-        .body { padding: var(--space-2) var(--space-8) var(--space-8); }
-        .foot { padding: 0 var(--space-8) var(--space-6); }
+        .card-top { display: block; padding: var(--space-4) var(--space-6) 0; }
+        .body { padding: var(--space-2) var(--space-6) var(--space-8); }
+        .foot { padding: 0 var(--space-6) var(--space-6); }
       }
     `,
   ],

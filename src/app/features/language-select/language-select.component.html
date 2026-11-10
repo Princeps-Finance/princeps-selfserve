@@ -1,8 +1,20 @@
 <main class="screen">
   <header class="brand-row">
-    <img class="brand-logo" src="/princeps-logo.png" alt="Princeps Credit Systems Limited" width="180" height="40" />
+    <img class="brand-logo" src="/brand/princeps-logo.svg" alt="Princeps Credit Systems Limited" width="180" height="40" />
     <span class="tools"><app-read-aloud /><app-help-launcher /></span>
   </header>
+
+  @if (install.offer()) {
+    <div class="install">
+      <app-promo-banner
+        title="Get Princeps on your phone"
+        description="Track your loan and get repayment reminders."
+        ctaLabel="Install"
+        (action)="install.install()"
+        (dismissed)="install.dismiss()"
+      />
+    </div>
+  }
 
   <section class="content">
     <h1 class="title">{{ 'lang.select.title' | t }}</h1>
@@ -13,9 +25,7 @@
         <li [style.--i]="i">
           <button type="button" class="lang-card" [attr.lang]="l.code" [class.is-current]="current() === l.code" (click)="choose(l.code)">
             <span class="lang-endonym">{{ l.endonym }}</span>
-            @if (l.english !== l.endonym) {
-              <span class="lang-english">{{ l.english }}</span>
-            }
+            <span class="lang-english">{{ l.hello }}</span>
             @if (current() === l.code) {
               <svg class="lang-check" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path d="M4 10.5L8 14.5L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -32,10 +42,6 @@
   </section>
 
   <footer class="footer">
-    <a class="signin" href="https://caltos-rho.vercel.app/portal/repayments" rel="noopener">
-      {{ 'lang.select.signin' | t }}
-    </a>
-
     <ul class="trust" [attr.aria-label]="'trust.aria' | t">
       <li class="trust-item">
         <svg class="trust-icon" width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -51,10 +57,8 @@
         </svg>
         <span>{{ 'trust.ndpr' | t }}</span>
       </li>
-      <li class="trust-item">
+      <li class="trust-links">
         <button type="button" class="trust-link trust-btn" (click)="privacy.open()">{{ 'privacy.link' | t }}</button>
-      </li>
-      <li class="trust-item">
         <a class="trust-link" href="mailto:complaints@princeps.ng?subject=Complaint" rel="noopener">{{ 'trust.complaints' | t }}</a>
       </li>
     </ul>

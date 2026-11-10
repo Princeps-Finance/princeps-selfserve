@@ -35,7 +35,7 @@ function stageOf(step: number): number {
     `
       :host { display: block; }
       .bar { height: 4px; border-radius: 999px; background: var(--hairline-strong); overflow: hidden; }
-      .fill { display: block; height: 100%; border-radius: 999px; background: var(--action-primary); transition: width 320ms ease; }
+      .fill { display: block; height: 100%; border-radius: 999px; background: var(--action-secondary); transition: width 320ms ease; }
       @media (prefers-reduced-motion: reduce) { .fill { transition: none; } }
     `,
   ],

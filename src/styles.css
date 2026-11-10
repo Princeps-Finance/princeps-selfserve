@@ -1,5 +1,31 @@
 @import '@fontsource-variable/inter/wght.css';
+
 @import './styles/tokens.css';
+
+/* Google Sans (variable, subset to Latin + Yoruba/Igbo/Hausa glyphs). No U+20A6 (₦): falls back to Inter. */
+@font-face {
+  font-family: 'Google Sans';
+  src: url('/fonts/google-sans-var.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* NaN SuperX Sans Display (TRIAL build): headings. No Yoruba/Igbo/Hausa letters (ẹ ọ ṣ, tone marks), so those fall back to Google Sans. */
+@font-face {
+  font-family: 'SuperX Sans';
+  src: url('/fonts/nan-superx-sans-semibold.woff2') format('woff2');
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'SuperX Sans';
+  src: url('/fonts/nan-superx-sans-bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 *,
 *::before,

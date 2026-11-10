@@ -9,7 +9,6 @@
   letter-spacing: -0.03em;
   font-weight: 600;
   color: var(--ink);
-  max-width: 18ch;
 }
 
 .subtitle { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); max-width: 38ch; }
@@ -123,7 +122,7 @@
   background: var(--action-primary);
   color: var(--action-on-primary);
   border: none;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-md);
   font-family: var(--font-sans); font-size: 16px; font-weight: 500;
   cursor: pointer;
   transition: transform 120ms ease-out, background 160ms ease, opacity 160ms ease;

@@ -5,11 +5,13 @@ import { LANGUAGES, Lang } from '../../core/i18n/translations';
 import { TPipe } from '../../core/i18n/t.pipe';
 import { ReadAloudComponent } from '../apply/read-aloud.component';
 import { HelpLauncherComponent } from '../apply/help-launcher.component';
+import { PromoBannerComponent } from '../../shared/promo-banner.component';
+import { InstallService } from '../../core/pwa/install.service';
 import { PrivacyService } from '../../core/privacy/privacy.service';
 
 @Component({
   selector: 'app-language-select',
-  imports: [TPipe, ReadAloudComponent, HelpLauncherComponent],
+  imports: [TPipe, ReadAloudComponent, HelpLauncherComponent, PromoBannerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './language-select.component.html',
   styleUrl: './language-select.component.css',
@@ -18,6 +20,7 @@ export class LanguageSelectComponent {
   private readonly langService = inject(LangService);
   private readonly router = inject(Router);
   protected readonly privacy = inject(PrivacyService);
+  protected readonly install = inject(InstallService);
 
   readonly languages = LANGUAGES;
   /** Highlight a language only once the customer has actually chosen one, so nothing looks already done. */

@@ -9,7 +9,6 @@
   letter-spacing: -0.03em;
   font-weight: 600;
   color: var(--ink);
-  max-width: 18ch;
 }
 
 .subtitle { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); max-width: 38ch; }
@@ -78,11 +77,11 @@
 .actions .link-btn { justify-content: center; }
 
 .link-btn {
-  background: transparent;
-  border: 1px solid var(--ink);
+  background: var(--grey-100);
+  border: 0;
   padding: 0 var(--space-4); min-height: 40px;
   display: inline-flex; align-items: center; justify-content: center;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-md);
   font: inherit; font-size: 14px; font-weight: 500;
   color: var(--ink);
   cursor: pointer;
@@ -98,7 +97,7 @@
   background: var(--action-primary);
   color: var(--action-on-primary);
   border: none;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-md);
   font-family: var(--font-sans); font-size: 16px; font-weight: 500;
   cursor: pointer;
   transition: background 160ms ease, transform 120ms ease-out, opacity 160ms ease;

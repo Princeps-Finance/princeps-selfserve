@@ -64,7 +64,7 @@
 .pick {
   align-self: stretch; min-height: 56px; padding: 0 var(--space-6);
   display: inline-flex; align-items: center; justify-content: space-between;
-  border: none; border-radius: var(--radius-pill);
+  border: none; border-radius: var(--radius-md);
   background: var(--action-primary); color: var(--action-on-primary);
   font: inherit; font-size: 16px; font-weight: 500; cursor: pointer;
   transition: transform 120ms ease-out, background 160ms ease;
@@ -80,8 +80,8 @@
 .alt {
   min-height: 52px; padding: 0 var(--space-5);
   display: inline-flex; align-items: center; justify-content: center;
-  border: 1px solid var(--ink); border-radius: var(--radius-pill);
-  background: transparent; color: var(--ink); font: inherit; font-weight: 500; text-decoration: none; cursor: pointer;
+  border: 0; border-radius: var(--radius-md);
+  background: var(--grey-100); color: var(--ink); font: inherit; font-weight: 500; text-decoration: none; cursor: pointer;
 }
 .alt:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 
@@ -116,77 +116,34 @@
 .alt--primary { background: var(--action-primary); color: var(--action-on-primary); border-color: var(--action-primary); }
 .alt--primary:hover { background: var(--action-primary-hover); }
 
-.referral { display: flex; flex-direction: column; }
-
+.referral { display: flex; flex-direction: column; margin-bottom: var(--space-4); }
 .referral-toggle {
-  align-self: flex-start;
-  display: inline-flex; align-items: center; gap: 8px;
-  background: transparent;
-  border: 1px dashed var(--hairline);
-  border-radius: var(--radius-md, 10px);
-  padding: 10px 14px;
-  font-size: 14px;
-  color: var(--ink-soft);
-  cursor: pointer;
-  transition: border-color 120ms ease, color 120ms ease, background 120ms ease;
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border: 1px dashed var(--hairline-strong); border-radius: var(--radius-md);
+  background: transparent; color: var(--ink-soft); font-size: 14px; cursor: pointer;
 }
-.referral-toggle:hover { color: var(--ink); border-color: var(--ink-soft); background: color-mix(in srgb, var(--ink) 3%, transparent); }
-
-.referral-form {
-  display: flex; flex-direction: column; gap: 8px;
-  background: var(--surface-0);
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius-md, 10px);
-  padding: 14px;
+.referral-form, .referral-applied {
+  display: flex; gap: 8px; padding: 14px; border-radius: var(--radius-md);
+  background: #fff; border: 1px solid var(--hairline);
 }
+.referral-form { flex-direction: column; }
 .referral-input-wrap { display: flex; flex-direction: column; gap: 4px; }
-.referral-input-label { font-size: 12px; color: var(--ink-soft); font-weight: 500; }
+.referral-input-label { font-size: 12px; color: var(--ink-soft); }
 .referral-input {
-  height: 42px;
-  padding: 0 12px;
-  border: 1px solid var(--hairline);
-  border-radius: 8px;
-  background: #fff;
-  font-family: inherit;
-  font-size: 15px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--ink);
+  height: 44px; padding: 0 12px; border: 1px solid var(--hairline-strong); border-radius: var(--radius-sm);
+  font: inherit; letter-spacing: 0.05em;
 }
-.referral-input:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 12%, transparent); }
 .referral-actions { display: flex; gap: 8px; justify-content: flex-end; }
 .referral-cancel, .referral-apply {
-  height: 36px; padding: 0 16px;
-  border-radius: 8px;
-  font-size: 14px; font-weight: 500;
-  cursor: pointer;
-  border: 1px solid var(--hairline);
-  background: #fff;
-  color: var(--ink);
+  height: 40px; padding: 0 16px; border-radius: var(--radius-sm); font: 500 14px var(--font-sans);
+  border: 1px solid var(--hairline-strong); background: #fff; cursor: pointer;
 }
-.referral-apply { background: var(--ink); color: #fff; border-color: var(--ink); }
+.referral-apply { background: var(--action-primary); border-color: var(--action-primary); color: #fff; }
 .referral-apply:disabled { opacity: 0.4; cursor: not-allowed; }
-.referral-error { margin: 0; font-size: 13px; color: #b3261e; }
-
-.referral-applied {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 12px 14px;
-  background: color-mix(in srgb, #17a367 8%, #fff);
-  border: 1px solid color-mix(in srgb, #17a367 30%, transparent);
-  border-radius: var(--radius-md, 10px);
-}
+.referral-error { font-size: 13px; color: var(--danger); }
+.referral-applied { align-items: center; justify-content: space-between; background: var(--success-soft); }
 .referral-applied-main { display: flex; align-items: center; gap: 12px; }
-.referral-check {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 24px; height: 24px; border-radius: 999px;
-  background: #17a367; color: #fff;
-}
-.referral-code { font-family: var(--font-mono, ui-monospace, monospace); font-size: 14px; font-weight: 600; color: #0e5a3a; letter-spacing: 0.06em; }
-.referral-label { font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; }
-.referral-remove {
-  background: transparent; border: none; color: var(--ink-soft);
-  font-size: 13px; cursor: pointer; text-decoration: underline; padding: 4px 8px;
-}
-.referral-remove:hover { color: var(--ink); }
-
-
+.referral-check { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--success); color: #fff; }
+.referral-code { font: 600 14px var(--font-mono); letter-spacing: 0.06em; }
+.referral-label { font-size: 13px; color: var(--ink-soft); }
+.referral-remove { border: 0; background: none; color: var(--ink-soft); text-decoration: underline; cursor: pointer; }

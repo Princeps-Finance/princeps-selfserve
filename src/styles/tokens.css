@@ -45,34 +45,55 @@
   --info-soft: #e4eaf3;
 
   /* Typography */
-  --font-display: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'SuperX Sans', 'Google Sans', 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans: 'Google Sans', 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
 
   /* Editorial surface — Contra-leaning cream, less "web app white" */
-  --canvas: #eaf0f8; /* cool navy-tinted page backdrop (desktop) */
-  --ink: #0a1f3d;
-  --ink-soft: #3d4f6b;
-  --ink-muted: #5b6b85;
+  --canvas: #ffffff; /* plain white page, like Voicenotes */
+  --ink: #111214;
+  --ink-soft: #4b4e55;
+  --ink-muted: #6b6e75;
   --hairline: rgba(11, 43, 85, 0.08);
   --hairline-strong: rgba(11, 43, 85, 0.16);
 
+  /* Neutral greys + promo card */
+  --grey-50: #f7f7f8;
+  --grey-100: #f0f0f2;
+  --grey-200: #e4e4e7;
+  --grey-500: #6b6e75;
+  --grey-900: #111214;
+  --action-neutral: var(--grey-900);
+  --action-neutral-hover: #2a2c30;
+  --action-neutral-active: #000000;
+  --action-on-neutral: #ffffff;
+  --card-bg: var(--surface-0);
+  --card-border: rgba(17, 18, 20, 0.06);
+  --card-shadow: 0 12px 32px rgba(16, 24, 40, 0.12), 0 2px 6px rgba(16, 24, 40, 0.06);
+  /* Secondary accent: the orange from the logo. Fills and rings only; text on orange must be dark. */
+  --action-secondary: var(--orange-500);
+  --action-secondary-hover: var(--orange-600);
+  --accent-secondary-soft: var(--orange-100);
+  --banner-bg: var(--grey-100);
+  --badge-new-bg: var(--orange-100);
+  --badge-new-text: #8a3a0f;
+
   /* Semantic action tokens — resolve to the brand navy so every CTA/focus
      ring/link routes through one variable. Change here to reskin globally. */
-  --action-primary: var(--navy-900);
-  --action-primary-hover: var(--navy-800);
-  --action-primary-active: var(--navy-950);
+  --action-primary: var(--grey-900);
+  --action-primary-hover: #2a2c30;
+  --action-primary-active: #000000;
   --action-on-primary: var(--text-on-navy);
   --accent-cool: var(--cyan-500);
   --accent-warm: var(--orange-500);
-  --focus-ring: 0 0 0 3px #ffffff, 0 0 0 5px var(--navy-900);
+  --focus-ring: 0 0 0 3px #ffffff, 0 0 0 5px var(--grey-900);
 
   /* Polaris-style input surface */
-  --input-bg: #eef3fa;
-  --input-border: #6f83a3;
-  --input-border-hover: #4a5f82;
-  --input-border-focus: var(--navy-900);
-  --input-shadow-focus: 0 0 0 3px rgba(11, 43, 85, 0.18);
+  --input-bg: var(--grey-50);
+  --input-border: #c4c6cc;
+  --input-border-hover: #9a9da4;
+  --input-border-focus: var(--grey-900);
+  --input-shadow-focus: 0 0 0 3px rgba(17, 18, 20, 0.12);
   --input-radius: 12px;
   --input-height: 52px;
 
@@ -104,4 +125,11 @@
   --shadow-3: 0 12px 32px rgba(16, 24, 40, 0.1);
   --shadow-4: 0 24px 64px rgba(16, 24, 40, 0.14);
   --shadow-focus: 0 0 0 3px rgba(11, 43, 85, 0.28);
+}
+
+/* The display face has no tone marks or dotted letters (ẹ ọ ṣ), which Yoruba, Igbo and Hausa need: use the body face for headings there. */
+:root:lang(yo),
+:root:lang(ig),
+:root:lang(ha) {
+  --font-display: var(--font-sans);
 }

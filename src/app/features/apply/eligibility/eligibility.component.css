@@ -19,7 +19,6 @@
   letter-spacing: -0.03em;
   font-weight: 600;
   color: var(--ink);
-  max-width: 18ch;
 }
 
 .subtitle { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); max-width: 38ch; }
@@ -54,7 +53,7 @@
   background: var(--action-primary);
   color: var(--action-on-primary);
   border: none;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-md);
   font-family: var(--font-sans); font-size: 16px; font-weight: 500;
   cursor: pointer;
 }
@@ -66,8 +65,8 @@
 .next-action {
   min-height: 52px; padding: 0 var(--space-5);
   display: inline-flex; align-items: center; justify-content: center;
-  border: 1px solid var(--ink); border-radius: var(--radius-pill);
-  background: transparent; color: var(--ink);
+  border: 0; border-radius: var(--radius-md);
+  background: var(--grey-100); color: var(--ink);
   font: inherit; font-weight: 500; text-decoration: none; cursor: pointer;
 }
 .next-action:hover { background: rgba(11, 43, 85, 0.04); }

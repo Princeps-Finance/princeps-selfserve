@@ -14,7 +14,6 @@
   letter-spacing: -0.03em;
   font-weight: 600;
   color: var(--ink);
-  max-width: 18ch;
 }
 
 .subtitle {
@@ -137,7 +136,7 @@
   background: var(--action-primary);
   color: var(--action-on-primary);
   border: none;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-md);
   font-family: var(--font-sans);
   font-size: 16px;
   font-weight: 500;

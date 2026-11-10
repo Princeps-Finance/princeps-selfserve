@@ -3,3 +3,16 @@
 <router-outlet />
 <app-toast-host />
 <app-privacy-dialog />
+@if (install.offer()) {
+  <div class="promo">
+    <app-promo-card
+      title="Get repayment reminders"
+      badge="New"
+      description="Add Princeps to your home screen to track your loan and never miss a payment."
+      ctaLabel="Add to home screen"
+      imageAlt="Princeps app preview"
+      (dismissed)="install.dismiss()"
+      (action)="install.install()"
+    />
+  </div>
+}
