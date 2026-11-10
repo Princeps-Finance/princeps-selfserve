@@ -85,6 +85,7 @@
       <input
         id="account"
         [attr.aria-invalid]="invalid('accountNumber')"
+        [attr.aria-describedby]="invalid('accountNumber') ? 'account-error' : 'account-hint'"
         class="input"
         type="text"
         inputmode="numeric"
@@ -93,9 +94,9 @@
         placeholder="0123456789"
       />
       @if (form.controls.accountNumber.touched && form.controls.accountNumber.invalid) {
-        <p class="msg msg--error">{{ 'step.salary.account.invalid' | t }}</p>
+        <p class="msg msg--error" id="account-error" role="alert">{{ 'step.salary.account.invalid' | t }}</p>
       } @else {
-        <p class="msg">{{ 'step.salary.account.hint' | t }}</p>
+        <p class="msg" id="account-hint">{{ 'step.salary.account.hint' | t }}</p>
       }
     </div>
 
@@ -105,13 +106,14 @@
         <input
           id="ippis"
           [attr.aria-invalid]="invalid('ippisNumber')"
+          aria-describedby="ippis-hint"
           class="input"
           type="text"
           inputmode="numeric"
           formControlName="ippisNumber"
           placeholder="123456"
         />
-        <p class="msg">{{ 'step.salary.ippis.hint' | t }}</p>
+        <p class="msg" id="ippis-hint">{{ 'step.salary.ippis.hint' | t }}</p>
       </div>
     }
 
@@ -120,7 +122,7 @@
     }
 
     @if (attempted() && !canSubmit()) {
-      <p class="msg--error" role="alert">{{ 'form.fix.required' | t }}</p>
+      <p class="msg--error" id="form-error" role="alert">{{ 'form.fix.required' | t }}</p>
     }
 
     <button type="submit" class="cta" [disabled]="submitting()">
