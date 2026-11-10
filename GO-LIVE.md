@@ -11,6 +11,7 @@ Tick a box only when it is done and tested, not when it is planned.
 
 ## 2. Vercel environment variables (production only)
 - [ ] `BACKOFFICE_API_URL` and `SELFSERVE_INGEST_TOKEN`: where our server sends calls, and its key.
+- [ ] `SELF_SERVICE_API_URL`: the live self-service API, `https://self-service-api.princeps.cloud`. Used to read which employment types are open.
 - [ ] `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`: the shared rate-limit store. Without them the app refuses every limited call on purpose.
 - [ ] `TURNSTILE_SECRET`: the bot check. Turnstile is Cloudflare's free "are you a person" check. Create a widget in the Cloudflare dashboard, put the site key in the environment file and the secret here. Without it, anyone can script the code-sending calls and run up the SMS bill.
 - [ ] `SMS_HOURLY_CAP` reviewed (default 1000 texts an hour across all customers).
