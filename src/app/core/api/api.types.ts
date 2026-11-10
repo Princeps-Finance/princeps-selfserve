@@ -49,6 +49,17 @@ export interface StatementCheckInput {
   captchaToken?: string;
 }
 
+/** One document the back end wants for this product and customer. Optional ones do not block the customer. */
+export interface RequiredDocument {
+  key: string;
+  optional: boolean;
+}
+
+export interface RequiredDocumentsInput {
+  productId: string;
+  employmentType: 'government' | 'paramilitary' | 'corper' | 'private-sector';
+}
+
 export type EligibilityCheckResult =
   | { status: 'ok'; decision: 'approved' | 'review' | 'declined'; maxAmount: number; tenorMonths: number; monthlyIncome: number }
   | { status: 'not-found' }

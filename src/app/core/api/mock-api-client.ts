@@ -26,6 +26,8 @@ import type {
   ReturningOtpSendResult,
   ReturningOtpVerifyResult,
   StatementCheckInput,
+  RequiredDocument,
+  RequiredDocumentsInput,
 } from './api.types';
 import type { ApiClient } from './api-client';
 import { buildSimplePdf } from '../pdf/simple-pdf';
@@ -245,6 +247,12 @@ export class MockApiClient implements ApiClient {
     await delay(1200);
     if (input.fileName.toLowerCase().startsWith('fail')) return { status: 'service-down' };
     return { status: 'ok', decision: 'approved', maxAmount: 250_000, tenorMonths: 6, monthlyIncome: 200_000 };
+  }
+
+  /** Demo: the full set, so every document screen can be tried. Production asks the back end. */
+  async getRequiredDocuments(input: RequiredDocumentsInput): Promise<RequiredDocument[]> {
+    await delay(300);
+    return [{ key: 'id', optional: false }, { key: input.employmentType === 'corper' ? 'callup' : 'payslip', optional: false }];
   }
 
   async verifyBvn(bvn: string, _fullName: string, _dateOfBirth: string): Promise<BvnVerifyResult> {
