@@ -1,3 +1,4 @@
+import { CheckboxComponent } from '../../../shared/checkbox.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { productById } from '../../../core/products/products';
 import { TPipe } from '../../../core/i18n/t.pipe';
@@ -32,7 +33,7 @@ function firstPaydayAfter(from: Date): Date {
 
 @Component({
   selector: 'app-terms',
-  imports: [TPipe, WizardProgressComponent, OfferLetterComponent],
+  imports: [CheckboxComponent, TPipe, WizardProgressComponent, OfferLetterComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './terms.component.html',
   styleUrl: './terms.component.css',

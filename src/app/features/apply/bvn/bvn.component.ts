@@ -1,3 +1,4 @@
+import { CheckboxComponent } from '../../../shared/checkbox.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { ActivatedRoute } from '@angular/router';
@@ -22,7 +23,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
  */
 @Component({
   selector: 'app-bvn',
-  imports: [IllustrationComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, OtpChannelDialogComponent],
+  imports: [CheckboxComponent, IllustrationComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, OtpChannelDialogComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './bvn.component.html',
   styleUrl: './bvn.component.css',
@@ -74,7 +75,7 @@ export class BvnComponent {
     }
     if (!this.consent.value) {
       this.showConsentError.set(true);
-      document.getElementById('consent')?.focus();
+      document.querySelector<HTMLElement>('#consent input')?.focus();
       return;
     }
     this.state.setConsent({

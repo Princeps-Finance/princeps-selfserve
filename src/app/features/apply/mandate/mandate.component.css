@@ -77,11 +77,6 @@
   font-size: var(--fs-md); color: var(--ink); line-height: 1.5;
   cursor: pointer;
 }
-.agree-box {
-  flex: 0 0 auto;
-  margin-top: 2px;
-  cursor: pointer;
-}
 
 
 
