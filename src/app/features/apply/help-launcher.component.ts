@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { ModalComponent } from '../../shared/modal.component';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { TPipe } from '../../core/i18n/t.pipe';
 import { APP_VERSION } from '../../core/app-version';
 import { Router } from '@angular/router';
@@ -11,12 +12,10 @@ import { LiveChatService, chatAllowedOn } from '../../core/support-chat/live-cha
  */
 @Component({
   selector: 'app-help-launcher',
-  imports: [TPipe],
+  imports: [ModalComponent, TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '(document:keydown.escape)': 'close()' },
   template: `
     <button
-      #trigger
       type="button"
       class="help-btn glass-pill"
       (click)="toggle()"
@@ -32,14 +31,7 @@ import { LiveChatService, chatAllowedOn } from '../../core/support-chat/live-cha
       <span>{{ 'support.label' | t }}</span>
     </button>
 
-    @if (open()) {
-      <div class="backdrop" (click)="close()"></div>
-      <div #sheet class="sheet glass" role="dialog" aria-modal="true" [attr.aria-label]="'help.dialog' | t">
-        <button type="button" class="sheet-close" [attr.aria-label]="'common.close' | t" (click)="close()">
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-            <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-          </svg>
-        </button>
+    <app-modal [open]="open()" [title]="'help.dialog' | t" (closed)="open.set(false)">
         <p class="sheet-title">{{ 'help.title' | t }}</p>
         <p class="sheet-sub">{{ 'help.sub' | t }}</p>
         @if (chatAvailable()) {
@@ -69,30 +61,12 @@ import { LiveChatService, chatAllowedOn } from '../../core/support-chat/live-cha
           <span>{{ 'help.email' | t }}</span>
         </a>
         <p class="sheet-version">{{ 'help.version' | t: { v: version } }}</p>
-      </div>
-    }
+    </app-modal>
   `,
   styles: [
     `
       :host { position: fixed; right: calc(var(--space-4) + env(safe-area-inset-right)); bottom: calc(var(--space-4) + env(safe-area-inset-bottom)); z-index: 60; }
       .help-btn { font: var(--btn-weight) 15px/1 var(--font-sans); }
-      .backdrop { position: fixed; inset: 0; z-index: 79; background: var(--overlay); }
-      .sheet {
-        position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
-        max-width: 520px; margin: 0 auto;
-        padding: var(--space-6) var(--space-6) calc(var(--space-6) + env(safe-area-inset-bottom));
-        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-        box-shadow: var(--shadow-4);
-        display: flex; flex-direction: column; gap: var(--space-2);
-        animation: sheet-in 200ms cubic-bezier(0.2, 0.7, 0.1, 1) both;
-      }
-      @keyframes sheet-in { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
-      .sheet-close {
-        position: absolute; top: var(--space-4); right: var(--space-4); width: 36px; height: 36px; border: 0; border-radius: 50%;
-        display: grid; place-items: center; background: var(--grey-100); color: var(--ink); cursor: pointer;
-      }
-      .sheet-close:hover { background: var(--grey-200); }
-      .sheet-close:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
       .sheet-title { margin: 0; font-family: var(--font-display); font-size: 20px; font-weight: 600; }
       .sheet-sub { margin: 0 0 var(--space-2); font-size: var(--fs-md); color: var(--ink-soft); }
       .row {
@@ -104,13 +78,11 @@ import { LiveChatService, chatAllowedOn } from '../../core/support-chat/live-cha
       .row:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
       .row-icon { display: inline-flex; width: 32px; height: 32px; border-radius: 50%; align-items: center; justify-content: center; background: var(--grey-100); color: var(--ink); }
       .sheet-version { margin: var(--space-2) 0 0; font-size: var(--fs-xs); color: var(--ink-muted); }
-      @media (prefers-reduced-motion: reduce) { .sheet { animation: none; } .help-btn { transition: none; } }
+      @media (prefers-reduced-motion: reduce) { .help-btn { transition: none; } }
     `,
   ],
 })
 export class HelpLauncherComponent {
-  private readonly trigger = viewChild<ElementRef<HTMLButtonElement>>('trigger');
-  private readonly sheet = viewChild<ElementRef<HTMLElement>>('sheet');
   private readonly router = inject(Router);
   private readonly chat = inject(LiveChatService);
 
@@ -128,16 +100,9 @@ export class HelpLauncherComponent {
 
   toggle(): void {
     this.open.update((v) => !v);
-    if (this.open()) setTimeout(() => this.sheet()?.nativeElement.querySelector<HTMLElement>('a, button.row')?.focus());
   }
 
   protected async startChat(): Promise<void> {
     if (await this.chat.open()) this.open.set(false);
-  }
-
-  close(): void {
-    if (!this.open()) return;
-    this.open.set(false);
-    this.trigger()?.nativeElement.focus();
   }
 }

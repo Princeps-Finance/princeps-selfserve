@@ -1,3 +1,4 @@
+import { HapticsService } from '../../../core/ui/haptics.service';
 import { CardComponent } from '../../../shared/card.component';
 import { PushService } from '../../../core/pwa/push.service';
 import { logWarn } from '../../../core/log';
@@ -26,6 +27,12 @@ export class StatusComponent {
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
   protected readonly push = inject(PushService);
+  private readonly haptics = inject(HapticsService);
+
+  constructor() {
+    // The application went through: a little double tick.
+    this.haptics.success();
+  }
 
   readonly submission = this.state.submission;
   readonly agents = AGENTS;

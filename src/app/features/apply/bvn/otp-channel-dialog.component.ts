@@ -1,4 +1,5 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, OnDestroy, computed, input, output, signal, viewChild } from '@angular/core';
+import { ModalComponent } from '../../../shared/modal.component';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MaskedContact, OtpDestination } from '../../../core/api/api-client';
@@ -12,12 +13,12 @@ import { TPipe } from '../../../core/i18n/t.pipe';
  */
 @Component({
   selector: 'app-otp-channel-dialog',
-  imports: [TPipe, ReactiveFormsModule],
+  imports: [ModalComponent, TPipe, ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <dialog #dlg class="sheet glass" aria-labelledby="otp-where-title" (cancel)="onCancel($event)">
+    <app-modal [open]="true" [title]="'otp.where.title' | t" (closed)="cancelled.emit()">
       <div class="panel">
-        <h2 id="otp-where-title" class="title">{{ 'otp.where.title' | t }}</h2>
+        <h2 class="title">{{ 'otp.where.title' | t }}</h2>
 
         @if (!alternate()) {
           <p class="sub">{{ 'otp.where.sub' | t }}</p>
@@ -57,20 +58,13 @@ import { TPipe } from '../../../core/i18n/t.pipe';
           @if (alternate()) {
             <button type="button" class="cta" [disabled]="busy()" (click)="send()">{{ 'otp.send' | t }}</button>
           }
-          <button type="button" class="alt" (click)="cancelled.emit()">{{ 'common.cancel' | t }}</button>
         </div>
       </div>
-    </dialog>
+    </app-modal>
   `,
   styles: [
     `
-      .sheet {
-        width: min(480px, 100vw); max-width: 100vw; max-height: 92dvh; margin: auto auto 0; padding: 0; border: 0;
-        border-radius: var(--radius-lg) var(--radius-lg) 0 0; color: var(--ink); box-shadow: var(--shadow-4);
-      }
-      @media (min-width: 560px) { .sheet { margin: auto; border-radius: var(--radius-lg); } }
-      .sheet::backdrop { background: var(--overlay); }
-      .panel { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-5); }
+      .panel { display: flex; flex-direction: column; gap: var(--space-3); }
       .title { margin: 0; font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 600; }
       .sub, .hint { margin: 0; font-size: var(--fs-md); line-height: 1.5; color: var(--ink-soft); }
       .hint { font-size: var(--fs-sm); color: var(--ink-muted); }
@@ -101,14 +95,13 @@ import { TPipe } from '../../../core/i18n/t.pipe';
     `,
   ],
 })
-export class OtpChannelDialogComponent implements AfterViewInit, OnDestroy {
+export class OtpChannelDialogComponent {
   readonly phones = input<MaskedContact[]>([]);
   readonly emails = input<MaskedContact[]>([]);
   readonly busy = input(false);
   readonly confirmed = output<OtpDestination>();
   readonly cancelled = output<void>();
 
-  private readonly dlg = viewChild.required<ElementRef<HTMLDialogElement>>('dlg');
   protected readonly hasContacts = computed(() => this.phones().length + this.emails().length > 0);
   protected readonly selected = signal<string | null>(null);
   /** Showing the "another number" form: chosen by the customer, or forced when nothing is tied to the BVN. */
@@ -121,21 +114,6 @@ export class OtpChannelDialogComponent implements AfterViewInit, OnDestroy {
   private readonly altValue = toSignal(this.altPhone.valueChanges, { initialValue: '' });
   private readonly attempted = signal(false);
   protected readonly showInvalid = computed(() => this.attempted() && !normalizePhoneNg(this.altValue()));
-
-  ngAfterViewInit(): void {
-    const el = this.dlg().nativeElement;
-    if (!el.open) el.showModal();
-  }
-
-  ngOnDestroy(): void {
-    const el = this.dlg().nativeElement;
-    if (el.open) el.close();
-  }
-
-  protected onCancel(event: Event): void {
-    event.preventDefault();
-    this.cancelled.emit();
-  }
 
   /** Tapping a contact sends the code to it straight away: no second "Send code" tap. */
   protected pick(id: string): void {
