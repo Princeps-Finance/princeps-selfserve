@@ -1,3 +1,4 @@
+import { logWarn } from '../../../core/log';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
@@ -38,8 +39,9 @@ export class StatusComponent {
       await navigator.clipboard.writeText(this.reference());
       this.copied.set(true);
       setTimeout(() => this.copied.set(false), 2500);
-    } catch {
-      // The reference is on screen and can be read out.
+    } catch (err) {
+        logWarn('status step 1 failed', err);
+// The reference is on screen and can be read out.
     }
   }
 

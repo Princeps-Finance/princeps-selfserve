@@ -18,6 +18,7 @@ import { ToastService } from '../../../core/toast/toast.service';
 import { formatNaira } from '../../../core/money.util';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
+import { logWarn } from '../../../core/log';
 import { readAsDataUrl } from '../../../core/ui/file-data-url';
 import { CameraSession } from './camera-session';
 
@@ -110,7 +111,8 @@ export class VerifyIdentityComponent implements OnDestroy {
       queueMicrotask(() => {
         if (this.previewRef) this.previewRef.nativeElement.srcObject = stream;
       });
-    } catch {
+    } catch (err) {
+      logWarn('identity camera could not open', err);
       this.cameraError.set(this.lang.t(withAudio ? 'camera.error.av' : 'camera.error.v'));
     }
   }
@@ -146,8 +148,9 @@ export class VerifyIdentityComponent implements OnDestroy {
         this.camera.close();
         this.showClip(clip.blob);
       })
-      .catch(() => {
+      .catch((err) => {
         // Some browsers cannot record: say so instead of failing silently.
+        logWarn('identity recording failed', err);
         this.isRecording.set(false);
         this.toast.error(this.lang.t('toast.video.error'));
       });

@@ -1,3 +1,4 @@
+import { logWarn } from '../../../core/log';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
@@ -78,8 +79,9 @@ export class DocumentsComponent implements OnInit {
     let res: Awaited<ReturnType<typeof this.api.uploadDocument>>;
     try {
       res = await this.api.uploadDocument({ docId: id, fileName: file.name, sizeBytes: file.size });
-    } catch {
-      res = { status: 'network' };
+    } catch (err) {
+        logWarn('documents step 1 failed', err);
+res = { status: 'network' };
     }
     if (res.status === 'ok') {
       this.state.updateDoc(id, { status: 'uploaded' });

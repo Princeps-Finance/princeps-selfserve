@@ -1,3 +1,4 @@
+import { logWarn } from '../../../core/log';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -83,8 +84,9 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
       }
       this.maskedTarget.set(res.target);
       this.startCooldown();
-    } catch {
-      this.error.set({ kind: 'service' });
+    } catch (err) {
+        logWarn('verify-phone step 1 failed', err);
+this.error.set({ kind: 'service' });
     }
   }
 
@@ -177,8 +179,9 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
       this.cells.set(Array(OTP_LENGTH).fill(''));
       this.cellRefs().forEach((r) => (r.nativeElement.value = ''));
       this.cellRefs()[0]?.nativeElement.focus();
-    } catch {
-      this.error.set({ kind: 'service' });
+    } catch (err) {
+        logWarn('verify-phone step 2 failed', err);
+this.error.set({ kind: 'service' });
     } finally {
       this.submitting.set(false);
     }
@@ -197,8 +200,9 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
         this.state.setReturningCustomer(true, result.snapshot);
         return APPLY.loans;
       }
-    } catch {
-      // A failed lookup must never block a new application.
+    } catch (err) {
+        logWarn('verify-phone step 3 failed', err);
+// A failed lookup must never block a new application.
     }
     this.state.setReturningCustomer(false, null);
     return APPLY.profile;
@@ -217,8 +221,9 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
       this.justResent.set(true);
       this.error.set(null);
       this.startCooldown();
-    } catch {
-      this.error.set({ kind: 'service' });
+    } catch (err) {
+        logWarn('verify-phone step 4 failed', err);
+this.error.set({ kind: 'service' });
     } finally {
       this.resending.set(false);
     }
