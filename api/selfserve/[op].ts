@@ -22,6 +22,7 @@ export const config = { runtime: 'nodejs' };
 
 const phone = z.string().regex(/^\+234[789]\d{9}$/);
 const digits = (n: number) => z.string().regex(new RegExp(`^\\d{${n}}$`));
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 interface OpDef {
@@ -32,6 +33,8 @@ interface OpDef {
   allow: string[];
   /** Needs the application token issued after a verified OTP. Stops anonymous probing. */
   needsToken?: boolean;
+  /** Creates something, so the caller must send an Idempotency-Key and the back office must honour it. */
+  idempotent?: boolean;
 }
 
 const OPS: Record<string, OpDef> = {
@@ -93,6 +96,7 @@ const OPS: Record<string, OpDef> = {
     limit: 5,
     allow: ['status', 'referenceId'],
     needsToken: true,
+    idempotent: true,
   },
   lgas: { schema: z.object({ state: z.string().min(2).max(40) }).strict(), limit: 30, allow: ['lgas'] },
   banks: { schema: z.object({}).strict(), limit: 30, allow: ['banks'] },
@@ -170,6 +174,7 @@ const OPS: Record<string, OpDef> = {
     limit: 6,
     allow: ['url', 'reference'],
     needsToken: true,
+    idempotent: true,
   },
   'mandate-status': {
     schema: z.object({ reference: z.string().regex(/^[\w-]{3,64}$/) }).strict(),
@@ -191,6 +196,7 @@ const OPS: Record<string, OpDef> = {
     limit: 5,
     allow: ['status', 'referenceId', 'positionInQueue', 'estimatedWindow'],
     needsToken: true,
+    idempotent: true,
   },
 };
 
@@ -223,6 +229,12 @@ export default async function handler(req: Request): Promise<Response> {
   const parsed = def.schema.safeParse(raw);
   if (!parsed.success) return fail('VALIDATION_ERROR', 'Some details are invalid.', 400);
 
+  // Calls that create something must carry a key, so a retry can never create a second one.
+  const idempotencyKey = req.headers.get('idempotency-key');
+  if (def.idempotent && !(idempotencyKey && UUID.test(idempotencyKey))) {
+    return fail('IDEMPOTENCY_KEY_REQUIRED', 'Send a valid Idempotency-Key.', 400);
+  }
+
   const token = req.headers.get('x-application-token');
   if (def.needsToken && (!token || token.length > 512)) {
     return fail('UNVERIFIED', 'Verify your phone number first.', 401);
@@ -248,7 +260,10 @@ export default async function handler(req: Request): Promise<Response> {
     cfg,
     `/api/selfserve/${op}`,
     payload,
-    token && token.length <= 512 ? { 'X-Application-Token': token } : {},
+    {
+      ...(token && token.length <= 512 ? { 'X-Application-Token': token } : {}),
+      ...(def.idempotent && idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
+    },
   );
   if (!upstream) return fail('UPSTREAM_DOWN', 'Service unavailable. Try again shortly.', 502);
   if (upstream.status < 200 || upstream.status >= 300 || typeof upstream.data !== 'object' || !upstream.data) {

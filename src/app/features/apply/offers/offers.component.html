@@ -83,6 +83,16 @@
             [quickLabel]="'offers.quick' | t"
             (valueChange)="setAmount(o, $event)"
           />
+          @if (askedMore()[o.product.id]; as more) {
+            <div class="agent" role="status">
+              <p class="agent-text">
+                <strong>{{ 'offers.more.title' | t: { amount: formatNaira(more) } }}</strong>
+                {{ 'offers.more.body' | t: { max: formatNaira(o.limits.maxAmount) } }}
+              </p>
+              <a class="cta" [attr.href]="agentLink(o)" target="_blank" rel="noopener">{{ 'offers.more.agent' | t }}</a>
+              <a class="alt" [attr.href]="tel">{{ 'offers.more.call' | t }}</a>
+            </div>
+          }
           <p class="hint" id="amt-hint">
             @if (adjusted()[o.product.id]; as a) {
               <span role="status">{{ 'step.offers.amount.adjusted' | t: { amount: formatNaira(a) } }}</span>

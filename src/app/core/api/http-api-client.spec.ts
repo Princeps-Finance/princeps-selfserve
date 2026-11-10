@@ -1,3 +1,4 @@
+import { TestBed } from '@angular/core/testing';
 import { ApiUnavailableError, HttpApiClient } from './http-api-client';
 
 function reply(body: unknown, status = 200): Response {
@@ -11,7 +12,7 @@ describe('HttpApiClient', () => {
   beforeEach(() => {
     fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
-    client = new HttpApiClient();
+    client = TestBed.inject(HttpApiClient);
   });
   afterEach(() => vi.unstubAllGlobals());
 
@@ -100,5 +101,18 @@ describe('HttpApiClient', () => {
     const r = await client.uploadDocument({ docId: 'id', fileName: 'a.pdf', sizeBytes: 11 * 1024 * 1024 });
     expect(r).toEqual({ status: 'too-large' });
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('sends the same Idempotency-Key when the same mandate is requested again, and a new one for a different amount', async () => {
+    const link = { url: 'https://pay.test/x', reference: 'MND-1' };
+    const ask = (monthlyAmount: number) => client.createMandateLink({ productId: 'p', channel: 'ippis', monthlyAmount, tenorMonths: 12 });
+    fetchMock.mockImplementation(() => Promise.resolve(reply(link)));
+    await ask(31_966);
+    await ask(31_966);
+    await ask(40_000);
+    const keys = fetchMock.mock.calls.map((c) => (c[1].headers as Record<string, string>)['Idempotency-Key']);
+    expect(keys[0]).toBeTruthy();
+    expect(keys[1]).toBe(keys[0]);
+    expect(keys[2]).not.toBe(keys[0]);
   });
 });
