@@ -33,6 +33,8 @@ The app has a mandate step (link or authorize, then status). Nothing in the spec
 - Needed: create a mandate (returns a link or reference), `GET` its status (`pending` | `authorized` | `failed`), and how it ties to the application and submit.
 
 ### 6. Identity capture and documents
+*Update: face matching will be done by the back end, so the app does not need a liveness endpoint. It only needs the upload and a way to read the match result.*
+
 `documents/presign` exists, which is what the app needs for photo, video and documents.
 - List the allowed `documentType` values per product (selfie, video, payslip, ID, and so on), accepted content types and size limits.
 - Say how an upload is confirmed after the S3 PUT, and how a liveness or face-match result is returned.
