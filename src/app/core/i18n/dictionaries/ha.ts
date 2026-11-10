@@ -296,6 +296,8 @@ export const ha: Dictionary = {
   'offers.more.body': 'A kan intanet, wannan rancen yana kaiwa {max}. Don adadi mafi girma, wakili zai iya taimaka maka.',
   'offers.more.agent': 'Yi magana da wakili',
   'offers.more.call': 'Kira mu maimakon haka',
+  'step.terms.feeCol': 'Kuɗi',
+  'step.terms.amountCol': 'Adadi',
   'step.employment.federal': 'Gwamnatin tarayya',
   'step.employment.federal.hint': "Ma'aikatun gwamnatin tarayya, sassa da hukumomi.",
   'step.employment.state': 'Gwamnatin jiha',

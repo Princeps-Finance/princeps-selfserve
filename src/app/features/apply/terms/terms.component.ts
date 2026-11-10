@@ -1,3 +1,5 @@
+import { estimateApr } from '../../../../shared/pricing';
+import { CardComponent } from '../../../shared/card.component';
 import { CheckboxComponent } from '../../../shared/checkbox.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { productById } from '../../../core/products/products';
@@ -33,7 +35,7 @@ function firstPaydayAfter(from: Date): Date {
 
 @Component({
   selector: 'app-terms',
-  imports: [CheckboxComponent, TPipe, WizardProgressComponent, OfferLetterComponent],
+  imports: [CardComponent, CheckboxComponent, TPipe, WizardProgressComponent, OfferLetterComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './terms.component.html',
   styleUrl: './terms.component.css',
@@ -86,6 +88,13 @@ export class TermsComponent {
       monthlyRepayment: o?.monthlyRepayment ?? 0,
       ratePercent: o?.ratePercent ?? 0,
     };
+  });
+
+  /** Interest over the whole loan, and the yearly rate it works out to once fees are counted. */
+  readonly totalInterest = computed(() => Math.max(0, this.totalRepayable() - (this.offer()?.amount ?? 0)));
+  readonly apr = computed(() => {
+    const o = this.offer();
+    return o ? Math.round(estimateApr(o.amount, this.totalFees(), o.monthlyRepayment, o.tenorMonths)) : 0;
   });
 
   readonly totalFees = computed(() =>

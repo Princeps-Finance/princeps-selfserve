@@ -296,6 +296,8 @@ export const yo: Dictionary = {
   'offers.more.body': 'Lórí ayélujára, ìgbèsè yìí lè lọ títí dé {max}. Fún iye tó pọ̀ jù, aṣojú lè ràn ọ́ lọ́wọ́.',
   'offers.more.agent': 'Bá aṣojú sọ̀rọ̀',
   'offers.more.call': 'Pè wá dípò',
+  'step.terms.feeCol': 'Owó',
+  'step.terms.amountCol': 'Iye',
   'step.employment.federal': 'Ìjọba àpapọ̀',
   'step.employment.federal.hint': 'Àwọn ilé-iṣẹ́ ìjọba àpapọ̀, ẹ̀ka àti àjọ.',
   'step.employment.state': 'Ìjọba ìpínlẹ̀',

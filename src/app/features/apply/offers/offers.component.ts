@@ -1,4 +1,3 @@
-import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
@@ -62,7 +61,7 @@ interface Choice {
 
 @Component({
   selector: 'app-offers',
-  imports: [IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective, ReferralBoxComponent, AmountSliderComponent, DecimalPipe],
+  imports: [IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective, ReferralBoxComponent, AmountSliderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './offers.component.html',
   styleUrl: './offers.component.css',

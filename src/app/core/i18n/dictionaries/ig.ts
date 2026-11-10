@@ -296,6 +296,8 @@ export const ig: Dictionary = {
   'offers.more.body': "N'ịntanetị, mgbazinye ego a ruru {max}. Maka ego karịrị nke a, onye nnọchi anya nwere ike inyere gị aka.",
   'offers.more.agent': 'Soro onye nnọchi anya kwuo okwu',
   'offers.more.call': 'Kpọọ anyị kama',
+  'step.terms.feeCol': 'Ụgwọ',
+  'step.terms.amountCol': 'Ego',
   'step.employment.federal': 'Gọọmentị etiti',
   'step.employment.federal.hint': 'Ngalaba, ụlọ ọrụ na ndị ọrụ gọọmentị etiti.',
   'step.employment.state': 'Gọọmentị steeti',
