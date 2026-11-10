@@ -64,6 +64,7 @@ export class WelcomeIntentComponent {
 
   choose(intent: ApplyIntent): void {
     this.state.setIntent(intent);
-    void this.flow.go(APPLY.bvn);
+    // Checking how much you can get needs no identity: it starts with the work questions.
+    void this.flow.go(intent === 'check' ? APPLY.employment : APPLY.bvn);
   }
 }

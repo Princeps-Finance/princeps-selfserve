@@ -17,6 +17,7 @@ export const APPLY = {
   statement: '/apply/statement',
   salary: '/apply/salary',
   eligibility: '/apply/eligibility',
+  checkResult: '/apply/check-result',
   offers: '/apply/offers',
   terms: '/apply/terms',
   nin: '/apply/nin',

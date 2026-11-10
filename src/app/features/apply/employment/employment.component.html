@@ -7,14 +7,14 @@
   </header>
 
   <ul class="options" [attr.aria-label]="'step.employment.title' | t">
-    @for (opt of options(); track opt.type) {
+    @for (opt of options(); track opt.key) {
       <li>
         <button
           type="button"
           class="option"
-          [class.is-selected]="selected() === opt.type"
+          [class.is-selected]="selectedKey() === opt.key"
           [attr.aria-expanded]="opt.type === 'corper' ? selected() === 'corper' : null"
-          (click)="select(opt.type)"
+          (click)="select(opt)"
         >
           <span class="option-body">
             <span class="option-label">{{ opt.labelKey | t }}</span>
