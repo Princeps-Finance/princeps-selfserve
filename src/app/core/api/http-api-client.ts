@@ -27,6 +27,7 @@ import {
   WaitlistResult,
 } from './api-client';
 import { NG_BANKS } from './ng-banks';
+import type { ReferralDraft } from '../application/application-state.service';
 
 /** The service could not be reached or returned something unusable. */
 export class ApiUnavailableError extends Error {
@@ -272,6 +273,13 @@ return []; // The user can type it.
 
   joinWaitlist(input: WaitlistInput): Promise<WaitlistResult> {
     return this.op<WaitlistResult>('waitlist', input, this.idempotency.keyFor(`waitlist:${input.type}`));
+  }
+
+  async checkReferral(code: string): Promise<ReferralDraft | null> {
+    const r = await this.post<{ valid?: boolean; code?: string; rateDiscountPct?: number; label?: string }>('/api/referral', { code });
+    const d = r.data;
+    if (!r.ok || !d?.valid || typeof d.code !== 'string' || typeof d.rateDiscountPct !== 'number' || typeof d.label !== 'string') return null;
+    return { code: d.code, rateDiscountPct: d.rateDiscountPct, label: d.label };
   }
 }
 
