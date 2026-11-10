@@ -17,7 +17,7 @@ function needsNin(state: ApplicationStateService): boolean {
 export const languageChosenGuard: CanMatchFn = () =>
   inject(LangService).hasChosen() ? true : inject(Router).parseUrl(APPLY.home);
 
-export const requiresBvnEnteredGuard = requires((s) => !!s.bvn(), APPLY.bvn);
+export const requiresBvnEnteredGuard = requires((s) => !!s.bvn() || !!s.returningRef(), APPLY.bvn);
 export const requiresBvnGuard = requires((s) => !!s.bvn()?.verified, APPLY.bvn);
 export const requiresContactGuard = requires((s) => !!s.contact(), APPLY.bvn);
 export const requiresPhoneVerifiedGuard = requires((s) => s.phoneVerified(), APPLY.verify);

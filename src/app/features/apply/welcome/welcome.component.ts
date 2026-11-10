@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
+import { PromoBannerComponent } from '../../../shared/promo-banner.component';
 import { TrustFooterComponent } from '../../../shared/trust-footer.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
+import { ReturningService } from '../../../core/application/returning.service';
 import { ApplicationStateService, ApplyIntent } from '../../../core/application/application-state.service';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
@@ -9,10 +11,23 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 /** First choice: apply now, or just find out how much they could get. Both use the same journey. */
 @Component({
   selector: 'app-welcome-intent',
-  imports: [TPipe, IllustrationComponent, TrustFooterComponent],
+  imports: [PromoBannerComponent, TPipe, IllustrationComponent, TrustFooterComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="step">
+      @if (returning.saved(); as r) {
+        <app-promo-banner
+          [title]="'returning.title' | t: { name: r.firstName }"
+          [description]="'returning.sub' | t: { phone: nbsp(r.maskedPhone) }"
+          [ctaLabel]="'returning.continue' | t"
+          [dismissLabel]="'returning.notyou' | t"
+          imageSrc="icons/icon-192.png"
+          [imageWidth]="192"
+          [imageHeight]="192"
+          (action)="continueAs(r.ref)"
+          (dismissed)="forgetDevice()"
+        />
+      }
       <app-illustration name="coins" [size]="176" />
       <h1 class="title">{{ 'welcome.intent.title' | t }}</h1>
 
@@ -61,6 +76,25 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 export class WelcomeIntentComponent {
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
+
+  protected readonly returning = inject(ReturningService);
+  /** Keeps the masked number on one line. */
+  protected nbsp(text: string): string {
+    return text.replace(/ /g, '\u00a0');
+  }
+
+  /** "Not you?": forget this phone and drop anything this tab still holds, so the next person starts clean. */
+  protected forgetDevice(): void {
+    this.returning.forget();
+    this.state.reset();
+  }
+
+  /** One tap back in: the code goes to the BVN-linked phone, and no BVN is typed. */
+  protected continueAs(ref: string): void {
+    this.state.setIntent('apply');
+    this.state.setReturningRef(ref);
+    void this.flow.go(APPLY.verify);
+  }
 
   choose(intent: ApplyIntent): void {
     this.state.setIntent(intent);

@@ -206,7 +206,20 @@ export type BvnOtpSendResult =
   | { status: 'not-found' };
 
 export type BvnOtpVerifyResult =
-  | { status: 'ok'; identity: BvnIdentity }
+  /** `customerRef` is an opaque handle the app may keep on the device to bring the customer back with one tap. */
+  | { status: 'ok'; identity: BvnIdentity; customerRef?: string }
+  | { status: 'wrong' }
+  | { status: 'expired' }
+  | { status: 'locked'; retryAfterSeconds: number };
+
+/** Coming back on a device the customer used before: a code to the BVN-linked phone, with no BVN typed. */
+export type ReturningOtpSendResult =
+  | { status: 'sent'; target: string; expiresInSeconds: number }
+  | { status: 'not-found' };
+
+export type ReturningOtpVerifyResult =
+  /** `bvn` is the customer's own BVN, returned after the code is verified and kept in memory only. */
+  | { status: 'ok'; identity: BvnIdentity; bvn: string; customerRef?: string }
   | { status: 'wrong' }
   | { status: 'expired' }
   | { status: 'locked'; retryAfterSeconds: number };

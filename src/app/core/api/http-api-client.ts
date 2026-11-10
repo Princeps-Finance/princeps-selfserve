@@ -23,6 +23,8 @@ import {
   StatementReviewInput,
   EligibilityCheckInput,
   EligibilityCheckResult,
+  ReturningOtpSendResult,
+  ReturningOtpVerifyResult,
   StatementCheckInput,
   RequiredDocument,
   RequiredDocumentsInput,
@@ -135,7 +137,7 @@ export class HttpApiClient implements ApiClient {
   }
 
   async verifyBvnOtp(bvn: string, code: string): Promise<BvnOtpVerifyResult> {
-    const r = await this.post<{ status: string; retryAfterSeconds?: number; token?: string; identity?: BvnIdentity }>(
+    const r = await this.post<{ status: string; retryAfterSeconds?: number; token?: string; identity?: BvnIdentity; customerRef?: string }>(
       '/api/selfserve/verify-bvn-otp',
       { bvn, code },
     );
@@ -148,7 +150,42 @@ export class HttpApiClient implements ApiClient {
           throw new ApiUnavailableError('verify-bvn-otp', 502);
         }
         this.token = r.data.token;
-        return { status: 'ok', identity: r.data.identity };
+        return { status: 'ok', identity: r.data.identity, ...(typeof r.data.customerRef === 'string' ? { customerRef: r.data.customerRef } : {}) };
+      }
+      case 'expired':
+        return { status: 'expired' };
+      case 'locked':
+        return { status: 'locked', retryAfterSeconds: r.data.retryAfterSeconds ?? 60 };
+      default:
+        return { status: 'wrong' };
+    }
+  }
+
+  async sendReturningOtp(customerRef: string, captchaToken?: string): Promise<ReturningOtpSendResult> {
+    const r = await this.op<{ status?: string; target?: string; expiresInSeconds?: number }>('send-returning-otp', {
+      customerRef,
+      ...(captchaToken ? { captchaToken } : {}),
+    });
+    if (r.status === 'not-found') return { status: 'not-found' };
+    if (typeof r.target !== 'string') throw new ApiUnavailableError('send-returning-otp', 502);
+    return { status: 'sent', target: r.target, expiresInSeconds: r.expiresInSeconds ?? 300 };
+  }
+
+  async verifyReturningOtp(customerRef: string, code: string): Promise<ReturningOtpVerifyResult> {
+    const r = await this.post<{ status: string; retryAfterSeconds?: number; token?: string; identity?: BvnIdentity; bvn?: string; customerRef?: string }>(
+      '/api/selfserve/verify-returning-otp',
+      { customerRef, code },
+    );
+    if (r.status === 429) return { status: 'locked', retryAfterSeconds: 60 };
+    if (!r.ok || !r.data) throw new ApiUnavailableError('verify-returning-otp', r.status);
+    switch (r.data.status) {
+      case 'ok': {
+        // Fail closed: ownership is only confirmed with a token, an identity and a BVN.
+        if (typeof r.data.token !== 'string' || !r.data.identity || typeof r.data.identity.fullName !== 'string' || !/^\d{11}$/.test(r.data.bvn ?? '')) {
+          throw new ApiUnavailableError('verify-returning-otp', 502);
+        }
+        this.token = r.data.token;
+        return { status: 'ok', identity: r.data.identity, bvn: r.data.bvn as string, ...(typeof r.data.customerRef === 'string' ? { customerRef: r.data.customerRef } : {}) };
       }
       case 'expired':
         return { status: 'expired' };
