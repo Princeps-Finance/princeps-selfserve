@@ -21,40 +21,22 @@
     <h1 class="title">{{ 'lang.select.title' | t }}</h1>
     <p class="subtitle">{{ 'lang.select.subtitle' | t }}</p>
 
-    <!-- One language per row, chosen first and confirmed with Continue: two taps in a row cannot send someone into the wrong language by accident. -->
-    <ul class="lang-grid" appRadioGroup role="radiogroup" [attr.aria-label]="'lang.select.title' | t">
+    <!-- One language per row: rows stacked full width, so a tap cannot land on the wrong one. A tap chooses and continues. -->
+    <ul class="lang-grid" [attr.aria-label]="'lang.select.title' | t">
       @for (l of languages; track l.code; let i = $index) {
         <li [style.--i]="i">
-          <button
-            type="button"
-            role="radio"
-            class="lang-card"
-            [attr.lang]="l.code"
-            [attr.aria-checked]="current() === l.code"
-            [attr.tabindex]="tabFor(l.code, i)"
-            [class.is-current]="current() === l.code"
-            (click)="choose(l.code)"
-          >
+          <button type="button" class="lang-card" [attr.lang]="l.code" (click)="choose(l.code)">
             <span class="lang-text">
               <span class="lang-endonym">{{ l.endonym }}</span>
               <span class="lang-english">{{ l.hello }}</span>
             </span>
-            <span class="lang-radio" aria-hidden="true">
-              @if (current() === l.code) {
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 10.5L8 14.5L16 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" /></svg>
-              }
-            </span>
+            <svg class="lang-go" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M8 5L13 10L8 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
           </button>
         </li>
       }
     </ul>
-
-    <button type="button" class="cta lang-continue" [disabled]="!current()" (click)="proceed()">
-      <span>{{ 'lang.select.continue' | t }}</span>
-      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-        <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
-    </button>
   </section>
 
   
