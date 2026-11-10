@@ -29,7 +29,3 @@
 .consent-inline { display: inline; padding: 0; border: 0; background: none; font: inherit; color: var(--text-accent); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .consent-inline:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); border-radius: 2px; }
 
-.bvn-wrap { position: relative; display: flex; }
-.bvn-wrap .input { flex: 1; padding-right: 52px; }
-.bvn-toggle { position: absolute; top: 0; right: 0; bottom: 0; width: 52px; display: grid; place-items: center; border: 0; background: none; color: var(--ink-soft); cursor: pointer; border-radius: var(--btn-radius); }
-.bvn-toggle:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }

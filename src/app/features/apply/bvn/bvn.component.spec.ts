@@ -20,9 +20,4 @@ describe('BvnComponent never shows an earlier visit\'s BVN', () => {
     const c = create((s) => s.setBvn({ value: '12345678901', verified: false }));
     expect(c.bvn.value).toBe('12345678901');
   });
-
-  it('hides the BVN as it is typed until the customer chooses to show it', () => {
-    const c = create(() => undefined);
-    expect(c.revealed()).toBe(false);
-  });
 });

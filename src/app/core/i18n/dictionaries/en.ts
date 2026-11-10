@@ -514,8 +514,6 @@ export const en: Dictionary = {
   'step.bvn.eyebrow': 'Identity check',
   'step.bvn.title': 'Enter your BVN',
   'step.bvn.subtitle': 'We send a code to the phone linked to it.',
-  'step.bvn.show': 'Show BVN',
-  'step.bvn.hide': 'Hide BVN',
   'step.bvn.label': 'BVN',
   'step.bvn.hint': '11 digits. Dial *565*0# to see it.',
   'step.bvn.invalid': 'BVN must be exactly 11 digits.',

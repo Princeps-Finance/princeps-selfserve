@@ -514,8 +514,6 @@ export const ha: Dictionary = {
   'step.bvn.eyebrow': 'Tabbatar da tantancewa',
   'step.bvn.title': 'Shigar da BVN ɗinka',
   'step.bvn.subtitle': 'Za mu aika lamba zuwa wayar da aka haɗa da shi.',
-  'step.bvn.show': 'Nuna BVN',
-  'step.bvn.hide': 'Ɓoye BVN',
   'step.bvn.label': 'BVN',
   'step.bvn.hint': 'Lamba 11. Danna *565*0# don ganin sa.',
   'step.bvn.invalid': 'BVN dole ta zama lambobi 11 daidai.',
