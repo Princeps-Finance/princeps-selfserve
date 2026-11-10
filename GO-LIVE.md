@@ -16,6 +16,8 @@ Tick a box only when it is done and tested, not when it is planned.
 - [ ] `TURNSTILE_SECRET`: the bot check. Turnstile is Cloudflare's free "are you a person" check. Create a widget in the Cloudflare dashboard, put the site key in the environment file and the secret here. Without it, anyone can script the code-sending calls and run up the SMS bill.
 - [ ] `SMS_HOURLY_CAP` reviewed (default 1000 texts an hour across all customers).
 
+- [ ] Notifications: a VAPID key pair created. The public key goes in `vapidPublicKey` (environment file), the private key stays with the back end, which stores `push-subscribe` and sends the updates. Until then the prompt stays hidden.
+
 ## 3. What the back end (Caltos and the self-service API) must do
 These cannot be checked from this repository. Each needs a test against the real API, written down below it.
 - [ ] **The token is bound to the person.** A token from verifying phone A must be refused when the loan names a different BVN, phone or bank account. Test: verify your own phone, submit with someone else's BVN, expect a refusal.

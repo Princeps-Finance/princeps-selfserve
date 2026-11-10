@@ -56,6 +56,8 @@ export interface ApiClient {
   /** Which employment types the back end can serve now. Null when it cannot be reached: the app then keeps its own defaults. */
   /** Checks employment and salary from the account details, with no identity. Answers a decision and a maximum only. */
   checkEligibility(input: EligibilityCheckInput): Promise<EligibilityCheckResult>;
+  /** Gives the back end this device's push subscription, so it can send updates about the application. */
+  registerPush(subscription: PushSubscriptionJSON): Promise<void>;
   getEmploymentTypes(): Promise<EmploymentAvailability[] | null>;
   /** Checks a referral code with the server. Null when the code is not valid or the check could not be made. */
   checkReferral(code: string): Promise<ReferralDraft | null>;

@@ -304,3 +304,9 @@ a.cta, a.alt { text-decoration: none; }
   }
 }
 @media (prefers-reduced-motion: reduce) { .glass-btn, .glass-pill { transition: none; } }
+
+/* Notification opt-in on the status screen. */
+.notify { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-md); background: var(--grey-100); }
+.notify-title { margin: 0; font-size: var(--fs-lg); }
+.notify-body { margin: 0; color: var(--ink-soft); font-size: var(--fs-md); line-height: 1.45; }
+.notify-note { margin: 0; color: var(--ink-soft); font-size: var(--fs-md); text-align: center; }

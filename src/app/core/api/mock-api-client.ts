@@ -268,6 +268,10 @@ export class MockApiClient implements ApiClient {
     return { status: 'received', referenceId: 'PR-' + randomRef() };
   }
 
+  async registerPush(_subscription: PushSubscriptionJSON): Promise<void> {
+    await delay(300);
+  }
+
   /** Demo: no back end, so the app keeps its own defaults. */
   async getEmploymentTypes(): Promise<EmploymentAvailability[] | null> {
     return null;

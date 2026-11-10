@@ -282,6 +282,14 @@ return []; // The user can type it.
     return r.data;
   }
 
+  async registerPush(subscription: PushSubscriptionJSON): Promise<void> {
+    const keys = subscription.keys ?? {};
+    await this.op<{ status?: string }>('push-subscribe', {
+      endpoint: subscription.endpoint,
+      keys: { p256dh: keys['p256dh'], auth: keys['auth'] },
+    });
+  }
+
   async getEmploymentTypes(): Promise<EmploymentAvailability[] | null> {
     try {
       const res = await fetch('/api/employment-types', { credentials: 'same-origin', signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
