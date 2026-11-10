@@ -177,17 +177,34 @@ input[type='checkbox'][aria-invalid='true'] {
 .step .cta { margin-top: auto !important; }
 
 /* ===== Shared UI: buttons and step layout (single source; components keep only real differences) ===== */
+/* Primary button. Shape, depth and states follow the Figma "Fancy Buttons" Primary (colours stay on our tokens):
+   8px radius, 1px translucent edge, soft drop shadow + 1px ring, a top gloss that lifts on hover and a
+   darkening layer on press. min-height keeps the 52px touch target. */
 .cta {
-  align-self: stretch; min-height: var(--btn-height); padding: 0 var(--space-6);
+  --cta-gloss: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 7.3%, rgba(255, 255, 255, 0) 65.6%);
+  --cta-ring: color-mix(in srgb, var(--action-primary) 30%, white);
+  align-self: stretch; min-height: var(--btn-height); padding: 14px var(--space-6);
   display: inline-flex; align-items: center; justify-content: center; gap: var(--space-4);
-  background: var(--action-primary); color: var(--action-on-primary);
-  border: none; border-radius: var(--btn-radius);
+  text-align: center; line-height: 20px;
+  background-color: var(--action-primary); background-image: var(--cta-gloss); color: var(--action-on-primary);
+  border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16), 0 0 0 1px var(--cta-ring);
   font-family: var(--font-sans); font-size: var(--fs-base); font-weight: var(--btn-weight); cursor: pointer;
-  transition: transform 120ms ease-out, background 160ms ease, opacity 160ms ease;
+  transition: transform 120ms ease-out, background-color 160ms ease, box-shadow 160ms ease-out, opacity 160ms ease;
 }
 .cta:disabled { opacity: 0.5; cursor: not-allowed; }
-.cta:hover:not(:disabled) { background: var(--action-primary-hover); }
-.cta:active:not(:disabled) { transform: scale(0.99); background: var(--action-primary-active); }
+@media (hover: hover) and (pointer: fine) {
+  .cta:hover:not(:disabled) {
+    background-color: var(--action-primary-hover);
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 7.3%, rgba(255, 255, 255, 0) 65.6%);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22), 0 0 0 1px var(--cta-ring);
+  }
+}
+.cta:active:not(:disabled) {
+  transform: scale(0.99); background-color: var(--action-primary-active);
+  background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 7.3%, rgba(0, 0, 0, 0.1) 74%);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16), 0 0 0 1px var(--cta-ring);
+}
 .cta:focus-visible, .alt:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 .alt {
   align-self: stretch; min-height: var(--btn-height); padding: 0 var(--space-6);
@@ -257,6 +274,10 @@ h1[tabindex='-1']:focus { outline: none; }
   }
 }
 
+/* Every button-like control centres its label, whatever its own component CSS forgets to set. */
+.cta, .alt, .alt-btn, .next-action, .ghost, .promo-cta {
+  display: inline-flex; align-items: center; justify-content: center; text-align: center;
+}
 /* Buttons that are links look like buttons, not underlined text. */
 a.cta, a.alt { text-decoration: none; }
 
