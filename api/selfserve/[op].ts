@@ -268,6 +268,13 @@ const OPS: Record<string, OpDef> = {
     allow: ['documents'],
     needsToken: true,
   },
+  // Extra details for the details screen, for example religion. In production the app asks only for what comes back.
+  'profile-fields': {
+    schema: z.object({}).strict(),
+    limit: 20,
+    allow: ['fields'],
+    needsToken: true,
+  },
   waitlist: {
     schema: z
       .object({

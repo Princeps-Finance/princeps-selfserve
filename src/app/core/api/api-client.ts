@@ -2,7 +2,7 @@ import { InjectionToken } from '@angular/core';
 import type { EmploymentAvailability } from './employment-availability';
 import type { ReferralDraft } from '../application/application-state.service';
 import type {
-  Bank, BvnContactsResult, EligibilityCheckInput, EligibilityCheckResult, RequiredDocument, RequiredDocumentsInput, ReturningOtpSendResult, ReturningOtpVerifyResult, StatementCheckInput, BvnOtpSendResult, BvnOtpVerifyResult, BvnVerifyResult, DocUploadInput, DocUploadResult,
+  Bank, BvnContactsResult, EligibilityCheckInput, EligibilityCheckResult, RequiredDocument, RequiredDocumentsInput, RequiredProfileField, ReturningOtpSendResult, ReturningOtpVerifyResult, StatementCheckInput, BvnOtpSendResult, BvnOtpVerifyResult, BvnVerifyResult, DocUploadInput, DocUploadResult,
   LoanSummary, LookupResult, MandateLink, OfferLetterRequest, MandateStatus, OtpDestination, SalaryVerifyInput, SalaryVerifyResult,
   StatementReviewInput, SubmitPayload, SubmitResult, WaitlistInput, WaitlistResult,
 } from './api.types';
@@ -70,6 +70,8 @@ export interface ApiClient {
    * service cannot be reached: the app must not guess, so it shows the error and lets the customer retry.
    */
   getRequiredDocuments(input: RequiredDocumentsInput): Promise<RequiredDocument[]>;
+  /** Extra details to ask on the details screen. Production asks only for what is returned; unreachable means none. */
+  getRequiredProfileFields(): Promise<RequiredProfileField[]>;
   getEmploymentTypes(): Promise<EmploymentAvailability[] | null>;
   /** Checks a referral code with the server. Null when the code is not valid or the check could not be made. */
   checkReferral(code: string): Promise<ReferralDraft | null>;

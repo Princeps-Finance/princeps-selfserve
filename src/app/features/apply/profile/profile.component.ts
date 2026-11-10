@@ -11,6 +11,7 @@ import { DobFieldComponent } from '../../../core/ui/dob-field.component';
 import { SelectFieldComponent, SelectOption } from '../../../core/ui/select-field.component';
 import { LangService } from '../../../core/i18n/lang.service';
 import { APPLY } from '../../../core/flow/apply-routes';
+import { RequiredProfileField } from '../../../core/api/api-client';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 @Component({
@@ -48,6 +49,7 @@ export class ProfileComponent {
     relationshipStatus: new FormControl<'single' | 'married' | 'divorced' | 'widowed'>('single', {
       nonNullable: true, validators: [Validators.required],
     }),
+    religion: new FormControl('', { nonNullable: true }),
     // Optional: only checked when something is typed.
     email: new FormControl(this.state.contact()?.email ?? '', {
       nonNullable: true, validators: [Validators.pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)],
@@ -56,6 +58,14 @@ export class ProfileComponent {
 
   /** First name only, to greet the customer. The rest of the BVN record is never shown. */
   readonly firstName = this.identity ? titleCase(this.identity.firstName) : '';
+
+  /** Extra details the back end asked for. Empty until it answers, and for good if it cannot be reached. */
+  readonly extraFields = signal<RequiredProfileField[]>([]);
+  readonly religionField = computed(() => this.extraFields().find((f) => f.key === 'religion') ?? null);
+  readonly religionOptions = computed<SelectOption[]>(() => {
+    this.lang.lang();
+    return ['christianity', 'islam', 'traditional', 'other', 'prefer-not-to-say'].map((v) => ({ value: v, label: this.lang.t('step.profile.religion.' + v) }));
+  });
 
   readonly statusChanges = toSignal(this.form.statusChanges, { initialValue: this.form.status });
   readonly attempted = signal(false);
@@ -72,6 +82,13 @@ export class ProfileComponent {
   readonly submitting = signal(false);
 
   constructor() {
+    void this.api.getRequiredProfileFields().then((fields) => {
+      this.extraFields.set(fields);
+      const religion = fields.find((f) => f.key === 'religion');
+      // Required only if the back end says so; otherwise the customer may skip it.
+      if (religion && !religion.optional) this.form.controls.religion.addValidators(Validators.required);
+      this.form.controls.religion.updateValueAndValidity();
+    });
     this.form.controls.stateName.valueChanges.subscribe((st) => void this.loadLgas(st, true));
     const saved = this.state.profile();
     const id = this.identity;
@@ -83,6 +100,7 @@ export class ProfileComponent {
         stateName: saved.address.state,
         lga: saved.address.lga,
         relationshipStatus: saved.relationshipStatus,
+        religion: saved.religion ?? '',
       }, { emitEvent: false });
       if (saved.address.state) void this.loadLgas(saved.address.state, false);
     }
@@ -131,6 +149,7 @@ export class ProfileComponent {
       dateOfBirth: v.dateOfBirth,
       address: { street: v.street.trim(), state: v.stateName, lga: v.lga.trim() },
       relationshipStatus: v.relationshipStatus,
+      ...(this.religionField() && v.religion ? { religion: v.religion } : {}),
     });
     // Work details already given in the check are not asked again; only the salary account is confirmed.
     const checkedPrivate = this.state.employment()?.type === 'private-sector' && !!this.state.eligibility();

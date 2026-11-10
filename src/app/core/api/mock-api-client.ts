@@ -28,6 +28,7 @@ import type {
   StatementCheckInput,
   RequiredDocument,
   RequiredDocumentsInput,
+  RequiredProfileField,
 } from './api.types';
 import type { ApiClient } from './api-client';
 import { buildSimplePdf } from '../pdf/simple-pdf';
@@ -254,6 +255,11 @@ export class MockApiClient implements ApiClient {
   async getRequiredDocuments(input: RequiredDocumentsInput): Promise<RequiredDocument[]> {
     await delay(300);
     return [{ key: 'id', optional: false }, { key: input.employmentType === 'corper' ? 'callup' : 'payslip', optional: false }];
+  }
+
+  /** Demo: ask for religion so the field can be tried. Production asks only what the back end lists. */
+  async getRequiredProfileFields(): Promise<RequiredProfileField[]> {
+    return [{ key: 'religion', optional: true }];
   }
 
   async verifyBvn(bvn: string, _fullName: string, _dateOfBirth: string): Promise<BvnVerifyResult> {

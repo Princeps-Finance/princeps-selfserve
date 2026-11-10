@@ -87,6 +87,18 @@ describe('POST /api/submit-loan', () => {
     expect(sent.feesKobo).toBe(4_000 * 100);
   });
 
+  it('forwards religion only when the customer gave it, and only a known value', async () => {
+    const without = await handler(req(valid()));
+    expect(without.status).toBe(200);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).religion).toBeUndefined();
+
+    const given = await handler(req(valid({ religion: 'islam' })));
+    expect(given.status).toBe(200);
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body).religion).toBe('islam');
+
+    expect((await handler(req(valid({ religion: 'anything else' })))).status).toBe(400);
+  });
+
   it('rejects wrong method, foreign origin and missing application token', async () => {
     expect((await handler(req(null, { method: 'GET' }))).status).toBe(405);
     expect((await handler(req(valid(), { headers: { origin: 'https://evil.example' } }))).status).toBe(403);

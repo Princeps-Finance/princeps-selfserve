@@ -48,6 +48,14 @@
       <app-select-field inputId="rel" [options]="relationshipOptions()" [title]="'step.profile.relationship.label' | t" formControlName="relationshipStatus" />
     </div>
 
+    @if (religionField(); as rf) {
+      <div class="field">
+        <label class="label" for="religion">{{ (rf.optional ? 'step.profile.religion.label' : 'step.profile.religion.label.required') | t }}</label>
+        <app-select-field inputId="religion" [options]="religionOptions()" [title]="'step.profile.religion.label' | t" [invalid]="!rf.optional && attempted() && !form.controls.religion.value ? true : null" formControlName="religion" />
+        <p class="msg">{{ 'step.profile.religion.hint' | t }}</p>
+      </div>
+    }
+
     <div class="field">
       <label class="label" for="email">{{ 'step.profile.email.label' | t }}</label>
       <input id="email" class="input" type="email" inputmode="email" autocomplete="email" formControlName="email" [attr.aria-invalid]="invalid('email')" aria-describedby="email-hint" />

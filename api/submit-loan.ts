@@ -55,6 +55,7 @@ const Body = z
     accountNumber: digits(10).nullable(),
     ippisNumber: z.string().regex(/^\d{4,20}$/).nullable(),
     employer: z.string().trim().max(120).nullable(),
+    religion: z.enum(['christianity', 'islam', 'traditional', 'other', 'prefer-not-to-say']).nullable().optional(),
     // Figures the client computed. Accepted only so we can reject tampering.
     monthlyRepaymentKobo: z.number().int().positive(),
     ratePercent: z.number(),
@@ -142,6 +143,8 @@ export default async function handler(req: Request): Promise<Response> {
     ippisNumber: b.ippisNumber,
     employmentType: b.employmentType,
     employer: b.employer,
+    // Only when the customer chose to give it.
+    ...(b.religion ? { religion: b.religion } : {}),
     appVersion: b.appVersion,
     consentVersion: b.consentVersion,
     consentAt: b.consentAt,
