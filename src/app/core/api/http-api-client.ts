@@ -28,6 +28,7 @@ import {
   StatementCheckInput,
   RequiredDocument,
   RequiredDocumentsInput,
+  RequiredProfileField,
   SubmitPayload,
   SubmitResult,
   WaitlistInput,
@@ -335,6 +336,14 @@ return []; // The user can type it.
     return r.documents
       .filter((d): d is { key: string; optional?: boolean } => !!d && typeof (d as { key?: unknown }).key === 'string')
       .map((d) => ({ key: d.key.slice(0, 40), optional: d.optional === true }));
+  }
+
+  async getRequiredProfileFields(): Promise<RequiredProfileField[]> {
+    const r = await this.opOr<{ fields?: unknown }>('profile-fields', {}, {});
+    if (!Array.isArray(r.fields)) return [];
+    return r.fields
+      .filter((f): f is { key: string; optional?: boolean } => !!f && typeof (f as { key?: unknown }).key === 'string')
+      .map((f) => ({ key: f.key.slice(0, 40), optional: f.optional !== false }));
   }
 
   async registerPush(subscription: PushSubscriptionJSON): Promise<void> {

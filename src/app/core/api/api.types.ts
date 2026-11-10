@@ -60,6 +60,12 @@ export interface RequiredDocumentsInput {
   employmentType: 'government' | 'paramilitary' | 'corper' | 'private-sector';
 }
 
+/** One extra detail the back end wants on the details screen, for example `religion`. */
+export interface RequiredProfileField {
+  key: string;
+  optional: boolean;
+}
+
 export type EligibilityCheckResult =
   | { status: 'ok'; decision: 'approved' | 'review' | 'declined'; maxAmount: number; tenorMonths: number; monthlyIncome: number }
   | { status: 'not-found' }
@@ -128,6 +134,8 @@ export interface SubmitPayload {
     ippisNumber: string | null;
     employmentType: 'government' | 'paramilitary' | 'corper';
     employer: string | null;
+    /** Only when the customer chose to give it. A sensitive detail: never stored on the device. */
+    religion?: string | null;
   };
 }
 

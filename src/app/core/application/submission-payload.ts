@@ -59,6 +59,7 @@ export function buildSubmitPayload(state: ApplicationStateService, idempotencyKe
         ippisNumber: salary.ippisNumber || null,
         employmentType: employment.type,
         employer: salary.paramilitaryEmployer ?? null,
+        religion: state.profile()?.religion || null,
       },
     },
   };
