@@ -4,39 +4,32 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
 import { NavigationEnd } from '@angular/router';
 import { LanguageMenuComponent } from './language-menu.component';
+import { APPLY } from '../../core/flow/apply-routes';
 import { BackButtonComponent } from './back-button.component';
 import { ReadAloudComponent } from './read-aloud.component';
-import { HelpLauncherComponent } from './help-launcher.component';
-import { TPipe } from '../../core/i18n/t.pipe';
-import { PrivacyService } from '../../core/privacy/privacy.service';
+import { BrandLogoComponent } from '../../shared/brand-logo.component';
+import { ThemeToggleComponent } from '../../shared/theme-toggle.component';
 
-const NO_BACK_ROUTES = new Set<string>(['/apply', '/apply/', '/apply/status', '/apply/welcome-back']);
+const NO_BACK_ROUTES = new Set<string>([APPLY.root, `${APPLY.root}/`, APPLY.status, APPLY.loans]);
 
 @Component({
   selector: 'app-apply-shell',
-  imports: [RouterOutlet, LanguageMenuComponent, BackButtonComponent, ReadAloudComponent, HelpLauncherComponent, TPipe],
+  imports: [RouterOutlet, LanguageMenuComponent, BackButtonComponent, ReadAloudComponent, ThemeToggleComponent, BrandLogoComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
-      <!-- Slim top bar. Phone: back chevron (or the logo on the first screens) + controls. Desktop: logo + controls, and the back chevron moves into the card. -->
+      <!-- Top bar: on a phone the back arrow comes first, and the logo sits under it on the same row as the controls. On wide screens the arrow moves into the card. -->
       <header class="topbar">
-        <div class="topbar-left">
-          @if (showBack()) {
-            <app-back-button class="back-phone" />
-          }
-          <img
-            class="brand-logo"
-            [class.brand-logo--desktop-only]="showBack()"
-            src="/princeps-logo.png"
-            alt="Princeps Credit Systems Limited"
-            width="150"
-            height="34"
-          />
-        </div>
-        <div class="topbar-right">
-          <app-read-aloud />
-          <app-help-launcher />
-          <app-language-menu />
+        @if (showBack()) {
+          <app-back-button class="back-phone" />
+        }
+        <div class="topbar-row">
+          <app-brand-logo class="brand-logo" />
+          <div class="topbar-right">
+            <app-read-aloud />
+            <app-theme-toggle />
+            <app-language-menu />
+          </div>
         </div>
       </header>
 
@@ -49,32 +42,22 @@ const NO_BACK_ROUTES = new Set<string>(['/apply', '/apply/', '/apply/status', '/
           <router-outlet />
         </main>
 
-        <footer class="foot">
-          <p class="foot-trust">{{ 'trust.cbn' | t }}</p>
-          <button type="button" class="foot-link" (click)="privacy.open()">{{ 'privacy.link' | t }}</button>
-        </footer>
       </div>
     </div>
   `,
   styles: [
     `
       :host { display: block; min-height: 100dvh; background: var(--surface-0); color: var(--ink); }
-      .page { min-height: 100dvh; display: flex; flex-direction: column; }
-      .topbar {
-        display: flex; align-items: center; justify-content: space-between;
-        width: 100%; box-sizing: border-box; padding: var(--space-2) var(--space-4); min-height: 56px;
-      }
-      .topbar-left { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; }
+      /* Room at the bottom so the floating Support button never sits on top of a step's main button. */
+      .page { min-height: 100dvh; display: flex; flex-direction: column; padding-bottom: calc(var(--tap-min) + var(--space-8)); box-sizing: border-box; }
+      .topbar { display: flex; flex-direction: column; align-items: stretch; width: 100%; box-sizing: border-box; padding: var(--space-2) var(--space-4) 0; }
+      .topbar-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 56px; }
       .topbar-right { display: inline-flex; align-items: center; gap: var(--space-1); }
       .brand-logo { height: 30px; width: auto; display: block; }
-      .brand-logo--desktop-only { display: none; }
       .card-top { display: none; }
       .shell { flex: 1; width: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; }
       .body { flex: 1; display: flex; flex-direction: column; padding: var(--space-2) var(--space-6) var(--space-6); }
       .body > :not(router-outlet) { flex: 1 1 auto; display: flex; flex-direction: column; }
-      .foot { padding: 0 var(--space-6) calc(var(--space-6) + env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); }
-      .foot-trust { margin: 0; font-size: 12px; color: var(--ink-muted); }
-      .foot-link { min-height: 44px; padding: 0; border: 0; background: none; color: var(--ink-soft); font: inherit; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 
       /* Desktop: a page header (logo left, controls right) over a centred card. */
       @media (min-width: 720px) {
@@ -82,22 +65,19 @@ const NO_BACK_ROUTES = new Set<string>(['/apply', '/apply/', '/apply/status', '/
         .page { padding-bottom: var(--space-8); }
         .topbar { max-width: 1040px; margin: 0 auto; padding: var(--space-5) var(--space-6); }
         .back-phone { display: none; }
-        .brand-logo--desktop-only { display: block; }
         .brand-logo { height: 34px; }
         .shell {
-          flex: 0 0 auto; max-width: 560px; margin-top: var(--space-2);
-          background: var(--surface-0); border: 1px solid var(--hairline); border-radius: 24px; box-shadow: var(--shadow-3);
+          flex: 0 0 auto; max-width: 480px; margin-top: var(--space-2); background: var(--surface-0);
         }
-        .card-top { display: block; padding: var(--space-5) var(--space-8) 0; }
-        .body { padding: var(--space-2) var(--space-8) var(--space-8); }
-        .foot { padding: 0 var(--space-8) var(--space-6); }
+        .card-top { display: block; padding: var(--space-4) var(--space-6) 0; }
+        .body { padding: var(--space-2) var(--space-6) var(--space-8); }
+        .foot { padding: 0 var(--space-6) var(--space-6); }
       }
     `,
   ],
 })
 export class ApplyShellComponent {
   private readonly router = inject(Router);
-  protected readonly privacy = inject(PrivacyService);
 
   private readonly currentUrl = toSignal(
     this.router.events.pipe(

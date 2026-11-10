@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
-import { Router } from '@angular/router';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { AGENTS, OFFICES } from '../../../core/directory/contacts';
 import { environment } from '../../../../environments/environment';
+import { APPLY } from '../../../core/flow/apply-routes';
+import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 /**
  * After a successful submission. The app never claims an outcome (approval, disbursement):
@@ -20,7 +21,7 @@ import { environment } from '../../../../environments/environment';
 })
 export class StatusComponent {
   private readonly state = inject(ApplicationStateService);
-  private readonly router = inject(Router);
+  private readonly flow = inject(FlowNavigator);
 
   readonly submission = this.state.submission;
   readonly agents = AGENTS;
@@ -31,12 +32,6 @@ export class StatusComponent {
   readonly isReview = this.state.employment()?.type === 'private-sector';
   readonly telHref = (phone: string): string => `tel:${phone.replace(/\s+/g, '')}`;
   readonly reference = computed(() => this.submission().referenceId ?? '');
-
-  constructor() {
-    if (this.submission().status !== 'received') {
-      void this.router.navigateByUrl('/apply/submit');
-    }
-  }
 
   async copyReference(): Promise<void> {
     try {
@@ -50,6 +45,6 @@ export class StatusComponent {
 
   done(): void {
     this.state.reset();
-    void this.router.navigateByUrl('/');
+    void this.flow.go(APPLY.home);
   }
 }

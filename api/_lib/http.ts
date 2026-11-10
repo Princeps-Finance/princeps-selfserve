@@ -132,7 +132,8 @@ export async function callBackoffice(
  */
 export async function verifyCaptcha(token: string | undefined, ip: string): Promise<boolean> {
   const secret = process.env['TURNSTILE_SECRET'];
-  if (!secret) return true;
+  // No secret is acceptable only while developing; in production a missing secret must not switch the check off.
+  if (!secret) return process.env['VERCEL_ENV'] !== 'production';
   if (!token) return false;
   try {
     const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {

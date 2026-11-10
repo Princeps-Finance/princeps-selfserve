@@ -1,3 +1,4 @@
+import { APPLY } from '../flow/apply-routes';
 import { Injectable, effect, inject, signal } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { APP_VERSION } from '../app-version';
@@ -16,8 +17,18 @@ const KEY = 'princeps.draft';
 /** A saved application is deleted after this long without use. */
 export const DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
+/** Account and payroll numbers are never kept on the device: the customer types them again on resume. */
+function redactSalary(salary: SalaryDraft): SalaryDraft {
+  return { ...salary, accountNumber: '', ippisNumber: undefined };
+}
+
+/** Date of birth and street address are not kept either; name and status are enough to pick up where they left. */
+function redactProfile(profile: ProfileDraft): ProfileDraft {
+  return { ...profile, dateOfBirth: '', address: { ...profile.address, street: '' } };
+}
+
 /** Steps whose answers we save. Resume re-runs eligibility, so nothing after this is stored. */
-export const RESUMABLE_ROUTES = ['/apply/profile', '/apply/employment', '/apply/salary'] as const;
+export const RESUMABLE_ROUTES = [APPLY.profile, APPLY.employment, APPLY.salary] as const;
 
 /**
  * What is saved on the device so a customer can pick up later (Caltos only receives an
@@ -65,18 +76,19 @@ export class DraftService {
         intent: d.intent,
         consent: d.consent,
         contact: d.contact,
-        profile: d.profile,
+        profile: d.profile ? redactProfile(d.profile) : null,
         employment: d.employment,
-        salary: d.salary,
+        salary: d.salary ? redactSalary(d.salary) : null,
       });
     });
   }
 
-  /** Where to send the customer after restoring: the step they were on, or a fresh eligibility check. */
+  /** Where to send the customer after restoring: the step they were on, or the salary step to re-enter payout details. */
   private stepFor(route: string, hasSalary: boolean, hasEmployment: boolean): string {
     if ((RESUMABLE_ROUTES as readonly string[]).includes(route)) return route;
-    if (hasSalary) return '/apply/eligibility';
-    return hasEmployment ? '/apply/salary' : '/apply/employment';
+    // The account number is not saved, so a saved salary step must be confirmed again before eligibility runs.
+    if (hasSalary || hasEmployment) return APPLY.salary;
+    return APPLY.employment;
   }
 
   /** The saved application for this phone number, if there is one and it has not expired. */

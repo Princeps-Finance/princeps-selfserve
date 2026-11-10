@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { focusFirstInvalid } from '../../../core/a11y/focus';
@@ -11,6 +10,8 @@ import { API_CLIENT } from '../../../core/api/api-client';
 import { DobFieldComponent } from '../../../core/ui/dob-field.component';
 import { SelectFieldComponent, SelectOption } from '../../../core/ui/select-field.component';
 import { LangService } from '../../../core/i18n/lang.service';
+import { APPLY } from '../../../core/flow/apply-routes';
+import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 @Component({
   selector: 'app-profile',
@@ -21,7 +22,7 @@ import { LangService } from '../../../core/i18n/lang.service';
 })
 export class ProfileComponent {
   private readonly state = inject(ApplicationStateService);
-  private readonly router = inject(Router);
+  private readonly flow = inject(FlowNavigator);
   private readonly api = inject(API_CLIENT);
   private readonly lang = inject(LangService);
 
@@ -93,9 +94,9 @@ export class ProfileComponent {
 
   /** Not the customer's record: start over from the BVN. */
   notMe(): void {
-    this.state.setBvnIdentity(null);
-    this.state.setBvn({ value: '', verified: false });
-    void this.router.navigateByUrl('/apply/bvn');
+    // Someone else's record: nothing from it, or from the steps built on it, may carry over.
+    this.state.reset();
+    void this.flow.go(APPLY.bvn);
   }
 
   private async loadLgas(stateName: string, clearLga: boolean): Promise<void> {
@@ -120,7 +121,7 @@ export class ProfileComponent {
       address: { street: v.street.trim(), state: v.stateName, lga: v.lga.trim() },
       relationshipStatus: v.relationshipStatus,
     });
-    void this.router.navigateByUrl('/apply/employment');
+    void this.flow.go(APPLY.employment);
   }
 }
 

@@ -15,6 +15,7 @@ import {
   estimateMonthlyRepayment,
   pricingProductById,
 } from '../src/shared/pricing';
+import { discountedRate, findReferral } from '../src/shared/referral';
 import {
   HttpError,
   backofficeConfig,
@@ -37,6 +38,9 @@ const Body = z
     consentVersion: z.string().regex(/^[\w.-]{1,20}$/),
     consentAt: z.string().datetime(),
     manualReview: z.boolean(),
+    /** One key per application: a retry of the same application can never create a second loan. */
+    idempotencyKey: z.string().uuid(),
+    referralCode: z.string().regex(/^[A-Za-z0-9]{3,20}$/).nullable().optional(),
     mandateReference: z.string().regex(/^[\w-]{3,64}$/).nullable(),
     appVersion: z.string().regex(/^\d{1,3}\.\d{1,3}\.\d{1,3}(?:-[\w.]{1,20})?$/),
     borrowerBvn: digits(11),
@@ -100,18 +104,20 @@ export default async function handler(req: Request): Promise<Response> {
   }
   if (b.amountKobo % 100 !== 0) return fail('VALIDATION_ERROR', 'Some details are invalid.', 400);
   const amount = b.amountKobo / 100;
-  if (amount < product.minAmount || amount > product.maxAmount) {
+  if (amount < product.minAmount || amount > product.maxAmount || amount % product.amountStep !== 0) {
     return fail('VALIDATION_ERROR', 'Amount is outside the allowed range.', 400);
   }
-  const monthly = estimateMonthlyRepayment(
-    amount,
-    b.tenorMonths,
-    product.ratePercent,
-    product.interestModel,
-  );
+  if (b.tenorMonths < product.minTenorMonths || b.tenorMonths > product.maxTenorMonths) {
+    return fail('VALIDATION_ERROR', 'Repayment period is outside the allowed range.', 400);
+  }
+  // A referral code is honoured only if the server knows it; the client's discounted rate must match exactly.
+  const referral = b.referralCode ? findReferral(b.referralCode) : null;
+  if (b.referralCode && !referral) return fail('VALIDATION_ERROR', 'Referral code is not valid.', 400);
+  const ratePercent = discountedRate(product.ratePercent, referral);
+  const monthly = estimateMonthlyRepayment(amount, b.tenorMonths, ratePercent, product.interestModel);
   if (
     b.monthlyRepaymentKobo !== monthly * 100 ||
-    b.ratePercent !== product.ratePercent ||
+    b.ratePercent !== ratePercent ||
     b.interestModel !== product.interestModel
   ) {
     console.warn('submit-loan: client pricing mismatch', product.id);
@@ -126,7 +132,9 @@ export default async function handler(req: Request): Promise<Response> {
     tenorMonths: b.tenorMonths,
     monthlyRepaymentKobo: monthly * 100,
     interestModel: product.interestModel,
-    ratePercent: product.ratePercent,
+    ratePercent,
+    // Sent only when a code was used, so back-office versions that do not know the field are unaffected.
+    ...(referral ? { referralCode: referral.code } : {}),
     channel: product.channel,
     bankCode: b.bankCode,
     accountNumber: b.accountNumber,
@@ -143,6 +151,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   const upstream = await callBackoffice(cfg, '/api/loans', payload, {
     'X-Application-Token': appToken,
+    'Idempotency-Key': b.idempotencyKey,
   });
   if (!upstream) return fail('UPSTREAM_DOWN', 'Service unavailable. Try again shortly.', 502);
 

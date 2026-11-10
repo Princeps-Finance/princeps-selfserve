@@ -1,4 +1,6 @@
 import {
+  buildRepaymentSchedule,
+  estimateApr,
   PRICING_PRODUCTS,
   clampAmount,
   offerLimits,
@@ -63,14 +65,28 @@ describe('pricing catalogue', () => {
   });
 });
 
+describe('estimateApr', () => {
+  it('is zero for nonsense input and rises with fees', () => {
+    expect(estimateApr(0, 0, 100, 6)).toBe(0);
+    const noFees = estimateApr(200_000, 0, 35_000, 6);
+    const withFees = estimateApr(200_000, 4_000, 35_000, 6);
+    expect(noFees).toBeGreaterThan(0);
+    expect(withFees).toBeGreaterThan(noFees);
+  });
+
+  it('matches a loan repaid with no interest at 0%', () => {
+    expect(estimateApr(120_000, 0, 10_000, 12)).toBeCloseTo(0, 1);
+  });
+});
+
 describe('quoteLoan', () => {
-  it('adds up repayment, fees and the cost of credit', () => {
+  it('adds up repayment, interest and fees', () => {
     const p = pricingProductById('ippis-standard')!; // 5% flat, 2% processing fee
     const q = quoteLoan(p, 200_000, 6);
     expect(q.monthly).toBe(35_000);
     expect(q.totalRepayment).toBe(210_000);
     expect(q.totalFees).toBe(4_000);
-    expect(q.costOfCredit).toBe(210_000 - 200_000 + 4_000);
+    expect(q.interest).toBe(10_000);
     expect(q.fees).toEqual([{ name: 'Processing fee', amount: 4_000 }]);
   });
 
@@ -114,5 +130,23 @@ describe('product settings', () => {
       expect(p.minTenorMonths).toBeLessThanOrEqual(p.maxTenorMonths);
       expect(p.maxAmount % p.amountStep).toBe(0);
     }
+  });
+});
+
+describe('buildRepaymentSchedule', () => {
+  const cases: [number, number, number, 'Flat Rate' | 'Reducing Balance'][] = [
+    [100_000, 3, 5, 'Flat Rate'],
+    [250_000, 7, 4.5, 'Reducing Balance'],
+    [50_000, 12, 0, 'Reducing Balance'],
+    [333_335, 11, 5, 'Flat Rate'],
+  ];
+  it.each(cases)('adds up to the quote and clears the balance (%d over %d months at %d%% %s)', (amount, n, rate, model) => {
+    const lines = buildRepaymentSchedule(amount, n, rate, model);
+    const monthly = estimateMonthlyRepayment(amount, n, rate, model);
+    expect(lines).toHaveLength(n);
+    expect(lines.every((l) => l.payment === monthly)).toBe(true);
+    expect(lines.reduce((sum, l) => sum + l.principal, 0)).toBe(amount);
+    expect(lines.reduce((sum, l) => sum + l.payment, 0)).toBe(monthly * n);
+    expect(lines.at(-1)!.balance).toBe(0);
   });
 });

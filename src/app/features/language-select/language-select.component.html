@@ -1,8 +1,21 @@
 <main class="screen">
   <header class="brand-row">
-    <img class="brand-logo" src="/princeps-logo.png" alt="Princeps Credit Systems Limited" width="180" height="40" />
-    <span class="tools"><app-read-aloud /><app-help-launcher /></span>
+    <app-brand-logo class="brand-logo" />
+    <span class="tools"><app-read-aloud /><app-theme-toggle /></span>
   </header>
+
+  @if (install.offer()) {
+    <div class="install">
+      <app-promo-banner
+        [title]="'install.banner.title' | t"
+        [description]="'install.banner.desc' | t"
+        [ctaLabel]="'install.banner.cta' | t"
+        [dismissLabel]="'common.dismiss' | t"
+        (action)="install.install()"
+        (dismissed)="install.dismiss()"
+      />
+    </div>
+  }
 
   <section class="content">
     <h1 class="title">{{ 'lang.select.title' | t }}</h1>
@@ -13,9 +26,7 @@
         <li [style.--i]="i">
           <button type="button" class="lang-card" [attr.lang]="l.code" [class.is-current]="current() === l.code" (click)="choose(l.code)">
             <span class="lang-endonym">{{ l.endonym }}</span>
-            @if (l.english !== l.endonym) {
-              <span class="lang-english">{{ l.english }}</span>
-            }
+            <span class="lang-english">{{ l.hello }}</span>
             @if (current() === l.code) {
               <svg class="lang-check" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path d="M4 10.5L8 14.5L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -31,32 +42,5 @@
     </ul>
   </section>
 
-  <footer class="footer">
-    <a class="signin" href="https://caltos-rho.vercel.app/portal/repayments" rel="noopener">
-      {{ 'lang.select.signin' | t }}
-    </a>
-
-    <ul class="trust" [attr.aria-label]="'trust.aria' | t">
-      <li class="trust-item">
-        <svg class="trust-icon" width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="M10 2L3 5v5c0 4.5 3 7.5 7 8 4-.5 7-3.5 7-8V5l-7-3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
-          <path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-        <span>{{ 'trust.cbn' | t }}</span>
-      </li>
-      <li class="trust-item">
-        <svg class="trust-icon" width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <rect x="3" y="7" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.5" />
-          <path d="M7 7V5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-        </svg>
-        <span>{{ 'trust.ndpr' | t }}</span>
-      </li>
-      <li class="trust-item">
-        <button type="button" class="trust-link trust-btn" (click)="privacy.open()">{{ 'privacy.link' | t }}</button>
-      </li>
-      <li class="trust-item">
-        <a class="trust-link" href="mailto:complaints@princeps.ng?subject=Complaint" rel="noopener">{{ 'trust.complaints' | t }}</a>
-      </li>
-    </ul>
-  </footer>
+  
 </main>

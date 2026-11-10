@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
@@ -9,6 +8,8 @@ import { productById } from '../../../core/products/products';
 import { LangService } from '../../../core/i18n/lang.service';
 import { telLink, whatsappLink } from '../../../core/support';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
+import { APPLY } from '../../../core/flow/apply-routes';
+import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 @Component({
   selector: 'app-mandate',
@@ -19,7 +20,7 @@ import { IllustrationComponent } from '../../../core/ui/illustration.component';
 })
 export class MandateComponent {
   private readonly state = inject(ApplicationStateService);
-  private readonly router = inject(Router);
+  private readonly flow = inject(FlowNavigator);
   private readonly api = inject(API_CLIENT);
   private readonly lang = inject(LangService);
   private readonly destroyRef = inject(DestroyRef);
@@ -70,10 +71,6 @@ export class MandateComponent {
   private poll: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
-    if (!this.offer()) {
-      void this.router.navigateByUrl('/apply/offers');
-      return;
-    }
     this.destroyRef.onDestroy(() => this.stopPolling());
     const existing = this.state.mandate();
     if (existing?.mode === 'link' && existing.reference && !existing.authorized) {
@@ -81,7 +78,8 @@ export class MandateComponent {
       this.linkRef.set(existing.reference);
       this.linkUrl.set(null);
     }
-    if (this.mode() === 'link') void this.prepareLink();
+    // Only create a link when none exists yet; a second one would orphan the first.
+    if (this.mode() === 'link' && !existing?.reference) void this.prepareLink();
   }
 
   showLink(): void {
@@ -162,7 +160,7 @@ export class MandateComponent {
       mode: 'link',
       reference: this.linkRef() ?? undefined,
     });
-    void this.router.navigateByUrl('/apply/submit');
+    void this.flow.go(APPLY.submit);
   }
 
   toggleAgree(v: boolean): void {
@@ -187,6 +185,6 @@ export class MandateComponent {
       authorizedAt: new Date().toISOString(),
       mode: 'authorize',
     });
-    void this.router.navigateByUrl('/apply/submit');
+    void this.flow.go(APPLY.submit);
   }
 }

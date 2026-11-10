@@ -1,3 +1,4 @@
+import { MAX_UPLOAD_BYTES } from '../limits';
 import { InjectionToken, Injectable } from '@angular/core';
 
 export interface ReturningProfileSnapshot {
@@ -69,6 +70,9 @@ export interface SubmitPayload {
     /** Eligibility fell in the manual-review band. Caltos re-scores; this is a hint only. */
     manualReview: boolean;
     mandateReference: string | null;
+    /** Same value on every retry of one application, so the server can refuse a duplicate. */
+    idempotencyKey: string;
+    referralCode: string | null;
     borrowerBvn: string;
     borrowerName: string;
     borrowerPhone: string;
@@ -84,6 +88,27 @@ export interface SubmitPayload {
     employmentType: 'government' | 'paramilitary' | 'corper';
     employer: string | null;
   };
+}
+
+/** One loan the customer already has, as Caltos reports it. Amounts are naira; dates are ISO (YYYY-MM-DD). */
+export interface LoanSummary {
+  id: string;
+  /** The reference quoted to support. */
+  reference: string;
+  productName: string;
+  status: 'active' | 'overdue' | 'completed';
+  principal: number;
+  /** What is still owed, including interest. Zero once completed. */
+  outstanding: number;
+  monthlyRepayment: number;
+  /** The next instalment date, or null when completed. */
+  nextDueDate: string | null;
+  instalmentsPaid: number;
+  instalmentsTotal: number;
+  ratePercent: number;
+  disbursedAt: string;
+  /** Whether the repayment mandate is in place. */
+  mandateActive: boolean;
 }
 
 /** The application reached Caltos. Caltos decides the outcome; the app never claims one. */
@@ -173,6 +198,8 @@ export interface ApiClient {
     tenorMonths: number;
   }): Promise<MandateLink>;
   getMandateStatus(reference: string): Promise<MandateStatus>;
+  /** The customer's loans from Caltos. Rejects when the service cannot be reached. */
+  listLoans(): Promise<LoanSummary[]>;
   submitApplication(payload: SubmitPayload): Promise<SubmitResult>;
   joinWaitlist(input: WaitlistInput): Promise<WaitlistResult>;
 }
@@ -277,6 +304,15 @@ export class MockApiClient implements ApiClient {
     return { kind: 'new' };
   }
 
+  async listLoans(): Promise<LoanSummary[]> {
+    await delay(500);
+    return [
+      { id: 'ln-1042', reference: 'PRN-8H2K4Q', productName: 'IPPIS Salary Advance', status: 'active', principal: 200_000, outstanding: 126_000, monthlyRepayment: 42_000, nextDueDate: '2026-12-25', instalmentsPaid: 2, instalmentsTotal: 5, ratePercent: 5, disbursedAt: '2026-09-02', mandateActive: true },
+      { id: 'ln-0977', reference: 'PRN-3M9T7A', productName: 'IPPIS Standard Loan', status: 'overdue', principal: 80_000, outstanding: 28_000, monthlyRepayment: 28_000, nextDueDate: '2026-11-25', instalmentsPaid: 2, instalmentsTotal: 3, ratePercent: 5, disbursedAt: '2026-07-14', mandateActive: true },
+      { id: 'ln-0801', reference: 'PRN-6C1D5W', productName: 'IPPIS Salary Advance', status: 'completed', principal: 150_000, outstanding: 0, monthlyRepayment: 52_500, nextDueDate: null, instalmentsPaid: 3, instalmentsTotal: 3, ratePercent: 5, disbursedAt: '2026-03-14', mandateActive: false },
+    ];
+  }
+
   async submitStatementReview(_input: StatementReviewInput): Promise<SubmitResult> {
     await delay(900);
     return { status: 'received', referenceId: 'PRN-' + Math.random().toString(36).slice(2, 8).toUpperCase() };
@@ -379,7 +415,7 @@ export class MockApiClient implements ApiClient {
 
   async uploadDocument(input: DocUploadInput): Promise<DocUploadResult> {
     await delay(800);
-    if (input.sizeBytes > 10 * 1024 * 1024) return { status: 'too-large' };
+    if (input.sizeBytes > MAX_UPLOAD_BYTES) return { status: 'too-large' };
     return { status: 'ok' };
   }
 

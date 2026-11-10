@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { focusFirstInvalid } from '../../../core/a11y/focus';
@@ -10,6 +10,8 @@ import { ApplicationStateService } from '../../../core/application/application-s
 import { whatsappLink } from '../../../core/support';
 import { LangService } from '../../../core/i18n/lang.service';
 import { PRIVACY_NOTICE_VERSION, PrivacyService } from '../../../core/privacy/privacy.service';
+import { APPLY } from '../../../core/flow/apply-routes';
+import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 /**
  * The BVN is asked first. We then text a code to the phone linked to that BVN, so only its real
@@ -24,7 +26,7 @@ import { PRIVACY_NOTICE_VERSION, PrivacyService } from '../../../core/privacy/pr
 })
 export class BvnComponent {
   private readonly state = inject(ApplicationStateService);
-  private readonly router = inject(Router);
+  private readonly flow = inject(FlowNavigator);
   private readonly lang = inject(LangService);
   protected readonly privacy = inject(PrivacyService);
   readonly support = whatsappLink('Hello Princeps, I need help with my BVN.');
@@ -75,6 +77,6 @@ export class BvnComponent {
     this.submitting.set(true);
     // Not verified yet: the next screen sends the code to the phone linked to this BVN.
     this.state.setBvn({ value: this.bvn.value, verified: false });
-    void this.router.navigateByUrl('/apply/verify');
+    void this.flow.go(APPLY.verify);
   }
 }

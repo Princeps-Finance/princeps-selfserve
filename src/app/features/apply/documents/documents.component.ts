@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { API_CLIENT } from '../../../core/api/api-client';
 import { ApplicationStateService, DocDraft } from '../../../core/application/application-state.service';
+import { APPLY } from '../../../core/flow/apply-routes';
+import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 interface DocSpec {
   id: string;
@@ -28,7 +29,7 @@ const CORPER: DocSpec = { id: 'callup', labelKey: 'step.docs.callup', hintKey: '
 export class DocumentsComponent implements OnInit {
   private readonly api = inject(API_CLIENT);
   private readonly state = inject(ApplicationStateService);
-  private readonly router = inject(Router);
+  private readonly flow = inject(FlowNavigator);
 
   readonly specs = signal<DocSpec[]>([]);
   readonly docs = this.state.docs;
@@ -44,10 +45,6 @@ export class DocumentsComponent implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
-    if (!this.state.bvn()?.verified) {
-      await this.router.navigateByUrl('/apply/bvn');
-      return;
-    }
     const employment = this.state.employment()?.type;
     const specs = [...BASE_DOCS, employment === 'corper' ? CORPER : SALARIED];
     this.specs.set(specs);
@@ -56,7 +53,9 @@ export class DocumentsComponent implements OnInit {
     const existing = this.docs();
     const seeded: DocDraft[] = specs.map((s) => {
       const found = existing.find((d) => d.id === s.id);
-      return found ?? { id: s.id, name: s.labelKey, status: 'pending' };
+      if (!found) return { id: s.id, name: s.labelKey, status: 'pending' };
+      // An upload cut short by leaving the page never finished: let the customer try again.
+      return found.status === 'uploading' ? { ...found, status: 'failed' } : found;
     });
     this.state.setDocs(seeded);
   }
@@ -76,7 +75,12 @@ export class DocumentsComponent implements OnInit {
   async upload(id: string, file: File): Promise<void> {
     this.errors.update((e) => ({ ...e, [id]: null }));
     this.state.updateDoc(id, { status: 'uploading', fileName: file.name });
-    const res = await this.api.uploadDocument({ docId: id, fileName: file.name, sizeBytes: file.size });
+    let res: Awaited<ReturnType<typeof this.api.uploadDocument>>;
+    try {
+      res = await this.api.uploadDocument({ docId: id, fileName: file.name, sizeBytes: file.size });
+    } catch {
+      res = { status: 'network' };
+    }
     if (res.status === 'ok') {
       this.state.updateDoc(id, { status: 'uploaded' });
     } else {
@@ -91,6 +95,6 @@ export class DocumentsComponent implements OnInit {
       setTimeout(() => document.getElementById('docs-error')?.focus());
       return;
     }
-    void this.router.navigateByUrl('/apply/verify-identity');
+    void this.flow.go(APPLY.verifyIdentity);
   }
 }

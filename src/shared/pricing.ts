@@ -121,6 +121,8 @@ export function estimateMonthlyRepayment(
   ratePercent: number,
   model: InterestModel = 'Flat Rate',
 ): number {
+  // NaN, zero or negative money must fail loudly, not turn into a plausible-looking repayment.
+  if (!(amount > 0) || !(ratePercent >= 0) || !Number.isFinite(tenorMonths)) throw new RangeError('Invalid loan terms');
   const n = Math.max(tenorMonths, 1);
   const r = ratePercent / 100;
   if (model === 'Reducing Balance') {
@@ -141,6 +143,49 @@ export function calcProductFees(
   }));
 }
 
+export interface ScheduleLine {
+  month: number;
+  principal: number;
+  interest: number;
+  /** What the customer pays that month. Equal for every month, so the lines add up to the quote's total repayment. */
+  payment: number;
+  balance: number;
+}
+
+/**
+ * The month-by-month repayment table, built from the same monthly figure as the quote so the two can never
+ * disagree. Rounding differences are settled in the last month. "Percentage Based" is priced like "Flat Rate"
+ * (see estimateMonthlyRepayment) until a product defines something different.
+ */
+export function buildRepaymentSchedule(
+  principal: number,
+  tenorMonths: number,
+  ratePercent: number,
+  model: InterestModel = 'Flat Rate',
+): ScheduleLine[] {
+  const n = Math.max(tenorMonths, 1);
+  const monthly = estimateMonthlyRepayment(principal, n, ratePercent, model);
+  const lines: ScheduleLine[] = [];
+  let balance = principal;
+  const monthlyRate = ratePercent / 100;
+  const flatInterest = monthly * n - principal;
+  for (let month = 1; month <= n; month++) {
+    const last = month === n;
+    let interest: number;
+    let principalPaid: number;
+    if (model === 'Reducing Balance') {
+      interest = last ? monthly - balance : Math.round(balance * monthlyRate);
+      principalPaid = last ? balance : monthly - interest;
+    } else {
+      principalPaid = last ? balance : Math.round(principal / n);
+      interest = last ? monthly - principalPaid : Math.round(flatInterest / n);
+    }
+    balance = Math.max(0, balance - principalPaid);
+    lines.push({ month, principal: principalPaid, interest, payment: monthly, balance });
+  }
+  return lines;
+}
+
 export interface LoanQuote {
   amount: number;
   tenorMonths: number;
@@ -148,8 +193,8 @@ export interface LoanQuote {
   totalRepayment: number;
   fees: { name: string; amount: number }[];
   totalFees: number;
-  /** Interest plus fees: what the loan costs on top of the amount borrowed. */
-  costOfCredit: number;
+  /** Interest alone: total repayment minus the amount borrowed. Fees are listed separately. */
+  interest: number;
 }
 
 export function quoteLoan(
@@ -168,7 +213,7 @@ export function quoteLoan(
     totalRepayment,
     fees,
     totalFees,
-    costOfCredit: totalRepayment - amount + totalFees,
+    interest: totalRepayment - amount,
   };
 }
 
@@ -189,4 +234,27 @@ export function clampAmount(product: PricingProduct, amount: number, limits: { m
   const step = product.amountStep;
   const rounded = Math.round(amount / step) * step;
   return Math.min(limits.maxAmount, Math.max(limits.minAmount, rounded));
+}
+
+/**
+ * Estimated yearly rate (APR) from the cash flows: the customer receives the amount minus any fees, then pays
+ * `monthly` each month. Found by bisection on the monthly rate and compounded to a year. It is an estimate for
+ * comparison; the offer Princeps confirms before acceptance is the one that counts.
+ */
+export function estimateApr(amount: number, totalFees: number, monthly: number, tenorMonths: number): number {
+  const received = amount - totalFees;
+  if (!(received > 0) || !(monthly > 0) || tenorMonths < 1) return 0;
+  const presentValue = (rate: number): number => {
+    let pv = 0;
+    for (let k = 1; k <= tenorMonths; k++) pv += monthly / Math.pow(1 + rate, k);
+    return pv;
+  };
+  let low = 0;
+  let high = 2; // 200% a month is far beyond any product
+  for (let i = 0; i < 60; i++) {
+    const mid = (low + high) / 2;
+    if (presentValue(mid) > received) low = mid;
+    else high = mid;
+  }
+  return (Math.pow(1 + (low + high) / 2, 12) - 1) * 100;
 }

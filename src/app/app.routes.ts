@@ -1,123 +1,23 @@
-import { inject } from '@angular/core';
-import { CanMatchFn, Router, Routes } from '@angular/router';
-import { LangService } from './core/i18n/lang.service';
-import { ApplicationStateService } from './core/application/application-state.service';
-import { productById } from './core/products/products';
-
-const languageChosenGuard: CanMatchFn = () => {
-  const lang = inject(LangService);
-  const router = inject(Router);
-  return lang.hasChosen() ? true : router.parseUrl('/');
-};
-
-const requiresContactGuard: CanMatchFn = () => {
-  const state = inject(ApplicationStateService);
-  const router = inject(Router);
-  return state.contact() ? true : router.parseUrl('/apply/bvn');
-};
-
-/** The OTP screen only makes sense once a BVN has been entered. */
-const requiresBvnEnteredGuard: CanMatchFn = () => {
-  const state = inject(ApplicationStateService);
-  const router = inject(Router);
-  return state.bvn() ? true : router.parseUrl('/apply/bvn');
-};
-
-const requiresPhoneVerifiedGuard: CanMatchFn = () => {
-  const state = inject(ApplicationStateService);
-  const router = inject(Router);
-  return state.phoneVerified() ? true : router.parseUrl('/apply/verify');
-};
-
-const requiresEmploymentGuard: CanMatchFn = () => {
-  const state = inject(ApplicationStateService);
-  const router = inject(Router);
-  return state.employment() ? true : router.parseUrl('/apply/employment');
-};
-
-const requiresSalaryGuard: CanMatchFn = () => {
-  const state = inject(ApplicationStateService);
-  const router = inject(Router);
-  return state.salary() ? true : router.parseUrl('/apply/salary');
-};
-
-const requiresApprovedGuard: CanMatchFn = () => {
-  const state = inject(ApplicationStateService);
-  const router = inject(Router);
-  const decision = state.eligibility()?.decision;
-  return decision === 'approved' || decision === 'review' ? true : router.parseUrl('/apply/eligibility');
-};
-
-const requiresDocumentsGuard: CanMatchFn = () => {
-  const state = inject(ApplicationStateService);
-  const router = inject(Router);
-  const docs = state.docs();
-  return docs.length > 0 && docs.every((d) => d.status === 'uploaded')
-    ? true
-    : router.parseUrl('/apply/documents');
-};
-
-const requiresSubmissionGuard: CanMatchFn = () => {
-  const state = inject(ApplicationStateService);
-  const router = inject(Router);
-  return state.submission().status !== 'idle' && state.submission().status !== 'submitting'
-    ? true
-    : router.parseUrl('/apply/bvn');
-};
-
-const requiresTermsGuard: CanMatchFn = () => {
-  const state = inject(ApplicationStateService);
-  const router = inject(Router);
-  return state.termsAcceptedAt() ? true : router.parseUrl('/apply/terms');
-};
-
-/** NIN is only needed when the chosen product asks for it. */
-const requiresNinIfNeededGuard: CanMatchFn = () => {
-  const state = inject(ApplicationStateService);
-  const router = inject(Router);
-  const product = productById(state.offer()?.productId ?? '');
-  const needsNin = product?.settings.requiresNin ?? false;
-  if (!state.bvn()?.verified) return router.parseUrl('/apply/bvn');
-  return !needsNin || state.nin()?.verified ? true : router.parseUrl('/apply/nin');
-};
-
-const requiresOfferGuard: CanMatchFn = () => {
-  const state = inject(ApplicationStateService);
-  const router = inject(Router);
-  return state.offer() ? true : router.parseUrl('/apply/offers');
-};
-
-const requiresProfileGuard: CanMatchFn = () => {
-  const state = inject(ApplicationStateService);
-  const router = inject(Router);
-  return state.profile() ? true : router.parseUrl('/apply/profile');
-};
-
-const requiresBvnGuard: CanMatchFn = () => {
-  const state = inject(ApplicationStateService);
-  const router = inject(Router);
-  return state.bvn()?.verified ? true : router.parseUrl('/apply/bvn');
-};
-
-const requiresNinGuard: CanMatchFn = () => {
-  const state = inject(ApplicationStateService);
-  const router = inject(Router);
-  return state.nin()?.verified ? true : router.parseUrl('/apply/nin');
-};
-
-const requiresMandateGuard: CanMatchFn = () => {
-  const state = inject(ApplicationStateService);
-  const router = inject(Router);
-  return state.mandate()?.authorized ? true : router.parseUrl('/apply/mandate');
-};
-
-const requiresIdentityVerificationGuard: CanMatchFn = () => {
-  const state = inject(ApplicationStateService);
-  const router = inject(Router);
-  const product = productById(state.offer()?.productId ?? '');
-  if (product?.settings.identityVideo === 'none' && state.docs().length > 0) return true;
-  return state.identityVerification() ? true : router.parseUrl('/apply/verify-identity');
-};
+import { Routes } from '@angular/router';
+import {
+  languageChosenGuard,
+  requiresApprovedGuard,
+  requiresBvnEnteredGuard,
+  requiresBvnGuard,
+  requiresContactGuard,
+  requiresDocumentsGuard,
+  requiresEmploymentGuard,
+  requiresIdentityVerificationGuard,
+  requiresMandateGuard,
+  requiresNotSubmittedGuard,
+  requiresNinIfNeededGuard,
+  requiresOfferGuard,
+  requiresPhoneVerifiedGuard,
+  requiresProfileGuard,
+  requiresReceivedGuard,
+  requiresSalaryGuard,
+  requiresTermsGuard,
+} from './core/flow/guards';
 
 export const routes: Routes = [
   {
@@ -162,12 +62,16 @@ export const routes: Routes = [
           import('./features/apply/saved/saved.component').then((m) => m.SavedComponent),
       },
       {
-        path: 'welcome-back',
+        path: 'loans',
         canMatch: [requiresContactGuard, requiresPhoneVerifiedGuard],
         loadComponent: () =>
-          import('./features/apply/welcome-back/welcome-back.component').then(
-            (m) => m.WelcomeBackComponent,
-          ),
+          import('./features/apply/loans/loans.component').then((m) => m.LoansComponent),
+      },
+      {
+        path: 'loans/:id',
+        canMatch: [requiresContactGuard, requiresPhoneVerifiedGuard],
+        loadComponent: () =>
+          import('./features/apply/loans/loan-detail.component').then((m) => m.LoanDetailComponent),
       },
       {
         path: 'employment',
@@ -214,7 +118,7 @@ export const routes: Routes = [
       },
       {
         path: 'eligibility',
-        canMatch: [requiresSalaryGuard],
+        canMatch: [requiresEmploymentGuard, requiresSalaryGuard],
         loadComponent: () =>
           import('./features/apply/eligibility/eligibility.component').then(
             (m) => m.EligibilityComponent,
@@ -222,7 +126,7 @@ export const routes: Routes = [
       },
       {
         path: 'offers',
-        canMatch: [requiresSalaryGuard, requiresApprovedGuard],
+        canMatch: [requiresEmploymentGuard, requiresSalaryGuard, requiresApprovedGuard],
         loadComponent: () =>
           import('./features/apply/offers/offers.component').then((m) => m.OffersComponent),
       },
@@ -234,7 +138,7 @@ export const routes: Routes = [
       },
       {
         path: 'mandate',
-        canMatch: [requiresDocumentsGuard, requiresIdentityVerificationGuard],
+        canMatch: [requiresOfferGuard, requiresDocumentsGuard, requiresIdentityVerificationGuard],
         loadComponent: () =>
           import('./features/apply/mandate/mandate.component').then((m) => m.MandateComponent),
       },
@@ -256,13 +160,13 @@ export const routes: Routes = [
       },
       {
         path: 'submit',
-        canMatch: [requiresMandateGuard],
+        canMatch: [requiresNotSubmittedGuard, requiresBvnGuard, requiresOfferGuard, requiresMandateGuard],
         loadComponent: () =>
           import('./features/apply/submit/submit.component').then((m) => m.SubmitComponent),
       },
       {
         path: 'status',
-        canMatch: [requiresSubmissionGuard],
+        canMatch: [requiresReceivedGuard],
         loadComponent: () =>
           import('./features/apply/status/status.component').then((m) => m.StatusComponent),
       },

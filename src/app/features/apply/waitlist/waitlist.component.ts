@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { SelectFieldComponent, SelectOption } from '../../../core/ui/select-field.component';
 import { LangService } from '../../../core/i18n/lang.service';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { focusFirstInvalid } from '../../../core/a11y/focus';
@@ -13,6 +13,8 @@ import {
   WaitlistResult,
 } from '../../../core/api/api-client';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
+import { APPLY } from '../../../core/flow/apply-routes';
+import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 @Component({
   selector: 'app-waitlist',
@@ -24,7 +26,7 @@ import { ApplicationStateService } from '../../../core/application/application-s
 export class WaitlistComponent {
   private readonly api = inject(API_CLIENT);
   private readonly state = inject(ApplicationStateService);
-  private readonly router = inject(Router);
+  private readonly flow = inject(FlowNavigator);
   private readonly route = inject(ActivatedRoute);
 
   private readonly params = toSignal(this.route.queryParamMap, {
@@ -82,7 +84,7 @@ export class WaitlistComponent {
     }
     const contact = this.state.contact();
     if (!contact) {
-      await this.router.navigateByUrl('/apply/bvn');
+      await this.flow.go(APPLY.bvn);
       return;
     }
     this.submitting.set(true);
@@ -106,6 +108,6 @@ export class WaitlistComponent {
   }
 
   home(): void {
-    void this.router.navigateByUrl('/');
+    void this.flow.go(APPLY.home);
   }
 }

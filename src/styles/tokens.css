@@ -1,80 +1,50 @@
-/* Princeps design tokens — see design.md §3 */
+/* Princeps design tokens.
+   1. Primitives: raw brand palette, type, spacing, radius, motion, layers. Never change with the theme.
+   2. Semantic: what components use. Light is the default; dark overrides the same names, so a component
+      written against semantic tokens works in both. Dark applies with data-theme="dark", or automatically
+      when the device prefers dark and no theme is forced (data-theme="light" forces light).
+   Components must use semantic tokens, never a hex value or a primitive colour. */
 
+/* ===== 1. Primitives ===== */
 :root {
-  /* Brand — navy (primary) */
+  /* Brand palette */
   --navy-950: #071e3d;
   --navy-900: #0b2b55;
   --navy-800: #123869;
   --navy-100: #e4eaf3;
-
-  /* Brand — cyan (secondary accent) */
   --cyan-600: #2ea9c0;
   --cyan-500: #51c4d9;
   --cyan-100: #e5f6fa;
-
-  /* Brand — orange (attention, reserved) */
+  --orange-700: #b8440f;
   --orange-600: #d45217;
   --orange-500: #f16522;
   --orange-100: #fdeae0;
+  --whatsapp: #25d366;
 
-  /* Neutrals */
-  --surface-0: #ffffff;
-  --surface-1: #fafafb;
-  --surface-2: #f3f4f6;
-  --surface-3: #e5e7eb;
-  --surface-4: #d1d5db;
-
-  --text-primary: #111214;
-  --text-secondary: #5a5d63;
-  --text-tertiary: #666a70;
-  --text-disabled: #b6b8bd;
-  --text-on-navy: #ffffff;
-  --text-on-orange: #ffffff;
-  --text-on-cyan: #0b2b55;
-
-  /* Semantic */
-  --success: #16a34a;
-  --success-soft: #e7f6ec;
-  --success-text: #166534; /* AA on --success-soft and white; --success is for icons only */
-  --warning: #d97706;
-  --warning-soft: #fef3e2;
-  --danger: #dc2626;
-  --danger-text: #b91c1c; /* AA on canvas + white; --danger fails 4.5:1 for small text */
-  --danger-soft: #fdecec;
-  --info: #0b2b55;
-  --info-soft: #e4eaf3;
-
-  /* Typography */
-  --font-display: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Typography: families */
+  --font-display: 'SuperX Sans', 'Google Sans', 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans: 'Agrandir', 'Google Sans', 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
-
-  /* Editorial surface — Contra-leaning cream, less "web app white" */
-  --canvas: #eaf0f8; /* cool navy-tinted page backdrop (desktop) */
-  --ink: #0a1f3d;
-  --ink-soft: #3d4f6b;
-  --ink-muted: #5b6b85;
-  --hairline: rgba(11, 43, 85, 0.08);
-  --hairline-strong: rgba(11, 43, 85, 0.16);
-
-  /* Semantic action tokens — resolve to the brand navy so every CTA/focus
-     ring/link routes through one variable. Change here to reskin globally. */
-  --action-primary: var(--navy-900);
-  --action-primary-hover: var(--navy-800);
-  --action-primary-active: var(--navy-950);
-  --action-on-primary: var(--text-on-navy);
-  --accent-cool: var(--cyan-500);
-  --accent-warm: var(--orange-500);
-  --focus-ring: 0 0 0 3px #ffffff, 0 0 0 5px var(--navy-900);
-
-  /* Polaris-style input surface */
-  --input-bg: #eef3fa;
-  --input-border: #6f83a3;
-  --input-border-hover: #4a5f82;
-  --input-border-focus: var(--navy-900);
-  --input-shadow-focus: 0 0 0 3px rgba(11, 43, 85, 0.18);
-  --input-radius: 12px;
-  --input-height: 52px;
+  /* Typography: sizes, weights, leading, tracking */
+  --fs-2xs: 11px;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-md: 14px;
+  --fs-body: 15px;
+  --fs-base: 16px;
+  --fs-lg: 18px;
+  --fs-xl: 22px;
+  --fs-2xl: 28px;
+  --fs-3xl: 34px;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --lh-tight: 1.15;
+  --lh-snug: 1.3;
+  --lh-normal: 1.5;
+  --ls-tight: -0.02em;
+  --ls-caps: 0.1em;
 
   /* Spacing (4px base) */
   --space-1: 4px;
@@ -97,11 +67,301 @@
   --radius-xl: 28px;
   --radius-2xl: 32px;
   --radius-pill: 999px;
+  --btn-radius: var(--radius-md);
+  --btn-height: 52px;
+  --btn-weight: 700;
+  --tap-min: 44px;
+  --input-radius: 12px;
+  --input-height: 52px;
 
-  /* Elevation */
+  /* Layout */
+  --container-narrow: 460px;
+  --container: 600px;
+  --container-wide: 1040px;
+
+  /* Motion */
+  --dur-fast: 120ms;
+  --dur-base: 160ms;
+  --dur-slow: 240ms;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.1, 1);
+
+  /* Layers */
+  --glass-blur: 14px;
+  --z-promo: 50;
+  --z-support: 60;
+  --z-banner: 70;
+  --z-backdrop: 79;
+  --z-sheet: 80;
+  --z-toast: 1000;
+}
+
+/* ===== 2. Semantic: light (default) ===== */
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  /* Surfaces */
+  --canvas: #ffffff;
+  --surface-0: #ffffff;
+  --surface-1: #fafafb;
+  --surface-2: #f3f4f6;
+  --surface-3: #e5e7eb;
+  --surface-4: #d1d5db;
+  --grey-50: #f7f7f8;
+  --grey-100: #f0f0f2;
+  --grey-200: #e4e4e7;
+  --grey-500: #6b6e75;
+  --grey-900: #111214;
+
+  /* Text */
+  --text-primary: #111214;
+  --text-secondary: #5a5d63;
+  --text-tertiary: #666a70;
+  --text-disabled: #b6b8bd;
+  --text-accent: #c2410c;
+  --ink: #111214;
+  --ink-soft: #4b4e55;
+  --ink-muted: #6b6e75;
+
+  /* Lines, overlays and hover */
+  --hairline: rgba(17, 18, 20, 0.08);
+  --hairline-strong: rgba(17, 18, 20, 0.16);
+  --hover-tint: rgba(17, 18, 20, 0.05);
+  --overlay: rgba(7, 30, 61, 0.5);
+
+  /* Actions: primary is the logo orange, secondary a soft grey fill, neutral an ink fill */
+  --action-primary: #f16522;
+  --action-primary-hover: #ff7a3d;
+  --action-primary-active: #ff8f5c;
+  --action-on-primary: #111214;
+  --action-primary-soft: #fdeae0;
+  --action-secondary: var(--grey-100);
+  --action-secondary-hover: var(--grey-200);
+  --action-on-secondary: var(--ink);
+  --action-neutral: #111214;
+  --action-neutral-hover: #2a2c30;
+  --action-neutral-active: #000000;
+  --action-on-neutral: #ffffff;
+  --focus-color: #111214;
+
+  /* Status */
+  --success: #16a34a;
+  --success-soft: #e7f6ec;
+  --success-text: #166534;
+  --warning: #d97706;
+  --warning-soft: #fef3e2;
+  --warning-text: #b45309;
+  --danger: #dc2626;
+  --danger-soft: #fdecec;
+  --danger-text: #b91c1c;
+  --info: #0b2b55;
+  --info-soft: #e4eaf3;
+
+  /* Inputs */
+  --input-bg: #f7f7f8;
+  --input-border: #c4c6cc;
+  --input-border-hover: #9a9da4;
+  --input-shadow-focus: 0 0 0 3px rgba(17, 18, 20, 0.12);
+
+  /* Cards, badges and elevation */
+  --card-border: rgba(17, 18, 20, 0.06);
+  --card-shadow: 0 12px 32px rgba(16, 24, 40, 0.12), 0 2px 6px rgba(16, 24, 40, 0.06);
+  /* Glass: translucent surface for small floating elements. Kept mostly opaque so text stays readable. */
+  --glass-bg: rgba(255, 255, 255, 0.86);
+  --glass-border: rgba(255, 255, 255, 0.7);
+  --glass-solid: #ffffff;
+  --badge-new-bg: #fdeae0;
+  --badge-new-text: #8a3a0f;
   --shadow-1: 0 1px 2px rgba(16, 24, 40, 0.04);
   --shadow-2: 0 4px 12px rgba(16, 24, 40, 0.06);
   --shadow-3: 0 12px 32px rgba(16, 24, 40, 0.1);
   --shadow-4: 0 24px 64px rgba(16, 24, 40, 0.14);
-  --shadow-focus: 0 0 0 3px rgba(11, 43, 85, 0.28);
+
+  /* Derived */
+  --focus-ring: 0 0 0 3px var(--canvas), 0 0 0 5px var(--focus-color);
+  --shadow-focus: 0 0 0 3px rgba(17, 18, 20, 0.28);
+  --input-border-focus: var(--grey-900);
+  --card-bg: var(--surface-0);
+  --banner-bg: var(--grey-100);
+  --accent-cool: var(--cyan-500);
+  --accent-warm: var(--orange-500);
+  --action-secondary-soft: var(--grey-100);
+  --text-on-navy: #ffffff;
+  --text-on-orange: #111214;
+  --text-on-cyan: #0b2b55;
+}
+
+/* ===== 3. Semantic: dark ===== */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --canvas: #0e0f11;
+  --surface-0: #16171a;
+  --surface-1: #1a1b1f;
+  --surface-2: #212226;
+  --surface-3: #2b2c31;
+  --surface-4: #3a3b41;
+  --grey-50: #1a1b1e;
+  --grey-100: #222327;
+  --grey-200: #2d2e33;
+  --grey-500: #9a9da4;
+  --grey-900: #f4f4f5;
+
+  /* Text */
+  --text-primary: #f4f4f5;
+  --text-secondary: #b4b6bc;
+  --text-tertiary: #9a9da4;
+  --text-disabled: #5c5e65;
+  --text-accent: #ff9b6a;
+  --ink: #f4f4f5;
+  --ink-soft: #c1c3c8;
+  --ink-muted: #9a9da4;
+
+  /* Lines, overlays and hover */
+  --hairline: rgba(255, 255, 255, 0.1);
+  --hairline-strong: rgba(255, 255, 255, 0.2);
+  --hover-tint: rgba(255, 255, 255, 0.07);
+  --overlay: rgba(0, 0, 0, 0.65);
+
+  /* Actions: primary is the logo orange, secondary a soft grey fill, neutral an ink fill */
+  --action-primary: #f16522;
+  --action-primary-hover: #ff7a3d;
+  --action-primary-active: #ff8f5c;
+  --action-on-primary: #111214;
+  --action-primary-soft: rgba(241, 101, 34, 0.18);
+  --action-secondary: var(--grey-100);
+  --action-secondary-hover: var(--grey-200);
+  --action-on-secondary: var(--ink);
+  --action-neutral: #f4f4f5;
+  --action-neutral-hover: #d4d4d8;
+  --action-neutral-active: #ffffff;
+  --action-on-neutral: #111214;
+  --focus-color: #f4f4f5;
+
+  /* Status */
+  --success: #22c55e;
+  --success-soft: #12301f;
+  --success-text: #86efac;
+  --warning: #f59e0b;
+  --warning-soft: #33270f;
+  --warning-text: #fbbf24;
+  --danger: #f87171;
+  --danger-soft: #3a1717;
+  --danger-text: #fca5a5;
+  --info: #8bb4f0;
+  --info-soft: #17243a;
+
+  /* Inputs */
+  --input-bg: #1a1b1e;
+  --input-border: #3a3b41;
+  --input-border-hover: #55575e;
+  --input-shadow-focus: 0 0 0 3px rgba(255, 255, 255, 0.16);
+
+  /* Cards, badges and elevation */
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.4);
+  /* Glass: translucent surface for small floating elements. Kept mostly opaque so text stays readable. */
+  --glass-bg: rgba(30, 31, 36, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-solid: #1e1f24;
+  --badge-new-bg: rgba(241, 101, 34, 0.2);
+  --badge-new-text: #ffb48a;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --shadow-3: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --shadow-4: 0 24px 64px rgba(0, 0, 0, 0.55);
+  --shadow-focus: 0 0 0 3px rgba(255, 255, 255, 0.32);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    /* Surfaces */
+    --canvas: #0e0f11;
+    --surface-0: #16171a;
+    --surface-1: #1a1b1f;
+    --surface-2: #212226;
+    --surface-3: #2b2c31;
+    --surface-4: #3a3b41;
+    --grey-50: #1a1b1e;
+    --grey-100: #222327;
+    --grey-200: #2d2e33;
+    --grey-500: #9a9da4;
+    --grey-900: #f4f4f5;
+
+    /* Text */
+    --text-primary: #f4f4f5;
+    --text-secondary: #b4b6bc;
+    --text-tertiary: #9a9da4;
+    --text-disabled: #5c5e65;
+    --text-accent: #ff9b6a;
+    --ink: #f4f4f5;
+    --ink-soft: #c1c3c8;
+    --ink-muted: #9a9da4;
+
+    /* Lines, overlays and hover */
+    --hairline: rgba(255, 255, 255, 0.1);
+    --hairline-strong: rgba(255, 255, 255, 0.2);
+    --hover-tint: rgba(255, 255, 255, 0.07);
+    --overlay: rgba(0, 0, 0, 0.65);
+
+    /* Actions: primary is the logo orange, secondary a soft grey fill, neutral an ink fill */
+    --action-primary: #f16522;
+    --action-primary-hover: #ff7a3d;
+    --action-primary-active: #ff8f5c;
+    --action-on-primary: #111214;
+    --action-primary-soft: rgba(241, 101, 34, 0.18);
+    --action-secondary: var(--grey-100);
+    --action-secondary-hover: var(--grey-200);
+    --action-on-secondary: var(--ink);
+    --action-neutral: #f4f4f5;
+    --action-neutral-hover: #d4d4d8;
+    --action-neutral-active: #ffffff;
+    --action-on-neutral: #111214;
+    --focus-color: #f4f4f5;
+
+    /* Status */
+    --success: #22c55e;
+    --success-soft: #12301f;
+    --success-text: #86efac;
+    --warning: #f59e0b;
+    --warning-soft: #33270f;
+    --warning-text: #fbbf24;
+    --danger: #f87171;
+    --danger-soft: #3a1717;
+    --danger-text: #fca5a5;
+    --info: #8bb4f0;
+    --info-soft: #17243a;
+
+    /* Inputs */
+    --input-bg: #1a1b1e;
+    --input-border: #3a3b41;
+    --input-border-hover: #55575e;
+    --input-shadow-focus: 0 0 0 3px rgba(255, 255, 255, 0.16);
+
+    /* Cards, badges and elevation */
+    --card-border: rgba(255, 255, 255, 0.08);
+    --card-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.4);
+    /* Glass: translucent surface for small floating elements. Kept mostly opaque so text stays readable. */
+    --glass-bg: rgba(30, 31, 36, 0.82);
+    --glass-border: rgba(255, 255, 255, 0.14);
+    --glass-solid: #1e1f24;
+    --badge-new-bg: rgba(241, 101, 34, 0.2);
+    --badge-new-text: #ffb48a;
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.45);
+    --shadow-3: 0 12px 32px rgba(0, 0, 0, 0.5);
+    --shadow-4: 0 24px 64px rgba(0, 0, 0, 0.55);
+    --shadow-focus: 0 0 0 3px rgba(255, 255, 255, 0.32);
+  }
+}
+
+/* Agrandir and SuperX have no tone marks or dotted letters (ẹ ọ ṣ), which Yoruba, Igbo and Hausa need: those languages use Google Sans for body and headings. */
+:root:lang(yo),
+:root:lang(ig),
+:root:lang(ha) {
+  --font-sans: 'Google Sans', 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: var(--font-sans);
 }

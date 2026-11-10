@@ -49,6 +49,13 @@ export interface OfferDraft {
   interestModel: 'Flat Rate' | 'Reducing Balance' | 'Percentage Based';
   monthlyRepayment: number;
   fees: { name: string; amount: number }[];
+  referralCode?: string;
+}
+
+export interface ReferralDraft {
+  code: string;
+  rateDiscountPct: number;
+  label: string;
 }
 
 /** What the customer last chose, kept so a changed offer can start from it. */
@@ -157,6 +164,7 @@ export interface ApplicationDraft {
   eligibility: EligibilityDraft | null;
   offer: OfferDraft | null;
   offerPreference: OfferPreference | null;
+  referral: ReferralDraft | null;
   profile: ProfileDraft | null;
   bvn: BvnDraft | null;
   nin: NinDraft | null;
@@ -164,6 +172,20 @@ export interface ApplicationDraft {
   docs: DocDraft[];
   identityVerification: IdentityVerificationDraft | null;
   submission: SubmissionDraft;
+  /** Generated once per application and sent with every submit attempt, so a retry cannot create a second loan. */
+  submissionKey: string | null;
+}
+
+const sameValue = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
+
+/** Everything that depends on the offer being accepted: terms, mandate, documents and the identity check. */
+function withoutAcceptance(s: ApplicationDraft): ApplicationDraft {
+  return { ...s, termsAcceptedAt: null, mandate: null, docs: [], identityVerification: null, submissionKey: null };
+}
+
+/** Everything the customer decided after the work and salary details: eligibility, offer and what follows. */
+function withoutDecisions(s: ApplicationDraft): ApplicationDraft {
+  return { ...withoutAcceptance(s), eligibility: null, offer: null, nin: null };
 }
 
 const empty: ApplicationDraft = {
@@ -179,6 +201,7 @@ const empty: ApplicationDraft = {
   eligibility: null,
   offer: null,
   offerPreference: null,
+  referral: null,
   profile: null,
   bvn: null,
   nin: null,
@@ -186,6 +209,7 @@ const empty: ApplicationDraft = {
   docs: [],
   identityVerification: null,
   submission: { status: 'idle' },
+  submissionKey: null,
 };
 
 @Injectable({ providedIn: 'root' })
@@ -204,6 +228,7 @@ export class ApplicationStateService {
   readonly eligibility = computed(() => this.state().eligibility);
   readonly offer = computed(() => this.state().offer);
   readonly offerPreference = computed(() => this.state().offerPreference);
+  readonly referral = computed(() => this.state().referral);
   readonly profile = computed(() => this.state().profile);
   readonly bvn = computed(() => this.state().bvn);
   /**
@@ -247,12 +272,13 @@ export class ApplicationStateService {
     }));
   }
 
+  /** Changing a step invalidates everything the customer decided after it (offer, terms, mandate, documents...). */
   setEmployment(employment: EmploymentDraft): void {
-    this.state.update((s) => ({ ...s, employment }));
+    this.state.update((s) => (sameValue(s.employment, employment) ? s : { ...withoutDecisions(s), employment, salary: null }));
   }
 
   setSalary(salary: SalaryDraft): void {
-    this.state.update((s) => ({ ...s, salary }));
+    this.state.update((s) => (sameValue(s.salary, salary) ? s : { ...withoutDecisions(s), salary }));
   }
 
   setEligibility(eligibility: EligibilityDraft): void {
@@ -260,11 +286,15 @@ export class ApplicationStateService {
   }
 
   setOffer(offer: OfferDraft): void {
-    this.state.update((s) => ({ ...s, offer }));
+    this.state.update((s) => (sameValue(s.offer, offer) ? s : { ...withoutAcceptance(s), offer }));
   }
 
   setOfferPreference(offerPreference: OfferPreference | null): void {
     this.state.update((s) => ({ ...s, offerPreference }));
+  }
+
+  setReferral(referral: ReferralDraft | null): void {
+    this.state.update((s) => ({ ...s, referral }));
   }
 
   setProfile(profile: ProfileDraft): void {
@@ -320,6 +350,15 @@ export class ApplicationStateService {
     salary: SalaryDraft | null;
   }): void {
     this.state.update((s) => ({ ...s, ...d }));
+  }
+
+  /** The key for this application's submit; created on first use and kept for retries. */
+  ensureSubmissionKey(): string {
+    const existing = this.state().submissionKey;
+    if (existing) return existing;
+    const key = crypto.randomUUID();
+    this.state.update((s) => ({ ...s, submissionKey: key }));
+    return key;
   }
 
   reset(): void {

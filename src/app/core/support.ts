@@ -11,3 +11,6 @@ export function whatsappLink(message = 'Hello Princeps, I need help with my loan
 export function telLink(): string {
   return `tel:${SUPPORT_PHONE}`;
 }
+
+/** Zoho support flow opened by the floating Support button. Empty until the link is provided: the contact sheet opens instead. */
+export const SUPPORT_ZOHO_URL = '';

@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { SelectFieldComponent, SelectOption } from '../../../core/ui/select-field.component';
-import { Router } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { focusFirstInvalid } from '../../../core/a11y/focus';
@@ -11,6 +10,8 @@ import {
   ApplicationStateService,
   SalaryChannel,
 } from '../../../core/application/application-state.service';
+import { APPLY } from '../../../core/flow/apply-routes';
+import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 const PARAMILITARY_EMPLOYERS = [
   'NSCDC',
@@ -30,7 +31,7 @@ const PARAMILITARY_EMPLOYERS = [
 export class SalaryComponent {
   private readonly api = inject(API_CLIENT);
   private readonly state = inject(ApplicationStateService);
-  private readonly router = inject(Router);
+  private readonly flow = inject(FlowNavigator);
 
   readonly channel = signal<SalaryChannel>(this.deriveChannel());
   readonly showChannelChoice = computed(() => this.state.employment()?.type === 'government');
@@ -92,10 +93,6 @@ export class SalaryComponent {
   });
 
   constructor() {
-    // Ensure prerequisite step done.
-    if (!this.state.employment()) {
-      void this.router.navigateByUrl('/apply/employment');
-    }
     void this.api.listBanks().then((b) => this.banks.set(b));
 
     // Rehydrate.
@@ -208,7 +205,7 @@ export class SalaryComponent {
         paramilitaryEmployer: v.employer || undefined,
         monthlyIncome: res.monthlyIncome,
       });
-      await this.router.navigateByUrl('/apply/eligibility');
+      await this.flow.go(APPLY.eligibility);
     } finally {
       this.submitting.set(false);
     }

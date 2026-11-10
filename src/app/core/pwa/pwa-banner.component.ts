@@ -39,18 +39,18 @@ const OFFER_ROUTES = new Set([...AUTO_APPLY_ROUTES, '/apply/bvn', '/apply/status
         display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
         padding: var(--space-3) var(--space-4);
         border-radius: var(--radius-md);
-        background: var(--ink); color: #fff;
-        font-size: 14px; line-height: 1.4;
+        background: var(--ink); color: var(--canvas);
+        font-size: var(--fs-md); line-height: 1.4;
         box-shadow: var(--shadow-3);
       }
       .banner--offline { background: var(--navy-950); }
       .action {
         min-height: 44px; padding: 0 var(--space-4);
-        border: 1px solid #fff; border-radius: var(--radius-pill);
-        background: transparent; color: #fff;
-        font: inherit; font-weight: 600; cursor: pointer;
+        border: 1px solid currentColor; border-radius: var(--btn-radius);
+        background: transparent; color: inherit;
+        font: inherit; font-weight: var(--btn-weight); cursor: pointer;
       }
-      .action:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+      .action:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
     `,
   ],
 })

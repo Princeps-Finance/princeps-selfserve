@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { LangService } from '../../../core/i18n/lang.service';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { DraftData, DraftService } from '../../../core/application/draft.service';
+import { APPLY } from '../../../core/flow/apply-routes';
+import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 /** Shown right after the OTP when this phone number has an application in progress. */
 @Component({
@@ -50,25 +51,25 @@ import { DraftData, DraftService } from '../../../core/application/draft.service
   `,
   styles: [
     `
-      .step { display: flex; flex-direction: column; gap: var(--space-5); padding-top: var(--space-6); }
-      .title { margin: 0; text-align: center; font-size: clamp(26px, 7vw, 32px); line-height: 1.15; letter-spacing: -0.02em; }
+.step { gap: var(--space-5); padding-top: var(--space-6); }
+.title { text-align: center; font-size: clamp(26px, 7vw, 32px); line-height: 1.15; letter-spacing: -0.02em; }
       .card { padding: var(--space-5); border-radius: var(--radius-lg); background: var(--surface-0); border: 1px solid var(--hairline); display: flex; flex-direction: column; gap: var(--space-2); }
-      .label { margin: 0; font-size: 13px; color: var(--ink-muted); }
+      .label { margin: 0; font-size: var(--fs-sm); color: var(--ink-muted); }
       .where { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
       .where::first-letter { text-transform: uppercase; }
-      .bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: var(--space-2); }
+      .bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-1); margin-top: var(--space-2); }
       .bar span { height: 4px; border-radius: 2px; background: var(--hairline); }
       .bar span.on { background: var(--action-primary); }
-      .meta { margin: var(--space-2) 0 0; font-size: 14px; color: var(--ink-soft); }
+      .meta { margin: var(--space-2) 0 0; font-size: var(--fs-md); color: var(--ink-soft); }
       .actions { margin-top: auto; display: flex; flex-direction: column; gap: var(--space-3); padding-top: var(--space-4); }
       .confirm { margin: 0; padding: var(--space-4); border-radius: var(--radius-md); background: var(--warning-soft); }
       .cta, .alt {
-        min-height: 56px; padding: 0 var(--space-6); border-radius: var(--radius-pill); cursor: pointer;
-        font-family: var(--font-sans); font-size: 16px; font-weight: 600;
+        min-height: var(--btn-height); padding: 0 var(--space-6); border-radius: var(--btn-radius); cursor: pointer;
+        font-family: var(--font-sans); font-size: var(--fs-base); font-weight: var(--btn-weight);
         display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3);
       }
-      .cta { border: 0; background: var(--action-primary); color: var(--action-on-primary); justify-content: space-between; margin-top: 0 !important; }
-      .alt { border: 1.5px solid var(--action-primary); background: transparent; color: var(--action-primary); }
+.cta { border: 0; margin-top: 0 !important; }
+
       .alt--danger { border-color: var(--danger-text); color: var(--danger-text); }
       .cta:focus-visible, .alt:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
     `,
@@ -77,7 +78,7 @@ import { DraftData, DraftService } from '../../../core/application/draft.service
 export class ResumeComponent {
   private readonly state = inject(ApplicationStateService);
   private readonly drafts = inject(DraftService);
-  private readonly router = inject(Router);
+  private readonly flow = inject(FlowNavigator);
   private readonly lang = inject(LangService);
 
   readonly draft = signal<DraftData | null>(null);
@@ -119,18 +120,18 @@ export class ResumeComponent {
     const contact = this.state.contact();
     const found = contact && this.state.phoneVerified() ? this.drafts.find(contact.phone) : null;
     if (!found) {
-      void this.router.navigateByUrl('/apply/profile');
+      void this.flow.go(APPLY.profile);
       return;
     }
     this.draft.set(found);
   }
 
   continueDraft(d: DraftData): void {
-    void this.router.navigateByUrl(this.drafts.restore(d));
+    void this.flow.go(this.drafts.restore(d));
   }
 
   startOver(): void {
     this.drafts.clear();
-    void this.router.navigateByUrl('/apply/profile');
+    void this.flow.go(APPLY.profile);
   }
 }

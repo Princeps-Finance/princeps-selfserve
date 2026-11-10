@@ -1,0 +1,26 @@
+.group { display: flex; flex-direction: column; gap: var(--space-3); }
+.group-title { margin: 0; font: var(--fw-medium) var(--fs-xs) var(--font-sans); letter-spacing: var(--ls-caps); text-transform: uppercase; color: var(--ink-muted); }
+.list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
+.loan {
+  display: flex; flex-direction: column; gap: var(--space-2); width: 100%; padding: var(--space-4); text-align: left;
+  font: inherit; color: var(--ink); cursor: pointer; background: var(--grey-100); border: 0; border-radius: var(--radius-md);
+  transition: background var(--dur-base) ease;
+}
+.loan:hover { background: var(--grey-200); }
+.loan:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
+.loan--past { opacity: 0.85; }
+.loan-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.loan-name { font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 600; }
+.loan-owed { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+.loan-owed-label { font-size: var(--fs-sm); color: var(--ink-soft); }
+.loan-owed-amount { font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 600; font-variant-numeric: tabular-nums; }
+.loan-next { font-size: var(--fs-sm); color: var(--ink-soft); }
+.bar { display: block; height: 6px; border-radius: var(--radius-pill); background: var(--hairline-strong); overflow: hidden; }
+.bar-fill { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--action-primary); }
+.state { margin: 0; padding: var(--space-4); border-radius: var(--radius-md); background: var(--grey-100); color: var(--ink-soft); display: flex; flex-direction: column; gap: var(--space-3); }
+.state p { margin: 0; }
+.hint { margin: 0; text-align: center; font-size: var(--fs-sm); color: var(--ink-muted); }
+.facts { margin: 0; display: flex; flex-direction: column; }
+.fact { display: flex; justify-content: space-between; gap: var(--space-4); padding: var(--space-3) 0; border-top: 1px solid var(--hairline); font-size: var(--fs-md); }
+.fact dt { margin: 0; color: var(--ink-soft); }
+.fact dd { margin: 0; font-weight: 500; text-align: right; font-variant-numeric: tabular-nums; }

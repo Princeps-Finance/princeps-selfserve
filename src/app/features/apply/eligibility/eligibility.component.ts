@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
@@ -10,6 +9,8 @@ import {
   MdaCategory,
   ReasonCode,
 } from '../../../core/eligibility/eligibility-scoring';
+import { APPLY } from '../../../core/flow/apply-routes';
+import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 const REVIEW_BAND_MIN = 45;
 const REVIEW_BAND_MAX = 55;
@@ -23,7 +24,7 @@ const REVIEW_BAND_MAX = 55;
 })
 export class EligibilityComponent implements OnInit {
   private readonly state = inject(ApplicationStateService);
-  private readonly router = inject(Router);
+  private readonly flow = inject(FlowNavigator);
 
   readonly phase = signal<'checking' | 'declined'>('checking');
   readonly reasonCodes = signal<ReasonCode[]>([]);
@@ -33,10 +34,8 @@ export class EligibilityComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     const employment = this.state.employment();
     const salary = this.state.salary();
-    if (!employment || !salary) {
-      await this.router.navigateByUrl('/apply/employment');
-      return;
-    }
+    // The route guard guarantees both; the check only narrows the types.
+    if (!employment || !salary) return;
 
     // Small deliberate delay so the spinner reads as work being done.
     await new Promise((r) => setTimeout(r, 700));
@@ -77,7 +76,7 @@ export class EligibilityComponent implements OnInit {
     // A 'review' result is not a dead end: the customer still chooses an offer and submits,
     // and a person reviews the application afterwards.
     if (decision === 'approved' || decision === 'review') {
-      await this.router.navigateByUrl('/apply/offers');
+      await this.flow.go(APPLY.offers);
       return;
     }
     this.reasonCodes.set(result.reasonCodes);
@@ -85,9 +84,7 @@ export class EligibilityComponent implements OnInit {
   }
 
   private toMdaCategory(t: string): MdaCategory {
-    if (t === 'paramilitary') return 'paramilitary';
-    if (t === 'government') return 'federal';
-    return 'federal';
+    return t === 'paramilitary' ? 'paramilitary' : 'federal';
   }
 
   private incomeSource(): EligibilityInput['income']['source'] {
@@ -98,10 +95,10 @@ export class EligibilityComponent implements OnInit {
   }
 
   editDetails(): void {
-    void this.router.navigateByUrl('/apply/employment');
+    void this.flow.go(APPLY.employment);
   }
 
   home(): void {
-    void this.router.navigateByUrl('/');
+    void this.flow.go(APPLY.home);
   }
 }

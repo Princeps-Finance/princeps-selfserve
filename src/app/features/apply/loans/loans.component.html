@@ -1,0 +1,76 @@
+<section class="step">
+  <header class="head">
+    <h1 class="title">{{ 'loans.title' | t }}@if (firstName()) {, {{ firstName() }}}</h1>
+    <p class="subtitle">{{ 'loans.sub' | t }}</p>
+  </header>
+
+  @switch (book.status()) {
+    @case ('loading') {
+      <p class="state" role="status">{{ 'loans.loading' | t }}</p>
+    }
+    @case ('error') {
+      <div class="state" role="alert">
+        <p>{{ 'loans.error' | t }}</p>
+        <button type="button" class="alt" (click)="retry()">{{ 'common.retry' | t }}</button>
+      </div>
+    }
+    @default {
+      @if (!hasLoans()) {
+        <p class="state">{{ 'loans.none' | t }}</p>
+      }
+
+      @if (book.open().length > 0) {
+        <section aria-labelledby="open-title" class="group">
+          <h2 class="group-title" id="open-title">{{ 'loans.open' | t }}</h2>
+          <ul class="list">
+            @for (l of book.open(); track l.id) {
+              <li>
+                <button type="button" class="loan" (click)="open(l.id)">
+                  <span class="loan-top">
+                    <span class="loan-name">{{ l.productName }}</span>
+                    <app-loan-status [status]="l.status" />
+                  </span>
+                  <span class="loan-owed">
+                    <span class="loan-owed-label">{{ 'loans.owed' | t }}</span>
+                    <span class="loan-owed-amount">{{ formatNaira(l.outstanding) }}</span>
+                  </span>
+                  @if (l.nextDueDate) {
+                    <span class="loan-next">{{ 'loans.next' | t: { amount: formatNaira(l.monthlyRepayment), date: due(l.nextDueDate) } }}</span>
+                  }
+                  <span class="bar" aria-hidden="true"><span class="bar-fill" [style.width.%]="(l.instalmentsPaid / l.instalmentsTotal) * 100"></span></span>
+                </button>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      @if (book.completed().length > 0) {
+        <section aria-labelledby="past-title" class="group">
+          <h2 class="group-title" id="past-title">{{ 'loans.past' | t }}</h2>
+          <ul class="list">
+            @for (l of book.completed(); track l.id) {
+              <li>
+                <button type="button" class="loan loan--past" (click)="open(l.id)">
+                  <span class="loan-top">
+                    <span class="loan-name">{{ l.productName }}</span>
+                    <app-loan-status [status]="l.status" />
+                  </span>
+                  <span class="loan-next">{{ formatNaira(l.principal) }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    }
+  }
+
+  <button type="button" class="cta" (click)="newLoan()">
+    <span>{{ 'loans.new' | t }}</span>
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  </button>
+  <p class="hint">{{ 'loans.new.hint' | t }}</p>
+</section>

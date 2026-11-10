@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { focusFirstInvalid } from '../../../core/a11y/focus';
@@ -10,6 +9,8 @@ import {
   ApplicationStateService,
   EmploymentType,
 } from '../../../core/application/application-state.service';
+import { APPLY } from '../../../core/flow/apply-routes';
+import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 interface Option {
   type: EmploymentType;
@@ -35,7 +36,7 @@ const OPTIONS: Option[] = [
 })
 export class EmploymentComponent {
   private readonly state = inject(ApplicationStateService);
-  private readonly router = inject(Router);
+  private readonly flow = inject(FlowNavigator);
 
   /** Only segments we can serve now are options. The rest are a single waitlist link, not disabled-looking rows. */
   readonly options = OPTIONS;
@@ -98,12 +99,12 @@ export class EmploymentComponent {
     if (!opt) return;
 
     if (!opt.live) {
-      await this.router.navigate(['/apply/waitlist'], { queryParams: { type: opt.type } });
+      await this.flow.go(APPLY.waitlist, { queryParams: { type: opt.type } });
       return;
     }
     if (opt.type === 'private-sector') {
       this.state.setEmployment({ type: opt.type });
-      await this.router.navigateByUrl('/apply/statement');
+      await this.flow.go(APPLY.statement);
       return;
     }
 
@@ -114,7 +115,7 @@ export class EmploymentComponent {
         nyscMonthsRemaining:
           opt.type === 'corper' ? (this.nyscMonths.value ?? undefined) : undefined,
       });
-      await this.router.navigateByUrl('/apply/salary');
+      await this.flow.go(APPLY.salary);
     } finally {
       this.submitting.set(false);
     }

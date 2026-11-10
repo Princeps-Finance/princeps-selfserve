@@ -2,4 +2,19 @@
 <app-pwa-banner />
 <router-outlet />
 <app-toast-host />
+<app-help-launcher />
 <app-privacy-dialog />
+@if (install.offer()) {
+  <div class="promo">
+    <app-promo-card
+      [title]="'install.card.title' | t"
+      [badge]="'install.badge' | t"
+      [description]="'install.card.desc' | t"
+      [ctaLabel]="'install.card.cta' | t"
+      [dismissLabel]="'common.dismiss' | t"
+      imageAlt="Princeps app preview"
+      (dismissed)="install.dismiss()"
+      (action)="install.install()"
+    />
+  </div>
+}
