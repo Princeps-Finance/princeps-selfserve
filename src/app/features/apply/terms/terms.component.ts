@@ -1,4 +1,5 @@
 import { estimateApr } from '../../../../shared/pricing';
+import { dueDateOf, firstPaydayAfter } from '../../../core/products/payday';
 import { CardComponent } from '../../../shared/card.component';
 import { CheckboxComponent } from '../../../shared/checkbox.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
@@ -19,18 +20,6 @@ interface ScheduleRow {
   interest: number;
   payment: number;
   balance: number;
-}
-
-const PAYDAY_DAY = 25;
-
-function firstPaydayAfter(from: Date): Date {
-  const y = from.getFullYear();
-  const m = from.getMonth();
-  const d = from.getDate();
-  // If disbursed on or before the 15th of the month, first repayment is this month's 25th.
-  // Otherwise, roll to next month's 25th so the borrower doesn't owe within 10 days.
-  const monthOffset = d <= 15 ? 0 : 1;
-  return new Date(y, m + monthOffset, PAYDAY_DAY);
 }
 
 @Component({
@@ -63,7 +52,7 @@ export class TermsComponent {
     const firstDue = firstPaydayAfter(new Date());
     return buildRepaymentSchedule(o.amount, o.tenorMonths, o.ratePercent, o.interestModel).map((line) => ({
       ...line,
-      dueDate: new Date(firstDue.getFullYear(), firstDue.getMonth() + (line.month - 1), PAYDAY_DAY),
+      dueDate: dueDateOf(firstDue, line.month),
     }));
   });
 

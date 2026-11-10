@@ -16,7 +16,8 @@ import { LangService } from '../../../core/i18n/lang.service';
 import { productById } from '../../../core/products/products';
 import { whatsappLink } from '../../../core/support';
 import { ToastService } from '../../../core/toast/toast.service';
-import { formatNaira } from '../../../core/money.util';
+import { formatNaira, spokenNaira } from '../../../core/money.util';
+import { dueDateOf, firstPaydayAfter } from '../../../core/products/payday';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 import { logWarn } from '../../../core/log';
@@ -57,6 +58,34 @@ export class VerifyIdentityComponent implements OnDestroy {
 
   readonly loanAmount = computed(() => this.offer()?.amount ?? 0);
   readonly monthlyRepayment = computed(() => this.offer()?.monthlyRepayment ?? 0);
+
+  /**
+   * What the customer reads aloud on the video: every figure of the loan, exact to the kobo, so the recording
+   * stands as a clear confirmation of the terms. It is built from the same offer the customer accepted.
+   */
+  readonly scriptLines = computed<string[]>(() => {
+    const o = this.offer();
+    if (!o) return [];
+    const first = firstPaydayAfter(new Date());
+    const last = dueDateOf(first, o.tenorMonths);
+    const date = (d: Date) => d.toLocaleDateString('en-NG', { day: 'numeric', month: 'long', year: 'numeric' });
+    const fees = o.fees.reduce((sum, f) => sum + f.amount, 0);
+    const channel = (this.state.salary()?.channel ?? 'ippis').toUpperCase().replace('REMITA', 'Remita').replace('DEDUKT', 'Dedukt');
+    const p = {
+      name: this.state.bvnIdentity()?.fullName ?? this.state.profile()?.fullName ?? '',
+      product: o.productName,
+      amount: spokenNaira(o.amount),
+      months: String(o.tenorMonths),
+      monthly: spokenNaira(o.monthlyRepayment),
+      first: date(first),
+      last: date(last),
+      rate: String(o.ratePercent),
+      fees: spokenNaira(fees),
+      total: spokenNaira(o.monthlyRepayment * o.tenorMonths),
+      channel,
+    };
+    return [1, 2, 3, 4, 5, 6, 7].map((n) => this.lang.t(`step.verify.script.l${n}`).replace(/\{(\w+)\}/g, (_, k: string) => (p as Record<string, string>)[k] ?? ''));
+  });
 
   readonly attempted = signal(false);
 
