@@ -310,7 +310,7 @@ export const ig: Dictionary = {
   'support.label': 'Support',
   'referral.toggle': 'Have a referral code?',
   'referral.label': 'Referral code',
-  'referral.placeholder': 'e.g. PRINCEPS10',
+  'referral.placeholder': 'e.g. ABC123',
   'referral.invalid': 'This code isn’t valid. Check it and try again.',
   'referral.applied': 'applied',
   'install.banner.title': 'Get Princeps on your phone',

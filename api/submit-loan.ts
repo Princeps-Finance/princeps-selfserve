@@ -15,7 +15,8 @@ import {
   estimateMonthlyRepayment,
   pricingProductById,
 } from '../src/shared/pricing';
-import { discountedRate, findReferral } from '../src/shared/referral';
+import { discountedRate } from '../src/shared/referral';
+import { findReferral } from './_lib/referral-codes';
 import {
   HttpError,
   backofficeConfig,
