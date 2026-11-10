@@ -42,3 +42,37 @@ status copy) were removed from all four languages, which also trims the app size
   someone who answers the phone.
 - **Money wording**: "Total repayable", "Cost of credit", "Yearly rate (estimated)" are accurate but technical. Consider a
   one-line "what this means" under the total.
+
+## Screen by screen
+I read the live text of each screen in the demo build (language, welcome, BVN, contact choice, code, details, work, salary,
+offers, review, documents, identity intro) and the rest from the strings. **Fixed** means changed in this pull request.
+
+| Screen | Verdict | Notes |
+| --- | --- | --- |
+| Language | Good | "Which language do you prefer? / You can change it at any time." |
+| Welcome | Good | Says what it is, what to have ready, how long the check takes. |
+| BVN | Good | The "Why we ask" card does the work. "Dial *565*0# to see it" is a useful touch. |
+| Contact choice | Good | "I can't reach any of these" is the right escape. |
+| Code | Good | Warns not to share the code. The demo hint ("Demo · 123456") is only in the demo build. |
+| Details | Good | "Check what we found from your BVN and add anything missing." |
+| Work type | Good | Federal and state are separate rows with a hint each. |
+| Salary | Fixed | The button said "Verify"; now "Check my salary". |
+| Offers | **Fixed** | Each loan ended "· Monthly", which read oddly. Now "Repaid monthly" (weekly and one-go too). |
+| Review | Open | See below: fees and the total. |
+| Documents | Good | Friendly. What it asks for comes from the back end in production. |
+| Identity | **Fixed** | The intro said "You read one sentence out loud", but the script is now several lines. Now "a few short lines: your loan amount, repayments and dates". |
+| Repayment set-up | **Fixed** | "Complete your mandate" and "Mandate completed" used jargon. Now "Finish setting up your repayment" and "Repayment set-up complete". |
+| Submitted | **Fixed** | "We check your details and mandate" now says "salary deduction set-up". |
+| Loans | **Fixed** | "Repayment mandate" is now "Salary deduction". |
+
+### Open on the review screen (needs the back end's rule)
+- **Fees and the total.** "Total repayable" is the amount plus interest, and the fees are listed separately. Say clearly whether
+  the fees are taken from the amount you receive or added to the repayments, for example one line under the fee table. I did not
+  guess, because it is the back end's rule.
+- **"Yearly rate (estimated)"** can look alarming next to a monthly rate. Show the rate's unit ("4% a month") once the back end
+  says what it is.
+- **Dates** always show in English ("25 Nov 2026"), whatever language is chosen.
+
+### Hard-coded text
+I scanned every screen template for text that is not translated. Only brand names (WhatsApp, Remita), the date format hint
+(YYYY) and the demo code hint remain. Nothing else is English-only.
