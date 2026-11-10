@@ -159,6 +159,7 @@ export class MockApiClient implements ApiClient {
         dateOfBirth: '1988-04-12',
         phone: bvn === '33333333333' ? '08099999999' : '08012345678',
         gender: 'female',
+        address: { street: '12 Allen Avenue', state: 'Lagos', lga: 'Ikeja' },
       },
       customerRef: 'demo-customer-ref-0001',
     };
