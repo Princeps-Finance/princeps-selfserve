@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { MAX_UPLOAD_BYTES } from '../limits';
 import type {
+  OfferLetterRequest,
   LookupResult,
   SalaryVerifyInput,
   SalaryVerifyResult,
@@ -22,6 +23,7 @@ import type {
   WaitlistResult,
 } from './api.types';
 import type { ApiClient } from './api-client';
+import { buildSimplePdf } from '../pdf/simple-pdf';
 import { maskPhoneNg } from './contact.util';
 import { NG_BANKS } from './ng-banks';
 
@@ -82,6 +84,22 @@ export class MockApiClient implements ApiClient {
       { id: 'ln-0977', reference: 'PRN-3M9T7A', productName: 'IPPIS Standard Loan', status: 'overdue', principal: 80_000, outstanding: 28_000, monthlyRepayment: 28_000, nextDueDate: '2026-11-25', instalmentsPaid: 2, instalmentsTotal: 3, ratePercent: 5, disbursedAt: '2026-07-14', mandateActive: true },
       { id: 'ln-0801', reference: 'PRN-6C1D5W', productName: 'IPPIS Salary Advance', status: 'completed', principal: 150_000, outstanding: 0, monthlyRepayment: 52_500, nextDueDate: null, instalmentsPaid: 3, instalmentsTotal: 3, ratePercent: 5, disbursedAt: '2026-03-14', mandateActive: false },
     ];
+  }
+
+  async getOfferLetter(r: OfferLetterRequest): Promise<Uint8Array> {
+    await delay(500);
+    const naira = (n: number) => `NGN ${n.toLocaleString('en-NG')}`;
+    return buildSimplePdf('Princeps loan offer (demo)', [
+      `Product: ${r.productName}`,
+      `Amount: ${naira(r.amount)}`,
+      `Repayment period: ${r.tenorMonths} months`,
+      `Monthly repayment: ${naira(r.monthlyRepayment)}`,
+      `Total to repay: ${naira(r.monthlyRepayment * r.tenorMonths)}`,
+      `Interest rate: ${r.ratePercent}%`,
+      '',
+      'This is a sample letter shown in the demo build.',
+      'The real letter comes from Princeps after you accept the offer terms.',
+    ]);
   }
 
   async submitStatementReview(_input: StatementReviewInput): Promise<SubmitResult> {

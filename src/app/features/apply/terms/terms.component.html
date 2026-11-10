@@ -14,6 +14,8 @@
     <p class="hero-per">{{ 'step.terms.hero.per' | t: { months: o.tenorMonths } }}</p>
   </section>
 
+  <app-offer-letter [request]="letterRequest()" />
+
   <dl class="card rows">
     <div class="row">
       <dt>{{ 'step.terms.principal' | t }}</dt>

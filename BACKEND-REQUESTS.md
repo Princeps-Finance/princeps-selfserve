@@ -34,6 +34,9 @@ Scoring runs in the browser today, so it can be bypassed.
 The app has a mandate step (link or authorize, then status). Nothing in the spec covers it.
 - Needed: create a mandate (returns a link or reference), `GET` its status (`pending` | `authorized` | `failed`), and how it ties to the application and submit.
 
+### 5a. The offer letter (PDF)
+The terms step now shows the customer's offer letter in a PDF viewer. Needed: an endpoint that returns the PDF for the offer the customer is about to accept (for example `GET /api/applications/{id}/offer/document`), as `application/pdf`, under 5 MB, with the same amount, tenor, rate, fees and total as the offer. Our server wraps it as `{ pdfBase64 }` and refuses anything that does not start with `%PDF-`. Until it exists, the demo build shows a sample letter.
+
 ### 6. Identity capture and documents
 *Update: face matching will be done by the back end, so the app does not need a liveness endpoint. It only needs the upload and a way to read the match result.*
 

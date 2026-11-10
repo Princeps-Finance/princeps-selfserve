@@ -1,7 +1,7 @@
 import { InjectionToken } from '@angular/core';
 import type {
   Bank, BvnContactsResult, BvnOtpSendResult, BvnOtpVerifyResult, BvnVerifyResult, DocUploadInput, DocUploadResult,
-  LoanSummary, LookupResult, MandateLink, MandateStatus, OtpDestination, SalaryVerifyInput, SalaryVerifyResult,
+  LoanSummary, LookupResult, MandateLink, OfferLetterRequest, MandateStatus, OtpDestination, SalaryVerifyInput, SalaryVerifyResult,
   StatementReviewInput, SubmitPayload, SubmitResult, WaitlistInput, WaitlistResult,
 } from './api.types';
 
@@ -47,6 +47,8 @@ export interface ApiClient {
   getMandateStatus(reference: string): Promise<MandateStatus>;
   /** The customer's loans from Caltos. Rejects when the service cannot be reached. */
   listLoans(): Promise<LoanSummary[]>;
+  /** The offer letter as PDF bytes. Rejects when it cannot be produced or fetched. */
+  getOfferLetter(request: OfferLetterRequest): Promise<Uint8Array>;
   submitApplication(payload: SubmitPayload): Promise<SubmitResult>;
   joinWaitlist(input: WaitlistInput): Promise<WaitlistResult>;
 }
