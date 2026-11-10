@@ -47,7 +47,7 @@ const NO_BACK_ROUTES = new Set<string>([APPLY.root, `${APPLY.root}/`, APPLY.stat
   `,
   styles: [
     `
-      :host { display: block; min-height: 100dvh; background: var(--surface-0); color: var(--ink); }
+      :host { display: block; min-height: 100dvh; background: var(--canvas); color: var(--ink); }
       /* Room at the bottom so the floating Support button never sits on top of a step's main button. */
       .page { min-height: 100dvh; display: flex; flex-direction: column; padding-bottom: calc(var(--tap-min) + var(--space-8)); box-sizing: border-box; }
       .topbar { display: flex; flex-direction: column; align-items: stretch; width: 100%; box-sizing: border-box; padding: var(--space-2) var(--space-4) 0; }
@@ -67,7 +67,7 @@ const NO_BACK_ROUTES = new Set<string>([APPLY.root, `${APPLY.root}/`, APPLY.stat
         .back-phone { display: none; }
         .brand-logo { height: 34px; }
         .shell {
-          flex: 0 0 auto; max-width: 480px; margin-top: var(--space-2); background: var(--surface-0);
+          flex: 0 0 auto; max-width: 480px; margin-top: var(--space-2);
         }
         .card-top { display: block; padding: var(--space-4) var(--space-6) 0; }
         .body { padding: var(--space-2) var(--space-6) var(--space-8); }

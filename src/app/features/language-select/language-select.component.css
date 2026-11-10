@@ -2,7 +2,7 @@
   display: block;
   min-height: 100dvh;
   color: var(--ink);
-  background: var(--surface-0);
+  background: var(--canvas);
 }
 
 .tools { display: inline-flex; align-items: center; gap: var(--space-3); }
@@ -18,11 +18,11 @@
   gap: var(--space-10);
 }
 
-/* Wide screens: a plain centred column on white, no card. */
+/* Wide screens: still a full-height screen with a centred column; the footer text stays at the bottom. */
 @media (min-width: 720px) {
-  :host { box-sizing: border-box; padding: var(--space-8) var(--space-4); background: var(--canvas); }
-  .screen { min-height: 0; max-width: 460px; padding: var(--space-6) var(--space-6) var(--space-8); background: var(--surface-0); }
+  .screen { max-width: 460px; }
 }
+.foot { margin-top: auto; }
 
 /* Brand — small, top-left, editorial */
 .brand-row {
@@ -76,22 +76,25 @@
 }
 
 /* Language cards: a 2x2 grid, one tap chooses and continues */
-.lang-grid { list-style: none; margin: var(--space-6) 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.lang-grid { list-style: none; margin: var(--space-6) 0 var(--space-4); padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
 .lang-card {
-  position: relative; width: 100%; min-height: 96px; padding: var(--space-4);
-  display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; gap: 2px;
-  background: var(--grey-100); border: 1.5px solid transparent; border-radius: 16px;
+  width: 100%; min-height: 72px; padding: var(--space-3) var(--space-4);
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  background: var(--grey-100); border: 2px solid transparent; border-radius: var(--radius-md);
   color: var(--ink); text-align: start; cursor: pointer;
-  transition: border-color 140ms ease, background-color 140ms ease, transform 140ms ease;
+  transition: border-color 140ms ease, background-color 140ms ease;
 }
 .lang-card:hover { background: var(--grey-200); }
-.lang-card:active { transform: scale(0.98); }
 .lang-card:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
 .lang-card.is-current { border-color: var(--action-primary); background: var(--action-primary-soft); }
-.lang-endonym { font-family: var(--font-sans); font-size: 22px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.15; }
+.lang-text { display: flex; flex-direction: column; gap: 2px; }
+.lang-endonym { font-family: var(--font-sans); font-size: var(--fs-lg); font-weight: 600; line-height: 1.2; }
 .lang-english { font-size: var(--fs-sm); color: var(--ink-soft); }
-.lang-check { position: absolute; top: var(--space-3); right: var(--space-3); color: var(--text-accent); }
-@media (prefers-reduced-motion: reduce) { .lang-card { transition: none; } .lang-card:active { transform: none; } }
+/* A round radio mark: empty until chosen, filled with a tick once it is. */
+.lang-radio { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--input-border); color: var(--action-on-primary); }
+.lang-card.is-current .lang-radio { background: var(--action-primary); border-color: var(--action-primary); }
+.lang-continue:disabled { opacity: 0.5; cursor: not-allowed; }
+@media (prefers-reduced-motion: reduce) { .lang-card { transition: none; } }
 
 /* Footer — CTA is a black pill with arrow, tagline in fine print */
 .footer {

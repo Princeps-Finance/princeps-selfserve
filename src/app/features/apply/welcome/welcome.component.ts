@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
+import { TrustFooterComponent } from '../../../shared/trust-footer.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { ApplicationStateService, ApplyIntent } from '../../../core/application/application-state.service';
 import { APPLY } from '../../../core/flow/apply-routes';
@@ -8,7 +9,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 /** First choice: apply now, or just find out how much they could get. Both use the same journey. */
 @Component({
   selector: 'app-welcome-intent',
-  imports: [TPipe, IllustrationComponent],
+  imports: [TPipe, IllustrationComponent, TrustFooterComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="step">
@@ -31,10 +32,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
         </div>
       </div>
 
-      <div class="trust">
-        <p>{{ 'trust.cbn' | t }}</p>
-        <p>{{ 'trust.official' | t }}</p>
-      </div>
+      <app-trust-footer />
     </section>
   `,
   styles: [
@@ -43,8 +41,6 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 .title { text-align: center; font-size: clamp(24px, 6.5vw, 30px); line-height: 1.15; letter-spacing: -0.02em; }
       .actions { margin-top: auto; display: flex; flex-direction: column; gap: var(--space-5); padding-top: var(--space-6); }
       .choice { display: flex; flex-direction: column; gap: var(--space-2); }
-      .trust { display: flex; flex-direction: column; gap: var(--space-2); text-align: center; font-size: var(--fs-sm); line-height: 1.5; color: var(--ink-muted); }
-      .trust p { margin: 0; }
       .hint { margin: 0; text-align: center; font-size: var(--fs-md); color: var(--ink-soft); }
       .cta, .alt {
         min-height: var(--btn-height); padding: 0 var(--space-6); border-radius: var(--btn-radius); cursor: pointer;
