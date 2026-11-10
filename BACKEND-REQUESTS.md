@@ -123,3 +123,50 @@ Legend: **Yes** = an endpoint exists and fits; **Partly** = exists but needs the
 
 ### A flow-order mismatch to settle
 The API binds a product to the application early: verification checks and the journey come from the chosen product, and `verifications` returns 409 until a product snapshot exists. Our flow asks for the BVN first and lets the customer pick a product only at the offers step, after eligibility. Either the API needs a product-independent first stage (BVN and OTP), or the app has to ask for the product earlier.
+
+---
+
+## Decision: keep our BVN-first flow, build on the application API, call it through our server
+
+Updated after the back end's "phase 1 and phase 2" pull request (Princeps-Finance/self-service-apply#1).
+
+### What the live API now covers
+Banks, states and local governments, one salary check for IPPIS, Remita and Dedukt, statement review, server-side eligibility, product selection and offers, plus the earlier presigned uploads, OTP, products and submit.
+
+### What is still missing for our flow
+1. **A BVN-first start.** Our first question is the BVN. `POST /api/applications` still starts from email and phone, and the OTP goes to the email as well as the BVN-linked phone. We need: start from a BVN alone, return the masked phones and emails tied to it, send the code to the one the customer picks (or to the BVN-linked phone by default), and collect the email later.
+2. **Code ownership.** Only a code delivered to the BVN-linked phone may prove ownership. An alternate-phone path needs its own rule (extra check, lower limit or manual review). Today an email the applicant typed receives the same code.
+3. **Resend** the code, with a cooldown and attempt limits.
+4. **Eligibility before product choice.** Our flow runs eligibility, then shows the products. The API needs a product first. Needed: one call that returns eligibility for every product the customer qualifies for (maximum amount and tenor for each).
+5. **A real quote.** The offer's monthly repayment is the amount divided by the tenor and ignores interest and fees. Needed: monthly repayment, total, interest, fees, APR and the schedule from one source.
+6. **Your loans.** List a customer's loans, with balance, next due date, repayment progress and mandate state, and one loan in detail.
+7. **Repayment mandate.** Create it, and read its state.
+8. **Submit.** Match our payload (names, address, state and country ids, bank), make a repeat submit return the same loan, and record the consent version and time.
+9. **NIN check** for products that need it (confirm the verification `checkKey`).
+10. **Status** with a readable reason, for the status screen.
+11. **Referral codes**, if the business keeps them.
+12. **Waitlist** for unsupported employment types.
+13. **Returning customer**: the safe fields to greet and prefill (first name, employment type, last loan date).
+
+### Which endpoints to build on, ranked by how much the server decides
+
+**Use (the server decides or the file goes straight to storage)**
+- `GET /api/products`, `GET /api/products/{id}/journey`, `GET /api/employment-types`
+- The salary check (`employment/salary/verify`), `eligibility/evaluate` and `offers`, once the issues in the pull request review are fixed
+- `documents/presign`: the file goes straight to storage and never passes through our server
+- `otp/*` and `resume/*`, once the code-ownership issue is fixed
+- `submit`: the server must price from the stored offer, not from what the browser sends
+
+**Use only through our server, with a fixed list of allowed fields**
+- `PATCH /api/applications/{id}` takes free-form `data`. Anything the browser writes there could later be trusted as a fact. Our server should accept only named, validated fields (profile, address, consent) and reject the rest.
+
+**Do not call from the browser**
+- `GET /api/files/{applicationId}/{fileId}` is meant for Caltos.
+- `verifications/sync`, which lets the client choose a bucket and tier.
+- Anything that takes `age` or `existingExposure` from the client: the server must read those from the BVN record and Caltos.
+
+### How the app talks to it
+- The browser only calls our own server (same origin). Our server calls the API, so the API's address and credentials never reach the page, and the existing content-security rule that allows only our own origin keeps holding.
+- Our server holds the resume token in an httpOnly, secure, same-site cookie. Script on the page can never read it. If that is not possible, keep it in memory and never in `localStorage`.
+- Our server allows only the routes above, validates every body, removes anything that is not meant for the customer (for example the raw Caltos customer record), and keeps the bot check and rate limits on code sending.
+- Keep the demo build on the mock. The old `/api/selfserve/*` calls are retired once this is wired.
