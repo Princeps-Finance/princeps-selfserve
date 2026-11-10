@@ -77,3 +77,4 @@
 
 .table-scroll:focus-visible { outline: 2px solid transparent; outline-offset: -2px; box-shadow: inset var(--focus-ring); }
 
+.agree.is-locked { opacity: 0.6; cursor: not-allowed; }

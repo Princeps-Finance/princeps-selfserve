@@ -296,6 +296,7 @@ export const yo: Dictionary = {
   'offers.more.body': 'Lórí ayélujára, ìgbèsè yìí lè lọ títí dé {max}. Fún iye tó pọ̀ jù, aṣojú lè ràn ọ́ lọ́wọ́.',
   'offers.more.agent': 'Bá aṣojú sọ̀rọ̀',
   'offers.more.call': 'Pè wá dípò',
+  'step.terms.letter.scroll': 'Yí lẹ́tà náà sí ìparí. Àpótí tó wà nísàlẹ̀ yóò ṣí nígbà tí o bá dé ibẹ̀.',
   'step.terms.feeCol': 'Owó',
   'step.terms.amountCol': 'Iye',
   'step.employment.federal': 'Ìjọba àpapọ̀',
@@ -471,7 +472,7 @@ export const yo: Dictionary = {
   'step.terms.dueCol': 'Ọjọ́',
   'step.terms.payday.first': 'Ìsanpadà àkọ́kọ́',
   'step.terms.payday.note': 'A máa yọ owó nígbà tí wọ́n bá san owó oṣù rẹ, kí nǹkan má lọ kúrò nínú àkáǹtì rẹ kí owó oṣù rẹ tó dé.',
-  'step.terms.agree': 'Mo ti kà, mo sì gbà àwọn ìlànà wọ̀nyí.',
+  'step.terms.agree': 'Mo ti ka lẹ́tà ìfilọ̀ náà, mo sì gbà á.',
   'step.terms.take': 'Gba ìfilọ̀ yìí',
   'step.terms.change': 'Yan ìfilọ̀ mìíràn',
 

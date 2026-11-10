@@ -296,6 +296,7 @@ export const ig: Dictionary = {
   'offers.more.body': "N'ịntanetị, mgbazinye ego a ruru {max}. Maka ego karịrị nke a, onye nnọchi anya nwere ike inyere gị aka.",
   'offers.more.agent': 'Soro onye nnọchi anya kwuo okwu',
   'offers.more.call': 'Kpọọ anyị kama',
+  'step.terms.letter.scroll': "Pịgharịa ruo ọgwụgwụ akwụkwọ ahụ. Igbe dị n'okpuru ga-emepe mgbe ị rutere ebe ahụ.",
   'step.terms.feeCol': 'Ụgwọ',
   'step.terms.amountCol': 'Ego',
   'step.employment.federal': 'Gọọmentị etiti',
@@ -471,7 +472,7 @@ export const ig: Dictionary = {
   'step.terms.dueCol': 'Ụbọchị',
   'step.terms.payday.first': 'Nkwụghachi mbụ',
   'step.terms.payday.note': 'A na-ewepụ ego mgbe a kwụrụ gị ụgwọ ọrụ, ya mere ọ dịghị ihe na-apụ n\'akaụntụ gị tupu ụgwọ ọrụ gị abịa.',
-  'step.terms.agree': 'Agụọla m, ekwenyere m usoro ndị a.',
+  'step.terms.agree': 'Agụọla m akwụkwọ onyinye ahụ, ekwenyere m na ya.',
   'step.terms.take': 'Nara onyinye a',
   'step.terms.change': 'Họrọ onyinye ọzọ',
 

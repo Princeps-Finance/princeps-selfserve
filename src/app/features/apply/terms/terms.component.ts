@@ -46,6 +46,8 @@ export class TermsComponent {
 
   readonly offer = this.state.offer;
   readonly agreed = signal(false);
+  /** Set when the offer letter has been scrolled to the end. The agreement box stays locked until then. */
+  readonly letterRead = signal(false);
   readonly attempted = signal(false);
   readonly formatNaira = formatNaira;
 
@@ -102,6 +104,7 @@ export class TermsComponent {
   );
 
   toggleAgree(v: boolean): void {
+    if (v && !this.letterRead()) return;
     this.agreed.set(v);
     if (v) this.attempted.set(false);
   }

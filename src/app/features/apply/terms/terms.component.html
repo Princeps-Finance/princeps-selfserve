@@ -46,8 +46,6 @@
     </div>
   </app-card>
 
-  <app-offer-letter [request]="letterRequest()" />
-
   <!-- What it costs: the figures that used to sit on the offers screen. -->
   <app-card>
     <dl class="rows">
@@ -100,8 +98,10 @@
     </section>
   }
 
-  <label class="agree">
-    <app-checkbox [invalid]="attempted() && !agreed()" describedBy="agree-error" [checked]="agreed()" (checkedChange)="toggleAgree($event)" />
+  <app-offer-letter [request]="letterRequest()" (readToEnd)="letterRead.set(true)" />
+
+  <label class="agree" [class.is-locked]="!letterRead()">
+    <app-checkbox [invalid]="attempted() && !agreed()" describedBy="agree-error" [disabled]="!letterRead()" [checked]="agreed()" (checkedChange)="toggleAgree($event)" />
     <span>{{ 'step.terms.agree' | t }}</span>
   </label>
   @if (attempted() && !agreed()) {

@@ -296,6 +296,7 @@ export const en: Dictionary = {
   'offers.more.body': 'Online, this loan goes up to {max}. For a larger amount, an agent can help you.',
   'offers.more.agent': 'Speak to an agent',
   'offers.more.call': 'Call us instead',
+  'step.terms.letter.scroll': 'Scroll to the end of the letter. The box below unlocks when you reach it.',
   'step.terms.feeCol': 'Fee',
   'step.terms.amountCol': 'Amount',
   'step.employment.federal': 'Federal government',
@@ -471,7 +472,7 @@ export const en: Dictionary = {
   'step.terms.dueCol': 'Due',
   'step.terms.payday.first': 'First payment',
   'step.terms.payday.note': 'Deductions are taken when your salary is paid, so nothing leaves your account before your salary arrives.',
-  'step.terms.agree': 'I\'ve read and I accept these terms.',
+  'step.terms.agree': 'I have read the offer letter and I agree to it.',
   'step.terms.take': 'Take this offer',
   'step.terms.change': 'Pick a different offer',
 

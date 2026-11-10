@@ -296,6 +296,7 @@ export const ha: Dictionary = {
   'offers.more.body': 'A kan intanet, wannan rancen yana kaiwa {max}. Don adadi mafi girma, wakili zai iya taimaka maka.',
   'offers.more.agent': 'Yi magana da wakili',
   'offers.more.call': 'Kira mu maimakon haka',
+  'step.terms.letter.scroll': 'Gungura zuwa ƙarshen wasiƙar. Akwatin da ke ƙasa zai buɗe idan ka isa can.',
   'step.terms.feeCol': 'Kuɗi',
   'step.terms.amountCol': 'Adadi',
   'step.employment.federal': 'Gwamnatin tarayya',
@@ -471,7 +472,7 @@ export const ha: Dictionary = {
   'step.terms.dueCol': 'Ranar',
   'step.terms.payday.first': 'Biya na farko',
   'step.terms.payday.note': 'Ana cire kuɗi ne lokacin da aka biya albashinka, don kada wani abu ya fita daga asusunka kafin albashinka ya shigo.',
-  'step.terms.agree': 'Na karanta, na kuma yarda da waɗannan sharuɗɗan.',
+  'step.terms.agree': 'Na karanta wasiƙar tayin, na kuma yarda da ita.',
   'step.terms.take': 'Karɓi wannan tayin',
   'step.terms.change': 'Zaɓi wani tayi',
 
