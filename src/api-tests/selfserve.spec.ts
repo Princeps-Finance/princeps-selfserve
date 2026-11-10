@@ -137,6 +137,8 @@ describe('POST /api/selfserve/[op]', () => {
     const codes: number[] = [];
     for (let i = 0; i < 5; i++) codes.push((await handler(req('eligibility-check', body))).status);
     expect(codes).toContain(429);
+  });
+
   it('accepts a push subscription only with a token and an https endpoint', async () => {
     fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ status: 'ok', extra: 1 }))));
     const body = { endpoint: 'https://push.example.com/abc', keys: { p256dh: 'k', auth: 'a' } };
