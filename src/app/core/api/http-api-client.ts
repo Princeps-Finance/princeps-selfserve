@@ -10,7 +10,9 @@ import {
   BvnVerifyResult,
   DocUploadInput,
   DocUploadResult,
+  BvnContactsResult,
   LoanSummary,
+  OtpDestination,
   LookupResult,
   MandateLink,
   MandateStatus,
@@ -99,11 +101,16 @@ export class HttpApiClient implements ApiClient {
     return { status: 'received', referenceId: r.referenceId };
   }
 
-  async sendBvnOtp(bvn: string, captchaToken?: string): Promise<BvnOtpSendResult> {
-    const r = await this.op<{ status?: string; target?: string; expiresInSeconds?: number }>(
-      'send-bvn-otp',
-      captchaToken ? { bvn, captchaToken } : { bvn },
-    );
+  lookupBvnContacts(bvn: string, captchaToken?: string): Promise<BvnContactsResult> {
+    return this.opOr<BvnContactsResult>('bvn-contacts', captchaToken ? { bvn, captchaToken } : { bvn }, { status: 'service-down' });
+  }
+
+  async sendBvnOtp(bvn: string, captchaToken?: string, destination?: OtpDestination): Promise<BvnOtpSendResult> {
+    const r = await this.op<{ status?: string; target?: string; expiresInSeconds?: number }>('send-bvn-otp', {
+      bvn,
+      ...(captchaToken ? { captchaToken } : {}),
+      ...(destination ? { destination } : {}),
+    });
     if (r.status === 'not-found') return { status: 'not-found' };
     if (typeof r.target !== 'string') throw new ApiUnavailableError('send-bvn-otp', 502);
     return { status: 'sent', target: r.target, expiresInSeconds: r.expiresInSeconds ?? 300 };

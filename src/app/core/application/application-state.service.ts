@@ -1,3 +1,4 @@
+import type { OtpDestination } from '../api/api-client';
 import { Injectable, computed, signal } from '@angular/core';
 import type { BvnIdentity } from "../api/api-client";
 
@@ -238,6 +239,9 @@ export class ApplicationStateService {
    */
   private readonly _bvnIdentity = signal<BvnIdentity | null>(null);
   readonly bvnIdentity = this._bvnIdentity.asReadonly();
+  /** Where the customer asked for the one-time code. Kept in memory only, never saved to the device. */
+  private readonly _otpDestination = signal<OtpDestination | null>(null);
+  readonly otpDestination = this._otpDestination.asReadonly();
   readonly nin = computed(() => this.state().nin);
   readonly mandate = computed(() => this.state().mandate);
   readonly docs = computed(() => this.state().docs);
@@ -306,6 +310,10 @@ export class ApplicationStateService {
     this.state.update((s) => (s.contact ? { ...s, contact: { ...s.contact, email } } : s));
   }
 
+  setOtpDestination(destination: OtpDestination | null): void {
+    this._otpDestination.set(destination);
+  }
+
   setBvnIdentity(identity: BvnIdentity | null): void {
     this._bvnIdentity.set(identity);
   }
@@ -363,6 +371,7 @@ export class ApplicationStateService {
 
   reset(): void {
     this._bvnIdentity.set(null);
+    this._otpDestination.set(null);
     this.state.set(empty);
   }
 }

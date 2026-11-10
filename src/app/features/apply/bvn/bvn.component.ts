@@ -11,6 +11,9 @@ import { whatsappLink } from '../../../core/support';
 import { LangService } from '../../../core/i18n/lang.service';
 import { PRIVACY_NOTICE_VERSION, PrivacyService } from '../../../core/privacy/privacy.service';
 import { APPLY } from '../../../core/flow/apply-routes';
+import { API_CLIENT, MaskedContact, OtpDestination } from '../../../core/api/api-client';
+import { CaptchaService } from '../../../core/captcha/captcha.service';
+import { OtpChannelDialogComponent } from './otp-channel-dialog.component';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 /**
@@ -19,7 +22,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
  */
 @Component({
   selector: 'app-bvn',
-  imports: [IllustrationComponent, TPipe, WizardProgressComponent, ReactiveFormsModule],
+  imports: [IllustrationComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, OtpChannelDialogComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './bvn.component.html',
   styleUrl: './bvn.component.css',
@@ -28,6 +31,8 @@ export class BvnComponent {
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
   private readonly lang = inject(LangService);
+  private readonly api = inject(API_CLIENT);
+  private readonly captcha = inject(CaptchaService);
   protected readonly privacy = inject(PrivacyService);
   readonly support = whatsappLink('Hello Princeps, I need help with my BVN.');
 
@@ -39,6 +44,9 @@ export class BvnComponent {
   readonly consent = new FormControl(!!this.state.consent(), { nonNullable: true });
   readonly showConsentError = signal(false);
   readonly submitting = signal(false);
+  /** The contacts tied to this BVN, set while the "where should we send your code" dialog is open. */
+  readonly contacts = signal<{ phones: MaskedContact[]; emails: MaskedContact[] } | null>(null);
+  readonly lookupFailed = signal(false);
   readonly notFound = signal(inject(ActivatedRoute).snapshot.queryParamMap.get('error') === 'not-found');
 
   readonly status = toSignal(this.bvn.statusChanges, { initialValue: this.bvn.status });
@@ -57,7 +65,7 @@ export class BvnComponent {
     this.notFound.set(false);
   }
 
-  submit(): void {
+  async submit(): Promise<void> {
     if (this.submitting()) return;
     if (this.bvn.invalid) {
       this.bvn.markAsTouched();
@@ -75,8 +83,28 @@ export class BvnComponent {
       language: this.lang.lang(),
     });
     this.submitting.set(true);
-    // Not verified yet: the next screen sends the code to the phone linked to this BVN.
+    this.lookupFailed.set(false);
+    // Show where the code can go (the contacts tied to this BVN, masked) before anything is sent.
+    const found = await this.api.lookupBvnContacts(this.bvn.value, await this.captcha.token());
+    if (found.status === 'ok') {
+      this.contacts.set({ phones: found.phones, emails: found.emails });
+      return; // the dialog now owns the next step; the button stays busy until it is answered
+    }
+    this.submitting.set(false);
+    if (found.status === 'not-found') this.notFound.set(true);
+    else this.lookupFailed.set(true);
+  }
+
+  /** The customer chose where the code goes. Not verified yet: the next screen sends it. */
+  onDestination(destination: OtpDestination): void {
     this.state.setBvn({ value: this.bvn.value, verified: false });
+    this.state.setOtpDestination(destination);
+    this.contacts.set(null);
     void this.flow.go(APPLY.verify);
+  }
+
+  onDialogCancelled(): void {
+    this.contacts.set(null);
+    this.submitting.set(false);
   }
 }

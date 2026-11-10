@@ -54,3 +54,15 @@ describe('suggestEmailFix (edit distance)', () => {
     expect(suggestEmailFix('a@yahooo.com')).toBe('a@yahoo.com');
   });
 });
+
+import { maskPhoneNg } from './contact.util';
+
+describe('maskPhoneNg', () => {
+  it('keeps only the last two digits', () => {
+    expect(maskPhoneNg('08031112233')).toBe('+234 •••• ••33');
+    expect(maskPhoneNg('+2348031112299')).toBe('+234 •••• ••99');
+  });
+  it('shows nothing for a number that is not valid', () => {
+    expect(maskPhoneNg('12345')).toBe('');
+  });
+});
