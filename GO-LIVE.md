@@ -25,7 +25,7 @@ These cannot be checked from this repository. Each needs a test against the real
 - [ ] **A lookup never leaks.** `verify-salary` returns `monthlyIncome` and `accountName`: confirm both are needed by the screen, and that the call is limited per token and per account.
 
 ## 4. Before the first real customer
-- [ ] Yoruba, Igbo and Hausa translations done and reviewed by native speakers (`docs/translations-needed.csv`).
+- [ ] Yoruba, Igbo and Hausa translations (drafted by Claude in the code) reviewed by native speakers, especially the loan, repayment and consent wording.
 - [ ] One full application on a real phone, in each language, on the production domain.
 - [ ] Dependency audit clean (`npm audit --omit=dev`).
 
