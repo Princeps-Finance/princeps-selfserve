@@ -86,14 +86,11 @@
 }
 .lang-card:hover { background: var(--grey-200); }
 .lang-card:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
-.lang-card.is-current { border-color: var(--action-primary); background: var(--action-primary-soft); }
 .lang-text { display: flex; flex-direction: column; gap: 2px; }
 .lang-endonym { font-family: var(--font-sans); font-size: var(--fs-lg); font-weight: 600; line-height: 1.2; }
 .lang-english { font-size: var(--fs-sm); color: var(--ink-soft); }
-/* A round radio mark: empty until chosen, filled with a tick once it is. */
-.lang-radio { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--input-border); color: var(--action-on-primary); }
-.lang-card.is-current .lang-radio { background: var(--action-primary); border-color: var(--action-primary); }
-.lang-continue:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.lang-go { flex: none; color: var(--ink-muted); }
 @media (prefers-reduced-motion: reduce) { .lang-card { transition: none; } }
 
 /* Footer — CTA is a black pill with arrow, tagline in fine print */
