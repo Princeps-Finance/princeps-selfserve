@@ -183,6 +183,8 @@ export interface BvnIdentity {
   /** The phone number registered with the BVN. This becomes the contact number. */
   phone: string;
   gender?: 'male' | 'female';
+  /** The address on the BVN record, if the back end sends one. It may be old, so the customer can change it. */
+  address?: { street?: string; state?: string; lga?: string };
 }
 
 /** A contact point tied to a BVN, shown only in part. `id` is an opaque reference the server understands. */

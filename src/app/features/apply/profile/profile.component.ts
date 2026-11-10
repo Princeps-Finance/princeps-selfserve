@@ -75,9 +75,6 @@ export class ProfileComponent {
     this.form.controls.stateName.valueChanges.subscribe((st) => void this.loadLgas(st, true));
     const saved = this.state.profile();
     const id = this.identity;
-    if (id && !saved) {
-      this.form.patchValue({ fullName: id.fullName, dateOfBirth: id.dateOfBirth }, { emitEvent: false });
-    }
     if (saved) {
       this.form.patchValue({
         fullName: saved.fullName,
@@ -88,7 +85,21 @@ export class ProfileComponent {
         relationshipStatus: saved.relationshipStatus,
       }, { emitEvent: false });
       if (saved.address.state) void this.loadLgas(saved.address.state, false);
-      return;
+    }
+    if (id) {
+      // The BVN record is the source for name and date of birth, always: a saved application keeps neither of them
+      // (the date of birth is not stored on the device), so a restored profile would otherwise come back blank.
+      this.form.patchValue({ fullName: id.fullName, dateOfBirth: id.dateOfBirth }, { emitEvent: false });
+      // The BVN address fills in what the customer has not already given. It may be old, so every part can be changed.
+      const a = id.address;
+      if (a && !saved?.address.street && !saved?.address.state) {
+        this.form.patchValue({ street: a.street ?? '', stateName: a.state ?? '' }, { emitEvent: false });
+        if (a.state) {
+          void this.loadLgas(a.state, false).then(() => {
+            if (a.lga) this.form.controls.lga.setValue(a.lga, { emitEvent: false });
+          });
+        }
+      }
     }
   }
 
