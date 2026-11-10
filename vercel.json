@@ -3,6 +3,7 @@
   "buildCommand": "ng build",
   "outputDirectory": "dist/princeps-selfserve/browser",
   "framework": null,
+  "ignoreCommand": "bash scripts/vercel-ignore.sh",
   "rewrites": [
     {
       "source": "/((?!api/|.*\\.).*)",

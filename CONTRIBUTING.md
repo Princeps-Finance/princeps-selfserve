@@ -24,3 +24,9 @@ Branch from `self-service-development` and name the branch for the change: `fix/
 npx ng test --watch=false
 npx ng build
 ```
+
+## Deployments
+Only `self-service-development` and `self-service-production` (and `main`, until it is retired) deploy to Vercel. Pull-request
+branches do not get a preview build: `scripts/vercel-ignore.sh` skips them, because every build counts against the account's
+daily build limit. Test a change by merging it into `self-service-development`. GitHub Actions still runs the tests and the
+build on every pull request.
