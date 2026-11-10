@@ -514,8 +514,6 @@ export const ig: Dictionary = {
   'step.bvn.eyebrow': 'Nyocha njirimara',
   'step.bvn.title': 'Tinye BVN gị',
   'step.bvn.subtitle': 'Anyị ga-ezigara koodu na ekwentị jikọtara ya.',
-  'step.bvn.show': 'Gosi BVN',
-  'step.bvn.hide': 'Zoo BVN',
   'step.bvn.label': 'BVN',
   'step.bvn.hint': 'Ọnụọgụ 11. Kpọọ *565*0# ka ị hụ ya.',
   'step.bvn.invalid': 'BVN ga-abụ nọmba 11 kpọmkwem.',

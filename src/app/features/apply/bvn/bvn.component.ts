@@ -45,8 +45,6 @@ export class BvnComponent {
 
   readonly consent = new FormControl(!!this.state.consent(), { nonNullable: true });
   readonly showConsentError = signal(false);
-  /** The BVN is hidden as it is typed, like a PIN, and can be shown on request. */
-  readonly revealed = signal(false);
   readonly submitting = signal(false);
   /** The contacts tied to this BVN, set while the "where should we send your code" dialog is open. */
   readonly contacts = signal<{ phones: MaskedContact[]; emails: MaskedContact[] } | null>(null);

@@ -514,8 +514,6 @@ export const yo: Dictionary = {
   'step.bvn.eyebrow': 'Ìjẹ́rìí ìdánimọ̀',
   'step.bvn.title': 'Tẹ BVN rẹ',
   'step.bvn.subtitle': 'A ó fi kóòdù ránṣẹ́ sí fóònù tó so mọ́ ọn.',
-  'step.bvn.show': 'Fi BVN hàn',
-  'step.bvn.hide': 'Fi BVN pamọ́',
   'step.bvn.label': 'BVN',
   'step.bvn.hint': 'Nọ́mbà 11. Pe *565*0# láti rí i.',
   'step.bvn.invalid': 'BVN gbọ́dọ̀ jẹ́ nọ́mbà 11 gan.',
