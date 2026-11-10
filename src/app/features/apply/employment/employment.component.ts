@@ -99,6 +99,8 @@ export class EmploymentComponent implements OnInit {
   }
 
   private initialKey(): string | null {
+    // The how-much-can-I-get check never starts with a row picked, not even after "Check again" or a reload.
+    if (this.state.intent() === 'check') return null;
     const e = this.state.employment();
     if (!e) return null;
     return OPTIONS.find((o) => o.type === e.type && (o.level ?? e.governmentLevel) === e.governmentLevel)?.key ?? OPTIONS.find((o) => o.type === e.type)?.key ?? null;
