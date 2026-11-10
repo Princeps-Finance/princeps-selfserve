@@ -8,7 +8,8 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "typecheck:api": "tsc -p tsconfig.api.json",
-    "test:ci": "ng test --watch=false"
+    "test:ci": "ng test --watch=false",
+    "check:live": "node scripts/check-live-config.mjs"
   },
   "private": true,
   "packageManager": "npm@10.8.2",
