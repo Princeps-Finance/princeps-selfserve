@@ -19,6 +19,7 @@ export const yo: Dictionary = {
   'help.version': 'Ẹ̀dà {v}',
   'help.title': 'O nílò ìrànlọ́wọ́?',
   'help.sub': 'Yan bí o ṣe fẹ́ kàn sí wa.',
+  'help.chat': 'Bá wa fọ̀rọ̀wérọ̀ lórí ayélujára',
   'help.call': 'Pe {tel}',
   'help.email': 'Fi ímeèlì ránṣẹ́ sí ìrànlọ́wọ́',
   'help.dialog': 'Kàn sí ìrànlọ́wọ́',
