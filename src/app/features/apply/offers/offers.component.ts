@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ProductMarkComponent } from '../../../shared/product-mark.component';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { RadioGroupDirective } from '../../../core/a11y/radio-group.directive';
@@ -61,7 +62,7 @@ interface Choice {
 
 @Component({
   selector: 'app-offers',
-  imports: [IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective, ReferralBoxComponent, AmountSliderComponent],
+  imports: [ProductMarkComponent, IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective, ReferralBoxComponent, AmountSliderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './offers.component.html',
   styleUrl: './offers.component.css',
@@ -138,7 +139,8 @@ export class OffersComponent implements OnInit {
     }
     this.catalogue.set(catalogue);
     this.choices.set(choices);
-    this.selectedId.set((pref && catalogue.find((c) => c.product.id === pref.productId)?.product.id) || catalogue[0]?.product.id || null);
+    // Several loans: none is open until the customer taps one (a returning choice stays open). Only one: it is open.
+    this.selectedId.set((pref && catalogue.find((c) => c.product.id === pref.productId)?.product.id) || (catalogue.length === 1 ? catalogue[0].product.id : null));
     this.ready.set(true);
   }
 

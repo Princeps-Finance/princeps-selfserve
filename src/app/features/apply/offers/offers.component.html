@@ -24,11 +24,10 @@
       </div>
     </div>
   } @else {
-    <!-- 1. Which loan -->
-    <section class="block" aria-labelledby="pick-title">
-      <h2 class="block-title" id="pick-title"><span class="num" aria-hidden="true">1</span>{{ 'offers.step.pick' | t }}</h2>
-      <div class="products" appRadioGroup role="radiogroup" aria-labelledby="pick-title">
-        @for (o of offers(); track o.product.id) {
+    <!-- Each loan is a card led by the amount available. Picking one opens its amount and period right inside it. -->
+    <div class="products" appRadioGroup role="radiogroup" [attr.aria-label]="'offers.choose.title' | t">
+      @for (o of offers(); track o.product.id) {
+        <div class="product-card" [class.is-open]="selectedId() === o.product.id">
           <button
             type="button"
             role="radio"
@@ -37,84 +36,85 @@
             [attr.tabindex]="productTab(o.product.id)"
             (click)="select(o.product.id)"
           >
-            <span class="product-top">
+            <app-product-mark [product]="o.product" />
+            <span class="product-body">
               <span class="product-name">{{ o.product.name }}</span>
-              <span class="product-rate">{{ o.product.ratePercent }}% <small>{{ modelKey(o.product.interestModel) | t }}</small></span>
-            </span>
-            <span class="product-meta">
-              {{ 'step.offers.upto' | t: { amount: formatNaira(o.limits.maxAmount), months: o.limits.maxTenor } }}
-              · {{ frequencyKey(o.product.repaymentFrequency) | t }}
+              <span class="product-label">{{ 'offers.card.available' | t }}</span>
+              <span class="product-amount">{{ formatNaira(o.limits.maxAmount) }}</span>
+              <span class="product-meta">
+                {{ 'offers.card.tenor' | t: { months: o.limits.maxTenor } }} · {{ frequencyKey(o.product.repaymentFrequency) | t }}
+                · {{ o.product.ratePercent }}% {{ modelKey(o.product.interestModel) | t }}
+              </span>
             </span>
           </button>
-        }
-      </div>
-    </section>
 
-    @if (selected(); as o) {
-      <!-- 2. How much and for how long -->
-      <section class="block" aria-labelledby="set-title">
-        <h2 class="block-title" id="set-title"><span class="num" aria-hidden="true">2</span>{{ 'offers.step.set' | t }}</h2>
+          @if (selectedId() === o.product.id) {
+            <div class="panel">
+              <div class="control">
+                <label class="control-label" for="amt">{{ 'step.offers.amount.edit' | t }}</label>
+                <div class="amount-field">
+                  <span class="currency" aria-hidden="true">₦</span>
+                  <input
+                    class="amount-input"
+                    id="amt"
+                    type="text"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    enterkeyhint="done"
+                    [attr.aria-describedby]="'amt-hint'"
+                    [value]="o.amount.toLocaleString('en-NG')"
+                    (input)="onAmountInput(o, $event)"
+                    (blur)="commitAmount(o, $event)"
+                    (keydown.enter)="commitAmount(o, $event)"
+                  />
+                </div>
+                <app-amount-slider
+                  [min]="o.limits.minAmount"
+                  [max]="o.limits.maxAmount"
+                  [step]="o.product.amountStep"
+                  [value]="o.amount"
+                  [format]="formatNaira"
+                  [ariaLabel]="'step.offers.slider' | t"
+                  [quickLabel]="'offers.quick' | t"
+                  (valueChange)="setAmount(o, $event)"
+                />
+                @if (askedMore()[o.product.id]; as more) {
+                  <div class="agent" role="status">
+                    <p class="agent-text">
+                      <strong>{{ 'offers.more.title' | t: { amount: formatNaira(more) } }}</strong>
+                      {{ 'offers.more.body' | t: { max: formatNaira(o.limits.maxAmount) } }}
+                    </p>
+                    <a class="cta" [attr.href]="agentLink(o)" target="_blank" rel="noopener">{{ 'offers.more.agent' | t }}</a>
+                    <a class="alt" [attr.href]="tel">{{ 'offers.more.call' | t }}</a>
+                  </div>
+                }
+                <p class="hint" id="amt-hint">
+                  @if (adjusted()[o.product.id]; as a) {
+                    <span role="status">{{ 'step.offers.amount.adjusted' | t: { amount: formatNaira(a) } }}</span>
+                  }
+                </p>
+              </div>
 
-        <div class="control">
-          <label class="control-label" for="amt">{{ 'step.offers.amount.edit' | t }}</label>
-          <div class="amount-field">
-            <span class="currency" aria-hidden="true">₦</span>
-            <input
-              class="amount-input"
-              id="amt"
-              type="text"
-              inputmode="numeric"
-              autocomplete="off"
-              enterkeyhint="done"
-              [attr.aria-describedby]="'amt-hint'"
-              [value]="o.amount.toLocaleString('en-NG')"
-              (input)="onAmountInput(o, $event)"
-              (blur)="commitAmount(o, $event)"
-              (keydown.enter)="commitAmount(o, $event)"
-            />
-          </div>
-          <app-amount-slider
-            [min]="o.limits.minAmount"
-            [max]="o.limits.maxAmount"
-            [step]="o.product.amountStep"
-            [value]="o.amount"
-            [format]="formatNaira"
-            [ariaLabel]="'step.offers.slider' | t"
-            [quickLabel]="'offers.quick' | t"
-            (valueChange)="setAmount(o, $event)"
-          />
-          @if (askedMore()[o.product.id]; as more) {
-            <div class="agent" role="status">
-              <p class="agent-text">
-                <strong>{{ 'offers.more.title' | t: { amount: formatNaira(more) } }}</strong>
-                {{ 'offers.more.body' | t: { max: formatNaira(o.limits.maxAmount) } }}
-              </p>
-              <a class="cta" [attr.href]="agentLink(o)" target="_blank" rel="noopener">{{ 'offers.more.agent' | t }}</a>
-              <a class="alt" [attr.href]="tel">{{ 'offers.more.call' | t }}</a>
+              <div class="control">
+                <span class="control-label" id="ten-label">{{ 'step.offers.tenor.edit' | t }}</span>
+                <div class="tenors" appRadioGroup role="radiogroup" aria-labelledby="ten-label">
+                  @for (t of o.tenors; track t) {
+                    <button type="button" role="radio" class="tenor" [attr.aria-checked]="o.tenor === t" [attr.tabindex]="tenorTab(o, t)" (click)="setTenor(o, t)">
+                      <span class="tenor-num">{{ t }}</span>
+                      <span class="tenor-unit">{{ 'step.offers.months' | t }}</span>
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <app-referral-box />
             </div>
           }
-          <p class="hint" id="amt-hint">
-            @if (adjusted()[o.product.id]; as a) {
-              <span role="status">{{ 'step.offers.amount.adjusted' | t: { amount: formatNaira(a) } }}</span>
-            }
-          </p>
         </div>
+      }
+    </div>
 
-        <div class="control">
-          <span class="control-label" id="ten-label">{{ 'step.offers.tenor.edit' | t }}</span>
-          <div class="tenors" appRadioGroup role="radiogroup" aria-labelledby="ten-label">
-            @for (t of o.tenors; track t) {
-              <button type="button" role="radio" class="tenor" [attr.aria-checked]="o.tenor === t" [attr.tabindex]="tenorTab(o, t)" (click)="setTenor(o, t)">
-                <span class="tenor-num">{{ t }}</span>
-                <span class="tenor-unit">{{ 'step.offers.months' | t }}</span>
-              </button>
-            }
-          </div>
-        </div>
-      </section>
-
-      <app-referral-box />
-
+    @if (selected(); as o) {
       <button type="button" class="cta" (click)="pick(o)">
         <span>{{ 'offers.continue' | t }}</span>
         <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">

@@ -16,22 +16,22 @@
   background: var(--action-primary); color: var(--action-on-primary); font: var(--fw-bold) var(--fs-sm) var(--font-sans);
 }
 
-/* Product choice: one calm card per loan, the chosen one outlined in the brand colour. */
+/* Product choice: a card per loan, led by the amount available. The chosen card opens its amount and period inside it. */
 .products { display: flex; flex-direction: column; gap: var(--space-3); }
+.product-card { border-radius: var(--radius-lg); background: var(--grey-100); border: 2px solid transparent; transition: border-color var(--dur-base) ease, background var(--dur-base) ease; }
+.product-card.is-open { background: var(--action-primary-soft); border-color: var(--action-primary); }
 .product {
-  display: flex; flex-direction: column; gap: var(--space-1); width: 100%; padding: var(--space-4);
-  text-align: left; font: inherit; color: var(--ink); cursor: pointer;
-  background: var(--grey-100); border: 2px solid transparent; border-radius: var(--radius-md);
-  transition: border-color var(--dur-base) ease, background var(--dur-base) ease;
+  display: flex; align-items: flex-start; gap: var(--space-4); width: 100%; padding: var(--space-4);
+  text-align: left; font: inherit; color: var(--ink); cursor: pointer; background: transparent; border: 0; border-radius: var(--radius-lg);
 }
-.product:hover { background: var(--grey-200); }
-.product[aria-checked='true'] { background: var(--action-primary-soft); border-color: var(--action-primary); }
+@media (hover: hover) and (pointer: fine) { .product-card:not(.is-open):hover { background: var(--grey-200); } }
 .product:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
-.product-top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
-.product-name { font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 600; }
-.product-rate { font-weight: var(--fw-bold); white-space: nowrap; }
-.product-rate small { font-weight: 400; font-size: var(--fs-xs); color: var(--ink-soft); }
-.product-meta { font-size: var(--fs-sm); color: var(--ink-soft); line-height: 1.4; }
+.product-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.product-name { font-size: var(--fs-md); font-weight: 500; color: var(--ink-soft); }
+.product-label { margin-top: var(--space-1); font-size: var(--fs-xs); color: var(--ink-muted); }
+.product-amount { font-family: var(--font-display); font-size: clamp(30px, 8vw, 38px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.product-meta { margin-top: var(--space-1); font-size: var(--fs-sm); color: var(--ink-soft); line-height: 1.4; }
+.panel { display: flex; flex-direction: column; gap: var(--space-5); padding: 0 var(--space-4) var(--space-4); }
 
 .control { display: flex; flex-direction: column; gap: var(--space-2); }
 .control-label { font-size: var(--fs-md); font-weight: 500; color: var(--ink); }
