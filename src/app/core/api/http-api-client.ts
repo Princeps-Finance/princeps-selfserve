@@ -16,7 +16,6 @@ import {
   LookupResult,
   MandateLink,
   MandateStatus,
-  NG_BANKS,
   SalaryVerifyInput,
   SalaryVerifyResult,
   StatementReviewInput,
@@ -25,6 +24,7 @@ import {
   WaitlistInput,
   WaitlistResult,
 } from './api-client';
+import { NG_BANKS } from './ng-banks';
 
 /** The service could not be reached or returned something unusable. */
 export class ApiUnavailableError extends Error {

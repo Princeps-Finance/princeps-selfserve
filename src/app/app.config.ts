@@ -3,7 +3,8 @@ import { provideRouter } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
 
 import { routes } from './app.routes';
-import { API_CLIENT, MockApiClient } from './core/api/api-client';
+import { API_CLIENT } from './core/api/api-client';
+import { MockApiClient } from './core/api/mock-api-client';
 import { HttpApiClient } from './core/api/http-api-client';
 import { environment } from '../environments/environment';
 
