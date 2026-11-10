@@ -127,6 +127,15 @@ describe('POST /api/selfserve/[op]', () => {
     });
   });
 
+  it('accepts a push subscription only with a token and an https endpoint', async () => {
+    fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ status: 'ok', extra: 1 }))));
+    const body = { endpoint: 'https://push.example.com/abc', keys: { p256dh: 'k', auth: 'a' } };
+    expect((await handler(req('push-subscribe', body))).status).toBe(401);
+    expect((await handler(req('push-subscribe', { ...body, endpoint: 'http://push.example.com/abc' }, { 'x-application-token': 't-push-1' }))).status).toBe(400);
+    const ok = await handler(req('push-subscribe', body, { 'x-application-token': 't-push-2' }));
+    expect(await ok.json()).toEqual({ status: 'ok' });
+  });
+
   it('returns a generic 502 when the backoffice errors', async () => {
     fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ stack: 'at db.ts:1' }), { status: 500 }));
     const res = await handler(req('banks', {}));

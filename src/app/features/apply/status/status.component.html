@@ -33,6 +33,22 @@
     </ol>
   </div>
 
+  @switch (push.state()) {
+    @case ('ask') {
+      <section class="notify" aria-labelledby="notify-title">
+        <h2 id="notify-title" class="notify-title">{{ 'push.title' | t }}</h2>
+        <p class="notify-body">{{ 'push.body' | t }}</p>
+        <button type="button" class="alt" (click)="push.enable()">{{ 'push.action' | t }}</button>
+      </section>
+    }
+    @case ('on') {
+      <p class="notify-note" role="status">{{ 'push.on' | t }}</p>
+    }
+    @case ('blocked') {
+      <p class="notify-note" role="note">{{ 'push.blocked' | t }}</p>
+    }
+  }
+
   <a class="cta" [attr.href]="trackUrl" rel="noopener">
     <span>{{ 'received.track' | t }}</span>
     <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
