@@ -270,6 +270,11 @@ export const ha: Dictionary = {
   'trust.official': 'Only apply on this official Princeps site. We never ask for your PIN, password or card details by phone or WhatsApp.',
   // TODO(translate)
   'offers.quick': 'Quick amounts',
+  // TODO(translate)
+  'theme.label': 'Colour theme',
+  'theme.system': 'Automatic (follows your device)',
+  'theme.light': 'Light',
+  'theme.dark': 'Dark',
   'common.close': 'Close',
   'common.retry': 'Try again',
   'common.dismiss': 'Dismiss',
@@ -291,8 +296,6 @@ export const ha: Dictionary = {
   'install.badge': 'New',
   'install.hint.ios': 'Tap the Share icon, then "Add to Home Screen".',
   'install.hint.other': 'Open your browser menu and choose "Install app" or "Add to Home screen".',
-  'theme.toDark': 'Light mode on. Switch to dark mode',
-  'theme.toLight': 'Dark mode on. Switch to light mode',
   'step.otp.subtitle': 'Mun aika zuwa {target}. Yana aiki na mintuna 5.',
   'step.otp.resend': 'Aika lambar sabuwa',
   'step.otp.resend.wait': 'Aika kuma a {seconds}s',
