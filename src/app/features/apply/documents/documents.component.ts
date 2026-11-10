@@ -3,7 +3,7 @@ import { logWarn } from '../../../core/log';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
-import { API_CLIENT } from '../../../core/api/api-client';
+import { API_CLIENT, RequiredDocument } from '../../../core/api/api-client';
 import { ApplicationStateService, DocDraft } from '../../../core/application/application-state.service';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
@@ -12,14 +12,20 @@ interface DocSpec {
   id: string;
   labelKey: string;
   hintKey: string;
+  optional?: boolean;
 }
 
-const BASE_DOCS: DocSpec[] = [
-  { id: 'id', labelKey: 'step.docs.id', hintKey: 'step.docs.id.hint' },
-];
+/** The documents the app knows how to name. A key the back end adds that is not here still gets a generic card. */
+const KNOWN: Record<string, DocSpec> = {
+  id: { id: 'id', labelKey: 'step.docs.id', hintKey: 'step.docs.id.hint' },
+  payslip: { id: 'payslip', labelKey: 'step.docs.payslip', hintKey: 'step.docs.payslip.hint' },
+  callup: { id: 'callup', labelKey: 'step.docs.callup', hintKey: 'step.docs.callup.hint' },
+};
 
-const SALARIED: DocSpec = { id: 'payslip', labelKey: 'step.docs.payslip', hintKey: 'step.docs.payslip.hint' };
-const CORPER: DocSpec = { id: 'callup', labelKey: 'step.docs.callup', hintKey: 'step.docs.callup.hint' };
+function specFor(doc: RequiredDocument): DocSpec {
+  const known = Object.hasOwn(KNOWN, doc.key) ? KNOWN[doc.key] : undefined;
+  return { ...(known ?? { id: doc.key, labelKey: 'step.docs.other', hintKey: 'step.docs.other.hint' }), optional: doc.optional };
+}
 
 @Component({
   selector: 'app-documents',
@@ -34,6 +40,8 @@ export class DocumentsComponent implements OnInit {
   private readonly flow = inject(FlowNavigator);
 
   readonly specs = signal<DocSpec[]>([]);
+  /** The list comes from the back end. Until it arrives, or if it cannot be loaded, nothing can be sent. */
+  readonly loadState = signal<'loading' | 'ready' | 'error'>('loading');
   readonly docs = this.state.docs;
   readonly errors = signal<Record<string, 'too-large' | 'network' | 'bad-type' | null>>({});
 
@@ -42,14 +50,32 @@ export class DocumentsComponent implements OnInit {
   readonly allUploaded = computed(() => {
     const s = this.specs();
     const d = this.docs();
-    if (!s.length) return false;
-    return s.every((spec) => d.find((x) => x.id === spec.id)?.status === 'uploaded');
+    if (this.loadState() !== 'ready') return false;
+    return s.filter((spec) => !spec.optional).every((spec) => d.find((x) => x.id === spec.id)?.status === 'uploaded');
   });
 
   async ngOnInit(): Promise<void> {
+    await this.loadList();
+  }
+
+  protected async loadList(): Promise<void> {
     const employment = this.state.employment()?.type;
-    const specs = [...BASE_DOCS, employment === 'corper' ? CORPER : SALARIED];
+    const offer = this.state.offer();
+    this.loadState.set('loading');
+    let list: RequiredDocument[];
+    try {
+      list = await this.api.getRequiredDocuments({
+        productId: offer?.productId ?? '',
+        employmentType: employment === 'corper' || employment === 'paramilitary' || employment === 'private-sector' ? employment : 'government',
+      });
+    } catch (err) {
+      logWarn('required documents unavailable', err);
+      this.loadState.set('error');
+      return;
+    }
+    const specs = list.map(specFor);
     this.specs.set(specs);
+    this.loadState.set('ready');
 
     // Initialize docs list.
     const existing = this.docs();
