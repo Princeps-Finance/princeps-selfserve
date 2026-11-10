@@ -45,6 +45,8 @@ export class BvnComponent {
 
   readonly consent = new FormControl(!!this.state.consent(), { nonNullable: true });
   readonly showConsentError = signal(false);
+  /** The BVN is hidden as it is typed, like a PIN, and can be shown on request. */
+  readonly revealed = signal(false);
   readonly submitting = signal(false);
   /** The contacts tied to this BVN, set while the "where should we send your code" dialog is open. */
   readonly contacts = signal<{ phones: MaskedContact[]; emails: MaskedContact[] } | null>(null);
@@ -55,8 +57,10 @@ export class BvnComponent {
   readonly canSubmit = computed(() => this.status() === 'VALID' && !this.submitting());
 
   constructor() {
+    // Only a BVN typed a moment ago and not yet verified comes back (the customer went back from the code screen to fix
+    // it). A verified one, from an earlier visit, is never shown again: another person may be using this phone.
     const saved = this.state.bvn();
-    if (saved && !this.notFound()) this.bvn.setValue(saved.value);
+    if (saved && !saved.verified && !this.notFound()) this.bvn.setValue(saved.value);
   }
 
   onInput(event: Event): void {

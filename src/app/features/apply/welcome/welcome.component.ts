@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
+import { PromoBannerComponent } from '../../../shared/promo-banner.component';
 import { TrustFooterComponent } from '../../../shared/trust-footer.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { ReturningService } from '../../../core/application/returning.service';
@@ -10,17 +11,22 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 /** First choice: apply now, or just find out how much they could get. Both use the same journey. */
 @Component({
   selector: 'app-welcome-intent',
-  imports: [TPipe, IllustrationComponent, TrustFooterComponent],
+  imports: [PromoBannerComponent, TPipe, IllustrationComponent, TrustFooterComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="step">
       @if (returning.saved(); as r) {
-        <div class="returning" role="region" [attr.aria-label]="'returning.title' | t: { name: r.firstName }">
-          <p class="returning-title">{{ 'returning.title' | t: { name: r.firstName } }}</p>
-          <p class="returning-sub">{{ 'returning.sub' | t: { phone: r.maskedPhone } }}</p>
-          <button type="button" class="cta" (click)="continueAs(r.ref)">{{ 'returning.continue' | t }}</button>
-          <button type="button" class="returning-forget" (click)="returning.forget()">{{ 'returning.notyou' | t }}</button>
-        </div>
+        <app-promo-banner
+          [title]="'returning.title' | t: { name: r.firstName }"
+          [description]="'returning.sub' | t: { phone: nbsp(r.maskedPhone) }"
+          [ctaLabel]="'returning.continue' | t"
+          [dismissLabel]="'returning.notyou' | t"
+          imageSrc="icons/icon-192.png"
+          [imageWidth]="192"
+          [imageHeight]="192"
+          (action)="continueAs(r.ref)"
+          (dismissed)="forgetDevice()"
+        />
       }
       <app-illustration name="coins" [size]="176" />
       <h1 class="title">{{ 'welcome.intent.title' | t }}</h1>
@@ -51,10 +57,6 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
       .actions { margin-top: auto; display: flex; flex-direction: column; gap: var(--space-5); padding-top: var(--space-6); }
       .choice { display: flex; flex-direction: column; gap: var(--space-2); }
       .hint { margin: 0; text-align: center; font-size: var(--fs-md); color: var(--ink-soft); }
-      .returning { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-lg); background: var(--grey-100); }
-      .returning-title { margin: 0; font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 600; }
-      .returning-sub { margin: 0 0 var(--space-2); color: var(--ink-soft); font-size: var(--fs-md); }
-      .returning-forget { align-self: center; min-height: var(--tap-min); border: 0; background: none; color: var(--ink-soft); font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
       .cta, .alt {
         min-height: var(--btn-height); padding: 0 var(--space-6); border-radius: var(--btn-radius); cursor: pointer;
         font-family: var(--font-sans); font-size: var(--fs-base); font-weight: var(--btn-weight);
@@ -76,6 +78,16 @@ export class WelcomeIntentComponent {
   private readonly flow = inject(FlowNavigator);
 
   protected readonly returning = inject(ReturningService);
+  /** Keeps the masked number on one line. */
+  protected nbsp(text: string): string {
+    return text.replace(/ /g, '\u00a0');
+  }
+
+  /** "Not you?": forget this phone and drop anything this tab still holds, so the next person starts clean. */
+  protected forgetDevice(): void {
+    this.returning.forget();
+    this.state.reset();
+  }
 
   /** One tap back in: the code goes to the BVN-linked phone, and no BVN is typed. */
   protected continueAs(ref: string): void {
