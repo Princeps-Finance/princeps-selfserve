@@ -46,7 +46,7 @@ import { ProductMarkComponent } from '../../../shared/product-mark.component';
                   <app-product-mark [product]="p.product" />
                   <span class="item-text">
                     <span class="item-name">{{ p.product.name }}</span>
-                    <span class="item-meta">{{ 'check.result.upto' | t: { amount: money(p.upTo) } }}</span>
+                    <span class="item-meta">{{ money(p.amount) }}</span>
                   </span>
                 </li>
               }
@@ -106,7 +106,7 @@ export class CheckResultComponent {
     if (!employment || !salary) return [];
     return productsFor(employment.type, salary.channel).map((product) => ({
       product,
-      upTo: Math.min(product.maxAmount, this.max()),
+      amount: Math.min(product.maxAmount, this.max()),
     }));
   });
 
