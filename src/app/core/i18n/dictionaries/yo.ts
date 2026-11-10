@@ -294,6 +294,8 @@ export const yo: Dictionary = {
   'pdf.download': 'Download the PDF',
   'pdf.page': 'Page',
   'pdf.letter.title': 'Your offer letter',
+  'pdf.letter.hint': 'Read it before you accept the terms.',
+  'pdf.letter.read': 'Read letter',
   'pdf.letter.error': 'We could not load your offer letter. Check your connection and try again.',
   'common.close': 'Close',
   'common.retry': 'Try again',

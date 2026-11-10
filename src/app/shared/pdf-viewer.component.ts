@@ -31,7 +31,7 @@ type ViewerState = 'loading' | 'ready' | 'error';
   imports: [TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="viewer" role="group" [attr.aria-label]="title()" [attr.aria-busy]="state() === 'loading'">
+    <div #viewer class="viewer" role="group" [attr.aria-label]="title()" [attr.aria-busy]="state() === 'loading'">
       @if (state() === 'loading') {
         <p class="state" role="status">{{ 'pdf.loading' | t }}</p>
       }
@@ -46,8 +46,8 @@ type ViewerState = 'loading' | 'ready' | 'error';
   `,
   styles: [
     `
-      :host { display: block; }
-      .viewer { background: var(--grey-100); border-radius: var(--radius-md); padding: var(--space-2); max-height: 70dvh; overflow: auto; }
+      :host { display: block; --pdf-max-height: none; }
+      .viewer { background: var(--grey-100); border-radius: var(--radius-md); padding: var(--space-2); max-height: var(--pdf-max-height, 70dvh); overflow: auto; }
       .pages { display: flex; flex-direction: column; gap: var(--space-2); }
       .pages :is(canvas) { width: 100%; height: auto; background: #ffffff; border-radius: var(--radius-xs); box-shadow: var(--shadow-1); }
       .state { margin: 0; padding: var(--space-6) var(--space-4); text-align: center; color: var(--ink-soft); font-size: var(--fs-md); }
@@ -61,6 +61,7 @@ export class PdfViewerComponent implements OnDestroy {
 
   private readonly lang = inject(LangService);
   private readonly pagesEl = viewChild.required<ElementRef<HTMLElement>>('pages');
+  private readonly viewerEl = viewChild.required<ElementRef<HTMLElement>>('viewer');
   protected readonly state = signal<ViewerState>('loading');
   private readonly url = signal<string | null>(null);
   protected readonly downloadUrl = computed(() => this.url());
@@ -92,7 +93,8 @@ export class PdfViewerComponent implements OnDestroy {
       const doc = await task.promise;
       const host = this.pagesEl().nativeElement;
       host.replaceChildren();
-      const width = host.clientWidth || 320;
+      // Measure the visible frame, not the hidden page list, so pages are drawn at the width they are shown.
+      const width = (this.viewerEl().nativeElement.clientWidth || 320) - 16;
       const ratio = Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO);
       for (let n = 1; n <= doc.numPages && !this.destroyed; n++) {
         const page = await doc.getPage(n);
