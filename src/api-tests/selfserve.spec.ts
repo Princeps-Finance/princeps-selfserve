@@ -9,6 +9,7 @@ function req(op: string, body: unknown, headers: Record<string, string> = {}): R
       host: 'selfserve.example.com',
       origin: 'https://selfserve.example.com',
       'x-forwarded-for': `198.51.100.${++ip}`,
+      'idempotency-key': '5b1f2a40-1c3d-4e7a-9a52-7d1e2f3a4b5c',
       ...headers,
     },
     body: JSON.stringify(body),
@@ -148,5 +149,14 @@ describe('POST /api/selfserve/[op]', () => {
       const ok = await handler(req('mandate-link', { productId: 'p', channel: 'ippis', monthlyAmount: 31966, tenorMonths: 12 }, tok));
       expect(await ok.json()).toEqual({ url: 'https://bank.example/m', reference: 'MD-1' });
     });
+  });
+
+  it('refuses a call that creates something without an Idempotency-Key, and forwards the key when given', async () => {
+    const noKey = await handler(req('mandate-link', { productId: 'p', channel: 'ippis', monthlyAmount: 31966, tenorMonths: 12 }, { 'x-application-token': 'tok', 'idempotency-key': '' }));
+    expect(noKey.status).toBe(400);
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ url: 'https://pay.test/x', reference: 'MND-123' })));
+    const ok = await handler(req('mandate-link', { productId: 'p', channel: 'ippis', monthlyAmount: 31966, tenorMonths: 12 }, { 'x-application-token': 'tok' }));
+    expect(ok.status).toBe(200);
+    expect(fetchMock.mock.calls.at(-1)![1].headers['Idempotency-Key']).toBe('5b1f2a40-1c3d-4e7a-9a52-7d1e2f3a4b5c');
   });
 });

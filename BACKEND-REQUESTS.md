@@ -18,7 +18,9 @@ The app currently carries its own catalogue and repayment maths, which can drift
 - Better: `POST /api/products/{id}/quote` with `{ amount, tenor }` returning `monthlyRepayment`, `totalRepayment`, `interest`, `fees[]`, `apr` and the repayment `schedule[]`. The app then displays exactly what Caltos will charge, and the "estimated yearly rate" becomes the real one.
 - State whether fees are deducted from the amount received or added to repayments.
 
-### 3. Safe retries on submit
+### 3. Safe retries on submit and other creating calls
+The app now sends an `Idempotency-Key` (a UUID, the same on every retry of one action) with the loan submit, mandate creation, statement review and waitlist signup. The back office must store the key with the result and return the same result for a repeat, for at least 24 hours.
+
 `POST /api/applications/{id}/submit` returns 409 if already submitted. After a timeout the customer cannot tell whether the loan was created.
 - Make a repeat submit for the same application return the existing loan (200) instead of 409, or accept an `Idempotency-Key` header.
 - Guard against two concurrent applications for the same BVN.

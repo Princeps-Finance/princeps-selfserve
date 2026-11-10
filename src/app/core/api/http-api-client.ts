@@ -1,6 +1,7 @@
 import { MAX_UPLOAD_BYTES, REQUEST_TIMEOUT_MS } from '../limits';
 import { logWarn } from '../log';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { IdempotencyService } from './idempotency.service';
 import {
   ApiClient,
   Bank,
@@ -55,10 +56,12 @@ interface Reply<T> {
 @Injectable({ providedIn: 'root' })
 export class HttpApiClient implements ApiClient {
   private token: string | null = null;
+  private readonly idempotency = inject(IdempotencyService);
 
-  private async post<T>(path: string, body: unknown): Promise<Reply<T>> {
+  private async post<T>(path: string, body: unknown, idempotencyKey?: string): Promise<Reply<T>> {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (this.token) headers['X-Application-Token'] = this.token;
+    if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
     try {
       const res = await fetch(path, {
         method: 'POST',
@@ -85,8 +88,8 @@ export class HttpApiClient implements ApiClient {
     }
   }
 
-  private async op<T>(name: string, body: unknown): Promise<T> {
-    const r = await this.post<T>(`/api/selfserve/${name}`, withoutEmptyEmail(body));
+  private async op<T>(name: string, body: unknown, idempotencyKey?: string): Promise<T> {
+    const r = await this.post<T>(`/api/selfserve/${name}`, withoutEmptyEmail(body), idempotencyKey);
     if (!r.ok || r.data === null) throw new ApiUnavailableError(name, r.status);
     return r.data;
   }
@@ -96,7 +99,11 @@ export class HttpApiClient implements ApiClient {
   }
 
   async submitStatementReview(input: StatementReviewInput): Promise<SubmitResult> {
-    const r = await this.op<{ status?: string; referenceId?: string }>('statement-review', input);
+    const r = await this.op<{ status?: string; referenceId?: string }>(
+      'statement-review',
+      input,
+      this.idempotency.keyFor(`statement:${input.fileName}:${input.sizeBytes}`),
+    );
     if (r.status !== 'received' || typeof r.referenceId !== 'string') throw new ApiUnavailableError('statement-review', 502);
     return { status: 'received', referenceId: r.referenceId };
   }
@@ -211,7 +218,11 @@ return []; // The user can type it.
     monthlyAmount: number;
     tenorMonths: number;
   }): Promise<MandateLink> {
-    const link = await this.op<MandateLink>('mandate-link', input);
+    const link = await this.op<MandateLink>(
+      'mandate-link',
+      input,
+      this.idempotency.keyFor(`mandate:${input.productId}:${input.monthlyAmount}:${input.tenorMonths}`),
+    );
     // Only ever offer the customer an https link, whatever the server returned.
     if (typeof link.url !== 'string' || !link.url.startsWith('https://') || typeof link.reference !== 'string') {
       throw new ApiUnavailableError('mandate-link', 502);
@@ -243,7 +254,7 @@ return []; // The user can type it.
   }
 
   joinWaitlist(input: WaitlistInput): Promise<WaitlistResult> {
-    return this.op<WaitlistResult>('waitlist', input);
+    return this.op<WaitlistResult>('waitlist', input, this.idempotency.keyFor(`waitlist:${input.type}`));
   }
 }
 
