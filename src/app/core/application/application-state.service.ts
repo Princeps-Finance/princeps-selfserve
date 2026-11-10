@@ -241,6 +241,10 @@ export class ApplicationStateService {
    * never written to the device draft. "phoneVerified" now means the customer proved who they are
    * (BVN OTP to the phone linked to their BVN), not that the typed phone number was texted.
    */
+  /** The opaque handle of a returning customer, set when they chose "Continue as ..." on this device. */
+  private readonly _returningRef = signal<string | null>(null);
+  readonly returningRef = this._returningRef.asReadonly();
+
   private readonly _bvnIdentity = signal<BvnIdentity | null>(null);
   readonly bvnIdentity = this._bvnIdentity.asReadonly();
   /** Where the customer asked for the one-time code. Kept in memory only, never saved to the device. */
@@ -373,7 +377,12 @@ export class ApplicationStateService {
     return key;
   }
 
+  setReturningRef(ref: string | null): void {
+    this._returningRef.set(ref);
+  }
+
   reset(): void {
+    this._returningRef.set(null);
     this._bvnIdentity.set(null);
     this._otpDestination.set(null);
     this.state.set(empty);

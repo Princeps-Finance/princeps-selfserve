@@ -23,6 +23,8 @@ import type {
   WaitlistResult,
   EligibilityCheckInput,
   EligibilityCheckResult,
+  ReturningOtpSendResult,
+  ReturningOtpVerifyResult,
   StatementCheckInput,
 } from './api.types';
 import type { ApiClient } from './api-client';
@@ -156,6 +158,24 @@ export class MockApiClient implements ApiClient {
         phone: bvn === '33333333333' ? '08099999999' : '08012345678',
         gender: 'female',
       },
+      customerRef: 'demo-customer-ref-0001',
+    };
+  }
+
+  async sendReturningOtp(_customerRef: string, _captchaToken?: string): Promise<ReturningOtpSendResult> {
+    await delay(600);
+    return { status: 'sent', target: '+234 •••• ••78', expiresInSeconds: 300 };
+  }
+
+  async verifyReturningOtp(customerRef: string, code: string): Promise<ReturningOtpVerifyResult> {
+    await delay(600);
+    if (code === '000000') return { status: 'expired' };
+    if (code !== '123456') return { status: 'wrong' };
+    return {
+      status: 'ok',
+      identity: { firstName: 'Ada', fullName: 'Ada Okafor', dateOfBirth: '1988-04-12', phone: '08012345678', gender: 'female' },
+      bvn: '12345678901',
+      customerRef,
     };
   }
 

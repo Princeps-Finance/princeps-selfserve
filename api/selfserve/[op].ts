@@ -23,6 +23,7 @@ export const config = { runtime: 'nodejs' };
 const phone = z.string().regex(/^\+234[789]\d{9}$/);
 const digits = (n: number) => z.string().regex(new RegExp(`^\\d{${n}}$`));
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const CUSTOMER_REF = z.string().regex(/^[\w-]{16,128}$/);
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 interface OpDef {
@@ -92,7 +93,21 @@ const OPS: Record<string, OpDef> = {
     schema: z.object({ bvn: digits(11), code: digits(6) }).strict(),
     limit: 6,
     // identity carries name, date of birth and address. The BVN photo is never passed through.
-    allow: ['status', 'retryAfterSeconds', 'token', 'identity'],
+    allow: ['status', 'retryAfterSeconds', 'token', 'identity', 'customerRef'],
+    subjectLimit: GUESS_LIMIT,
+  },
+  // Coming back on a device used before: the opaque handle the back end gave after the first full verification.
+  'send-returning-otp': {
+    schema: z.object({ customerRef: CUSTOMER_REF, captchaToken: z.string().max(2048).optional() }).strict(),
+    limit: 3,
+    allow: ['status', 'target', 'expiresInSeconds'],
+    subjectLimit: SEND_LIMIT,
+  },
+  'verify-returning-otp': {
+    schema: z.object({ customerRef: CUSTOMER_REF, code: digits(6) }).strict(),
+    limit: 6,
+    // bvn is the customer's own, released only after a correct code, for this visit.
+    allow: ['status', 'retryAfterSeconds', 'token', 'identity', 'bvn', 'customerRef'],
     subjectLimit: GUESS_LIMIT,
   },
   'statement-review': {
@@ -301,7 +316,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   // Bot check before sending an SMS (costs money and can harass a victim).
   let payload = parsed.data as Record<string, unknown>;
-  if (op === 'send-otp' || op === 'send-bvn-otp' || op === 'bvn-contacts' || op === 'eligibility-check' || op === 'statement-check') {
+  if (op === 'send-otp' || op === 'send-bvn-otp' || op === 'bvn-contacts' || op === 'eligibility-check' || op === 'statement-check' || op === 'send-returning-otp') {
     const { captchaToken, ...rest } = payload as { captchaToken?: string };
     if (!(await verifyCaptcha(captchaToken, ip))) {
       return fail('CAPTCHA', 'Please confirm you are not a robot and try again.', 400);
@@ -311,7 +326,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   // Limits that do not depend on the caller's address, so rotating addresses does not help:
   // per phone number, BVN, NIN or account number, and per application token.
-  const subject = ['phone', 'bvn', 'nin', 'accountNumber']
+  const subject = ['phone', 'bvn', 'nin', 'accountNumber', 'customerRef']
     .map((k) => (parsed.data as Record<string, unknown>)[k])
     .find((v): v is string => typeof v === 'string');
   const per = def.subjectLimit ?? { count: def.limit * 2, windowMs: 10 * 60_000 };

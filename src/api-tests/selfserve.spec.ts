@@ -156,6 +156,17 @@ describe('POST /api/selfserve/[op]', () => {
     expect((await handler(req('statement-check', { ...body, sizeBytes: 50 * 1024 * 1024 }))).status).toBe(400);
   });
 
+  it('lets a returning customer start with an opaque handle, never a BVN, and limits guesses per handle', async () => {
+    fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ status: 'wrong', secret: 1 }))));
+    const ref = 'demo-customer-ref-0001';
+    expect((await handler(req('verify-returning-otp', { customerRef: 'short', code: '123456' }))).status).toBe(400);
+    expect((await handler(req('verify-returning-otp', { customerRef: ref, bvn: '12345678901', code: '123456' }))).status).toBe(400);
+    const codes: number[] = [];
+    for (let i = 0; i < 7; i++) codes.push((await handler(req('verify-returning-otp', { customerRef: ref, code: '000001' }))).status);
+    expect(codes.slice(0, 5)).toEqual([200, 200, 200, 200, 200]);
+    expect(codes.slice(5)).toEqual([429, 429]);
+  });
+
   it('returns a generic 502 when the backoffice errors', async () => {
     fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ stack: 'at db.ts:1' }), { status: 500 }));
     const res = await handler(req('banks', {}));

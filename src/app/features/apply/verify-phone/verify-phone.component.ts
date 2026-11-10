@@ -20,6 +20,7 @@ import { environment } from '../../../../environments/environment';
 import { API_CLIENT } from '../../../core/api/api-client';
 import { normalizePhoneNg } from '../../../core/api/contact.util';
 import { CaptchaService } from '../../../core/captcha/captcha.service';
+import { ReturningService } from '../../../core/application/returning.service';
 import { DraftService } from '../../../core/application/draft.service';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { APPLY } from '../../../core/flow/apply-routes';
@@ -46,6 +47,7 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly api = inject(API_CLIENT);
   private readonly captcha = inject(CaptchaService);
   private readonly drafts = inject(DraftService);
+  private readonly returning = inject(ReturningService);
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
   private readonly lang = inject(LangService);
@@ -71,13 +73,17 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     const bvn = this.state.bvn();
-    if (!bvn) {
+    const ref = this.state.returningRef();
+    if (!bvn && !ref) {
       await this.flow.go(APPLY.bvn);
       return;
     }
     try {
-      // The code goes to the phone linked to the BVN, not to the number typed earlier.
-      const res = await this.api.sendBvnOtp(bvn.value, await this.captcha.token(), this.state.otpDestination() ?? undefined);
+      // The code goes to the phone linked to the BVN, not to the number typed earlier. A returning customer has
+      // no BVN typed: the handle kept on this device stands in for it.
+      const res = bvn
+        ? await this.api.sendBvnOtp(bvn.value, await this.captcha.token(), this.state.otpDestination() ?? undefined)
+        : await this.api.sendReturningOtp(ref as string, await this.captcha.token());
       if (res.status === 'not-found') {
         await this.flow.go(APPLY.bvn, { queryParams: { error: 'not-found' } });
         return;
@@ -155,20 +161,27 @@ this.error.set({ kind: 'service' });
       return;
     }
     const bvn = this.state.bvn();
-    if (!bvn) return;
+    const ref = this.state.returningRef();
+    if (!bvn && !ref) return;
 
     this.submitting.set(true);
     this.error.set(null);
     try {
-      const res = await this.api.verifyBvnOtp(bvn.value, this.code());
+      const res = bvn ? await this.api.verifyBvnOtp(bvn.value, this.code()) : await this.api.verifyReturningOtp(ref as string, this.code());
       if (res.status === 'ok') {
+        // A returning customer's BVN comes back with the verified code and lives in memory for this visit only.
+        const verifiedBvn: string = bvn ? bvn.value : ((res as { bvn?: string }).bvn ?? '');
+        if (!bvn) this.state.setBvn({ value: verifiedBvn, verified: false });
+        if (res.customerRef) {
+          this.returning.save({ ref: res.customerRef, firstName: res.identity.firstName || res.identity.fullName.split(' ')[0], maskedPhone: this.maskedTarget() });
+        }
         // The contact number is the one registered with the BVN. Email is optional and asked later.
         const phone = normalizePhoneNg(res.identity.phone);
         if (!phone) throw new Error('BVN record has no usable phone number');
         const contact = { phone, email: this.state.contact()?.email ?? '' };
         this.state.setContact(contact);
         this.state.setBvnIdentity(res.identity);
-        this.state.setBvn({ value: bvn.value, verified: true });
+        this.state.setBvn({ value: verifiedBvn, verified: true });
         this.state.markPhoneVerified();
         await this.flow.go(await this.nextAfterVerified(contact));
         return;
@@ -211,11 +224,14 @@ this.error.set({ kind: 'service' });
   async resend(): Promise<void> {
     if (this.resendCooldown() > 0 || this.resending()) return;
     const bvn = this.state.bvn();
-    if (!bvn) return;
+    const ref = this.state.returningRef();
+    if (!bvn && !ref) return;
     this.resending.set(true);
     this.justResent.set(false);
     try {
-      const res = await this.api.sendBvnOtp(bvn.value, await this.captcha.token(), this.state.otpDestination() ?? undefined);
+      const res = bvn
+        ? await this.api.sendBvnOtp(bvn.value, await this.captcha.token(), this.state.otpDestination() ?? undefined)
+        : await this.api.sendReturningOtp(ref as string, await this.captcha.token());
       if (res.status !== 'sent') throw new Error('not-sent');
       this.maskedTarget.set(res.target);
       this.justResent.set(true);
@@ -230,7 +246,8 @@ this.error.set({ kind: 'service' });
   }
 
   goBack(): void {
-    void this.flow.go(APPLY.bvn);
+    this.state.setReturningRef(null);
+    void this.flow.go(this.returning.saved() ? APPLY.welcome : APPLY.bvn);
   }
 
   private startCooldown(): void {

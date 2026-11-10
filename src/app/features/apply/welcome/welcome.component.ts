@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TrustFooterComponent } from '../../../shared/trust-footer.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
+import { ReturningService } from '../../../core/application/returning.service';
 import { ApplicationStateService, ApplyIntent } from '../../../core/application/application-state.service';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
@@ -13,6 +14,14 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="step">
+      @if (returning.saved(); as r) {
+        <div class="returning" role="region" [attr.aria-label]="'returning.title' | t: { name: r.firstName }">
+          <p class="returning-title">{{ 'returning.title' | t: { name: r.firstName } }}</p>
+          <p class="returning-sub">{{ 'returning.sub' | t: { phone: r.maskedPhone } }}</p>
+          <button type="button" class="cta" (click)="continueAs(r.ref)">{{ 'returning.continue' | t }}</button>
+          <button type="button" class="returning-forget" (click)="returning.forget()">{{ 'returning.notyou' | t }}</button>
+        </div>
+      }
       <app-illustration name="coins" [size]="176" />
       <h1 class="title">{{ 'welcome.intent.title' | t }}</h1>
 
@@ -42,6 +51,10 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
       .actions { margin-top: auto; display: flex; flex-direction: column; gap: var(--space-5); padding-top: var(--space-6); }
       .choice { display: flex; flex-direction: column; gap: var(--space-2); }
       .hint { margin: 0; text-align: center; font-size: var(--fs-md); color: var(--ink-soft); }
+      .returning { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-lg); background: var(--grey-100); }
+      .returning-title { margin: 0; font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 600; }
+      .returning-sub { margin: 0 0 var(--space-2); color: var(--ink-soft); font-size: var(--fs-md); }
+      .returning-forget { align-self: center; min-height: var(--tap-min); border: 0; background: none; color: var(--ink-soft); font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
       .cta, .alt {
         min-height: var(--btn-height); padding: 0 var(--space-6); border-radius: var(--btn-radius); cursor: pointer;
         font-family: var(--font-sans); font-size: var(--fs-base); font-weight: var(--btn-weight);
@@ -61,6 +74,15 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 export class WelcomeIntentComponent {
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
+
+  protected readonly returning = inject(ReturningService);
+
+  /** One tap back in: the code goes to the BVN-linked phone, and no BVN is typed. */
+  protected continueAs(ref: string): void {
+    this.state.setIntent('apply');
+    this.state.setReturningRef(ref);
+    void this.flow.go(APPLY.verify);
+  }
 
   choose(intent: ApplyIntent): void {
     this.state.setIntent(intent);

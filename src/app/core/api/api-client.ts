@@ -2,7 +2,7 @@ import { InjectionToken } from '@angular/core';
 import type { EmploymentAvailability } from './employment-availability';
 import type { ReferralDraft } from '../application/application-state.service';
 import type {
-  Bank, BvnContactsResult, EligibilityCheckInput, EligibilityCheckResult, StatementCheckInput, BvnOtpSendResult, BvnOtpVerifyResult, BvnVerifyResult, DocUploadInput, DocUploadResult,
+  Bank, BvnContactsResult, EligibilityCheckInput, EligibilityCheckResult, ReturningOtpSendResult, ReturningOtpVerifyResult, StatementCheckInput, BvnOtpSendResult, BvnOtpVerifyResult, BvnVerifyResult, DocUploadInput, DocUploadResult,
   LoanSummary, LookupResult, MandateLink, OfferLetterRequest, MandateStatus, OtpDestination, SalaryVerifyInput, SalaryVerifyResult,
   StatementReviewInput, SubmitPayload, SubmitResult, WaitlistInput, WaitlistResult,
 } from './api.types';
@@ -20,6 +20,10 @@ export interface ApiClient {
   lookupBvnContacts(bvn: string, captchaToken?: string): Promise<BvnContactsResult>;
   /** Sends a one-time code to the chosen contact. With no destination it goes to the BVN's main phone. */
   sendBvnOtp(bvn: string, captchaToken?: string, destination?: OtpDestination): Promise<BvnOtpSendResult>;
+  /** Sends the code to the BVN-linked phone of a returning customer, from the handle kept on this device. */
+  sendReturningOtp(customerRef: string, captchaToken?: string): Promise<ReturningOtpSendResult>;
+  /** Verifies that code. A correct one proves ownership and releases the identity and BVN for this visit only. */
+  verifyReturningOtp(customerRef: string, code: string): Promise<ReturningOtpVerifyResult>;
   /** A correct code proves the customer owns the BVN, and releases the details for it. */
   verifyBvnOtp(bvn: string, code: string): Promise<BvnOtpVerifyResult>;
   /** Local government areas for a state. An empty list means the user types it instead. */
