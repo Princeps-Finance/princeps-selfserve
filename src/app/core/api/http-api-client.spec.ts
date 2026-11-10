@@ -106,7 +106,7 @@ describe('HttpApiClient', () => {
   it('sends the same Idempotency-Key when the same mandate is requested again, and a new one for a different amount', async () => {
     const link = { url: 'https://pay.test/x', reference: 'MND-1' };
     const ask = (monthlyAmount: number) => client.createMandateLink({ productId: 'p', channel: 'ippis', monthlyAmount, tenorMonths: 12 });
-    fetchMock.mockResolvedValue(reply(link));
+    fetchMock.mockImplementation(() => Promise.resolve(reply(link)));
     await ask(31_966);
     await ask(31_966);
     await ask(40_000);
