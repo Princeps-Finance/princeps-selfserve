@@ -43,12 +43,12 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         position: absolute; top: 8px; right: 8px;
         width: 28px; height: 28px; border: 0; border-radius: 50%;
         display: grid; place-items: center; cursor: pointer;
-        background: rgba(17, 18, 20, 0.5); color: #fff;
+        background: var(--scrim); color: var(--on-dark);
         transition: background 120ms ease;
       }
-      .close:hover { background: rgba(17, 18, 20, 0.7); }
+      .close:hover { background: var(--scrim-strong); }
       .close:focus-visible, .promo-cta:focus-visible { outline: 2px solid var(--focus-color); outline-offset: 2px; }
-      .close:focus-visible { outline-color: #fff; }
+      .close:focus-visible { outline-color: var(--on-dark); }
       .body { padding: var(--space-4); }
       .title {
         display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: var(--space-2);
