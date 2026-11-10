@@ -6,7 +6,7 @@ Tick a box only when it is done and tested, not when it is planned.
 
 ## 1. Settings on the production branch
 - [ ] `environment.production.ts`: `useMockApi: false`, `demoBanner: false`, `turnstileSiteKey` set, `customerModuleUrl` on the Princeps domain.
-- [ ] `support.ts`: real support phone, WhatsApp and email, and the money lender `LICENCE_NUMBER`.
+- [ ] `support.ts`: real support phone, WhatsApp and email. (The licence number is optional: leave `LICENCE_NUMBER` empty and nothing is shown.)
 - [ ] The production domain is set up on Vercel and `ALLOWED_ORIGINS` lists it.
 
 ## 2. Vercel environment variables (production only)

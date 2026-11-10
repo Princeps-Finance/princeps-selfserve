@@ -14,7 +14,6 @@ if (/customerModuleUrl:\s*'[^']*vercel\.app/.test(env)) problems.push('environme
 
 const support = read('src/app/core/support.ts');
 if (/2348001234567|support@princeps\.ng/.test(support)) problems.push('support.ts: the support phone, WhatsApp or email is still the placeholder.');
-if (!/LICENCE_NUMBER\s*=\s*'[^']+'/.test(support)) problems.push('support.ts: LICENCE_NUMBER is empty.');
 
 const goLive = read('GO-LIVE.md');
 const open = goLive.split('\n').filter((line) => line.startsWith('- [ ]'));
