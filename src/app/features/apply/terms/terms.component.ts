@@ -5,6 +5,7 @@ import { WizardProgressComponent } from '../wizard-progress.component';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { formatNaira } from '../../../core/money.util';
 import { APPLY } from '../../../core/flow/apply-routes';
+import { OfferLetterComponent } from './offer-letter.component';
 import { buildRepaymentSchedule } from '../../../../shared/pricing';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
@@ -31,7 +32,7 @@ function firstPaydayAfter(from: Date): Date {
 
 @Component({
   selector: 'app-terms',
-  imports: [TPipe, WizardProgressComponent],
+  imports: [TPipe, WizardProgressComponent, OfferLetterComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './terms.component.html',
   styleUrl: './terms.component.css',
@@ -72,6 +73,19 @@ export class TermsComponent {
   readonly totalRepayable = computed(() =>
     this.schedule().reduce((acc, r) => acc + r.payment, 0),
   );
+
+  /** What the offer letter is generated for. */
+  readonly letterRequest = computed(() => {
+    const o = this.offer();
+    return {
+      productId: o?.productId ?? '',
+      productName: o?.productName ?? '',
+      amount: o?.amount ?? 0,
+      tenorMonths: o?.tenorMonths ?? 0,
+      monthlyRepayment: o?.monthlyRepayment ?? 0,
+      ratePercent: o?.ratePercent ?? 0,
+    };
+  });
 
   readonly totalFees = computed(() =>
     (this.offer()?.fees ?? []).reduce((acc, f) => acc + f.amount, 0),

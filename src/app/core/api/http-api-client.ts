@@ -12,6 +12,7 @@ import {
   DocUploadResult,
   BvnContactsResult,
   LoanSummary,
+  OfferLetterRequest,
   OtpDestination,
   LookupResult,
   MandateLink,
@@ -52,6 +53,9 @@ interface Reply<T> {
  * phone OTP is verified. It is held in memory only and sent with later calls
  * so the backoffice can refuse a submission that skipped verification.
  */
+/** About 5 MB of PDF once decoded; anything larger is refused. */
+const MAX_LETTER_BASE64 = 7_000_000;
+
 @Injectable({ providedIn: 'root' })
 export class HttpApiClient implements ApiClient {
   private token: string | null = null;
@@ -240,6 +244,19 @@ return []; // The user can type it.
   async listLoans(): Promise<LoanSummary[]> {
     const r = await this.op<{ loans?: LoanSummary[] }>('list-loans', {});
     return Array.isArray(r.loans) ? r.loans : [];
+  }
+
+  async getOfferLetter(request: OfferLetterRequest): Promise<Uint8Array> {
+    const r = await this.op<{ pdfBase64?: string }>('offer-letter', {
+      productId: request.productId,
+      amountKobo: Math.round(request.amount * 100),
+      tenorMonths: request.tenorMonths,
+    });
+    if (typeof r.pdfBase64 !== 'string' || r.pdfBase64.length > MAX_LETTER_BASE64) throw new ApiUnavailableError('offer-letter', 502);
+    const bytes = Uint8Array.from(atob(r.pdfBase64), (c) => c.charCodeAt(0));
+    // Never hand the viewer anything that is not a PDF, whatever the server returned.
+    if (new TextDecoder().decode(bytes.slice(0, 5)) !== '%PDF-') throw new ApiUnavailableError('offer-letter', 502);
+    return bytes;
   }
 
   joinWaitlist(input: WaitlistInput): Promise<WaitlistResult> {

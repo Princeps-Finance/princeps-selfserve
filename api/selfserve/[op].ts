@@ -145,6 +145,19 @@ const OPS: Record<string, OpDef> = {
     allow: ['status'],
     needsToken: true,
   },
+  // The offer letter (PDF) for the offer the customer is about to accept, produced by the back office.
+  'offer-letter': {
+    schema: z
+      .object({
+        productId: z.string().max(64),
+        amountKobo: z.number().int().positive(),
+        tenorMonths: z.number().int().min(1).max(60),
+      })
+      .strict(),
+    limit: 10,
+    allow: ['pdfBase64'],
+    needsToken: true,
+  },
   'mandate-link': {
     schema: z
       .object({

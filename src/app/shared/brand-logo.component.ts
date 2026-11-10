@@ -8,7 +8,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <img class="light" ngSrc="/brand/princeps-logo.svg" [width]="width()" [height]="height()" alt="Princeps Credit Systems Limited" priority />
-    <img class="dark" ngSrc="/brand/princeps-logo-dark.svg" [width]="width()" [height]="height()" alt="" aria-hidden="true" />
+    <img class="dark" ngSrc="/brand/princeps-logo-dark.svg" [width]="width()" [height]="height()" alt="" aria-hidden="true" priority />
   `,
   styles: [
     `

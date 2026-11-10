@@ -169,6 +169,16 @@ export type BvnOtpVerifyResult =
   | { status: 'expired' }
   | { status: 'locked'; retryAfterSeconds: number };
 
+/** What the offer letter is for: the offer the customer is about to accept. */
+export interface OfferLetterRequest {
+  productId: string;
+  productName: string;
+  amount: number;
+  tenorMonths: number;
+  monthlyRepayment: number;
+  ratePercent: number;
+}
+
 export interface StatementReviewInput {
   contact: { phone: string; email?: string };
   bvn: string;

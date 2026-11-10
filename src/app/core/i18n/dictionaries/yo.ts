@@ -288,6 +288,13 @@ export const yo: Dictionary = {
   'otp.phone': 'Phone',
   'otp.email': 'Email',
   'step.bvn.error.lookup': 'We could not look up your BVN right now. Try again in a moment.',
+  // TODO(translate)
+  'pdf.loading': 'Loading your offer letter…',
+  'pdf.error': 'We could not show this document.',
+  'pdf.download': 'Download the PDF',
+  'pdf.page': 'Page',
+  'pdf.letter.title': 'Your offer letter',
+  'pdf.letter.error': 'We could not load your offer letter. Check your connection and try again.',
   'common.close': 'Close',
   'common.retry': 'Try again',
   'common.dismiss': 'Dismiss',
