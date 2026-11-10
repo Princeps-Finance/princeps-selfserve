@@ -14,8 +14,6 @@
     <p class="hero-per">{{ 'step.terms.hero.per' | t: { months: o.tenorMonths } }}</p>
   </section>
 
-  <app-offer-letter [request]="letterRequest()" />
-
   <dl class="card rows">
     <div class="row">
       <dt>{{ 'step.terms.principal' | t }}</dt>
@@ -79,8 +77,10 @@
     </div>
   </details>
 
-  <label class="agree">
-    <app-checkbox [invalid]="attempted() && !agreed()" describedBy="agree-error" [checked]="agreed()" (checkedChange)="toggleAgree($event)" />
+  <app-offer-letter [request]="letterRequest()" (readToEnd)="letterRead.set(true)" />
+
+  <label class="agree" [class.is-locked]="!letterRead()">
+    <app-checkbox [invalid]="attempted() && !agreed()" describedBy="agree-error" [disabled]="!letterRead()" [checked]="agreed()" (checkedChange)="toggleAgree($event)" />
     <span>{{ 'step.terms.agree' | t }}</span>
   </label>
   @if (attempted() && !agreed()) {

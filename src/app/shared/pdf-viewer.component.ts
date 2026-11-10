@@ -7,6 +7,7 @@ import {
   effect,
   inject,
   input,
+  output,
   signal,
   untracked,
   viewChild,
@@ -31,7 +32,7 @@ type ViewerState = 'loading' | 'ready' | 'error';
   imports: [TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div #viewer class="viewer" role="group" [attr.aria-label]="title()" [attr.aria-busy]="state() === 'loading'">
+    <div #viewer class="viewer" role="group" [attr.aria-label]="title()" [attr.aria-busy]="state() === 'loading'" tabindex="0" (scroll)="checkEnd()">
       @if (state() === 'loading') {
         <p class="state" role="status">{{ 'pdf.loading' | t }}</p>
       }
@@ -47,6 +48,7 @@ type ViewerState = 'loading' | 'ready' | 'error';
   styles: [
     `
       :host { display: block; --pdf-max-height: none; }
+      .viewer:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
       .viewer { background: var(--grey-100); border-radius: var(--radius-md); padding: var(--space-2); max-height: var(--pdf-max-height, 70dvh); overflow: auto; }
       .pages { display: flex; flex-direction: column; gap: var(--space-2); }
       .pages :is(canvas) { width: 100%; height: auto; background: #ffffff; border-radius: var(--radius-xs); box-shadow: var(--shadow-1); }
@@ -58,6 +60,9 @@ type ViewerState = 'loading' | 'ready' | 'error';
 export class PdfViewerComponent implements OnDestroy {
   readonly data = input.required<Uint8Array>();
   readonly title = input('PDF');
+  /** Fires once, when the customer has scrolled to the bottom (or the whole document fits without scrolling). */
+  readonly readToEnd = output<void>();
+  private reachedEnd = false;
 
   private readonly lang = inject(LangService);
   private readonly pagesEl = viewChild.required<ElementRef<HTMLElement>>('pages');
@@ -108,10 +113,24 @@ export class PdfViewerComponent implements OnDestroy {
         host.appendChild(canvas);
         await page.render({ canvas, viewport }).promise;
       }
-      if (!this.destroyed) this.state.set('ready');
+      if (!this.destroyed) {
+        this.state.set('ready');
+        // After layout: a short document that fits without scrolling counts as read.
+        requestAnimationFrame(() => this.checkEnd());
+      }
     } catch (err) {
       logWarn('pdf could not be shown', err);
       if (!this.destroyed) this.state.set('error');
+    }
+  }
+
+  /** True when the last page is in view. A small margin covers rounding. */
+  protected checkEnd(): void {
+    if (this.reachedEnd || this.state() !== 'ready') return;
+    const el = this.viewerEl().nativeElement;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 24) {
+      this.reachedEnd = true;
+      this.readToEnd.emit();
     }
   }
 
