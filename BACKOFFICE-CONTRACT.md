@@ -66,6 +66,7 @@ response keys.
 | `/api/selfserve/upload-document` *(token)* | `{docId, fileName, sizeBytes}` | `{status:'ok'\|'too-large'\|'bad-type'\|'network'}` |
 | `/api/selfserve/mandate-link` *(token)* | `{productId, channel, monthlyAmount, tenorMonths}` | `{url (https), reference}` |
 | `/api/selfserve/mandate-status` *(token)* | `{reference}` | `{status:'pending'\|'completed'\|'failed'}` |
+| `/api/selfserve/push-subscribe` *(token)* | `{endpoint, keys:{p256dh, auth}}` | `{status:'ok'}`. The browser's Web Push subscription for this application. The back end stores it and sends updates with its VAPID private key. Payload: `{"notification":{"title","body","icon":"/icons/icon-192.png","data":{"onActionClick":{"default":{"operation":"navigateLastFocusedOrOpen","url":"/apply/status"}}}}}` |
 | `/api/selfserve/waitlist` *(token)* | `{phone, email, type, employer?, incomeBand?, channel}` | `{status:'ok', referenceId}` (`positionInQueue` and `estimatedWindow` only if real) |
 | `/api/loans` (from `/api/submit-loan`) | validated loan record, see below | `201 {id}` |
 

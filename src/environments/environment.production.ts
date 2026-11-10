@@ -12,6 +12,8 @@ export const environment = {
   turnstileSiteKey: '',
   /** Caltos customer module: where "Track your loan" sends the customer. */
   customerModuleUrl: 'https://caltos-rho.vercel.app/portal',
+  /** Web Push public key (VAPID). Empty hides the "turn on notifications" prompt. Set it before launch; the private key stays on the back end. */
+  vapidPublicKey: '',
   useMockApi: true,
   demoBanner: true,
 };

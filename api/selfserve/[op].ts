@@ -195,6 +195,18 @@ const OPS: Record<string, OpDef> = {
     allow: ['status'],
     needsToken: true,
   },
+  // The browser's push subscription, so the back end can send updates about the application.
+  'push-subscribe': {
+    schema: z
+      .object({
+        endpoint: z.string().url().startsWith('https://').max(600),
+        keys: z.object({ p256dh: z.string().max(200), auth: z.string().max(100) }).strict(),
+      })
+      .strict(),
+    limit: 5,
+    allow: ['status'],
+    needsToken: true,
+  },
   waitlist: {
     schema: z
       .object({
