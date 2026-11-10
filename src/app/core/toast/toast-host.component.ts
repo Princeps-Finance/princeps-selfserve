@@ -21,28 +21,23 @@ import { Toast, ToastService } from './toast.service';
           (keydown.escape)="toastSvc.dismiss(t.id)"
         >
           <span class="icon" aria-hidden="true">
-            @switch (t.tone) {
-              @case ('success') {
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.7" />
-                  <path d="M7.5 12.5L11 16L16.5 9.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
+            <!-- A filled white disc with the symbol cut out in the toast's own colour. -->
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="11" fill="currentColor" />
+              @switch (t.tone) {
+                @case ('success') {
+                  <path d="M7.5 12.5L10.8 15.8L16.5 9" stroke="var(--fill)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                }
+                @case ('error') {
+                  <path d="M12 6.8v6" stroke="var(--fill)" stroke-width="2.2" stroke-linecap="round" />
+                  <circle cx="12" cy="16.8" r="1.3" fill="var(--fill)" />
+                }
+                @default {
+                  <circle cx="12" cy="7.6" r="1.3" fill="var(--fill)" />
+                  <path d="M12 11v6" stroke="var(--fill)" stroke-width="2.2" stroke-linecap="round" />
+                }
               }
-              @case ('error') {
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.7" />
-                  <path d="M12 7v6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" />
-                  <circle cx="12" cy="16.5" r="1" fill="currentColor" />
-                </svg>
-              }
-              @default {
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.7" />
-                  <circle cx="12" cy="8" r="1" fill="currentColor" />
-                  <path d="M12 11v6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" />
-                </svg>
-              }
-            }
+            </svg>
           </span>
           <span class="msg">{{ t.message }}</span>
           @if (t.action; as a) {
