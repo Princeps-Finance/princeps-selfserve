@@ -18,6 +18,8 @@ export interface EmploymentDraft {
   type: EmploymentType;
   /** Only meaningful for corper: months remaining in service. */
   nyscMonthsRemaining?: number;
+  /** Only for government: federal or state. Decides the default salary channel and how stability is scored. */
+  governmentLevel?: 'federal' | 'state';
 }
 
 export type SalaryChannel = 'remita' | 'ippis' | 'dedukt';
@@ -30,6 +32,8 @@ export interface SalaryDraft {
   ippisNumber?: string;
   paramilitaryEmployer?: string;
   monthlyIncome: number;
+  /** True when the pay was typed by the customer in the "how much can I get" check and has not been verified yet. */
+  declared?: boolean;
 }
 
 export interface EligibilityDraft {

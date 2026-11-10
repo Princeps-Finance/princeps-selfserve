@@ -121,7 +121,8 @@ export class ProfileComponent {
       address: { street: v.street.trim(), state: v.stateName, lga: v.lga.trim() },
       relationshipStatus: v.relationshipStatus,
     });
-    void this.flow.go(APPLY.employment);
+    // Work details already given in the check are not asked again; only the salary account is confirmed.
+    void this.flow.go(this.state.salary()?.declared ? APPLY.salary : APPLY.employment);
   }
 }
 

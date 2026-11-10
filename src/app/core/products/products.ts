@@ -13,6 +13,8 @@ export interface Product extends PricingProduct {
   name: string;
   repaymentFrequency: RepaymentFrequency;
   hero: ProductHero;
+  /** The product's logo from Caltos, once the back end supplies one. Until then the coloured tile is shown. */
+  logoUrl?: string;
 }
 
 const GLYPH_WALLET =

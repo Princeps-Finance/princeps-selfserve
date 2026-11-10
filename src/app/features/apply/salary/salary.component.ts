@@ -33,8 +33,18 @@ export class SalaryComponent {
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
 
+  /**
+   * check: the no-identity "how much can I get" check. Only pay (and the employer for paramilitary) is asked.
+   * verify: after identity, when pay was already given in the check. Only the salary account is asked.
+   * full: the normal application. Everything is asked.
+   */
+  readonly mode: 'check' | 'verify' | 'full' =
+    this.state.intent() === 'check' ? 'check' : this.state.salary()?.declared ? 'verify' : 'full';
+  readonly askPay = this.mode === 'check';
+  readonly askAccount = this.mode !== 'check';
+
   readonly channel = signal<SalaryChannel>(this.deriveChannel());
-  readonly showChannelChoice = computed(() => this.state.employment()?.type === 'government');
+  readonly showChannelChoice = computed(() => this.askAccount && this.state.employment()?.type === 'government');
   readonly paramilitaryEmployers = PARAMILITARY_EMPLOYERS;
   readonly employerOptions: SelectOption[] = PARAMILITARY_EMPLOYERS.map((e) => ({ value: e, label: e }));
 
@@ -64,6 +74,7 @@ export class SalaryComponent {
     }),
     ippisNumber: new FormControl<string>('', { nonNullable: true }),
     employer: new FormControl<string>('', { nonNullable: true }),
+    monthlyIncome: new FormControl<string>('', { nonNullable: true }),
   });
 
   readonly submitting = signal(false);
@@ -87,17 +98,32 @@ export class SalaryComponent {
     this.statusChanges();
     this.valueChanges();
     if (this.form.invalid) return false;
-    if (this.needsIppis() && !/^\d+$/.test(this.form.controls.ippisNumber.value)) return false;
+    if (this.askPay && !(this.payAmount() > 0)) return false;
+    if (this.askAccount && this.needsIppis() && !/^\d+$/.test(this.form.controls.ippisNumber.value)) return false;
     if (this.channel() === 'dedukt' && !this.form.controls.employer.value) return false;
     return true;
   });
 
+  /** The pay typed in the check, in naira. Commas and spaces are ignored. */
+  payAmount(): number {
+    const n = Number(this.form.controls.monthlyIncome.value.replace(/[,\s₦]/g, ''));
+    return Number.isFinite(n) ? Math.round(n) : 0;
+  }
+
   constructor() {
-    void this.api.listBanks().then((b) => this.banks.set(b));
+    if (this.askAccount) void this.api.listBanks().then((b) => this.banks.set(b));
+    else {
+      // Pay-only: the bank and account fields are not on screen, so they must not block the form.
+      for (const c of [this.form.controls.bankCode, this.form.controls.bankName, this.form.controls.accountNumber]) {
+        c.clearValidators();
+        c.updateValueAndValidity();
+      }
+    }
 
     // Rehydrate.
     const saved = this.state.salary();
-    if (saved) {
+    if (saved?.declared && this.mode === 'check') this.form.patchValue({ monthlyIncome: String(saved.monthlyIncome), employer: saved.paramilitaryEmployer ?? '' });
+    if (saved && this.mode !== 'check') {
       this.form.patchValue({
         bankCode: saved.bankCode,
         bankName: saved.bankName,
@@ -114,11 +140,11 @@ export class SalaryComponent {
   }
 
   titleKey(): string {
-    return `step.salary.${this.channel()}.title`;
+    return this.mode === 'check' ? 'step.salary.check.title' : `step.salary.${this.channel()}.title`;
   }
 
   subtitleKey(): string {
-    return `step.salary.${this.channel()}.subtitle`;
+    return this.mode === 'check' ? 'step.salary.check.subtitle' : `step.salary.${this.channel()}.subtitle`;
   }
 
   onBankFocus(): void {
@@ -183,6 +209,21 @@ export class SalaryComponent {
     this.submitting.set(true);
     this.serverError.set(null);
     const v = this.form.getRawValue();
+    if (this.mode === 'check') {
+      // Nothing can be verified before identity, so the pay is the customer's own figure and is marked as such.
+      this.state.setSalary({
+        channel: this.channel(),
+        bankCode: '',
+        bankName: '',
+        accountNumber: '',
+        paramilitaryEmployer: v.employer || undefined,
+        monthlyIncome: this.payAmount(),
+        declared: true,
+      });
+      this.submitting.set(false);
+      await this.flow.go(APPLY.eligibility);
+      return;
+    }
     try {
       const res = await this.api.verifySalary({
         channel: this.channel(),
@@ -212,7 +253,11 @@ export class SalaryComponent {
   }
 
   private deriveChannel(): SalaryChannel {
-    const t = this.state.employment()?.type;
+    const saved = this.state.salary();
+    if (saved) return saved.channel;
+    const e = this.state.employment();
+    const t = e?.type;
+    if (t === 'government' && e?.governmentLevel === 'state') return 'remita';
     if (t === 'paramilitary') return 'dedukt';
     if (t === 'corper') return 'remita';
     return 'ippis'; // government default
