@@ -81,12 +81,11 @@
 
       <div class="script">
         <p class="script-label">{{ 'step.verify.script.label' | t }}</p>
-        <p class="script-body">
-          {{ 'step.verify.script.body' | t: {
-            amount: formatNaira(loanAmount()),
-            monthly: formatNaira(monthlyRepayment())
-          } }}
-        </p>
+        <ol class="script-lines">
+          @for (line of scriptLines(); track $index) {
+            <li class="script-body">{{ line }}</li>
+          }
+        </ol>
       </div>
 
       @if (canRecord() || videoPreviewUrl()) {
