@@ -227,6 +227,20 @@ const OPS: Record<string, OpDef> = {
     allow: ['status'],
     needsToken: true,
   },
+  // Private-sector check: the statement is reviewed automatically, with no identity. Bot-checked and limited like the salary check.
+  'statement-check': {
+    schema: z
+      .object({
+        employer: z.string().min(2).max(120),
+        bankCode: digits(3),
+        fileName: z.string().min(1).max(200),
+        sizeBytes: z.number().int().positive().max(10 * 1024 * 1024),
+        captchaToken: z.string().max(2048).optional(),
+      })
+      .strict(),
+    limit: 4,
+    allow: ['status', 'decision', 'maxAmount', 'tenorMonths', 'monthlyIncome'],
+  },
   waitlist: {
     schema: z
       .object({
@@ -287,7 +301,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   // Bot check before sending an SMS (costs money and can harass a victim).
   let payload = parsed.data as Record<string, unknown>;
-  if (op === 'send-otp' || op === 'send-bvn-otp' || op === 'bvn-contacts' || op === 'eligibility-check') {
+  if (op === 'send-otp' || op === 'send-bvn-otp' || op === 'bvn-contacts' || op === 'eligibility-check' || op === 'statement-check') {
     const { captchaToken, ...rest } = payload as { captchaToken?: string };
     if (!(await verifyCaptcha(captchaToken, ip))) {
       return fail('CAPTCHA', 'Please confirm you are not a robot and try again.', 400);

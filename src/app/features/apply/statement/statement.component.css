@@ -54,3 +54,7 @@
 .drop.is-invalid { border-color: var(--danger-text); }
 .drop-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-base); }
 .file:focus-visible + .msg, .file:focus-visible ~ .drop { box-shadow: var(--focus-ring); }
+
+.limit-title { margin: 0 0 var(--space-2); font-size: var(--fs-xl); }
+.limit-body { margin: 0 0 var(--space-4); color: var(--ink-soft); line-height: 1.5; }
+.limit-actions { display: flex; flex-direction: column; gap: var(--space-2); }

@@ -1,3 +1,4 @@
+import { WhyAskComponent } from '../../../shared/why-ask.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { SelectFieldComponent, SelectOption } from '../../../core/ui/select-field.component';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -26,7 +27,7 @@ const PARAMILITARY_EMPLOYERS = [
 
 @Component({
   selector: 'app-salary',
-  imports: [TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent, ModalComponent],
+  imports: [WhyAskComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent, ModalComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './salary.component.html',
   styleUrl: './salary.component.css',

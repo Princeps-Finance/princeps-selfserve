@@ -128,12 +128,6 @@ export class EmploymentComponent implements OnInit {
     }
     if (opt.type === 'private-sector') {
       this.state.setEmployment({ type: opt.type });
-      // The bank statement is sent after identity is verified, so the no-identity check hands over to the full application here.
-      if (this.state.intent() === 'check') {
-        this.state.setIntent('apply');
-        await this.flow.go(APPLY.bvn);
-        return;
-      }
       await this.flow.go(APPLY.statement);
       return;
     }
