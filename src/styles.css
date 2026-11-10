@@ -259,3 +259,28 @@ h1[tabindex='-1']:focus { outline: none; }
 
 /* Buttons that are links look like buttons, not underlined text. */
 a.cta, a.alt { text-decoration: none; }
+
+/* ===== Liquid glass controls (round icon buttons and pills) =====
+   A frosted disc: bright top edge, soft inner shade, thin outline and a gentle drop shadow. Solid where the
+   browser cannot blur or the person asked for less transparency. */
+.glass-btn, .glass-pill {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  color: var(--ink); cursor: pointer; font-family: var(--font-sans);
+  background: var(--glass-solid); border: 1px solid var(--glass-edge);
+  box-shadow: inset 0 1px 0 var(--glass-shine), inset 0 -10px 14px var(--glass-depth), var(--glass-drop);
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-base) ease;
+}
+.glass-btn { width: var(--tap-min); height: var(--tap-min); padding: 0; border-radius: 50%; }
+.glass-pill { min-height: var(--tap-min); padding: 0 var(--space-4); border-radius: var(--radius-pill); }
+.glass-btn:hover:not(:disabled), .glass-pill:hover:not(:disabled) { transform: scale(1.04); }
+.glass-btn:active:not(:disabled), .glass-pill:active:not(:disabled) { transform: scale(0.95); }
+.glass-btn:focus-visible, .glass-pill:focus-visible { outline: 2px solid var(--focus-color); outline-offset: 3px; }
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  @media (prefers-reduced-transparency: no-preference) {
+    .glass-btn, .glass-pill {
+      background: var(--glass-btn-bg);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%); backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce) { .glass-btn, .glass-pill { transition: none; } }

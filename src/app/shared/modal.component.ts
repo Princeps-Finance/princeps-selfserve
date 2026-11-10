@@ -14,7 +14,7 @@ import { TPipe } from '../core/i18n/t.pipe';
       <div class="panel">
         <header class="bar">
           <h2 id="modal-title" class="title">{{ title() }}</h2>
-          <button type="button" class="x" [attr.aria-label]="'common.close' | t" (click)="dlg.close()">
+          <button type="button" class="x glass-btn" [attr.aria-label]="'common.close' | t" (click)="dlg.close()">
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
               <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
             </svg>
@@ -36,12 +36,7 @@ import { TPipe } from '../core/i18n/t.pipe';
       .panel { display: flex; flex-direction: column; height: 100%; }
       .bar { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-3) var(--space-2) var(--space-5); }
       .title { margin: 0; font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 600; }
-      .x {
-        flex: none; width: var(--tap-min); height: var(--tap-min); display: grid; place-items: center; border: 0; border-radius: 50%;
-        background: var(--grey-100); color: var(--ink); cursor: pointer;
-      }
-      .x:hover { background: var(--grey-200); }
-      .x:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
+      .x { flex: none; }
       .body { flex: 1; min-height: 0; overflow: auto; padding: 0 var(--space-5) var(--space-5); }
     `,
   ],

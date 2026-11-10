@@ -13,7 +13,7 @@ const ORDER: readonly ThemeMode[] = ['system', 'light', 'dark'];
   selector: 'app-theme-toggle',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <button type="button" class="toggle" [attr.aria-label]="label()" [attr.title]="label()" (click)="next()">
+    <button type="button" class="toggle glass-btn" [attr.aria-label]="label()" [attr.title]="label()" (click)="next()">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         @switch (mode()) {
           @case ('light') {
@@ -36,11 +36,7 @@ const ORDER: readonly ThemeMode[] = ['system', 'light', 'dark'];
       :host { display: inline-flex; }
       .toggle {
         display: inline-flex; align-items: center; justify-content: center;
-        width: 44px; height: 44px; border: 0; border-radius: 50%;
-        background: transparent; color: var(--ink); cursor: pointer;
-        transition: background var(--dur-base) ease;
       }
-      .toggle:hover { background: var(--hover-tint); }
       .toggle:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
       @media (prefers-reduced-motion: reduce) { .toggle { transition: none; } }
     `,
