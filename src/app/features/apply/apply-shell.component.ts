@@ -8,13 +8,17 @@ import { APPLY } from '../../core/flow/apply-routes';
 import { BackButtonComponent } from './back-button.component';
 import { ReadAloudComponent } from './read-aloud.component';
 import { BrandLogoComponent } from '../../shared/brand-logo.component';
+import { LoanSummaryComponent } from '../../shared/loan-summary.component';
 import { ThemeToggleComponent } from '../../shared/theme-toggle.component';
+
+/** The steps after the review, where the chosen amount and period stay one tap away. */
+const SUMMARY_ROUTES = new Set<string>([APPLY.nin, APPLY.documents, APPLY.verifyIdentity, APPLY.mandate, APPLY.submit]);
 
 const NO_BACK_ROUTES = new Set<string>([APPLY.root, `${APPLY.root}/`, APPLY.status, APPLY.loans]);
 
 @Component({
   selector: 'app-apply-shell',
-  imports: [RouterOutlet, LanguageMenuComponent, BackButtonComponent, ReadAloudComponent, ThemeToggleComponent, BrandLogoComponent],
+  imports: [LoanSummaryComponent, RouterOutlet, LanguageMenuComponent, BackButtonComponent, ReadAloudComponent, ThemeToggleComponent, BrandLogoComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -39,6 +43,9 @@ const NO_BACK_ROUTES = new Set<string>([APPLY.root, `${APPLY.root}/`, APPLY.stat
         }
 
         <main class="body">
+          @if (showSummary()) {
+            <app-loan-summary class="summary" />
+          }
           <router-outlet />
         </main>
 
@@ -57,7 +64,8 @@ const NO_BACK_ROUTES = new Set<string>([APPLY.root, `${APPLY.root}/`, APPLY.stat
       .card-top { display: none; }
       .shell { flex: 1; width: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; }
       .body { flex: 1; display: flex; flex-direction: column; padding: var(--space-2) var(--space-6) var(--space-6); }
-      .body > :not(router-outlet) { flex: 1 1 auto; display: flex; flex-direction: column; }
+      .body > :not(router-outlet):not(.summary) { flex: 1 1 auto; display: flex; flex-direction: column; }
+      .summary { margin-bottom: var(--space-3); }
 
       /* Desktop: a page header (logo left, controls right) over a centred card. */
       @media (min-width: 720px) {
@@ -88,5 +96,6 @@ export class ApplyShellComponent {
     { initialValue: this.router.url },
   );
 
+  readonly showSummary = computed(() => SUMMARY_ROUTES.has(this.currentUrl().split('?')[0]));
   readonly showBack = computed(() => !NO_BACK_ROUTES.has(this.currentUrl().split('?')[0]));
 }
