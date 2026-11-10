@@ -195,6 +195,38 @@ const OPS: Record<string, OpDef> = {
     allow: ['status'],
     needsToken: true,
   },
+  // The "how much can I get" check: no identity, so it is bot-checked and limited per account. The back end does the real
+  // employment and salary check and answers a decision, the maximum and the verified monthly pay (never the account name).
+  'eligibility-check': {
+    schema: z
+      .object({
+        employmentType: z.enum(['government', 'paramilitary', 'corper']),
+        governmentLevel: z.enum(['federal', 'state']).optional(),
+        nyscMonthsRemaining: z.number().int().min(0).max(12).optional(),
+        channel: z.enum(['ippis', 'remita', 'dedukt']),
+        bankCode: digits(3),
+        accountNumber: digits(10),
+        ippisNumber: z.string().regex(/^\d{4,20}$/).optional(),
+        employer: z.string().max(120).optional(),
+        captchaToken: z.string().max(2048).optional(),
+      })
+      .strict(),
+    limit: 6,
+    allow: ['status', 'decision', 'maxAmount', 'tenorMonths', 'monthlyIncome'],
+    subjectLimit: { count: 4, windowMs: 30 * 60_000 },
+  },
+  // The browser's push subscription, so the back end can send updates about the application.
+  'push-subscribe': {
+    schema: z
+      .object({
+        endpoint: z.string().url().startsWith('https://').max(600),
+        keys: z.object({ p256dh: z.string().max(200), auth: z.string().max(100) }).strict(),
+      })
+      .strict(),
+    limit: 5,
+    allow: ['status'],
+    needsToken: true,
+  },
   waitlist: {
     schema: z
       .object({
@@ -255,7 +287,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   // Bot check before sending an SMS (costs money and can harass a victim).
   let payload = parsed.data as Record<string, unknown>;
-  if (op === 'send-otp' || op === 'send-bvn-otp' || op === 'bvn-contacts') {
+  if (op === 'send-otp' || op === 'send-bvn-otp' || op === 'bvn-contacts' || op === 'eligibility-check') {
     const { captchaToken, ...rest } = payload as { captchaToken?: string };
     if (!(await verifyCaptcha(captchaToken, ip))) {
       return fail('CAPTCHA', 'Please confirm you are not a robot and try again.', 400);

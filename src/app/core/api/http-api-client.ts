@@ -21,6 +21,8 @@ import {
   SalaryVerifyInput,
   SalaryVerifyResult,
   StatementReviewInput,
+  EligibilityCheckInput,
+  EligibilityCheckResult,
   SubmitPayload,
   SubmitResult,
   WaitlistInput,
@@ -270,6 +272,22 @@ return []; // The user can type it.
     // Never hand the viewer anything that is not a PDF, whatever the server returned.
     if (new TextDecoder().decode(bytes.slice(0, 5)) !== '%PDF-') throw new ApiUnavailableError('offer-letter', 502);
     return bytes;
+  }
+
+  async checkEligibility(input: EligibilityCheckInput): Promise<EligibilityCheckResult> {
+    const r = await this.post<EligibilityCheckResult>('/api/selfserve/eligibility-check', input);
+    // 429 is the limit on checks (per account and per address): the screen explains it in a window.
+    if (r.status === 429) return { status: 'rate-limited' };
+    if (!r.ok || !r.data) return { status: 'service-down' };
+    return r.data;
+  }
+
+  async registerPush(subscription: PushSubscriptionJSON): Promise<void> {
+    const keys = subscription.keys ?? {};
+    await this.op<{ status?: string }>('push-subscribe', {
+      endpoint: subscription.endpoint,
+      keys: { p256dh: keys['p256dh'], auth: keys['auth'] },
+    });
   }
 
   async getEmploymentTypes(): Promise<EmploymentAvailability[] | null> {

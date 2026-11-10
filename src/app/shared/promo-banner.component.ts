@@ -7,7 +7,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="banner" aria-labelledby="banner-title">
-      <img class="thumb" [ngSrc]="imageSrc()" width="664" height="420" alt="" />
+      <img class="thumb" [ngSrc]="imageSrc()" [width]="imageWidth()" [height]="imageHeight()" alt="" />
       <div class="text">
         <h2 id="banner-title" class="title">{{ title() }}</h2>
         <p class="desc">{{ description() }}</p>
@@ -56,6 +56,9 @@ export class PromoBannerComponent {
   readonly ctaLabel = input.required<string>();
   readonly dismissLabel = input('Dismiss');
   readonly imageSrc = input('brand/promo-illustration.svg');
+  /** The picture's own size, so a square app icon is not squeezed into the illustration's shape. */
+  readonly imageWidth = input(664);
+  readonly imageHeight = input(420);
   readonly action = output<void>();
   readonly dismissed = output<void>();
 }

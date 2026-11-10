@@ -1,3 +1,4 @@
+import { PushService } from '../../../core/pwa/push.service';
 import { logWarn } from '../../../core/log';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
@@ -23,6 +24,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 export class StatusComponent {
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
+  protected readonly push = inject(PushService);
 
   readonly submission = this.state.submission;
   readonly agents = AGENTS;

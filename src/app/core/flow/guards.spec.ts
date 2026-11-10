@@ -6,6 +6,8 @@ import { APPLY } from './apply-routes';
 import { FlowNavigator } from './flow-navigator.service';
 import {
   requiresBvnGuard,
+  requiresCheckResultGuard,
+  requiresIdentityOrCheckGuard,
   requiresOfferGuard,
   requiresReceivedGuard,
   requiresSalaryGuard,
@@ -30,6 +32,19 @@ describe('flow guards', () => {
     expect(router.serializeUrl(result)).toBe(APPLY.offers);
     expect(router.serializeUrl(run(requiresSalaryGuard) as UrlTree)).toBe(APPLY.salary);
     expect(router.serializeUrl(run(requiresBvnGuard) as UrlTree)).toBe(APPLY.bvn);
+  });
+
+  it('opens the work questions without identity only for the how-much-can-I-get check', () => {
+    expect(router.serializeUrl(run(requiresIdentityOrCheckGuard) as UrlTree)).toBe(APPLY.welcome);
+    state.setIntent('check');
+    expect(run(requiresIdentityOrCheckGuard)).toBe(true);
+  });
+
+  it('shows the check result only after a check has produced one', () => {
+    state.setIntent('check');
+    expect(router.serializeUrl(run(requiresCheckResultGuard) as UrlTree)).toBe(APPLY.welcome);
+    state.setEligibility({ score: 80, decision: 'approved', maxEligibleAmount: 300000, tenorMonths: 12, reasons: [] });
+    expect(run(requiresCheckResultGuard)).toBe(true);
   });
 
   it('only opens the status screen once the application was received', () => {

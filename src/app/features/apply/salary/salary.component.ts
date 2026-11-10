@@ -12,6 +12,9 @@ import {
 } from '../../../core/application/application-state.service';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
+import { ModalComponent } from '../../../shared/modal.component';
+import { telLink, whatsappLink } from '../../../core/support';
+import { CaptchaService } from '../../../core/captcha/captcha.service';
 
 const PARAMILITARY_EMPLOYERS = [
   'NSCDC',
@@ -23,7 +26,7 @@ const PARAMILITARY_EMPLOYERS = [
 
 @Component({
   selector: 'app-salary',
-  imports: [TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent],
+  imports: [TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent, ModalComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './salary.component.html',
   styleUrl: './salary.component.css',
@@ -32,9 +35,21 @@ export class SalaryComponent {
   private readonly api = inject(API_CLIENT);
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
+  private readonly captcha = inject(CaptchaService);
+
+  /**
+   * check: the no-identity "how much can I get" check. The salary account is asked and the back end does the real
+   *        employment and salary check; nothing is verified against a name yet.
+   * verify: after identity, when the account was already given in the check. It is checked again, silently, against
+   *         the name from the BVN, and the real pay replaces the estimate.
+   * full: the normal application.
+   */
+  readonly mode: 'check' | 'verify' | 'full' =
+    this.state.intent() === 'check' ? 'check' : this.state.salary()?.fromCheck ? 'verify' : 'full';
 
   readonly channel = signal<SalaryChannel>(this.deriveChannel());
-  readonly showChannelChoice = computed(() => this.state.employment()?.type === 'government');
+  /** Federal government is paid through IPPIS and state government through Remita, so the choice is only asked when the level is unknown. */
+  readonly showChannelChoice = computed(() => this.state.employment()?.type === 'government' && !this.state.employment()?.governmentLevel);
   readonly paramilitaryEmployers = PARAMILITARY_EMPLOYERS;
   readonly employerOptions: SelectOption[] = PARAMILITARY_EMPLOYERS.map((e) => ({ value: e, label: e }));
 
@@ -67,6 +82,10 @@ export class SalaryComponent {
   });
 
   readonly submitting = signal(false);
+  /** True when the limit on checks was reached: a window explains it. */
+  readonly limited = signal(false);
+  readonly whatsapp = whatsappLink('Hello Princeps, I reached the limit on checking how much I can get and I would like help.');
+  readonly tel = telLink();
   readonly serverError = signal<'not-found' | 'name-mismatch' | 'service-down' | null>(null);
 
   readonly statusChanges = toSignal(this.form.statusChanges, { initialValue: this.form.status });
@@ -107,6 +126,8 @@ export class SalaryComponent {
       });
       this.bankQuery.set(saved.bankName);
     }
+    // The account came from the check: verify it now without asking again. If it fails, the form below shows why.
+    if (this.mode === 'verify' && saved && saved.accountNumber) queueMicrotask(() => void this.submit());
   }
 
   needsIppis(): boolean {
@@ -183,6 +204,46 @@ export class SalaryComponent {
     this.submitting.set(true);
     this.serverError.set(null);
     const v = this.form.getRawValue();
+    if (this.mode === 'check') {
+      try {
+        const employment = this.state.employment();
+        const res = await this.api.checkEligibility({
+          employmentType: employment?.type === 'paramilitary' || employment?.type === 'corper' ? employment.type : 'government',
+          governmentLevel: employment?.governmentLevel,
+          nyscMonthsRemaining: employment?.nyscMonthsRemaining,
+          channel: this.channel(),
+          bankCode: v.bankCode,
+          accountNumber: v.accountNumber,
+          ippisNumber: v.ippisNumber || undefined,
+          employer: v.employer || undefined,
+          captchaToken: await this.captcha.token(),
+        });
+        if (res.status === 'rate-limited') {
+          this.limited.set(true);
+          return;
+        }
+        if (res.status !== 'ok') {
+          this.serverError.set(res.status);
+          return;
+        }
+        // The account is kept, so it is not asked again after identity. Pay is not known yet: it is verified then.
+        this.state.setSalary({
+          channel: this.channel(),
+          bankCode: v.bankCode,
+          bankName: v.bankName,
+          accountNumber: v.accountNumber,
+          ippisNumber: v.ippisNumber || undefined,
+          paramilitaryEmployer: v.employer || undefined,
+          monthlyIncome: res.monthlyIncome,
+          fromCheck: true,
+        });
+        this.state.setEligibility({ score: 0, decision: res.decision, maxEligibleAmount: res.maxAmount, tenorMonths: res.tenorMonths, reasons: [] });
+        await this.flow.go(APPLY.checkResult);
+      } finally {
+        this.submitting.set(false);
+      }
+      return;
+    }
     try {
       const res = await this.api.verifySalary({
         channel: this.channel(),
@@ -212,7 +273,11 @@ export class SalaryComponent {
   }
 
   private deriveChannel(): SalaryChannel {
-    const t = this.state.employment()?.type;
+    const saved = this.state.salary();
+    if (saved) return saved.channel;
+    const e = this.state.employment();
+    const t = e?.type;
+    if (t === 'government' && e?.governmentLevel === 'state') return 'remita';
     if (t === 'paramilitary') return 'dedukt';
     if (t === 'corper') return 'remita';
     return 'ippis'; // government default

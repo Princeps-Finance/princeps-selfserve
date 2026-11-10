@@ -43,7 +43,7 @@ export class EligibilityComponent implements OnInit {
     const stability: EligibilityInput['stability'] =
       employment.type === 'corper'
         ? { type: 'nysc-corper', monthsRemaining: employment.nyscMonthsRemaining ?? 0 }
-        : { type: 'mda', category: this.toMdaCategory(employment.type) };
+        : { type: 'mda', category: this.toMdaCategory(employment.type, employment.governmentLevel) };
 
     const input: EligibilityInput = {
       income: { source: this.incomeSource(), monthlyAmount: salary.monthlyIncome },
@@ -76,15 +76,17 @@ export class EligibilityComponent implements OnInit {
     // A 'review' result is not a dead end: the customer still chooses an offer and submits,
     // and a person reviews the application afterwards.
     if (decision === 'approved' || decision === 'review') {
-      await this.flow.go(APPLY.offers);
+      // The no-identity check ends on its own result screen; the full application goes on to the offers.
+      await this.flow.go(this.state.intent() === 'check' ? APPLY.checkResult : APPLY.offers);
       return;
     }
     this.reasonCodes.set(result.reasonCodes);
     this.phase.set('declined');
   }
 
-  private toMdaCategory(t: string): MdaCategory {
-    return t === 'paramilitary' ? 'paramilitary' : 'federal';
+  private toMdaCategory(t: string, level?: 'federal' | 'state'): MdaCategory {
+    if (t === 'paramilitary') return 'paramilitary';
+    return level === 'state' ? 'state' : 'federal';
   }
 
   private incomeSource(): EligibilityInput['income']['source'] {

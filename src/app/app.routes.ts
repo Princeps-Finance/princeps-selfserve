@@ -6,7 +6,9 @@ import {
   requiresBvnGuard,
   requiresContactGuard,
   requiresDocumentsGuard,
+  requiresCheckResultGuard,
   requiresEmploymentGuard,
+  requiresIdentityOrCheckGuard,
   requiresIdentityVerificationGuard,
   requiresMandateGuard,
   requiresNotSubmittedGuard,
@@ -75,7 +77,7 @@ export const routes: Routes = [
       },
       {
         path: 'employment',
-        canMatch: [requiresContactGuard, requiresPhoneVerifiedGuard, requiresProfileGuard],
+        canMatch: [requiresIdentityOrCheckGuard],
         loadComponent: () =>
           import('./features/apply/employment/employment.component').then(
             (m) => m.EmploymentComponent,
@@ -123,6 +125,12 @@ export const routes: Routes = [
           import('./features/apply/eligibility/eligibility.component').then(
             (m) => m.EligibilityComponent,
           ),
+      },
+      {
+        path: 'check-result',
+        canMatch: [requiresCheckResultGuard],
+        loadComponent: () =>
+          import('./features/apply/check-result/check-result.component').then((m) => m.CheckResultComponent),
       },
       {
         path: 'offers',

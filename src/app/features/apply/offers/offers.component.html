@@ -115,40 +115,7 @@
 
       <app-referral-box />
 
-      <!-- 3. What it costs -->
-      <section class="block" aria-labelledby="cost-title" aria-live="polite">
-        <h2 class="block-title" id="cost-title"><span class="num" aria-hidden="true">3</span>{{ 'offers.step.cost' | t }}</h2>
-        <div class="summary">
-          <div class="summary-main">
-            <span class="summary-label">{{ 'step.offers.monthly' | t }}</span>
-            <span class="summary-big">{{ formatNaira(o.quote.monthly) }}</span>
-          </div>
-          <dl class="summary-rows">
-            <div class="row"><dt>{{ 'offers.cost.borrow' | t }}</dt><dd>{{ formatNaira(o.amount) }}</dd></div>
-            <div class="row"><dt>{{ 'offers.cost.interest' | t }}</dt><dd>{{ formatNaira(o.quote.interest) }}</dd></div>
-            @if (o.quote.totalFees > 0) {
-              <div class="row row--fees">
-                <dt>
-                  <details class="fees">
-                    <summary>{{ 'step.offers.fees' | t }}</summary>
-                    <ul>
-                      @for (f of o.quote.fees; track f.name) {
-                        <li><span>{{ f.name }}</span><span>{{ formatNaira(f.amount) }}</span></li>
-                      }
-                    </ul>
-                  </details>
-                </dt>
-                <dd>{{ formatNaira(o.quote.totalFees) }}</dd>
-              </div>
-            }
-            <div class="row row--total"><dt>{{ 'step.offers.total.repayment' | t }}</dt><dd>{{ formatNaira(o.quote.totalRepayment) }}</dd></div>
-            <div class="row"><dt>{{ 'offers.cost.apr' | t }}</dt><dd>≈ {{ o.apr | number: '1.0-0' }}%</dd></div>
-          </dl>
-        </div>
-        <p class="note">{{ 'offers.note' | t }}</p>
-      </section>
-
-      <button type="button" class="pick" (click)="pick(o)">
+      <button type="button" class="cta" (click)="pick(o)">
         <span>{{ 'offers.continue' | t }}</span>
         <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
           <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />

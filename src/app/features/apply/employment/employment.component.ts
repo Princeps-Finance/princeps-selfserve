@@ -15,18 +15,22 @@ import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 interface Option {
+  /** Unique per row: government appears twice (federal and state). */
+  key: string;
   type: EmploymentType;
+  level?: 'federal' | 'state';
   labelKey: string;
   hintKey: string;
   live: boolean;
 }
 
 const OPTIONS: Option[] = [
-  { type: 'government', labelKey: 'step.employment.government', hintKey: 'step.employment.government.hint', live: true },
-  { type: 'paramilitary', labelKey: 'step.employment.paramilitary', hintKey: 'step.employment.paramilitary.hint', live: true },
-  { type: 'corper', labelKey: 'step.employment.corper', hintKey: 'step.employment.corper.hint', live: true },
-  { type: 'private-sector', labelKey: 'step.employment.private', hintKey: 'step.employment.private.hint', live: true },
-  { type: 'own-business', labelKey: 'step.employment.business', hintKey: 'step.employment.business.hint', live: false },
+  { key: 'government-federal', type: 'government', level: 'federal', labelKey: 'step.employment.federal', hintKey: 'step.employment.federal.hint', live: true },
+  { key: 'government-state', type: 'government', level: 'state', labelKey: 'step.employment.state', hintKey: 'step.employment.state.hint', live: true },
+  { key: 'paramilitary', type: 'paramilitary', labelKey: 'step.employment.paramilitary', hintKey: 'step.employment.paramilitary.hint', live: true },
+  { key: 'corper', type: 'corper', labelKey: 'step.employment.corper', hintKey: 'step.employment.corper.hint', live: true },
+  { key: 'private-sector', type: 'private-sector', labelKey: 'step.employment.private', hintKey: 'step.employment.private.hint', live: true },
+  { key: 'own-business', type: 'own-business', labelKey: 'step.employment.business', hintKey: 'step.employment.business.hint', live: false },
 ];
 
 @Component({
@@ -45,7 +49,9 @@ export class EmploymentComponent implements OnInit {
   /** What the back end says is open right now. Empty until it answers, or for good if it cannot be reached. */
   private readonly open = signal<Partial<Record<EmploymentType, boolean>>>({});
   readonly options = computed(() => OPTIONS.map((o) => ({ ...o, live: this.open()[o.type] ?? o.live })));
-  readonly selected = signal<EmploymentType | null>(this.state.employment()?.type ?? null);
+  /** Which row is picked. Government has two rows, so the type alone is not enough. */
+  readonly selectedKey = signal<string | null>(this.initialKey());
+  readonly selected = computed<EmploymentType | null>(() => OPTIONS.find((o) => o.key === this.selectedKey())?.type ?? null);
   readonly submitting = signal(false);
   readonly attempted = signal(false);
 
@@ -66,7 +72,7 @@ export class EmploymentComponent implements OnInit {
 
   readonly showCorperMonths = computed(() => this.selected() === 'corper');
   readonly selectedOption = computed(() =>
-    this.options().find((o) => o.type === this.selected()) ?? null,
+    this.options().find((o) => o.key === this.selectedKey()) ?? null,
   );
   readonly canContinue = computed(() => {
     const opt = this.selectedOption();
@@ -86,10 +92,16 @@ export class EmploymentComponent implements OnInit {
   }
 
   /** One tap moves on. Only a corper needs one more answer (months left), so only they get a button. */
-  select(type: EmploymentType): void {
-    this.selected.set(type);
+  select(opt: Option): void {
+    this.selectedKey.set(opt.key);
     this.attempted.set(false);
-    if (type !== 'corper') void this.continue();
+    if (opt.type !== 'corper') void this.continue();
+  }
+
+  private initialKey(): string | null {
+    const e = this.state.employment();
+    if (!e) return null;
+    return OPTIONS.find((o) => o.type === e.type && (o.level ?? e.governmentLevel) === e.governmentLevel)?.key ?? OPTIONS.find((o) => o.type === e.type)?.key ?? null;
   }
 
   async continue(): Promise<void> {
@@ -114,6 +126,12 @@ export class EmploymentComponent implements OnInit {
     }
     if (opt.type === 'private-sector') {
       this.state.setEmployment({ type: opt.type });
+      // The bank statement is sent after identity is verified, so the no-identity check hands over to the full application here.
+      if (this.state.intent() === 'check') {
+        this.state.setIntent('apply');
+        await this.flow.go(APPLY.bvn);
+        return;
+      }
       await this.flow.go(APPLY.statement);
       return;
     }
@@ -122,6 +140,7 @@ export class EmploymentComponent implements OnInit {
     try {
       this.state.setEmployment({
         type: opt.type,
+        governmentLevel: opt.level,
         nyscMonthsRemaining:
           opt.type === 'corper' ? (this.nyscMonths.value ?? undefined) : undefined,
       });

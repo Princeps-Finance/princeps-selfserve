@@ -14,9 +14,7 @@
 .hero-amount { font-size: 40px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .hero-per { font-size: var(--fs-body); color: var(--on-dark-soft); }
 
-/* Soft cards with stacked label / value rows. */
-.card { margin: 0; padding: var(--space-2) var(--space-5); border-radius: 16px; background: var(--input-bg); }
-.card-title { margin: 0; padding: var(--space-3) 0; font-family: var(--font-display); font-size: var(--fs-base); font-weight: 700; letter-spacing: -0.01em; color: var(--ink); }
+/* Rows of label and value, inside a card. */
 .rows { display: flex; flex-direction: column; }
 .row { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-4); padding: var(--space-4) 0; border-bottom: 1px solid var(--hairline); }
 .row:last-child { border-bottom: 0; }
@@ -27,27 +25,20 @@
 
 .block { display: flex; flex-direction: column; gap: var(--space-3); }
 
-.fees { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
-.fees li { display: flex; justify-content: space-between; align-items: baseline; padding: var(--space-3) 0; border-top: 1px solid var(--hairline); font-size: var(--fs-body); color: var(--ink-soft); }
-.fees li strong { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
-.fees-total span { color: var(--ink); font-weight: 600; }
-.fees-total strong { font-weight: 700; }
+/* Fees: a plain table (edge to edge, hairlines only). */
+.section-title { margin: 0 0 var(--space-2); font-family: var(--font-display); font-size: var(--fs-base); font-weight: 700; letter-spacing: -0.01em; }
+.fees { width: 100%; border-collapse: collapse; font-size: var(--fs-body); }
+.fees th, .fees td { padding: var(--space-3) 0; border-bottom: 1px solid var(--hairline); text-align: left; font-weight: 400; color: var(--ink-soft); }
+.fees th:last-child, .fees td:last-child { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; }
+.fees thead th { font-size: var(--fs-2xs); font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); border-bottom: 1px solid var(--hairline-strong); }
+.fees tfoot th, .fees tfoot td { color: var(--ink); font-weight: 700; border-bottom: 0; }
 
-.payday-callout {
-  display: flex; flex-direction: column; gap: var(--space-1);
-  padding: var(--space-3) var(--space-4);
-  background: color-mix(in srgb, var(--action-primary) 8%, transparent);
-  border-left: 3px solid var(--action-primary);
-  border-radius: var(--radius-xs);
-  font-size: var(--fs-sm); line-height: 1.5;
-  color: var(--ink);
-}
-.payday-callout strong { font-family: var(--font-display); font-weight: 500; }
-.payday-callout span { color: var(--ink-soft); font-size: var(--fs-xs); }
-@media (max-width: 380px) { .payday-callout { padding: var(--space-2) var(--space-3); font-size: var(--fs-xs); } }
-
+/* The first payment, as a tinted card inside the schedule card. */
+.first-pay { margin-bottom: var(--space-3); }
+.first-pay-date { margin: 0; font-size: var(--fs-body); color: var(--ink); }
+.first-pay-note { margin: var(--space-1) 0 0; font-size: var(--fs-sm); color: var(--ink-soft); line-height: 1.5; }
 /* Data table per CLAUDE.md: edge-to-edge, no card, hairlines only */
-.table-scroll { overflow-x: auto; margin: 0 calc(var(--space-6) * -1); padding: 0 var(--space-6); }
+.table-scroll { overflow-x: auto; margin: 0 calc(var(--space-5) * -1); padding: 0 var(--space-5); }
 .schedule { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 .schedule th, .schedule td { text-align: right; padding: 10px 10px; border-bottom: 1px solid var(--hairline); white-space: nowrap; }
 .schedule th:first-child, .schedule td:first-child { text-align: left; }
@@ -63,8 +54,7 @@
 .agree input { margin-top: 1px; }
 
 .actions { display: flex; flex-direction: column-reverse; align-items: stretch; gap: var(--space-3); }
-.actions .cta { justify-content: space-between; }
-.actions .link-btn { justify-content: center; }
+.actions .link-btn { justify-content: center; min-height: var(--btn-height); }
 
 .link-btn {
   background: var(--grey-100);
@@ -86,11 +76,5 @@
 
 
 .table-scroll:focus-visible { outline: 2px solid transparent; outline-offset: -2px; box-shadow: inset var(--focus-ring); }
-
-.schedule-block > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
-.schedule-block > summary::marker { content: ''; }
-.schedule-block > summary::after { content: '+'; margin-left: auto; font-size: 22px; font-weight: 400; }
-.schedule-block[open] > summary::after { content: '−'; }
-.schedule-block > summary:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); border-radius: 4px; }
 
 .agree.is-locked { opacity: 0.6; cursor: not-allowed; }

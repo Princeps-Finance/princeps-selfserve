@@ -14,51 +14,21 @@
     <p class="hero-per">{{ 'step.terms.hero.per' | t: { months: o.tenorMonths } }}</p>
   </section>
 
-  <dl class="card rows">
-    <div class="row">
-      <dt>{{ 'step.terms.principal' | t }}</dt>
-      <dd>{{ formatNaira(o.amount) }}</dd>
-    </div>
-    <div class="row">
-      <dt>{{ 'step.terms.rate' | t }}</dt>
-      <dd>{{ o.ratePercent }}%<span class="sub">{{ modelKey(o.interestModel) | t }}</span></dd>
-    </div>
-    <div class="row">
-      <dt>{{ 'step.terms.tenor' | t }}</dt>
-      <dd>{{ o.tenorMonths }} {{ 'step.offers.months' | t }}</dd>
-    </div>
-    <div class="row row--strong">
-      <dt>{{ 'step.terms.total' | t }}</dt>
-      <dd>{{ formatNaira(totalRepayable()) }}</dd>
-    </div>
-  </dl>
-
-  <section class="card">
-    <h2 class="card-title">{{ 'step.terms.fees' | t }}</h2>
-    <ul class="fees">
-      @for (f of o.fees; track f.name) {
-        <li><span>{{ f.name }}</span><strong>{{ formatNaira(f.amount) }}</strong></li>
-      }
-      <li class="fees-total"><span>{{ 'step.terms.fees.total' | t }}</span><strong>{{ formatNaira(totalFees()) }}</strong></li>
-    </ul>
-  </section>
-
-  <details class="card schedule-block">
-    <summary class="card-title">{{ 'step.terms.schedule' | t }}</summary>
-    <div class="payday-callout" role="note">
-      <strong>{{ 'step.terms.payday.first' | t }}: {{ formatDueDate(firstDueDate()) }}</strong>
-      <span>{{ 'step.terms.payday.note' | t }}</span>
-    </div>
+  <!-- When the money leaves the account: the schedule comes straight after the monthly figure. -->
+  <app-card [title]="'step.terms.schedule' | t">
+    <app-card tone="accent" class="first-pay">
+      <p class="first-pay-date">{{ 'step.terms.payday.first' | t }}: <strong>{{ formatDueDate(firstDueDate()) }}</strong></p>
+      <p class="first-pay-note">{{ 'step.terms.payday.note' | t }}</p>
+    </app-card>
     <div class="table-scroll" tabindex="0" role="region" [attr.aria-label]="'step.terms.schedule' | t">
       <table class="schedule">
         <thead>
           <tr>
-            <th>{{ 'step.terms.month' | t }}</th>
-            <th>{{ 'step.terms.dueCol' | t }}</th>
-            <th>{{ 'step.terms.principalCol' | t }}</th>
-            <th>{{ 'step.terms.interestCol' | t }}</th>
-            <th>{{ 'step.terms.paymentCol' | t }}</th>
-            <th>{{ 'step.terms.balanceCol' | t }}</th>
+            <th scope="col">{{ 'step.terms.month' | t }}</th>
+            <th scope="col">{{ 'step.terms.dueCol' | t }}</th>
+            <th scope="col">{{ 'step.terms.interestCol' | t }}</th>
+            <th scope="col">{{ 'step.terms.paymentCol' | t }}</th>
+            <th scope="col">{{ 'step.terms.balanceCol' | t }}</th>
           </tr>
         </thead>
         <tbody>
@@ -66,7 +36,6 @@
             <tr>
               <td>{{ r.month }}</td>
               <td>{{ formatDueDate(r.dueDate) }}</td>
-              <td>{{ formatNaira(r.principal) }}</td>
               <td>{{ formatNaira(r.interest) }}</td>
               <td>{{ formatNaira(r.payment) }}</td>
               <td>{{ formatNaira(r.balance) }}</td>
@@ -75,7 +44,59 @@
         </tbody>
       </table>
     </div>
-  </details>
+  </app-card>
+
+  <!-- What it costs: the figures that used to sit on the offers screen. -->
+  <app-card>
+    <dl class="rows">
+      <div class="row">
+        <dt>{{ 'step.terms.principal' | t }}</dt>
+        <dd>{{ formatNaira(o.amount) }}</dd>
+      </div>
+      <div class="row">
+        <dt>{{ 'step.terms.rate' | t }}</dt>
+        <dd>{{ o.ratePercent }}%<span class="sub">{{ modelKey(o.interestModel) | t }}</span></dd>
+      </div>
+      <div class="row">
+        <dt>{{ 'offers.cost.interest' | t }}</dt>
+        <dd>{{ formatNaira(totalInterest()) }}</dd>
+      </div>
+      <div class="row">
+        <dt>{{ 'step.terms.tenor' | t }}</dt>
+        <dd>{{ o.tenorMonths }} {{ 'step.offers.months' | t }}</dd>
+      </div>
+      <div class="row">
+        <dt>{{ 'offers.cost.apr' | t }}</dt>
+        <dd>≈ {{ apr() }}%</dd>
+      </div>
+      <div class="row row--strong">
+        <dt>{{ 'step.terms.total' | t }}</dt>
+        <dd>{{ formatNaira(totalRepayable()) }}</dd>
+      </div>
+    </dl>
+  </app-card>
+
+  @if (o.fees.length) {
+    <section class="fees-block" aria-labelledby="fees-title">
+      <h2 id="fees-title" class="section-title">{{ 'step.terms.fees' | t }}</h2>
+      <table class="fees">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'step.terms.feeCol' | t }}</th>
+            <th scope="col">{{ 'step.terms.amountCol' | t }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (f of o.fees; track f.name) {
+            <tr><td>{{ f.name }}</td><td>{{ formatNaira(f.amount) }}</td></tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr><th scope="row">{{ 'step.terms.fees.total' | t }}</th><td>{{ formatNaira(totalFees()) }}</td></tr>
+        </tfoot>
+      </table>
+    </section>
+  }
 
   <app-offer-letter [request]="letterRequest()" (readToEnd)="letterRead.set(true)" />
 

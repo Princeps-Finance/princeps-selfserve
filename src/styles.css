@@ -273,6 +273,11 @@ h1[tabindex='-1']:focus { outline: none; }
   }
 }
 
+/* A primary button's label is centred; its arrow sits at the right edge. The label never shifts because of the arrow. */
+.cta { position: relative; }
+.cta:has(> svg) { padding-inline: 52px; }
+.cta > svg { position: absolute; right: var(--space-5); top: 0; bottom: 0; margin-block: auto; }
+
 /* Every button-like control centres its label, whatever its own component CSS forgets to set. */
 .cta, .alt, .alt-btn, .next-action, .ghost, .promo-cta {
   display: inline-flex; align-items: center; justify-content: center; text-align: center;
@@ -304,3 +309,9 @@ a.cta, a.alt { text-decoration: none; }
   }
 }
 @media (prefers-reduced-motion: reduce) { .glass-btn, .glass-pill { transition: none; } }
+
+/* Notification opt-in on the status screen. */
+.notify { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-md); background: var(--grey-100); }
+.notify-title { margin: 0; font-size: var(--fs-lg); }
+.notify-body { margin: 0; color: var(--ink-soft); font-size: var(--fs-md); line-height: 1.45; }
+.notify-note { margin: 0; color: var(--ink-soft); font-size: var(--fs-md); text-align: center; }

@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
 import { TPipe } from '../i18n/t.pipe';
+import { PromoBannerComponent } from '../../shared/promo-banner.component';
 import { AppUpdateService } from './app-update.service';
 
 /** Nothing has been typed yet: a ready update is applied automatically. */
@@ -12,19 +13,26 @@ const OFFER_ROUTES = new Set([...AUTO_APPLY_ROUTES, '/apply/bvn', '/apply/status
 
 @Component({
   selector: 'app-pwa-banner',
-  imports: [TPipe],
+  imports: [TPipe, PromoBannerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (updater.offline()) {
       <p class="banner banner--offline" role="status">{{ 'pwa.offline' | t }}</p>
     }
-    @if (showUpdate()) {
-      <div class="banner banner--update" role="status">
-        <span>{{ 'pwa.update.ready' | t }}</span>
-        <button type="button" class="action" (click)="updater.apply()">
-          {{ 'pwa.update.action' | t }}
-        </button>
-      </div>
+    @if (showUpdate() && !dismissed()) {
+      <app-promo-banner
+        class="update"
+        role="status"
+        [title]="'pwa.update.title' | t"
+        [description]="'pwa.update.ready' | t"
+        [ctaLabel]="'pwa.update.action' | t"
+        [dismissLabel]="'common.dismiss' | t"
+        imageSrc="icons/icon-192.png"
+        [imageWidth]="192"
+        [imageHeight]="192"
+        (action)="updater.apply()"
+        (dismissed)="dismissed.set(true)"
+      />
     }
   `,
   styles: [
@@ -44,18 +52,14 @@ const OFFER_ROUTES = new Set([...AUTO_APPLY_ROUTES, '/apply/bvn', '/apply/status
         box-shadow: var(--shadow-3);
       }
       .banner--offline { background: var(--navy-950); }
-      .action {
-        min-height: 44px; padding: 0 var(--space-4);
-        border: 1px solid currentColor; border-radius: var(--btn-radius);
-        background: transparent; color: inherit;
-        font: inherit; font-weight: var(--btn-weight); cursor: pointer;
-      }
-      .action:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+      .update { margin: var(--space-2) auto 0; max-width: 520px; width: 100%; box-shadow: var(--shadow-3); border-radius: var(--radius-lg); }
     `,
   ],
 })
 export class PwaBannerComponent {
   protected readonly updater = inject(AppUpdateService);
+  /** The customer can put the update off; the banner stays away for the rest of the visit. */
+  protected readonly dismissed = signal(false);
   private readonly router = inject(Router);
 
   private readonly path = toSignal(
