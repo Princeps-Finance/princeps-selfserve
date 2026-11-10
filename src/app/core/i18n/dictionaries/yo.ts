@@ -296,6 +296,7 @@ export const yo: Dictionary = {
   'offers.more.body': 'Lórí ayélujára, ìgbèsè yìí lè lọ títí dé {max}. Fún iye tó pọ̀ jù, aṣojú lè ràn ọ́ lọ́wọ́.',
   'offers.more.agent': 'Bá aṣojú sọ̀rọ̀',
   'offers.more.call': 'Pè wá dípò',
+  'common.back': 'Padà',
   'common.close': 'Tì í',
   'common.retry': 'Tún gbìyànjú',
   'common.dismiss': 'Pa á tì',
