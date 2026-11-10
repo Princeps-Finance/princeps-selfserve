@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { TPipe } from '../../core/i18n/t.pipe';
 import { APP_VERSION } from '../../core/app-version';
-import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_ZOHO_URL, telLink, whatsappLink } from '../../core/support';
+import { Router } from '@angular/router';
+import { SUPPORT_EMAIL, SUPPORT_PHONE, telLink, whatsappLink } from '../../core/support';
+import { LiveChatService, chatAllowedOn } from '../../core/support-chat/live-chat.service';
 
 /**
  * Help lives in the top bar as a "?" button (not a floating button that covers content as
@@ -100,6 +102,8 @@ import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_ZOHO_URL, telLink, whatsappLink }
 export class HelpLauncherComponent {
   private readonly trigger = viewChild<ElementRef<HTMLButtonElement>>('trigger');
   private readonly sheet = viewChild<ElementRef<HTMLElement>>('sheet');
+  private readonly router = inject(Router);
+  private readonly chat = inject(LiveChatService);
 
   readonly open = signal(false);
   readonly tel = telLink();
@@ -108,14 +112,15 @@ export class HelpLauncherComponent {
   readonly wa = whatsappLink();
   readonly version = APP_VERSION;
 
-  toggle(): void {
-    // When a Zoho support link is configured, Support opens that; otherwise the contact sheet.
-    if (SUPPORT_ZOHO_URL) {
-      window.open(SUPPORT_ZOHO_URL, '_blank', 'noopener');
+  /** Support opens the live chat. Where chat is not allowed, or cannot load, it opens the contact sheet instead. */
+  async toggle(): Promise<void> {
+    if (this.open()) {
+      this.close();
       return;
     }
-    this.open.update((v) => !v);
-    if (this.open()) setTimeout(() => this.sheet()?.nativeElement.querySelector<HTMLElement>('a')?.focus());
+    if (chatAllowedOn(this.router.url) && (await this.chat.open())) return;
+    this.open.set(true);
+    setTimeout(() => this.sheet()?.nativeElement.querySelector<HTMLElement>('a')?.focus());
   }
 
   close(): void {

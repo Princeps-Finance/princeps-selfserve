@@ -15,7 +15,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' https://challenges.cloudflare.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+          "value": "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://salesiq.zohopublic.com https://*.zohopublic.com https://*.zohostatic.com; frame-src https://challenges.cloudflare.com https://*.zohopublic.com; style-src 'self' 'unsafe-inline' https://*.zohopublic.com https://*.zohostatic.com; font-src 'self' https://*.zohostatic.com https://*.zohopublic.com; img-src 'self' data: blob: https://*.zohopublic.com https://*.zohostatic.com https://*.zoho.com; media-src 'self' blob: data:; connect-src 'self' https://challenges.cloudflare.com https://*.zohopublic.com wss://*.zohopublic.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
         },
         {
           "key": "X-Content-Type-Options",

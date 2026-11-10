@@ -12,8 +12,12 @@ export function telLink(): string {
   return `tel:${SUPPORT_PHONE}`;
 }
 
-/** Zoho support flow opened by the floating Support button. Empty until the link is provided: the contact sheet opens instead. */
-export const SUPPORT_ZOHO_URL = '';
+/**
+ * Zoho SalesIQ live chat widget script. Loaded only when the customer taps Support (see live-chat.service.ts).
+ * Empty turns chat off and the Support button opens the contact sheet.
+ */
+export const ZOHO_CHAT_SCRIPT_URL =
+  'https://salesiq.zohopublic.com/widget?wc=siq62557ad54c21b37277a8dd7849d3953d65d0fd9fda683bda378576734ae092d8a75584460ae1bd55614fb79fede6731b';
 
 /** Money lender licence number, shown in the page footer. Empty until the business provides it: nothing is shown then. */
 export const LICENCE_NUMBER = '';
