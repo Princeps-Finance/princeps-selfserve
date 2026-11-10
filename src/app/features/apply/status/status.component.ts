@@ -1,3 +1,4 @@
+import { CardComponent } from '../../../shared/card.component';
 import { PushService } from '../../../core/pwa/push.service';
 import { logWarn } from '../../../core/log';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
@@ -16,7 +17,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
  */
 @Component({
   selector: 'app-status',
-  imports: [IllustrationComponent, TPipe],
+  imports: [CardComponent, IllustrationComponent, TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './status.component.html',
   styleUrl: './status.component.css',

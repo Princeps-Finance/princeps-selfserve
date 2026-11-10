@@ -36,48 +36,47 @@
     <p class="msg msg--error" role="alert">{{ 'form.choose.required' | t }}</p>
   }
 
-  @if (showCorperMonths()) {
-    <aside class="nysc-notice" role="note">
-      <p class="nysc-notice-headline">{{ 'step.employment.corper.cap.headline' | t }}</p>
-      <p class="nysc-notice-body">{{ 'step.employment.corper.cap.body' | t }}</p>
-    </aside>
+  <!-- A corper gives the months left in service in a sheet (bottom sheet on a phone, centred window on a wide screen). -->
+  <app-modal [open]="corperOpen()" [title]="'step.employment.corper' | t" (closed)="corperOpen.set(false)">
+    <div class="corper-form">
+      <app-card tone="accent" [title]="'step.employment.corper.cap.headline' | t">
+        <p class="corper-note">{{ 'step.employment.corper.cap.body' | t }}</p>
+      </app-card>
 
-    <div class="field">
-      <label class="label" for="months">{{ 'step.employment.corper.months.label' | t }}</label>
-      <input
-        id="months"
-        class="input"
-        type="number"
-        inputmode="numeric"
-        min="1"
-        max="11"
-        [formControl]="nyscMonths"
-        (input)="onMonthsInput()"
-        [attr.aria-invalid]="attempted() && nyscMonths.invalid ? true : null"
-        aria-describedby="months-hint"
-      />
-      @if (tooShort()) {
-        <div class="knockout" role="alert">
-          <p class="knockout-title">{{ 'step.employment.corper.too_short' | t: { min: minCorperMonths, months: months() ?? 0 } }}</p>
-          <p class="knockout-help">{{ 'step.employment.corper.too_short.help' | t: { min: minCorperMonths } }}</p>
-          <div class="knockout-actions">
-            <a class="knockout-link" [attr.href]="whatsapp" target="_blank" rel="noopener">{{ 'step.eligibility.declined.whatsapp' | t }}</a>
-            <a class="knockout-link" [attr.href]="tel">{{ 'step.eligibility.declined.call' | t }}</a>
-          </div>
-        </div>
-      } @else if (attempted() && nyscMonths.invalid) {
-        <p class="msg msg--error" role="alert">{{ 'form.fix.required' | t }}</p>
-      }
-      <p class="msg" id="months-hint">{{ 'step.employment.corper.months.hint' | t }}</p>
+      <div class="field">
+        <label class="label" for="months">{{ 'step.employment.corper.months.label' | t }}</label>
+        <input
+          id="months"
+          class="input"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="11"
+          [formControl]="nyscMonths"
+          (input)="onMonthsInput()"
+          [attr.aria-invalid]="attempted() && nyscMonths.invalid ? true : null"
+          aria-describedby="months-hint"
+        />
+        @if (tooShort()) {
+          <app-card role="alert" [title]="'step.employment.corper.too_short' | t: { min: minCorperMonths, months: months() ?? 0 }">
+            <p class="corper-note">{{ 'step.employment.corper.too_short.help' | t: { min: minCorperMonths } }}</p>
+            <div class="knockout-actions">
+              <a class="knockout-link" [attr.href]="whatsapp" target="_blank" rel="noopener">{{ 'step.eligibility.declined.whatsapp' | t }}</a>
+              <a class="knockout-link" [attr.href]="tel">{{ 'step.eligibility.declined.call' | t }}</a>
+            </div>
+          </app-card>
+        } @else if (attempted() && nyscMonths.invalid) {
+          <p class="msg msg--error" role="alert">{{ 'form.fix.required' | t }}</p>
+        }
+        <p class="msg" id="months-hint">{{ 'step.employment.corper.months.hint' | t }}</p>
+      </div>
+
+      <button type="button" class="cta" [disabled]="submitting()" (click)="continue()">
+        <span>{{ 'step.employment.continue' | t }}</span>
+        <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
     </div>
-  }
-
-  @if (showCorperMonths()) {
-  <button type="button" class="cta" [disabled]="submitting()" (click)="continue()">
-    <span>{{ 'step.employment.continue' | t }}</span>
-    <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-    </svg>
-  </button>
-  }
+  </app-modal>
 </section>

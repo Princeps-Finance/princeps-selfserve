@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { CardComponent } from '../../../shared/card.component';
 import { ProductMarkComponent } from '../../../shared/product-mark.component';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
@@ -62,7 +63,7 @@ interface Choice {
 
 @Component({
   selector: 'app-offers',
-  imports: [ProductMarkComponent, IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective, ReferralBoxComponent, AmountSliderComponent],
+  imports: [CardComponent, ProductMarkComponent, IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective, ReferralBoxComponent, AmountSliderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './offers.component.html',
   styleUrl: './offers.component.css',

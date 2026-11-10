@@ -23,14 +23,14 @@ import { TPipe } from '../../../core/i18n/t.pipe';
           <p class="sub">{{ 'otp.where.sub' | t }}</p>
           <div class="options" role="radiogroup" [attr.aria-label]="'otp.where.title' | t">
             @for (c of phones(); track c.id) {
-              <button type="button" role="radio" class="option" [attr.aria-checked]="selected() === c.id" (click)="selected.set(c.id)">
+              <button type="button" role="radio" class="option" [attr.aria-checked]="selected() === c.id" (click)="pick(c.id)" [disabled]="busy()">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h3l2 4-2 1a10 10 0 0 0 4 4l1-2 4 2v3a2 2 0 0 1-2 2A13 13 0 0 1 3 6a2 2 0 0 1 1-2z" /></svg>
                 <span class="option-text"><span class="kind">{{ 'otp.phone' | t }}</span><span class="value">{{ c.masked }}</span></span>
                 <span class="mark" aria-hidden="true"></span>
               </button>
             }
             @for (c of emails(); track c.id) {
-              <button type="button" role="radio" class="option" [attr.aria-checked]="selected() === c.id" (click)="selected.set(c.id)">
+              <button type="button" role="radio" class="option" [attr.aria-checked]="selected() === c.id" (click)="pick(c.id)" [disabled]="busy()">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18v12H3z" /><path d="M3 6l9 7 9-7" /></svg>
                 <span class="option-text"><span class="kind">{{ 'otp.email' | t }}</span><span class="value">{{ c.masked }}</span></span>
                 <span class="mark" aria-hidden="true"></span>
@@ -54,7 +54,9 @@ import { TPipe } from '../../../core/i18n/t.pipe';
         }
 
         <div class="actions">
-          <button type="button" class="cta" [disabled]="busy() || (!alternate() && !selected())" (click)="send()">{{ 'otp.send' | t }}</button>
+          @if (alternate()) {
+            <button type="button" class="cta" [disabled]="busy()" (click)="send()">{{ 'otp.send' | t }}</button>
+          }
           <button type="button" class="alt" (click)="cancelled.emit()">{{ 'common.cancel' | t }}</button>
         </div>
       </div>
@@ -135,6 +137,13 @@ export class OtpChannelDialogComponent implements AfterViewInit, OnDestroy {
     this.cancelled.emit();
   }
 
+  /** Tapping a contact sends the code to it straight away: no second "Send code" tap. */
+  protected pick(id: string): void {
+    if (this.busy()) return;
+    this.selected.set(id);
+    this.confirmed.emit({ kind: 'bvn-contact', id });
+  }
+
   protected send(): void {
     if (this.alternate()) {
       this.attempted.set(true);
@@ -142,7 +151,5 @@ export class OtpChannelDialogComponent implements AfterViewInit, OnDestroy {
       if (phone) this.confirmed.emit({ kind: 'alternate-phone', phone });
       return;
     }
-    const id = this.selected();
-    if (id) this.confirmed.emit({ kind: 'bvn-contact', id });
   }
 }

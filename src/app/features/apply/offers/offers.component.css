@@ -3,12 +3,6 @@
 .title { font-size: clamp(30px, 7vw, 40px); line-height: 1.1; }
 .subtitle { max-width: 40ch; }
 
-.review-note {
-  margin: 0; padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md); background: var(--info-soft); color: var(--ink);
-  font-size: var(--fs-md); line-height: 1.5;
-}
-
 .block { display: flex; flex-direction: column; gap: var(--space-4); }
 .block-title { display: flex; align-items: center; gap: var(--space-3); margin: 0; font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 600; }
 .num {
@@ -77,5 +71,8 @@
 
 .alt--primary { background: var(--action-primary); color: var(--action-on-primary); border-color: var(--action-primary); }
 .alt--primary:hover { background: var(--action-primary-hover); }
-.agent { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-md); background: var(--action-primary-soft); }
 .agent-text { margin: 0; line-height: 1.5; }
+
+.card-text { margin: 0; font-size: var(--fs-md); line-height: 1.5; color: var(--ink); }
+.agent { display: block; }
+.agent .cta, .agent .alt { margin-top: var(--space-2); }
