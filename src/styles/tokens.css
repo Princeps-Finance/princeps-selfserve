@@ -21,6 +21,16 @@
   --orange-100: #fdeae0;
   --whatsapp: #25d366;
 
+  /* Text and overlays that sit on dark or photographic surfaces in every theme */
+  --on-dark: #ffffff;
+  --on-dark-muted: rgba(255, 255, 255, 0.78);
+  --on-dark-soft: rgba(255, 255, 255, 0.9);
+  --camera-bg: #0b0b0b;
+  --camera-guide: rgba(255, 255, 255, 0.7);
+  --recording: rgba(220, 38, 38, 0.9);
+  --scrim: rgba(17, 18, 20, 0.5);
+  --scrim-strong: rgba(17, 18, 20, 0.7);
+
   /* Typography: families */
   --font-display: 'SuperX Sans', 'Google Sans', 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-sans: 'Agrandir', 'Google Sans', 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;

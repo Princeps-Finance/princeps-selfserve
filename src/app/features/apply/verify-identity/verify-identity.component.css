@@ -67,20 +67,20 @@
   width: 100%;
   border-radius: 16px;
   overflow: hidden;
-  background: #0b0b0b;
+  background: var(--camera-bg);
   aspect-ratio: 1 / 1;
   display: flex; align-items: center; justify-content: center;
 }
 .frame--video { aspect-ratio: 4 / 5; }
 .media, .captured {
   width: 100%; height: 100%; object-fit: cover; display: block;
-  background: #0b0b0b;
+  background: var(--camera-bg);
 }
 .captured { object-fit: cover; }
 
 .oval-guide {
   position: absolute; inset: 8%;
-  border: 2px dashed rgba(255,255,255,0.7);
+  border: 2px dashed var(--camera-guide);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -89,8 +89,8 @@
   position: absolute; top: 12px; left: 12px;
   display: inline-flex; align-items: center; gap: 6px;
   padding: var(--space-1) 10px;
-  background: rgba(220, 38, 38, 0.9);
-  color: white;
+  background: var(--recording);
+  color: var(--on-dark);
   border-radius: var(--radius-pill);
   font-size: var(--fs-xs); font-weight: 600;
 }
@@ -156,7 +156,7 @@
   aspect-ratio: 1 / 1;
   border-radius: var(--radius-sm);
   object-fit: cover;
-  background: #0b0b0b;
+  background: var(--camera-bg);
   display: block;
 }
 .review-photo figcaption, .review-video figcaption {
