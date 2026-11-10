@@ -45,6 +45,13 @@ The app asks for the BVN first and sends the code to the BVN-linked phone. `POST
 - Document when the OTP is sent, and add a resend endpoint with a cooldown and attempt limits.
 - Return the BVN identity needed to prefill and check the profile (name, date of birth, address) and say what is deliberately withheld.
 
+### 7a. Choose where the code goes (new in the BVN step)
+After the customer enters a BVN, the app shows the phones and emails tied to it, partly hidden, and lets them pick where to get the code. If they can reach none of them they type another phone number.
+- `POST bvn-contacts` `{ bvn, captchaToken }` returns `{ status, phones: [{ id, masked }], emails: [{ id, masked }] }`. Only masked values and opaque ids ever leave the server. Same bot check and per-BVN limits as the code send.
+- The code send takes an optional destination: `{ kind: 'bvn-contact', id }` or `{ kind: 'alternate-phone', phone }`.
+- **Security decision needed.** A code sent to a number the customer typed proves they hold that number, not that the BVN is theirs. Pick the extra check for the alternate-number path (for example matching name and date of birth against the BVN record, a lower first-loan limit, or manual review) and have the API flag the application so the status screen can say what happens next.
+- **Privacy.** Showing masked contacts to anyone who types a BVN reveals that the BVN exists and a few digits. Keep the masking heavy (last two digits of a phone, first letter and domain of an email), rate limit per BVN and per IP, and never log the values.
+
 ### 8. Salary and employment checks
 IPPIS, Remita and Dedukt checks exist. Document the exact request and response, including the verified monthly income, the error cases the app must show (not found, mismatch, service down), and the mapping from our employment types and channels.
 
@@ -82,6 +89,7 @@ Legend: **Yes** = an endpoint exists and fits; **Partly** = exists but needs the
 |---|---|---|---|
 | Language | nothing | none needed | n/a |
 | Enter BVN, send code to the BVN-linked phone | verify the BVN, send an OTP, get the identity back (name, date of birth, address) | `POST /api/applications` needs `email`, `bvn`, `phone`; the identity returned is not documented | **Partly** (email must become optional; say when the OTP is sent) |
+| Where the code goes | list masked contacts for a BVN; send to one, or to an alternate phone | none | **Missing** (see 7a) |
 | Resend the code | resend with a cooldown | none | **Missing** |
 | Verify the code | check the OTP, return a token | `POST /api/applications/{id}/otp/verify` (410 expired, 429 too many tries) | **Yes** |
 | Returning customer check | know the customer exists and read a few safe fields | `caltosCustomerLookupStatus` (`FOUND`/`NOT_FOUND`/`CONFLICT`) and `caltosCustomer` | **Partly** (fields not documented) |

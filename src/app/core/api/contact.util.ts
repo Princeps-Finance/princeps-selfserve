@@ -68,3 +68,9 @@ export function suggestEmailFix(email: string): string | null {
 export function isValidEmailShape(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
 }
+
+/** Shows only the last two digits of a Nigerian number, for places where the full number must not appear. */
+export function maskPhoneNg(raw: string): string {
+  const canonical = normalizePhoneNg(raw);
+  return canonical ? `+234 •••• ••${canonical.slice(-2)}` : '';
+}

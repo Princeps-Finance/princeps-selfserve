@@ -55,4 +55,10 @@
       </svg>
     </button>
   </form>
+  @if (contacts(); as c) {
+    <app-otp-channel-dialog [phones]="c.phones" [emails]="c.emails" (confirmed)="onDestination($event)" (cancelled)="onDialogCancelled()" />
+  }
+  @if (lookupFailed()) {
+    <p class="server-error" role="alert">{{ 'step.bvn.error.lookup' | t }}</p>
+  }
 </section>

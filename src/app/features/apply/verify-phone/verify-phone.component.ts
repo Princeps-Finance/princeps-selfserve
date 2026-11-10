@@ -76,7 +76,7 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     try {
       // The code goes to the phone linked to the BVN, not to the number typed earlier.
-      const res = await this.api.sendBvnOtp(bvn.value, await this.captcha.token());
+      const res = await this.api.sendBvnOtp(bvn.value, await this.captcha.token(), this.state.otpDestination() ?? undefined);
       if (res.status === 'not-found') {
         await this.flow.go(APPLY.bvn, { queryParams: { error: 'not-found' } });
         return;
@@ -211,7 +211,7 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
     this.resending.set(true);
     this.justResent.set(false);
     try {
-      const res = await this.api.sendBvnOtp(bvn.value, await this.captcha.token());
+      const res = await this.api.sendBvnOtp(bvn.value, await this.captcha.token(), this.state.otpDestination() ?? undefined);
       if (res.status !== 'sent') throw new Error('not-sent');
       this.maskedTarget.set(res.target);
       this.justResent.set(true);

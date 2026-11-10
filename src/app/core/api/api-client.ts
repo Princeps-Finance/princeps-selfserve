@@ -1,3 +1,4 @@
+import { maskPhoneNg } from './contact.util';
 import { MAX_UPLOAD_BYTES } from '../limits';
 import { InjectionToken, Injectable } from '@angular/core';
 
@@ -144,6 +145,22 @@ export interface BvnIdentity {
   gender?: 'male' | 'female';
 }
 
+/** A contact point tied to a BVN, shown only in part. `id` is an opaque reference the server understands. */
+export interface MaskedContact {
+  id: string;
+  masked: string;
+}
+
+export type BvnContactsResult =
+  | { status: 'ok'; phones: MaskedContact[]; emails: MaskedContact[] }
+  | { status: 'not-found' }
+  | { status: 'service-down' };
+
+/** Where the one-time code goes: a contact already tied to the BVN, or a number the customer gives. */
+export type OtpDestination =
+  | { kind: 'bvn-contact'; id: string }
+  | { kind: 'alternate-phone'; phone: string };
+
 export type BvnOtpSendResult =
   | { status: 'sent'; target: string; expiresInSeconds: number }
   | { status: 'not-found' };
@@ -169,8 +186,10 @@ export interface ApiClient {
    * Caltos receives the request and decides; the app never claims an outcome.
    */
   submitStatementReview(input: StatementReviewInput): Promise<SubmitResult>;
-  /** Sends a one-time code to the phone number linked to this BVN (not to a number the user typed). */
-  sendBvnOtp(bvn: string, captchaToken?: string): Promise<BvnOtpSendResult>;
+  /** The phone numbers and emails tied to a BVN, masked, so the customer can choose where to get the code. */
+  lookupBvnContacts(bvn: string, captchaToken?: string): Promise<BvnContactsResult>;
+  /** Sends a one-time code to the chosen contact. With no destination it goes to the BVN's main phone. */
+  sendBvnOtp(bvn: string, captchaToken?: string, destination?: OtpDestination): Promise<BvnOtpSendResult>;
   /** A correct code proves the customer owns the BVN, and releases the details for it. */
   verifyBvnOtp(bvn: string, code: string): Promise<BvnOtpVerifyResult>;
   /** Local government areas for a state. An empty list means the user types it instead. */
@@ -318,10 +337,34 @@ export class MockApiClient implements ApiClient {
     return { status: 'received', referenceId: 'PRN-' + Math.random().toString(36).slice(2, 8).toUpperCase() };
   }
 
-  async sendBvnOtp(bvn: string, _captchaToken?: string): Promise<BvnOtpSendResult> {
+  async lookupBvnContacts(bvn: string, _captchaToken?: string): Promise<BvnContactsResult> {
+    await delay(500);
+    if (bvn === '00000000000') return { status: 'not-found' };
+    if (bvn === '99999999999') return { status: 'service-down' };
+    if (bvn === '44444444444') return { status: 'ok', phones: [], emails: [] }; // nothing the customer can still reach
+    const last = bvn === '33333333333' ? '99' : '78';
+    return {
+      status: 'ok',
+      phones: [
+        { id: 'ph-1', masked: `+234 •••• ••${last}` },
+        { id: 'ph-2', masked: '+234 •••• ••31' },
+      ],
+      emails: [{ id: 'em-1', masked: 'a•••@gmail.com' }],
+    };
+  }
+
+  async sendBvnOtp(bvn: string, _captchaToken?: string, destination?: OtpDestination): Promise<BvnOtpSendResult> {
     await delay(600);
     if (bvn === '00000000000') return { status: 'not-found' };
-    return { status: 'sent', target: '+234 •••• ••78', expiresInSeconds: 300 };
+    const target =
+      destination?.kind === 'alternate-phone'
+        ? maskPhoneNg(destination.phone)
+        : destination?.id === 'em-1'
+          ? 'a•••@gmail.com'
+          : destination?.id === 'ph-2'
+            ? '+234 •••• ••31'
+            : '+234 •••• ••78';
+    return { status: 'sent', target, expiresInSeconds: 300 };
   }
 
   async verifyBvnOtp(bvn: string, code: string): Promise<BvnOtpVerifyResult> {

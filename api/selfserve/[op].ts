@@ -51,8 +51,25 @@ const OPS: Record<string, OpDef> = {
     limit: 6,
     allow: ['status', 'retryAfterSeconds', 'token'],
   },
-  'send-bvn-otp': {
+  // Masked phones and emails tied to a BVN, so the customer can choose where the code goes. Only masked values ever leave the server.
+  'bvn-contacts': {
     schema: z.object({ bvn: digits(11), captchaToken: z.string().max(2048).optional() }).strict(),
+    limit: 3,
+    allow: ['status', 'phones', 'emails'],
+  },
+  'send-bvn-otp': {
+    schema: z
+      .object({
+        bvn: digits(11),
+        captchaToken: z.string().max(2048).optional(),
+        destination: z
+          .discriminatedUnion('kind', [
+            z.object({ kind: z.literal('bvn-contact'), id: z.string().max(64) }).strict(),
+            z.object({ kind: z.literal('alternate-phone'), phone }).strict(),
+          ])
+          .optional(),
+      })
+      .strict(),
     limit: 3,
     allow: ['status', 'target', 'expiresInSeconds'],
   },
@@ -200,7 +217,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   // Bot check before sending an SMS (costs money and can harass a victim).
   let payload = parsed.data as Record<string, unknown>;
-  if (op === 'send-otp' || op === 'send-bvn-otp') {
+  if (op === 'send-otp' || op === 'send-bvn-otp' || op === 'bvn-contacts') {
     const { captchaToken, ...rest } = payload as { captchaToken?: string };
     if (!(await verifyCaptcha(captchaToken, ip))) {
       return fail('CAPTCHA', 'Please confirm you are not a robot and try again.', 400);
@@ -210,7 +227,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   // Per-phone limits stop one number being hammered from many IPs.
   const target = (parsed.data as { phone?: string; bvn?: string }).phone ?? (parsed.data as { bvn?: string }).bvn;
-  if (target && (op === 'send-otp' || op === 'verify-otp' || op === 'send-bvn-otp' || op === 'verify-bvn-otp') && rateLimited(`${op}:${target}`, def.limit * 2, 10 * 60_000)) {
+  if (target && (op === 'send-otp' || op === 'verify-otp' || op === 'send-bvn-otp' || op === 'verify-bvn-otp' || op === 'bvn-contacts') && rateLimited(`${op}:${target}`, def.limit * 2, 10 * 60_000)) {
     return fail('RATE_LIMITED', 'Too many attempts. Try again shortly.', 429);
   }
 
