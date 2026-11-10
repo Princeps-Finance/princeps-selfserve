@@ -294,6 +294,8 @@ export const en: Dictionary = {
   'offers.more.body': 'Online, this loan goes up to {max}. For a larger amount, an agent can help you.',
   'offers.more.agent': 'Speak to an agent',
   'offers.more.call': 'Call us instead',
+  'step.terms.feeCol': 'Fee',
+  'step.terms.amountCol': 'Amount',
   'common.close': 'Close',
   'common.retry': 'Try again',
   'common.dismiss': 'Dismiss',

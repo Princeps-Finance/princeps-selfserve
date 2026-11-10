@@ -157,7 +157,7 @@
 .copy { font-family: var(--font-sans); margin-left: var(--space-2); min-height: 44px; padding: 0 var(--space-3); border: 0; background: none; color: var(--text-accent); font: inherit; font-weight: var(--btn-weight); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .next-title { margin: 0 0 var(--space-2); font-size: var(--fs-lg); }
 .next-list { margin: 0; padding-left: var(--space-5); display: flex; flex-direction: column; gap: var(--space-2); color: var(--ink-soft); line-height: 1.5; }
-a.cta { text-decoration: none; justify-content: space-between; }
+a.cta { text-decoration: none; }
 .alt { font: inherit; }
 .alt:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 
