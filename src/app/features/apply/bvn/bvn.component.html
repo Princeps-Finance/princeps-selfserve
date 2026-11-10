@@ -33,7 +33,7 @@
 
     <div class="consent" [class.is-invalid]="showConsentError() && !consent.value">
       <label class="consent-row">
-        <input id="consent" type="checkbox" [formControl]="consent" [attr.aria-invalid]="showConsentError() && !consent.value ? true : null" aria-describedby="consent-error" />
+        <app-checkbox id="consent" [invalid]="showConsentError() && !consent.value" describedBy="consent-error" [checked]="consent.value" (checkedChange)="consent.setValue($event)" />
         <span>{{ 'consent.label' | t }} <button type="button" class="consent-inline" (click)="privacy.open()">{{ 'consent.link' | t }}</button>.</span>
       </label>
       @if (showConsentError() && !consent.value) {

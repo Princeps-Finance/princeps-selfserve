@@ -1,3 +1,4 @@
+import { CheckboxComponent } from '../../../shared/checkbox.component';
 import { logWarn } from '../../../core/log';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { TPipe } from '../../../core/i18n/t.pipe';
@@ -14,7 +15,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 @Component({
   selector: 'app-mandate',
-  imports: [TPipe, WizardProgressComponent, IllustrationComponent],
+  imports: [CheckboxComponent, TPipe, WizardProgressComponent, IllustrationComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './mandate.component.html',
   styleUrl: './mandate.component.css',

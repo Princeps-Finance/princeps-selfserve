@@ -28,9 +28,7 @@
   </dl>
 
   <label class="agree">
-    <input type="checkbox"
-      [attr.aria-invalid]="attempted() && !agreed() ? true : null"
-      aria-describedby="agree-error" [checked]="agreed()" (change)="toggleAgree($any($event.target).checked)" />
+    <app-checkbox [invalid]="attempted() && !agreed()" describedBy="agree-error" [checked]="agreed()" (checkedChange)="toggleAgree($event)" />
     <span>{{ 'step.submit.confirm' | t }}</span>
   </label>
   @if (attempted() && !agreed()) {
