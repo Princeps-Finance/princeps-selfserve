@@ -13,6 +13,7 @@ export const ig: Dictionary = {
   'form.docs.required': "Bulite akwụkwọ niile ka ị gaa n'ihu.",
   'form.identity.required': "Tinye foto na vidiyo gị ka ị gaa n'ihu.",
   'submit.error.failed': 'Ezipụghị ya. Lelee njikọ gị ma nwaa ọzọ.',
+  'pwa.update.title': 'Mmelite dị',
   'pwa.update.ready': 'Ụdị ọhụrụ dị njikere.',
   'pwa.update.action': 'Melite',
   'pwa.offline': "Ị anọghị n'ịntanetị. Jikọọ ọzọ ka ị gaa n'ihu.",

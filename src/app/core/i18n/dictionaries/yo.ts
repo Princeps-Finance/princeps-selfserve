@@ -13,6 +13,7 @@ export const yo: Dictionary = {
   'form.docs.required': 'Gbé gbogbo àwọn ìwé sókè láti tẹ̀síwájú.',
   'form.identity.required': 'Fi fọ́tò àti fídíò rẹ kún un láti tẹ̀síwájú.',
   'submit.error.failed': 'A kò fi ránṣẹ́. Yẹ ìsopọ̀ rẹ wò kí o tún gbìyànjú.',
+  'pwa.update.title': 'Àtúnṣe wà',
   'pwa.update.ready': 'Ẹ̀dà tuntun ti ṣetán.',
   'pwa.update.action': 'Ṣe àtúnṣe',
   'pwa.offline': 'O kò sí lórí íntánẹ́ẹ̀tì. Tún so pọ̀ láti tẹ̀síwájú.',
