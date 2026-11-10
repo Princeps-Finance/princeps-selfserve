@@ -7,10 +7,11 @@
 @if (install.offer()) {
   <div class="promo">
     <app-promo-card
-      title="Get repayment reminders"
-      badge="New"
-      description="Add Princeps to your home screen to track your loan and never miss a payment."
-      ctaLabel="Add to home screen"
+      [title]="'install.card.title' | t"
+      [badge]="'install.badge' | t"
+      [description]="'install.card.desc' | t"
+      [ctaLabel]="'install.card.cta' | t"
+      [dismissLabel]="'common.dismiss' | t"
       imageAlt="Princeps app preview"
       (dismissed)="install.dismiss()"
       (action)="install.install()"

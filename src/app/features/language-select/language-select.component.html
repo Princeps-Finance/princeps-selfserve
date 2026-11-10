@@ -7,9 +7,10 @@
   @if (install.offer()) {
     <div class="install">
       <app-promo-banner
-        title="Get Princeps on your phone"
-        description="Track your loan and get reminders."
-        ctaLabel="Install"
+        [title]="'install.banner.title' | t"
+        [description]="'install.banner.desc' | t"
+        [ctaLabel]="'install.banner.cta' | t"
+        [dismissLabel]="'common.dismiss' | t"
         (action)="install.install()"
         (dismissed)="install.dismiss()"
       />

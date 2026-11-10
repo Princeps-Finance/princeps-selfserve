@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { TPipe } from '../../../core/i18n/t.pipe';
+import { APPLY } from '../../../core/flow/apply-routes';
+import { ApplicationStateService } from '../../../core/application/application-state.service';
+import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 /** For customers who only wanted to see what they could get. */
 @Component({
@@ -17,18 +19,23 @@ import { TPipe } from '../../../core/i18n/t.pipe';
   `,
   styles: [
     `
-      .step { display: flex; flex-direction: column; gap: var(--space-4); padding-top: var(--space-4); }
-      .title { margin: 0; font-size: clamp(28px, 7vw, 38px); line-height: 1.1; }
+.step { gap: var(--space-4); padding-top: var(--space-4); }
+.title { font-size: clamp(28px, 7vw, 38px); line-height: 1.1; }
       .body { margin: 0; color: var(--ink-soft); line-height: 1.5; }
       .cta, .alt { min-height: var(--btn-height); border-radius: var(--btn-radius); font: inherit; font-weight: 500; cursor: pointer; }
-      .cta { border: 0; background: var(--action-primary); color: var(--action-on-primary); }
-      .alt { border: 1px solid var(--ink); background: transparent; color: var(--ink); }
+.cta { border: 0; }
+.alt { border: 1px solid var(--ink); background: transparent; }
       .cta:focus-visible, .alt:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
     `,
   ],
 })
 export class SavedComponent {
-  private readonly router = inject(Router);
-  apply(): void { void this.router.navigateByUrl('/apply/offers'); }
-  done(): void { void this.router.navigateByUrl('/'); }
+  private readonly flow = inject(FlowNavigator);
+  private readonly state = inject(ApplicationStateService);
+  apply(): void {
+    // Leaving "just checking": the offers screen must now behave as a real application.
+    this.state.setIntent('apply');
+    void this.flow.go(APPLY.offers);
+  }
+  done(): void { void this.flow.go(APPLY.home); }
 }

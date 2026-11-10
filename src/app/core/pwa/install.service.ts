@@ -1,4 +1,5 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { LangService } from '../i18n/lang.service';
 import { ToastService } from '../toast/toast.service';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -20,6 +21,7 @@ function read(): boolean {
 @Injectable({ providedIn: 'root' })
 export class InstallService {
   private readonly toast = inject(ToastService);
+  private readonly lang = inject(LangService);
   private deferred: BeforeInstallPromptEvent | null = null;
   private readonly dismissed = signal(read());
   private readonly installed = signal(
@@ -48,9 +50,7 @@ export class InstallService {
     }
     const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
     this.toast.info(
-      ios
-        ? 'Tap the Share icon, then "Add to Home Screen".'
-        : 'Open your browser menu and choose "Install app" or "Add to Home screen".',
+      this.lang.t(ios ? 'install.hint.ios' : 'install.hint.other'),
       6000,
     );
   }

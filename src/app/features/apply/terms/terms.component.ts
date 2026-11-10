@@ -1,10 +1,12 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { productById } from '../../../core/products/products';
-import { Router } from '@angular/router';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { formatNaira } from '../../../core/money.util';
+import { APPLY } from '../../../core/flow/apply-routes';
+import { buildRepaymentSchedule } from '../../../../shared/pricing';
+import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 interface ScheduleRow {
   month: number;
@@ -34,9 +36,9 @@ function firstPaydayAfter(from: Date): Date {
   templateUrl: './terms.component.html',
   styleUrl: './terms.component.css',
 })
-export class TermsComponent implements OnInit {
+export class TermsComponent {
   private readonly state = inject(ApplicationStateService);
-  private readonly router = inject(Router);
+  private readonly flow = inject(FlowNavigator);
 
   readonly offer = this.state.offer;
   readonly agreed = signal(false);
@@ -52,7 +54,11 @@ export class TermsComponent implements OnInit {
   readonly schedule = computed<ScheduleRow[]>(() => {
     const o = this.offer();
     if (!o) return [];
-    return buildSchedule(o.amount, o.tenorMonths, o.ratePercent, o.interestModel);
+    const firstDue = firstPaydayAfter(new Date());
+    return buildRepaymentSchedule(o.amount, o.tenorMonths, o.ratePercent, o.interestModel).map((line) => ({
+      ...line,
+      dueDate: new Date(firstDue.getFullYear(), firstDue.getMonth() + (line.month - 1), PAYDAY_DAY),
+    }));
   });
 
   readonly firstDueDate = computed(() => this.schedule()[0]?.dueDate ?? null);
@@ -71,17 +77,13 @@ export class TermsComponent implements OnInit {
     (this.offer()?.fees ?? []).reduce((acc, f) => acc + f.amount, 0),
   );
 
-  async ngOnInit(): Promise<void> {
-    if (!this.offer()) await this.router.navigateByUrl('/apply/offers');
-  }
-
   toggleAgree(v: boolean): void {
     this.agreed.set(v);
     if (v) this.attempted.set(false);
   }
 
   back(): void {
-    void this.router.navigateByUrl('/apply/offers');
+    void this.flow.go(APPLY.offers);
   }
 
   take(): void {
@@ -92,70 +94,6 @@ export class TermsComponent implements OnInit {
     }
     this.state.setTermsAccepted(new Date().toISOString());
     const needsNin = productById(this.offer()?.productId ?? '')?.settings.requiresNin ?? false;
-    void this.router.navigateByUrl(needsNin ? '/apply/nin' : '/apply/documents');
+    void this.flow.afterTerms(needsNin);
   }
-}
-
-function buildSchedule(
-  principal: number,
-  n: number,
-  ratePercent: number,
-  model: 'Flat Rate' | 'Reducing Balance' | 'Percentage Based',
-): ScheduleRow[] {
-  const r = ratePercent / 100;
-  const rows: ScheduleRow[] = [];
-  const firstDue = firstPaydayAfter(new Date());
-  const dueFor = (m: number) =>
-    new Date(firstDue.getFullYear(), firstDue.getMonth() + (m - 1), PAYDAY_DAY);
-  if (model === 'Reducing Balance') {
-    const pmt = r === 0 ? principal / n : (principal * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-    let balance = principal;
-    for (let m = 1; m <= n; m++) {
-      const interest = balance * r;
-      const principalPaid = pmt - interest;
-      balance -= principalPaid;
-      rows.push({
-        month: m,
-        dueDate: dueFor(m),
-        principal: Math.round(principalPaid),
-        interest: Math.round(interest),
-        payment: Math.round(pmt),
-        balance: Math.max(0, Math.round(balance)),
-      });
-    }
-  } else if (model === 'Percentage Based') {
-    const principalPerMonth = principal / n;
-    let balance = principal;
-    for (let m = 1; m <= n; m++) {
-      const interest = principal * r;
-      balance -= principalPerMonth;
-      rows.push({
-        month: m,
-        dueDate: dueFor(m),
-        principal: Math.round(principalPerMonth),
-        interest: Math.round(interest),
-        payment: Math.round(principalPerMonth + interest),
-        balance: Math.max(0, Math.round(balance)),
-      });
-    }
-  } else {
-    // Flat Rate
-    const total = principal * (1 + r);
-    const pmt = total / n;
-    const principalPerMonth = principal / n;
-    const interestPerMonth = (principal * r) / n;
-    let balance = principal;
-    for (let m = 1; m <= n; m++) {
-      balance -= principalPerMonth;
-      rows.push({
-        month: m,
-        dueDate: dueFor(m),
-        principal: Math.round(principalPerMonth),
-        interest: Math.round(interestPerMonth),
-        payment: Math.round(pmt),
-        balance: Math.max(0, Math.round(balance)),
-      });
-    }
-  }
-  return rows;
 }

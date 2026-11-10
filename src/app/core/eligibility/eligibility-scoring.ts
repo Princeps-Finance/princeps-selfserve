@@ -257,7 +257,8 @@ function scoreStability(
     return { score: config.stability.mdaScores[input.category], nyscCap: null, reasons, codes };
   }
 
-  const { monthsRemaining } = input;
+  // A missing, negative or fractional value must never be treated as more service left than there is.
+  const monthsRemaining = Number.isFinite(input.monthsRemaining) ? Math.max(0, Math.floor(input.monthsRemaining)) : 0;
   const nyscConfig = config.stability.nysc;
 
   if (monthsRemaining < nyscConfig.minEligibleMonthsRemaining) {

@@ -1,3 +1,5 @@
+import { MAX_UPLOAD_BYTES, REQUEST_TIMEOUT_MS } from '../limits';
+import { logWarn } from '../log';
 import { Injectable } from '@angular/core';
 import {
   ApiClient,
@@ -31,7 +33,6 @@ export class ApiUnavailableError extends Error {
   }
 }
 
-const TIMEOUT_MS = 15_000;
 
 interface Reply<T> {
   ok: boolean;
@@ -61,12 +62,23 @@ export class HttpApiClient implements ApiClient {
         headers,
         body: JSON.stringify(body),
         credentials: 'same-origin',
-        signal: AbortSignal.timeout(TIMEOUT_MS),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
       const data = (await res.json().catch(() => null)) as T | null;
       return { ok: res.ok, status: res.status, data };
-    } catch {
+    } catch (err) {
+      logWarn(`request failed: ${path}`, err);
       return { ok: false, status: 0, data: null };
+    }
+  }
+
+  /** Runs an API call; when the service cannot be reached, answers with `fallback` instead of throwing. */
+  private async opOr<T>(name: string, body: unknown, fallback: T): Promise<T> {
+    try {
+      return await this.op<T>(name, body);
+    } catch (err) {
+      logWarn(`${name} unavailable`, err);
+      return fallback;
     }
   }
 
@@ -166,37 +178,21 @@ export class HttpApiClient implements ApiClient {
     }
   }
 
-  async verifySalary(input: SalaryVerifyInput): Promise<SalaryVerifyResult> {
-    try {
-      return await this.op<SalaryVerifyResult>('verify-salary', input);
-    } catch {
-      return { status: 'service-down' };
-    }
+  verifySalary(input: SalaryVerifyInput): Promise<SalaryVerifyResult> {
+    return this.opOr<SalaryVerifyResult>('verify-salary', input, { status: 'service-down' });
   }
 
-  async verifyBvn(bvn: string, fullName: string, dateOfBirth: string): Promise<BvnVerifyResult> {
-    try {
-      return await this.op<BvnVerifyResult>('verify-bvn', { bvn, fullName, dateOfBirth });
-    } catch {
-      return { status: 'service-down' };
-    }
+  verifyBvn(bvn: string, fullName: string, dateOfBirth: string): Promise<BvnVerifyResult> {
+    return this.opOr<BvnVerifyResult>('verify-bvn', { bvn, fullName, dateOfBirth }, { status: 'service-down' });
   }
 
-  async verifyNin(nin: string, fullName: string, dateOfBirth: string): Promise<BvnVerifyResult> {
-    try {
-      return await this.op<BvnVerifyResult>('verify-nin', { nin, fullName, dateOfBirth });
-    } catch {
-      return { status: 'service-down' };
-    }
+  verifyNin(nin: string, fullName: string, dateOfBirth: string): Promise<BvnVerifyResult> {
+    return this.opOr<BvnVerifyResult>('verify-nin', { nin, fullName, dateOfBirth }, { status: 'service-down' });
   }
 
   async uploadDocument(input: DocUploadInput): Promise<DocUploadResult> {
-    if (input.sizeBytes > 10 * 1024 * 1024) return { status: 'too-large' };
-    try {
-      return await this.op<DocUploadResult>('upload-document', input);
-    } catch {
-      return { status: 'network' };
-    }
+    if (input.sizeBytes > MAX_UPLOAD_BYTES) return { status: 'too-large' };
+    return this.opOr<DocUploadResult>('upload-document', input, { status: 'network' });
   }
 
   async createMandateLink(input: {

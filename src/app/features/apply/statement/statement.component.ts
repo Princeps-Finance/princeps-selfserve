@@ -1,6 +1,6 @@
+import { MAX_UPLOAD_BYTES } from '../../../core/limits';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
-import { Router } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { focusFirstInvalid } from '../../../core/a11y/focus';
@@ -9,8 +9,11 @@ import { WizardProgressComponent } from '../wizard-progress.component';
 import { API_CLIENT, Bank, NG_BANKS } from '../../../core/api/api-client';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { SelectFieldComponent, SelectOption } from '../../../core/ui/select-field.component';
+import { APPLY } from '../../../core/flow/apply-routes';
+import { DraftService } from '../../../core/application/draft.service';
+import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
-const MAX_BYTES = 10 * 1024 * 1024;
+const MAX_BYTES = MAX_UPLOAD_BYTES;
 
 /**
  * Private-sector applicants are not scored automatically. They share their bank statement and a
@@ -26,7 +29,8 @@ const MAX_BYTES = 10 * 1024 * 1024;
 export class StatementComponent implements OnInit {
   private readonly api = inject(API_CLIENT);
   private readonly state = inject(ApplicationStateService);
-  private readonly router = inject(Router);
+  private readonly flow = inject(FlowNavigator);
+  private readonly drafts = inject(DraftService);
 
   readonly banks = signal<Bank[]>(NG_BANKS);
   readonly bankOptions = computed<SelectOption[]>(() => this.banks().map((b) => ({ value: b.code, label: b.name })));
@@ -78,7 +82,8 @@ export class StatementComponent implements OnInit {
         contact, bvn: bvn.value, employer: v.employer.trim(), bankCode: v.bankCode, fileName: f.name, sizeBytes: f.size,
       });
       this.state.setSubmission({ status: 'received', referenceId: res.referenceId });
-      await this.router.navigateByUrl('/apply/status');
+      this.drafts.clear();
+      await this.flow.go(APPLY.status);
     } catch {
       this.failed.set(true);
     } finally {

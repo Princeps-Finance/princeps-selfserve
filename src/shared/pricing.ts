@@ -121,6 +121,8 @@ export function estimateMonthlyRepayment(
   ratePercent: number,
   model: InterestModel = 'Flat Rate',
 ): number {
+  // NaN, zero or negative money must fail loudly, not turn into a plausible-looking repayment.
+  if (!(amount > 0) || !(ratePercent >= 0) || !Number.isFinite(tenorMonths)) throw new RangeError('Invalid loan terms');
   const n = Math.max(tenorMonths, 1);
   const r = ratePercent / 100;
   if (model === 'Reducing Balance') {
@@ -139,6 +141,49 @@ export function calcProductFees(
     name: f.name,
     amount: Math.round(f.percent ? (amount * f.percent) / 100 : (f.flat ?? 0)),
   }));
+}
+
+export interface ScheduleLine {
+  month: number;
+  principal: number;
+  interest: number;
+  /** What the customer pays that month. Equal for every month, so the lines add up to the quote's total repayment. */
+  payment: number;
+  balance: number;
+}
+
+/**
+ * The month-by-month repayment table, built from the same monthly figure as the quote so the two can never
+ * disagree. Rounding differences are settled in the last month. "Percentage Based" is priced like "Flat Rate"
+ * (see estimateMonthlyRepayment) until a product defines something different.
+ */
+export function buildRepaymentSchedule(
+  principal: number,
+  tenorMonths: number,
+  ratePercent: number,
+  model: InterestModel = 'Flat Rate',
+): ScheduleLine[] {
+  const n = Math.max(tenorMonths, 1);
+  const monthly = estimateMonthlyRepayment(principal, n, ratePercent, model);
+  const lines: ScheduleLine[] = [];
+  let balance = principal;
+  const monthlyRate = ratePercent / 100;
+  const flatInterest = monthly * n - principal;
+  for (let month = 1; month <= n; month++) {
+    const last = month === n;
+    let interest: number;
+    let principalPaid: number;
+    if (model === 'Reducing Balance') {
+      interest = last ? monthly - balance : Math.round(balance * monthlyRate);
+      principalPaid = last ? balance : monthly - interest;
+    } else {
+      principalPaid = last ? balance : Math.round(principal / n);
+      interest = last ? monthly - principalPaid : Math.round(flatInterest / n);
+    }
+    balance = Math.max(0, balance - principalPaid);
+    lines.push({ month, principal: principalPaid, interest, payment: monthly, balance });
+  }
+  return lines;
 }
 
 export interface LoanQuote {

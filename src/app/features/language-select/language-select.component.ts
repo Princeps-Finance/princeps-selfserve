@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { LangService } from '../../core/i18n/lang.service';
 import { LANGUAGES, Lang } from '../../core/i18n/translations';
 import { TPipe } from '../../core/i18n/t.pipe';
@@ -8,6 +7,8 @@ import { ThemeToggleComponent } from '../../shared/theme-toggle.component';
 import { BrandLogoComponent } from '../../shared/brand-logo.component';
 import { PromoBannerComponent } from '../../shared/promo-banner.component';
 import { InstallService } from '../../core/pwa/install.service';
+import { APPLY } from '../../core/flow/apply-routes';
+import { FlowNavigator } from '../../core/flow/flow-navigator.service';
 
 @Component({
   selector: 'app-language-select',
@@ -18,7 +19,7 @@ import { InstallService } from '../../core/pwa/install.service';
 })
 export class LanguageSelectComponent {
   private readonly langService = inject(LangService);
-  private readonly router = inject(Router);
+  private readonly flow = inject(FlowNavigator);
   protected readonly install = inject(InstallService);
 
   readonly languages = LANGUAGES;
@@ -28,6 +29,6 @@ export class LanguageSelectComponent {
   /** One tap picks the language and moves on, there is nothing else to answer on this screen. */
   choose(lang: Lang): void {
     this.langService.set(lang);
-    void this.router.navigateByUrl('/apply');
+    void this.flow.go(APPLY.root);
   }
 }

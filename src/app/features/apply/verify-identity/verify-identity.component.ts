@@ -9,7 +9,6 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { Router } from '@angular/router';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
@@ -18,6 +17,8 @@ import { productById } from '../../../core/products/products';
 import { whatsappLink } from '../../../core/support';
 import { ToastService } from '../../../core/toast/toast.service';
 import { formatNaira } from '../../../core/money.util';
+import { APPLY } from '../../../core/flow/apply-routes';
+import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 type Stage = 'intro' | 'face' | 'video' | 'review';
 
@@ -30,7 +31,7 @@ type Stage = 'intro' | 'face' | 'video' | 'review';
 })
 export class VerifyIdentityComponent implements OnDestroy {
   private readonly state = inject(ApplicationStateService);
-  private readonly router = inject(Router);
+  private readonly flow = inject(FlowNavigator);
   private readonly toast = inject(ToastService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly lang = inject(LangService);
@@ -107,11 +108,6 @@ export class VerifyIdentityComponent implements OnDestroy {
   );
 
   constructor() {
-    const docs = this.state.docs();
-    if (docs.length === 0 || !docs.every((d) => d.status === 'uploaded')) {
-      void this.router.navigateByUrl('/apply/documents');
-      return;
-    }
     let existing = this.state.identityVerification();
     // The video states the amount and repayment. If the offer changed since, record it again.
     if (existing && existing.offerKey !== this.offerKey()) {
@@ -254,7 +250,7 @@ export class VerifyIdentityComponent implements OnDestroy {
       capturedAt: new Date().toISOString(),
       offerKey: this.offerKey(),
     });
-    void this.router.navigateByUrl('/apply/mandate');
+    void this.flow.go(APPLY.mandate);
   }
 
   private stopStream(): void {

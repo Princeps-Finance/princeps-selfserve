@@ -43,9 +43,9 @@ import { SUPPORT_EMAIL, telLink, whatsappLink } from '../support';
       .body { padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-4); overflow-y: auto; max-height: calc(100dvh - 24px); }
       .title { margin: 0; font-size: 24px; }
       .intro { margin: 0; color: var(--ink-soft); line-height: 1.5; }
-      .sec h3 { margin: 0 0 4px; font-size: 16px; }
-      .sec p { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); }
-      .contact { margin: 0; font-size: 14px; }
+      .sec h3 { margin: 0 0 var(--space-1); font-size: var(--fs-base); }
+      .sec p { margin: 0; font-size: var(--fs-body); line-height: 1.5; color: var(--ink-soft); }
+      .contact { margin: 0; font-size: var(--fs-md); }
       .contact a { color: var(--text-accent); font-weight: 600; text-underline-offset: 3px; }
       .close {
         align-self: stretch; min-height: 52px; border: 0; border-radius: var(--radius-md);

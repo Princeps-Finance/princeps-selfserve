@@ -37,9 +37,9 @@
     <div class="field">
       <label class="label" for="lga">{{ 'step.profile.lga.label' | t }}</label>
       @if (lgas().length) {
-        <app-select-field inputId="lga" [options]="lgaOptions()" [title]="'step.profile.lga.label' | t" [searchable]="true" [invalid]="invalid('lga')" formControlName="lga" />
+        <app-select-field inputId="lga" [options]="lgaOptions()" [title]="'step.profile.lga.label' | t" [searchable]="true" [invalid]="invalid('lga')" formControlName="lga" autocomplete="address-level2" />
       } @else {
-        <input id="lga" [attr.aria-invalid]="invalid('lga')" class="input" type="text" formControlName="lga" />
+        <input id="lga" [attr.aria-invalid]="invalid('lga')" class="input" type="text" formControlName="lga" autocomplete="address-level2" />
       }
     </div>
 

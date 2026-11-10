@@ -1,4 +1,5 @@
 import {
+  buildRepaymentSchedule,
   PRICING_PRODUCTS,
   clampAmount,
   offerLimits,
@@ -114,5 +115,23 @@ describe('product settings', () => {
       expect(p.minTenorMonths).toBeLessThanOrEqual(p.maxTenorMonths);
       expect(p.maxAmount % p.amountStep).toBe(0);
     }
+  });
+});
+
+describe('buildRepaymentSchedule', () => {
+  const cases: [number, number, number, 'Flat Rate' | 'Reducing Balance'][] = [
+    [100_000, 3, 5, 'Flat Rate'],
+    [250_000, 7, 4.5, 'Reducing Balance'],
+    [50_000, 12, 0, 'Reducing Balance'],
+    [333_335, 11, 5, 'Flat Rate'],
+  ];
+  it.each(cases)('adds up to the quote and clears the balance (%d over %d months at %d%% %s)', (amount, n, rate, model) => {
+    const lines = buildRepaymentSchedule(amount, n, rate, model);
+    const monthly = estimateMonthlyRepayment(amount, n, rate, model);
+    expect(lines).toHaveLength(n);
+    expect(lines.every((l) => l.payment === monthly)).toBe(true);
+    expect(lines.reduce((sum, l) => sum + l.principal, 0)).toBe(amount);
+    expect(lines.reduce((sum, l) => sum + l.payment, 0)).toBe(monthly * n);
+    expect(lines.at(-1)!.balance).toBe(0);
   });
 });

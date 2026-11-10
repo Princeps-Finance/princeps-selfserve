@@ -1,17 +1,7 @@
-.step { display: flex; flex-direction: column; gap: var(--space-8); }
-.head { display: flex; flex-direction: column; gap: var(--space-3); }
 
-.title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(22px, 6vw, 26px);
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-  font-weight: 600;
-  color: var(--ink);
-}
 
-.subtitle { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); max-width: 38ch; }
+
+
 
 .review {
   margin: 0;
@@ -29,35 +19,20 @@
   align-items: baseline;
 }
 
-.review dt { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); }
-.review dd { margin: 0; font-size: 15px; color: var(--ink); line-height: 1.4; }
-.muted { color: var(--ink-muted); font-size: 13px; }
+.review dt { margin: 0; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); }
+.review dd { margin: 0; font-size: var(--fs-body); color: var(--ink); line-height: 1.4; }
+.muted { color: var(--ink-muted); font-size: var(--fs-sm); }
 
 .agree {
   display: flex; align-items: flex-start; gap: 10px;
-  font-size: 14px; color: var(--ink);
+  font-size: var(--fs-md); color: var(--ink);
   cursor: pointer;
 }
 .agree input { margin-top: 1px; }
 
-.cta {
-  align-self: stretch;
-  min-height: var(--btn-height);
-  padding: 0 var(--space-6);
-  display: inline-flex; align-items: center; justify-content: center;
-  gap: var(--space-4);
-  background: var(--action-primary);
-  color: var(--action-on-primary);
-  border: none;
-  border-radius: var(--btn-radius);
-  font-family: var(--font-sans); font-size: 16px; font-weight: 500;
-  cursor: pointer;
-  transition: transform 120ms ease-out, background 160ms ease, opacity 160ms ease;
-}
 
-.cta:disabled { opacity: 0.5; cursor: not-allowed; }
-.cta:hover:not(:disabled) { background: var(--action-primary-hover); }
-.cta:active:not(:disabled) { transform: scale(0.99); }
-.cta:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
+
+
+
 .cta-arrow { transition: transform 200ms cubic-bezier(0.2,0.7,0.1,1); }
 .cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); }

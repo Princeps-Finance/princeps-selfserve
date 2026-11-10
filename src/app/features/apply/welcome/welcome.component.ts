@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { ApplicationStateService, ApplyIntent } from '../../../core/application/application-state.service';
+import { APPLY } from '../../../core/flow/apply-routes';
+import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 /** First choice: apply now, or just find out how much they could get. Both use the same journey. */
 @Component({
@@ -33,21 +34,21 @@ import { ApplicationStateService, ApplyIntent } from '../../../core/application/
   `,
   styles: [
     `
-      .step { display: flex; flex-direction: column; gap: var(--space-5); padding-top: var(--space-6); }
-      .title { margin: 0; text-align: center; font-size: clamp(24px, 6.5vw, 30px); line-height: 1.15; letter-spacing: -0.02em; }
+.step { gap: var(--space-5); padding-top: var(--space-6); }
+.title { text-align: center; font-size: clamp(24px, 6.5vw, 30px); line-height: 1.15; letter-spacing: -0.02em; }
       .actions { margin-top: auto; display: flex; flex-direction: column; gap: var(--space-5); padding-top: var(--space-6); }
       .choice { display: flex; flex-direction: column; gap: var(--space-2); }
-      .hint { margin: 0; text-align: center; font-size: 14px; color: var(--ink-soft); }
+      .hint { margin: 0; text-align: center; font-size: var(--fs-md); color: var(--ink-soft); }
       .cta, .alt {
         min-height: var(--btn-height); padding: 0 var(--space-6); border-radius: var(--btn-radius); cursor: pointer;
-        font-family: var(--font-sans); font-size: 16px; font-weight: 600;
+        font-family: var(--font-sans); font-size: var(--fs-base); font-weight: 600;
         display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3);
         transition: background 160ms ease, transform 120ms ease-out;
       }
-      .cta { background: var(--action-primary); color: var(--action-on-primary); border: 0; justify-content: center; margin-top: 0 !important; }
+.cta { border: 0; margin-top: 0 !important; }
       .cta:hover { background: var(--action-primary-hover); }
-      .alt { background: var(--grey-100); color: var(--ink); border: 0; }
-      .alt:hover { background: var(--hover-tint); }
+
+.alt:hover { background: var(--hover-tint); }
       .cta:active, .alt:active { transform: scale(0.99); }
       .cta:focus-visible, .alt:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
       @media (prefers-reduced-motion: reduce) { .cta, .alt { transition: none; } }
@@ -56,10 +57,10 @@ import { ApplicationStateService, ApplyIntent } from '../../../core/application/
 })
 export class WelcomeIntentComponent {
   private readonly state = inject(ApplicationStateService);
-  private readonly router = inject(Router);
+  private readonly flow = inject(FlowNavigator);
 
   choose(intent: ApplyIntent): void {
     this.state.setIntent(intent);
-    void this.router.navigateByUrl('/apply/bvn');
+    void this.flow.go(APPLY.bvn);
   }
 }

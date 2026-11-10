@@ -53,14 +53,14 @@ import { ToastService } from './toast.service';
         /* Top, under the app bar: the primary button is pinned to the bottom and a toast must not cover it. */
         top: calc(env(safe-area-inset-top) + 64px);
         z-index: 1000;
-        display: flex; flex-direction: column; gap: 8px;
+        display: flex; flex-direction: column; gap: var(--space-2);
         width: min(520px, calc(100vw - 24px));
         pointer-events: none;
       }
       .toast {
         pointer-events: auto;
         display: flex; align-items: flex-start; gap: 10px;
-        padding: 12px 12px 12px 14px;
+        padding: var(--space-3) var(--space-3) var(--space-3) 14px;
         border-radius: 12px;
         background: var(--surface-0);
         color: var(--ink);
@@ -74,14 +74,14 @@ import { ToastService } from './toast.service';
       .toast[data-tone='error']   .icon { color: var(--danger); }
       .toast[data-tone='info']    .icon { color: var(--text-accent); }
       .icon { flex: none; display: inline-flex; margin-top: 1px; }
-      .msg { flex: 1; font-size: 14px; line-height: 1.45; color: var(--ink); }
+      .msg { flex: 1; font-size: var(--fs-md); line-height: 1.45; color: var(--ink); }
       .close {
         flex: none;
         display: inline-flex; align-items: center; justify-content: center;
         width: 24px; height: 24px;
         background: transparent; border: none;
         color: var(--ink-muted);
-        cursor: pointer; border-radius: 6px;
+        cursor: pointer; border-radius: var(--radius-xs);
       }
       .close:hover { background: var(--hover-tint); color: var(--ink); }
       .close:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
@@ -93,7 +93,7 @@ import { ToastService } from './toast.service';
         .toast { animation: none; }
       }
       @media (max-width: 380px) {
-        .msg { font-size: 13px; }
+        .msg { font-size: var(--fs-sm); }
       }
     `,
   ],

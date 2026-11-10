@@ -10,7 +10,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
       <div class="media">
         <img [ngSrc]="imageSrc()" [width]="664" [height]="420" [alt]="imageAlt()" />
         @if (dismissible()) {
-          <button type="button" class="close" aria-label="Dismiss" (click)="dismissed.emit()">
+          <button type="button" class="close" [attr.aria-label]="dismissLabel()" (click)="dismissed.emit()">
             <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
               <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
             </svg>
@@ -25,7 +25,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
           }
         </h2>
         <p class="desc">{{ description() }}</p>
-        <button type="button" class="cta" (click)="action.emit()">{{ ctaLabel() }}</button>
+        <button type="button" class="promo-cta" (click)="action.emit()">{{ ctaLabel() }}</button>
       </div>
     </section>
   `,
@@ -49,7 +49,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         transition: background 120ms ease;
       }
       .close:hover { background: rgba(17, 18, 20, 0.7); }
-      .close:focus-visible, .cta:focus-visible { outline: 2px solid var(--focus-color); outline-offset: 2px; }
+      .close:focus-visible, .promo-cta:focus-visible { outline: 2px solid var(--focus-color); outline-offset: 2px; }
       .close:focus-visible { outline-color: #fff; }
       .body { padding: var(--space-4); }
       .title {
@@ -57,21 +57,21 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         margin: 0; text-align: left; font: 600 15px/1.25 var(--font-sans); color: var(--text-primary);
       }
       .badge {
-        padding: 1px 8px; border-radius: var(--radius-pill);
+        padding: 1px var(--space-2); border-radius: var(--radius-pill);
         background: var(--badge-new-bg); color: var(--badge-new-text);
         font: 600 11px/16px var(--font-sans);
       }
       .desc { margin: var(--space-2) 0 var(--space-3); font: 400 13px/1.5 var(--font-sans); color: var(--grey-500); }
-      .cta {
+      .promo-cta {
         display: flex; align-items: center; justify-content: center;
         width: 100%; height: 44px; padding: 0; border: 0; border-radius: var(--btn-radius);
         background: var(--action-primary); color: var(--action-on-primary);
         font: 500 14px/1 var(--font-sans); cursor: pointer;
         transition: background 120ms ease;
       }
-      .cta:hover { background: var(--action-primary-hover); }
-      .cta:active { background: var(--action-primary-active); }
-      @media (prefers-reduced-motion: reduce) { .close, .cta { transition: none; } }
+      .promo-cta:hover { background: var(--action-primary-hover); }
+      .promo-cta:active { background: var(--action-primary-active); }
+      @media (prefers-reduced-motion: reduce) { .close, .promo-cta { transition: none; } }
     `,
   ],
 })
@@ -82,6 +82,7 @@ export class PromoCardComponent {
   readonly imageSrc = input('brand/promo-illustration.svg');
   readonly imageAlt = input('');
   readonly badge = input<string>();
+  readonly dismissLabel = input('Dismiss');
   readonly dismissible = input(true);
   readonly action = output<void>();
   readonly dismissed = output<void>();

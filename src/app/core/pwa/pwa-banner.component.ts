@@ -40,7 +40,7 @@ const OFFER_ROUTES = new Set([...AUTO_APPLY_ROUTES, '/apply/bvn', '/apply/status
         padding: var(--space-3) var(--space-4);
         border-radius: var(--radius-md);
         background: var(--ink); color: var(--canvas);
-        font-size: 14px; line-height: 1.4;
+        font-size: var(--fs-md); line-height: 1.4;
         box-shadow: var(--shadow-3);
       }
       .banner--offline { background: var(--navy-950); }

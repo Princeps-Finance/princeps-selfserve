@@ -12,8 +12,8 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         <h2 id="banner-title" class="title">{{ title() }}</h2>
         <p class="desc">{{ description() }}</p>
       </div>
-      <button type="button" class="cta" (click)="action.emit()">{{ ctaLabel() }}</button>
-      <button type="button" class="close" aria-label="Dismiss" (click)="dismissed.emit()">
+      <button type="button" class="promo-cta" (click)="action.emit()">{{ ctaLabel() }}</button>
+      <button type="button" class="close" [attr.aria-label]="dismissLabel()" (click)="dismissed.emit()">
         <svg width="12" height="12" viewBox="0 0 20 20" fill="none" aria-hidden="true">
           <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
         </svg>
@@ -31,19 +31,19 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
       .text { flex: 1; min-width: 0; padding-right: var(--space-2); }
       .title { margin: 0; font: 600 15px/1.3 var(--font-sans); color: var(--text-primary); }
       .desc { margin: 2px 0 0; font: 400 13px/1.4 var(--font-sans); color: var(--grey-500); }
-      .cta {
+      .promo-cta {
         flex: none; display: flex; align-items: center; justify-content: center;
         height: 44px; padding: 0 var(--space-4); border: 0; border-radius: var(--btn-radius);
         background: var(--action-primary); color: var(--action-on-primary);
         font: 500 15px/1 var(--font-sans); cursor: pointer;
       }
-      .cta:hover { background: var(--action-primary-hover); }
+      .promo-cta:hover { background: var(--action-primary-hover); }
       .close {
         flex: none; width: 28px; height: 28px; margin-right: calc(var(--space-1) * -1); border: 0; border-radius: 50%;
         display: grid; place-items: center; background: transparent; color: var(--grey-500); cursor: pointer;
       }
       .close:hover { background: var(--grey-200); }
-      .cta:focus-visible, .close:focus-visible { outline: 2px solid var(--grey-900); outline-offset: 2px; }
+      .promo-cta:focus-visible, .close:focus-visible { outline: 2px solid var(--grey-900); outline-offset: 2px; }
       @media (max-width: 359px) {
         .thumb { display: none; }
       }
@@ -54,6 +54,7 @@ export class PromoBannerComponent {
   readonly title = input.required<string>();
   readonly description = input.required<string>();
   readonly ctaLabel = input.required<string>();
+  readonly dismissLabel = input('Dismiss');
   readonly imageSrc = input('brand/promo-illustration.svg');
   readonly action = output<void>();
   readonly dismissed = output<void>();

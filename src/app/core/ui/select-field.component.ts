@@ -85,7 +85,7 @@ export interface SelectOption {
         display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
         padding: 0 var(--space-4);
         background: var(--input-bg); border: 1px solid var(--input-border); border-radius: var(--input-radius);
-        font-family: var(--font-sans); font-size: 16px; color: var(--ink); text-align: start; cursor: pointer;
+        font-family: var(--font-sans); font-size: var(--fs-base); color: var(--ink); text-align: start; cursor: pointer;
         transition: border-color 140ms ease, box-shadow 140ms ease;
       }
       .trigger:hover:not(:disabled) { border-color: var(--input-border-hover); }
@@ -98,13 +98,13 @@ export interface SelectOption {
 
       .sheet {
         width: min(480px, 100vw); max-width: 100vw; max-height: 82dvh; margin: auto auto 0; padding: 0; border: 0;
-        border-radius: 20px 20px 0 0; background: var(--surface-0); color: var(--ink); box-shadow: var(--shadow-4);
+        border-radius: var(--radius-lg) 20px 0 0; background: var(--surface-0); color: var(--ink); box-shadow: var(--shadow-4);
       }
       @media (min-width: 560px) { .sheet { margin: auto; max-width: 480px; border-radius: var(--radius-lg); } }
       .sheet::backdrop { background: var(--overlay); }
       .panel { display: flex; flex-direction: column; max-height: 82dvh; padding: var(--space-4) var(--space-4) var(--space-3); gap: var(--space-3); }
       .bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
-      .sheet-title { margin: 0; font-family: var(--font-display); font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+      .sheet-title { margin: 0; font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 600; letter-spacing: -0.01em; }
       .x {
         flex: none; width: 44px; height: 44px; display: grid; place-items: center;
         border: 0; border-radius: 50%; background: transparent; color: var(--ink); cursor: pointer;
@@ -112,13 +112,13 @@ export interface SelectOption {
       .x:hover { background: var(--hover-tint); }
       .search {
         width: 100%; min-height: 48px; padding: 0 var(--space-4); border: 1px solid var(--input-border);
-        border-radius: var(--input-radius); background: var(--input-bg); font: inherit; font-size: 16px; color: var(--ink);
+        border-radius: var(--input-radius); background: var(--input-bg); font: inherit; font-size: var(--fs-base); color: var(--ink);
       }
       .list { overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; }
       .opt {
         display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
         min-height: 52px; padding: 0 var(--space-2); border: 0; border-bottom: 1px solid var(--hairline);
-        background: transparent; font: inherit; font-size: 16px; color: var(--ink); text-align: start; cursor: pointer;
+        background: transparent; font: inherit; font-size: var(--fs-base); color: var(--ink); text-align: start; cursor: pointer;
       }
       .opt[aria-selected='true'] { font-weight: 600; color: var(--text-accent); }
       .opt:hover { background: var(--hover-tint); }

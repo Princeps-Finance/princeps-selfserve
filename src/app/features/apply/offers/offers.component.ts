@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
-import { Router } from '@angular/router';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { RadioGroupDirective } from '../../../core/a11y/radio-group.directive';
 import { WizardProgressComponent } from '../wizard-progress.component';
@@ -9,7 +8,11 @@ import { Product, RepaymentFrequency, productsFor } from '../../../core/products
 import { LoanQuote, clampAmount, offerLimits, quoteLoan } from '../../../../shared/pricing';
 import { formatNaira } from '../../../core/money.util';
 import { telLink, whatsappLink } from '../../../core/support';
-import { validateReferralCode } from '../../../core/referral/referral-codes';
+import { LangService } from '../../../core/i18n/lang.service';
+import { discountedRate } from '../../../../shared/referral';
+import { ReferralBoxComponent } from './referral-box.component';
+import { APPLY } from '../../../core/flow/apply-routes';
+import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 interface Limits {
   minAmount: number;
@@ -46,14 +49,15 @@ interface Choice {
 
 @Component({
   selector: 'app-offers',
-  imports: [IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective],
+  imports: [IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective, ReferralBoxComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './offers.component.html',
   styleUrl: './offers.component.css',
 })
 export class OffersComponent implements OnInit {
   private readonly state = inject(ApplicationStateService);
-  private readonly router = inject(Router);
+  private readonly flow = inject(FlowNavigator);
+  private readonly lang = inject(LangService);
 
   private readonly catalogue = signal<{ product: Product; limits: Limits }[]>([]);
   /** What the customer has chosen per product. Starts at the most they are eligible for. */
@@ -62,9 +66,6 @@ export class OffersComponent implements OnInit {
   readonly adjusted = signal<Record<string, number>>({});
 
   readonly referral = this.state.referral;
-  readonly referralOpen = signal(false);
-  readonly referralInput = signal('');
-  readonly referralError = signal<string | null>(null);
 
   readonly formatNaira = formatNaira;
   readonly justChecking = computed(() => this.state.intent() === 'check');
@@ -78,7 +79,7 @@ export class OffersComponent implements OnInit {
   readonly offers = computed<OfferView[]>(() =>
     this.catalogue().map(({ product: base, limits }) => {
       const r = this.referral();
-      const product = r ? { ...base, ratePercent: Math.max(0, base.ratePercent - r.rateDiscountPct) } : base;
+      const product = r ? { ...base, ratePercent: discountedRate(base.ratePercent, r) } : base;
       const c = this.choices()[product.id] ?? { amount: limits.maxAmount, tenor: limits.maxTenor };
       return {
         product,
@@ -95,10 +96,8 @@ export class OffersComponent implements OnInit {
     const employment = this.state.employment();
     const salary = this.state.salary();
     const eligibility = this.state.eligibility();
-    if (!employment || !salary || !eligibility || eligibility.decision === 'declined') {
-      await this.router.navigateByUrl('/apply/eligibility');
-      return;
-    }
+    // The route guards guarantee an approved eligibility result; the check only narrows the types.
+    if (!employment || !salary || !eligibility) return;
 
     const pref = this.state.offerPreference();
     const catalogue: { product: Product; limits: Limits }[] = [];
@@ -158,32 +157,6 @@ export class OffersComponent implements OnInit {
     this.setAmount(o, Number((event.target as HTMLInputElement).value));
   }
 
-  toggleReferral(): void {
-    this.referralOpen.update((v) => !v);
-    if (!this.referralOpen()) this.referralError.set(null);
-  }
-
-  onReferralInput(v: string): void {
-    this.referralInput.set(v);
-    if (this.referralError()) this.referralError.set(null);
-  }
-
-  applyReferral(): void {
-    const parsed = validateReferralCode(this.referralInput());
-    if (!parsed) {
-      this.referralError.set('This code isn\u2019t valid. Check it and try again.');
-      return;
-    }
-    this.state.setReferral(parsed);
-    this.referralError.set(null);
-    this.referralOpen.set(false);
-  }
-
-  removeReferral(): void {
-    this.state.setReferral(null);
-    this.referralInput.set('');
-  }
-
   toggle(id: string): void {
     this.expanded.update((cur) => (cur === id ? null : id));
   }
@@ -207,11 +180,11 @@ export class OffersComponent implements OnInit {
   }
 
   finishLater(): void {
-    void this.router.navigateByUrl('/apply/saved');
+    void this.flow.go(APPLY.saved);
   }
 
   editDetails(): void {
-    void this.router.navigateByUrl('/apply/employment');
+    void this.flow.go(APPLY.employment);
   }
 
   pick(o: OfferView): void {
@@ -224,9 +197,9 @@ export class OffersComponent implements OnInit {
       interestModel: o.product.interestModel,
       monthlyRepayment: o.quote.monthly,
       fees: o.quote.fees,
-      ...(this.referral() ? { referralCode: this.referral()!.code } : {}),
+      ...(this.referral() ? { referralCode: this.referral()?.code } : {}),
     });
     this.state.setOfferPreference({ productId: o.product.id, amount: o.amount, tenorMonths: o.tenor });
-    void this.router.navigateByUrl('/apply/terms');
+    void this.flow.go(APPLY.terms);
   }
 }

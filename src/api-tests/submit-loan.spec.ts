@@ -12,6 +12,8 @@ function valid(overrides: Record<string, unknown> = {}) {
     consentVersion: '2026-11-1',
     consentAt: '2026-11-09T10:00:00.000Z',
     manualReview: false,
+    idempotencyKey: '0b5f6f0e-6c3e-4a54-9f7e-2f0d3f1a9c11',
+    referralCode: null,
     mandateReference: null,
     borrowerBvn: '12345678901',
     borrowerName: 'Ada Obi',
@@ -155,5 +157,25 @@ describe('POST /api/submit-loan', () => {
     for (let i = 0; i < 7; i++) statuses.push((await handler(req(valid(), { headers }))).status);
     expect(statuses.slice(0, 5).every((s) => s === 200)).toBe(true);
     expect(statuses.slice(5)).toEqual([429, 429]);
+  });
+
+  it('honours a known referral code by repricing on the server, and rejects an unknown one', async () => {
+    const discounted = estimateMonthlyRepayment(200_000, 6, 4, 'Flat Rate');
+    const ok = await handler(req(valid({ referralCode: 'PRINCEPS10', ratePercent: 4, monthlyRepaymentKobo: discounted * 100 })));
+    expect(ok.status).toBe(200);
+    const sent = JSON.parse(fetchMock.mock.calls.at(-1)![1].body as string);
+    expect(sent.ratePercent).toBe(4);
+    expect(sent.referralCode).toBe('PRINCEPS10');
+    expect(fetchMock.mock.calls.at(-1)![1].headers['Idempotency-Key']).toBe('0b5f6f0e-6c3e-4a54-9f7e-2f0d3f1a9c11');
+
+    const forged = await handler(req(valid({ referralCode: 'NOTACODE' })));
+    expect(forged.status).toBe(400);
+    const fakeDiscount = await handler(req(valid({ ratePercent: 4, monthlyRepaymentKobo: discounted * 100 })));
+    expect(fakeDiscount.status).toBe(409);
+  });
+
+  it('enforces the product tenor and amount step, not just the global range', async () => {
+    const offStep = await handler(req(valid({ amountKobo: 200_100 * 100 })));
+    expect(offStep.status).toBe(400);
   });
 });

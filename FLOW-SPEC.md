@@ -5,6 +5,37 @@
 
 ---
 
+## Current flow (as built)
+
+This section is the source of truth. The numbered steps below are the original design and are kept for the
+reasoning behind each decision; where they disagree with this section, this section wins.
+
+```
+Language → Welcome (apply | just checking)
+  → BVN → code sent to the BVN-linked phone → Profile
+  → Employment → Salary (or Statement review for private sector; Waitlist for unsupported types)
+  → Eligibility → Offers (optional referral code) → Terms
+  → NIN (only if the product needs it) → Documents → Identity check (photo + video) → Mandate
+  → Submit → Status
+```
+
+Changes from the original steps 1 to 9:
+- Steps 1, 1a and 2 (phone and email capture, email OTP) were replaced by BVN first. The OTP goes to the phone linked to the BVN.
+- The profile is collected before employment, not after the offer (original step 8).
+- BVN is the first question (original step 9), and NIN is asked only for products that require it.
+
+How the flow is enforced:
+- Every URL is named once in `src/app/core/flow/apply-routes.ts`. Steps move with `FlowNavigator` and never build URLs.
+- A step opens only when its prerequisites exist. These checks are route guards in `src/app/core/flow/guards.ts`, not code inside the steps.
+- Changing the employment, salary or offer clears everything decided after it (eligibility, offer, terms, mandate, documents, identity check), so an old decision can never be submitted against new details.
+- A received application is final: the submit step cannot be opened again, and each application carries one idempotency key so a retry cannot create a second loan.
+- The server recomputes all money (rate, repayment, referral discount, product limits) and rejects anything that disagrees.
+
+Not built yet:
+- Step 4's "service unavailable, we'll notify you" state, and the "Other employer" manual-review path (only a string is sent today).
+- Photo, video and document files are not sent to the back office; only metadata and a review hint are.
+- Server-side eligibility scoring: it runs in the browser, so the back office must re-score.
+
 ## Step 0 — Language Selection
 
 **Flow:** First screen. English / Yoruba / Igbo / Hausa. Persists for the whole session.

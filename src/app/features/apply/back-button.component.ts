@@ -3,25 +3,27 @@ import { Router } from '@angular/router';
 import { TPipe } from '../../core/i18n/t.pipe';
 import { ApplicationStateService } from '../../core/application/application-state.service';
 import { productById } from '../../core/products/products';
+import { APPLY } from '../../core/flow/apply-routes';
+import { FlowNavigator } from '../../core/flow/flow-navigator.service';
 
 const BACK_MAP: Record<string, string> = {
-  '/apply/welcome': '/',
-  '/apply/bvn': '/apply/welcome',
-  '/apply/verify': '/apply/bvn',
-  '/apply/saved': '/apply/welcome',
-  '/apply/resume': '/apply/welcome',
-  '/apply/profile': '/apply/welcome',
-  '/apply/employment': '/apply/profile',
-  '/apply/waitlist': '/apply/employment',
-  '/apply/salary': '/apply/employment',
-  '/apply/eligibility': '/apply/salary',
-  '/apply/offers': '/apply/salary',
-  '/apply/terms': '/apply/offers',
-  '/apply/nin': '/apply/terms',
-  '/apply/statement': '/apply/employment',
-  '/apply/verify-identity': '/apply/documents',
-  '/apply/mandate': '/apply/verify-identity',
-  '/apply/submit': '/apply/mandate',
+  [APPLY.welcome]: APPLY.home,
+  [APPLY.bvn]: APPLY.welcome,
+  [APPLY.verify]: APPLY.bvn,
+  [APPLY.saved]: APPLY.welcome,
+  [APPLY.resume]: APPLY.welcome,
+  [APPLY.profile]: APPLY.welcome,
+  [APPLY.employment]: APPLY.profile,
+  [APPLY.waitlist]: APPLY.employment,
+  [APPLY.salary]: APPLY.employment,
+  [APPLY.eligibility]: APPLY.salary,
+  [APPLY.offers]: APPLY.salary,
+  [APPLY.terms]: APPLY.offers,
+  [APPLY.nin]: APPLY.terms,
+  [APPLY.statement]: APPLY.employment,
+  [APPLY.verifyIdentity]: APPLY.documents,
+  [APPLY.mandate]: APPLY.verifyIdentity,
+  [APPLY.submit]: APPLY.mandate,
 };
 
 @Component({
@@ -59,15 +61,16 @@ const BACK_MAP: Record<string, string> = {
 })
 export class BackButtonComponent {
   private readonly router = inject(Router);
+  private readonly flow = inject(FlowNavigator);
   private readonly state = inject(ApplicationStateService);
 
   goBack(): void {
     const here = this.router.url.split('?')[0];
-    let target = BACK_MAP[here] ?? '/apply/welcome';
-    if (here === '/apply/documents') {
+    let target = BACK_MAP[here] ?? APPLY.welcome;
+    if (here === APPLY.documents) {
       const needsNin = productById(this.state.offer()?.productId ?? '')?.settings.requiresNin ?? false;
-      target = needsNin ? '/apply/nin' : '/apply/terms';
+      target = needsNin ? APPLY.nin : APPLY.terms;
     }
-    void this.router.navigateByUrl(target);
+    void this.flow.go(target);
   }
 }

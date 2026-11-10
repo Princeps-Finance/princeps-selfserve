@@ -96,6 +96,7 @@ describe('wizard route guards (bio data → work → offer → loan documentatio
 
   it('lets a manual-review result continue (not a dead end) but never a decline', () => {
     verified();
+    state.setEmployment({ type: 'government' });
     state.setSalary({} as never);
     approve('declined');
     state.setOffer({ productId: 'ippis-advance' } as never);
@@ -108,10 +109,11 @@ describe('wizard route guards (bio data → work → offer → loan documentatio
 
   it('only asks for NIN when the chosen product needs it', () => {
     state.setBvn({ value: '12345678901', verified: true });
-    state.setTermsAccepted(new Date().toISOString());
     state.setOffer({ productId: 'ippis-advance' } as never); // NIN not required
+    state.setTermsAccepted(new Date().toISOString());
     expect(allows('documents')).toBe(true);
-    state.setOffer({ productId: 'corper-allowee' } as never); // NIN required
+    state.setOffer({ productId: 'corper-allowee' } as never); // NIN required; a new offer must be accepted again
+    state.setTermsAccepted(new Date().toISOString());
     expect(allows('documents')).toBe(false);
     state.setNin({ value: '12345678901', verified: true });
     expect(allows('documents')).toBe(true);

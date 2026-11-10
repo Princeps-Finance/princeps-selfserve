@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { focusFirstInvalid } from '../../../core/a11y/focus';
@@ -10,6 +9,8 @@ import { ApplicationStateService } from '../../../core/application/application-s
 import { whatsappLink } from '../../../core/support';
 import { LangService } from '../../../core/i18n/lang.service';
 import { ToastService } from '../../../core/toast/toast.service';
+import { APPLY } from '../../../core/flow/apply-routes';
+import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 @Component({
   selector: 'app-nin',
@@ -21,7 +22,7 @@ import { ToastService } from '../../../core/toast/toast.service';
 export class NinComponent {
   private readonly api = inject(API_CLIENT);
   private readonly state = inject(ApplicationStateService);
-  private readonly router = inject(Router);
+  private readonly flow = inject(FlowNavigator);
   private readonly toast = inject(ToastService);
   private readonly lang = inject(LangService);
   readonly support = whatsappLink('Hello Princeps, my name does not match my NIN and I need help.');
@@ -38,10 +39,6 @@ export class NinComponent {
   readonly canSubmit = computed(() => this.status() === 'VALID' && !this.submitting());
 
   constructor() {
-    if (!this.state.bvn()?.verified) {
-      void this.router.navigateByUrl('/apply/bvn');
-      return;
-    }
     const saved = this.state.nin();
     if (saved) this.nin.setValue(saved.value);
   }
@@ -73,7 +70,8 @@ export class NinComponent {
     this.submitting.set(true);
     this.serverError.set(null);
     try {
-      const profile = this.state.profile()!;
+      const profile = this.state.profile();
+      if (!profile) return; // the route guard guarantees a profile; this only narrows the type
       const res = await this.api.verifyNin(this.nin.value, profile.fullName, profile.dateOfBirth);
       if (res.status !== 'ok') {
         this.serverError.set(res.status);
@@ -81,7 +79,7 @@ export class NinComponent {
       }
       this.state.setNin({ value: this.nin.value, verified: true });
       this.toast.success(this.lang.t('toast.nin.ok'));
-      await this.router.navigateByUrl('/apply/documents');
+      await this.flow.go(APPLY.documents);
     } finally {
       this.submitting.set(false);
     }

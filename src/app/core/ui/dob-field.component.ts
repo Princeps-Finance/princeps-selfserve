@@ -57,11 +57,11 @@ export function toIsoDate(day: string, month: string, year: string): string {
       :host { display: block; }
       .row { display: grid; grid-template-columns: 0.8fr 1.6fr 1fr; gap: var(--space-3); align-items: end; }
       .cell { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
-      .sub { font-size: 12px; color: var(--ink-soft); }
+      .sub { font-size: var(--fs-xs); color: var(--ink-soft); }
       .input {
         width: 100%; min-height: var(--input-height); padding: 0 var(--space-4);
         background: var(--input-bg); border: 1px solid var(--input-border); border-radius: var(--input-radius);
-        font-family: var(--font-sans); font-size: 16px; color: var(--ink);
+        font-family: var(--font-sans); font-size: var(--fs-base); color: var(--ink);
         transition: border-color 140ms ease, box-shadow 140ms ease;
       }
       .input:hover { border-color: var(--input-border-hover); }

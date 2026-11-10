@@ -56,7 +56,7 @@ body {
   background-color: var(--canvas);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: 16px;
+  font-size: var(--fs-base);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -80,7 +80,7 @@ button {
 }
 
 /* Inline form messages shared by every step (component CSS may override). */
-.msg--error { color: var(--danger-text); font-size: 13px; line-height: 1.4; margin: 0; }
+.msg--error { color: var(--danger-text); font-size: var(--fs-sm); line-height: 1.4; margin: 0; }
 
 /* Invalid fields: border colour as well as aria-invalid for sighted users. */
 input.input[aria-invalid='true'],
@@ -175,3 +175,68 @@ input[type='checkbox'][aria-invalid='true'] {
 .step { flex: 1 1 auto; }
 .step > .form { flex: 1 1 auto; }
 .step .cta { margin-top: auto !important; }
+
+/* ===== Shared UI: buttons and step layout (single source; components keep only real differences) ===== */
+.cta {
+  align-self: stretch; min-height: var(--btn-height); padding: 0 var(--space-6);
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-4);
+  background: var(--action-primary); color: var(--action-on-primary);
+  border: none; border-radius: var(--btn-radius);
+  font-family: var(--font-sans); font-size: var(--fs-base); font-weight: 500; cursor: pointer;
+  transition: transform 120ms ease-out, background 160ms ease, opacity 160ms ease;
+}
+.cta:disabled { opacity: 0.5; cursor: not-allowed; }
+.cta:hover:not(:disabled) { background: var(--action-primary-hover); }
+.cta:active:not(:disabled) { transform: scale(0.99); background: var(--action-primary-active); }
+.cta:focus-visible, .alt:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
+.alt {
+  align-self: stretch; min-height: var(--btn-height); padding: 0 var(--space-6);
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3);
+  background: var(--grey-100); color: var(--ink); border: 0; border-radius: var(--btn-radius);
+  font-family: var(--font-sans); font-size: var(--fs-base); font-weight: 500; cursor: pointer;
+}
+.alt:hover { background: var(--grey-200); }
+.step { display: flex; flex-direction: column; gap: var(--space-8); }
+.step .head { display: flex; flex-direction: column; gap: var(--space-3); }
+.step .title {
+  margin: 0; font-family: var(--font-display); font-size: clamp(22px, 6vw, 26px);
+  line-height: 1.05; letter-spacing: -0.03em; font-weight: 600; color: var(--ink);
+}
+.step .subtitle { margin: 0; font-size: var(--fs-body); line-height: 1.5; color: var(--ink-soft); max-width: 38ch; }
+
+/* ===== Accessibility baselines ===== */
+/* Visually hidden but still focusable: file inputs inside a styled label stay reachable by keyboard and screen reader. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+label:has(> .sr-only:focus-visible) { box-shadow: var(--focus-ring); }
+/* Every interactive control gets a visible focus indicator, even without a component rule of its own. */
+:where(a, button, [role='button'], summary, select, textarea, input):focus-visible {
+  outline: 2px solid var(--focus-color); outline-offset: 2px;
+}
+/* Respect the "reduce motion" setting everywhere instead of per component. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+
+/* Form fields in the apply steps: one definition, tokens only. Steps keep just what differs (for example digit spacing). */
+.step .field { display: flex; flex-direction: column; gap: var(--space-2); }
+.step .label { font-family: var(--font-sans); font-size: var(--fs-sm); font-weight: 500; color: var(--ink); }
+.step .input {
+  width: 100%; min-height: var(--input-height); padding: 0 var(--space-4);
+  background: var(--input-bg); border: 1px solid var(--input-border); border-radius: var(--input-radius);
+  font-family: var(--font-sans); font-size: var(--fs-base); color: var(--ink);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+.step .input:focus, .step .input:focus-visible {
+  outline: 2px solid transparent; outline-offset: 2px;
+  border-color: var(--input-border-focus); box-shadow: var(--input-shadow-focus);
+}
+.step .field.is-invalid .input { border-color: var(--danger-text); }
+.step .server-error {
+  margin: 0; padding: var(--space-3) var(--space-4); background: var(--danger-soft); border-radius: var(--radius-md);
+  color: var(--danger-text); font-size: var(--fs-md); line-height: 1.4;
+}
+/* The heading is focused after each navigation only so screen readers announce it; it is not a control, so it shows no outline. */
+h1[tabindex='-1']:focus { outline: none; }

@@ -27,13 +27,13 @@ import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_ZOHO_URL, telLink, whatsappLink }
         <path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1.9-1.1 1.8" />
         <circle cx="12" cy="17" r="0.6" fill="currentColor" />
       </svg>
-      <span>Support</span>
+      <span>{{ 'support.label' | t }}</span>
     </button>
 
     @if (open()) {
       <div class="backdrop" (click)="close()"></div>
       <div #sheet class="sheet" role="dialog" aria-modal="true" [attr.aria-label]="'help.dialog' | t">
-        <button type="button" class="sheet-close" aria-label="Close" (click)="close()">
+        <button type="button" class="sheet-close" [attr.aria-label]="'common.close' | t" (click)="close()">
           <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
             <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
           </svg>
@@ -92,7 +92,7 @@ import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_ZOHO_URL, telLink, whatsappLink }
       .sheet-close:hover { background: var(--grey-200); }
       .sheet-close:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
       .sheet-title { margin: 0; font-family: var(--font-display); font-size: 20px; font-weight: 600; }
-      .sheet-sub { margin: 0 0 var(--space-2); font-size: 14px; color: var(--ink-soft); }
+      .sheet-sub { margin: 0 0 var(--space-2); font-size: var(--fs-md); color: var(--ink-soft); }
       .row {
         display: flex; align-items: center; gap: var(--space-3); min-height: 52px; padding: 0 var(--space-3);
         border-radius: var(--radius-md); color: var(--ink); text-decoration: none; font-weight: 500;
@@ -100,7 +100,7 @@ import { SUPPORT_EMAIL, SUPPORT_PHONE, SUPPORT_ZOHO_URL, telLink, whatsappLink }
       .row:hover { background: var(--surface-2); }
       .row:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
       .row-icon { display: inline-flex; width: 32px; height: 32px; border-radius: 50%; align-items: center; justify-content: center; background: var(--grey-100); color: var(--ink); }
-      .sheet-version { margin: var(--space-2) 0 0; font-size: 12px; color: var(--ink-muted); }
+      .sheet-version { margin: var(--space-2) 0 0; font-size: var(--fs-xs); color: var(--ink-muted); }
       @media (prefers-reduced-motion: reduce) { .sheet { animation: none; } .help-btn { transition: none; } }
     `,
   ],

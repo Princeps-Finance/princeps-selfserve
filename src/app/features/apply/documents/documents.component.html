@@ -33,17 +33,17 @@
             <!-- status shown under the title -->
           } @else if (d?.status === 'uploaded') {
             <label class="ghost-btn">
-              <input type="file" hidden (change)="onFile(spec.id, $event)" accept="image/*,application/pdf" />
+              <input type="file" class="sr-only" (change)="onFile(spec.id, $event)" accept="image/*,application/pdf" />
               {{ 'step.docs.replace' | t }}
             </label>
           } @else if (d?.status === 'failed') {
             <label class="ghost-btn">
-              <input type="file" hidden (change)="onFile(spec.id, $event)" accept="image/*,application/pdf" />
+              <input type="file" class="sr-only" (change)="onFile(spec.id, $event)" accept="image/*,application/pdf" />
               {{ 'step.docs.retry' | t }}
             </label>
           } @else {
             <label class="pill-btn">
-              <input type="file" hidden (change)="onFile(spec.id, $event)" accept="image/*,application/pdf" />
+              <input type="file" class="sr-only" (change)="onFile(spec.id, $event)" accept="image/*,application/pdf" />
               {{ 'step.docs.upload' | t }}
             </label>
           }

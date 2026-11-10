@@ -1,3 +1,4 @@
+import { MAX_UPLOAD_BYTES } from '../limits';
 import { InjectionToken, Injectable } from '@angular/core';
 
 export interface ReturningProfileSnapshot {
@@ -69,6 +70,9 @@ export interface SubmitPayload {
     /** Eligibility fell in the manual-review band. Caltos re-scores; this is a hint only. */
     manualReview: boolean;
     mandateReference: string | null;
+    /** Same value on every retry of one application, so the server can refuse a duplicate. */
+    idempotencyKey: string;
+    referralCode: string | null;
     borrowerBvn: string;
     borrowerName: string;
     borrowerPhone: string;
@@ -379,7 +383,7 @@ export class MockApiClient implements ApiClient {
 
   async uploadDocument(input: DocUploadInput): Promise<DocUploadResult> {
     await delay(800);
-    if (input.sizeBytes > 10 * 1024 * 1024) return { status: 'too-large' };
+    if (input.sizeBytes > MAX_UPLOAD_BYTES) return { status: 'too-large' };
     return { status: 'ok' };
   }
 

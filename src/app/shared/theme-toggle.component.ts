@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { LangService } from '../core/i18n/lang.service';
 import { ThemeService } from '../core/theme/theme.service';
 
 /** Switches between light and dark. Starts from the device setting until the visitor chooses. */
@@ -11,7 +12,7 @@ import { ThemeService } from '../core/theme/theme.service';
       class="toggle"
       role="switch"
       [attr.aria-checked]="isDark()"
-      [attr.aria-label]="isDark() ? 'Dark mode on. Switch to light mode' : 'Light mode on. Switch to dark mode'"
+      [attr.aria-label]="label()"
       (click)="flip()"
     >
       @if (isDark()) {
@@ -43,7 +44,9 @@ import { ThemeService } from '../core/theme/theme.service';
 })
 export class ThemeToggleComponent {
   private readonly theme = inject(ThemeService);
+  private readonly lang = inject(LangService);
   protected readonly isDark = computed(() => this.theme.effective() === 'dark');
+  protected readonly label = computed(() => this.lang.t(this.isDark() ? 'theme.toLight' : 'theme.toDark'));
 
   protected flip(): void {
     this.theme.set(this.isDark() ? 'light' : 'dark');

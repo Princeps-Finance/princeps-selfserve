@@ -1,18 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { API_CLIENT } from '../../../core/api/api-client';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { formatNaira } from '../../../core/money.util';
-import { APP_VERSION } from '../../../core/app-version';
+import { buildSubmitPayload } from '../../../core/application/submission-payload';
 import { LangService } from '../../../core/i18n/lang.service';
 import { DraftService } from '../../../core/application/draft.service';
 import { ToastService } from '../../../core/toast/toast.service';
-
-function isLoanEmployment(t: string): t is 'government' | 'paramilitary' | 'corper' {
-  return t === 'government' || t === 'paramilitary' || t === 'corper';
-}
+import { APPLY } from '../../../core/flow/apply-routes';
+import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 @Component({
   selector: 'app-submit',
@@ -24,7 +21,7 @@ function isLoanEmployment(t: string): t is 'government' | 'paramilitary' | 'corp
 export class SubmitComponent {
   private readonly api = inject(API_CLIENT);
   private readonly state = inject(ApplicationStateService);
-  private readonly router = inject(Router);
+  private readonly flow = inject(FlowNavigator);
   private readonly toast = inject(ToastService);
   private readonly drafts = inject(DraftService);
   private readonly lang = inject(LangService);
@@ -39,12 +36,6 @@ export class SubmitComponent {
   readonly formatNaira = formatNaira;
 
   readonly canSubmit = computed(() => this.agreed() && !this.submitting());
-
-  constructor() {
-    if (!this.state.bvn()?.verified || !this.state.offer()) {
-      void this.router.navigateByUrl('/apply/documents');
-    }
-  }
 
   toggleAgree(v: boolean): void { this.agreed.set(v);
     if (v) this.attempted.set(false); }
@@ -62,47 +53,9 @@ export class SubmitComponent {
     this.failed.set(false);
     this.state.setSubmission({ status: 'submitting' });
     try {
-      const contact = this.state.contact()!;
-      const employment = this.state.employment()!;
-      const offer = this.state.offer()!;
-      const bvnDraft = this.state.bvn()!;
-      const bvn = bvnDraft.value;
-      const salary = this.state.salary();
-      const consent = this.state.consent();
-      if (!consent) throw new Error('consent missing');
-      const profile = this.state.profile();
-
-      if (!salary || !isLoanEmployment(employment.type)) throw new Error('incomplete application');
-      const channel = salary.channel;
-      const employmentType = employment.type;
-      const res = await this.api.submitApplication({
-        contact: { phone: contact.phone, email: contact.email },
-        employment: { type: employment.type },
-        offer: { productId: offer.productId, amount: offer.amount, tenorMonths: offer.tenorMonths },
-        bvn,
-        loan: {
-          productId: offer.productId,
-          appVersion: APP_VERSION,
-          consentVersion: consent.version,
-          consentAt: consent.acceptedAt,
-          manualReview: this.state.eligibility()?.decision === 'review',
-          mandateReference: this.state.mandate()?.reference ?? null,
-          borrowerBvn: bvn,
-          borrowerName: profile?.fullName ?? bvnDraft.matchedName ?? 'Unknown',
-          borrowerPhone: contact.phone,
-          amountKobo: Math.round(offer.amount * 100),
-          tenorMonths: offer.tenorMonths,
-          monthlyRepaymentKobo: Math.round(offer.monthlyRepayment * 100),
-          interestModel: offer.interestModel,
-          ratePercent: offer.ratePercent,
-          channel,
-          bankCode: salary.bankCode || null,
-          accountNumber: salary.accountNumber || null,
-          ippisNumber: salary.ippisNumber || null,
-          employmentType,
-          employer: salary.paramilitaryEmployer ?? null,
-        },
-      });
+      const built = buildSubmitPayload(this.state, this.state.ensureSubmissionKey());
+      if (!built.ok) throw new Error(`Application incomplete: ${built.missing}`);
+      const res = await this.api.submitApplication(built.payload);
       this.state.setSubmission({
         status: 'received',
         submittedAt: new Date().toISOString(),
@@ -112,8 +65,9 @@ export class SubmitComponent {
       this.drafts.clear();
       // The photo and video were only needed for review; drop them from memory.
       this.state.setIdentityVerification(null);
-      await this.router.navigateByUrl('/apply/status');
-    } catch {
+      await this.flow.go(APPLY.status);
+    } catch (err) {
+      console.warn('Submit failed', err instanceof Error ? err.message : 'unknown');
       // Never invent an outcome: tell the user it did not go through and let them retry.
       this.state.setSubmission({ status: 'idle' });
       this.failed.set(true);

@@ -11,7 +11,6 @@ import {
   signal,
   viewChildren,
 } from '@angular/core';
-import { Router } from '@angular/router';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { LangService } from '../../../core/i18n/lang.service';
@@ -22,6 +21,8 @@ import { normalizePhoneNg } from '../../../core/api/contact.util';
 import { CaptchaService } from '../../../core/captcha/captcha.service';
 import { DraftService } from '../../../core/application/draft.service';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
+import { APPLY } from '../../../core/flow/apply-routes';
+import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 30;
@@ -45,7 +46,7 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly captcha = inject(CaptchaService);
   private readonly drafts = inject(DraftService);
   private readonly state = inject(ApplicationStateService);
-  private readonly router = inject(Router);
+  private readonly flow = inject(FlowNavigator);
   private readonly lang = inject(LangService);
 
   readonly length = OTP_LENGTH;
@@ -70,14 +71,14 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
   async ngOnInit(): Promise<void> {
     const bvn = this.state.bvn();
     if (!bvn) {
-      await this.router.navigateByUrl('/apply/bvn');
+      await this.flow.go(APPLY.bvn);
       return;
     }
     try {
       // The code goes to the phone linked to the BVN, not to the number typed earlier.
       const res = await this.api.sendBvnOtp(bvn.value, await this.captcha.token());
       if (res.status === 'not-found') {
-        await this.router.navigate(['/apply/bvn'], { queryParams: { error: 'not-found' } });
+        await this.flow.go(APPLY.bvn, { queryParams: { error: 'not-found' } });
         return;
       }
       this.maskedTarget.set(res.target);
@@ -167,7 +168,7 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
         this.state.setBvnIdentity(res.identity);
         this.state.setBvn({ value: bvn.value, verified: true });
         this.state.markPhoneVerified();
-        await this.router.navigateByUrl(await this.nextAfterVerified(contact));
+        await this.flow.go(await this.nextAfterVerified(contact));
         return;
       }
       if (res.status === 'wrong') this.error.set({ kind: 'wrong' });
@@ -189,18 +190,18 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   private async nextAfterVerified(contact: { phone: string; email: string }): Promise<string> {
     const draft = this.drafts.find(contact.phone);
-    if (draft) return '/apply/resume';
+    if (draft) return APPLY.resume;
     try {
       const result = await this.api.lookupContact(contact);
       if (result.kind === 'returning') {
         this.state.setReturningCustomer(true, result.snapshot);
-        return '/apply/welcome-back';
+        return APPLY.welcomeBack;
       }
     } catch {
       // A failed lookup must never block a new application.
     }
     this.state.setReturningCustomer(false, null);
-    return '/apply/profile';
+    return APPLY.profile;
   }
 
   async resend(): Promise<void> {
@@ -224,7 +225,7 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   goBack(): void {
-    void this.router.navigateByUrl('/apply/bvn');
+    void this.flow.go(APPLY.bvn);
   }
 
   private startCooldown(): void {

@@ -172,6 +172,20 @@ export interface ApplicationDraft {
   docs: DocDraft[];
   identityVerification: IdentityVerificationDraft | null;
   submission: SubmissionDraft;
+  /** Generated once per application and sent with every submit attempt, so a retry cannot create a second loan. */
+  submissionKey: string | null;
+}
+
+const sameValue = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
+
+/** Everything that depends on the offer being accepted: terms, mandate, documents and the identity check. */
+function withoutAcceptance(s: ApplicationDraft): ApplicationDraft {
+  return { ...s, termsAcceptedAt: null, mandate: null, docs: [], identityVerification: null, submissionKey: null };
+}
+
+/** Everything the customer decided after the work and salary details: eligibility, offer and what follows. */
+function withoutDecisions(s: ApplicationDraft): ApplicationDraft {
+  return { ...withoutAcceptance(s), eligibility: null, offer: null, nin: null };
 }
 
 const empty: ApplicationDraft = {
@@ -195,6 +209,7 @@ const empty: ApplicationDraft = {
   docs: [],
   identityVerification: null,
   submission: { status: 'idle' },
+  submissionKey: null,
 };
 
 @Injectable({ providedIn: 'root' })
@@ -257,12 +272,13 @@ export class ApplicationStateService {
     }));
   }
 
+  /** Changing a step invalidates everything the customer decided after it (offer, terms, mandate, documents...). */
   setEmployment(employment: EmploymentDraft): void {
-    this.state.update((s) => ({ ...s, employment }));
+    this.state.update((s) => (sameValue(s.employment, employment) ? s : { ...withoutDecisions(s), employment, salary: null }));
   }
 
   setSalary(salary: SalaryDraft): void {
-    this.state.update((s) => ({ ...s, salary }));
+    this.state.update((s) => (sameValue(s.salary, salary) ? s : { ...withoutDecisions(s), salary }));
   }
 
   setEligibility(eligibility: EligibilityDraft): void {
@@ -270,7 +286,7 @@ export class ApplicationStateService {
   }
 
   setOffer(offer: OfferDraft): void {
-    this.state.update((s) => ({ ...s, offer }));
+    this.state.update((s) => (sameValue(s.offer, offer) ? s : { ...withoutAcceptance(s), offer }));
   }
 
   setOfferPreference(offerPreference: OfferPreference | null): void {
@@ -334,6 +350,15 @@ export class ApplicationStateService {
     salary: SalaryDraft | null;
   }): void {
     this.state.update((s) => ({ ...s, ...d }));
+  }
+
+  /** The key for this application's submit; created on first use and kept for retries. */
+  ensureSubmissionKey(): string {
+    const existing = this.state().submissionKey;
+    if (existing) return existing;
+    const key = crypto.randomUUID();
+    this.state.update((s) => ({ ...s, submissionKey: key }));
+    return key;
   }
 
   reset(): void {

@@ -4,12 +4,13 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
 import { NavigationEnd } from '@angular/router';
 import { LanguageMenuComponent } from './language-menu.component';
+import { APPLY } from '../../core/flow/apply-routes';
 import { BackButtonComponent } from './back-button.component';
 import { ReadAloudComponent } from './read-aloud.component';
 import { BrandLogoComponent } from '../../shared/brand-logo.component';
 import { ThemeToggleComponent } from '../../shared/theme-toggle.component';
 
-const NO_BACK_ROUTES = new Set<string>(['/apply', '/apply/', '/apply/status', '/apply/welcome-back']);
+const NO_BACK_ROUTES = new Set<string>([APPLY.root, `${APPLY.root}/`, APPLY.status, APPLY.welcomeBack]);
 
 @Component({
   selector: 'app-apply-shell',
