@@ -122,7 +122,7 @@ export class ProfileComponent {
       relationshipStatus: v.relationshipStatus,
     });
     // Work details already given in the check are not asked again; only the salary account is confirmed.
-    void this.flow.go(this.state.salary()?.declared ? APPLY.salary : APPLY.employment);
+    void this.flow.go(this.state.salary()?.fromCheck ? APPLY.salary : APPLY.employment);
   }
 }
 

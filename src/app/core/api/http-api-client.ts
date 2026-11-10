@@ -21,6 +21,8 @@ import {
   SalaryVerifyInput,
   SalaryVerifyResult,
   StatementReviewInput,
+  EligibilityCheckInput,
+  EligibilityCheckResult,
   SubmitPayload,
   SubmitResult,
   WaitlistInput,
@@ -270,6 +272,10 @@ return []; // The user can type it.
     // Never hand the viewer anything that is not a PDF, whatever the server returned.
     if (new TextDecoder().decode(bytes.slice(0, 5)) !== '%PDF-') throw new ApiUnavailableError('offer-letter', 502);
     return bytes;
+  }
+
+  checkEligibility(input: EligibilityCheckInput): Promise<EligibilityCheckResult> {
+    return this.opOr<EligibilityCheckResult>('eligibility-check', input, { status: 'service-down' });
   }
 
   async getEmploymentTypes(): Promise<EmploymentAvailability[] | null> {

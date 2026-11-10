@@ -66,6 +66,7 @@ response keys.
 | `/api/selfserve/upload-document` *(token)* | `{docId, fileName, sizeBytes}` | `{status:'ok'\|'too-large'\|'bad-type'\|'network'}` |
 | `/api/selfserve/mandate-link` *(token)* | `{productId, channel, monthlyAmount, tenorMonths}` | `{url (https), reference}` |
 | `/api/selfserve/mandate-status` *(token)* | `{reference}` | `{status:'pending'\|'completed'\|'failed'}` |
+| `/api/selfserve/eligibility-check` *(no token: it runs before identity)* | `{employmentType, governmentLevel?, nyscMonthsRemaining?, channel, bankCode, accountNumber, ippisNumber?, employer?}` | `{status:'ok', decision:'approved'\|'review'\|'declined', maxAmount, tenorMonths}` / `{status:'not-found'\|'service-down'}`. Runs the **real employment and salary check** and the eligibility rules on the server. **Return no income and no account name, and round `maxAmount` down (for example to ₦10,000)**: anyone can call this with someone else's account number, so it must not reveal pay. Our proxy bot-checks it and allows 4 checks per account per hour. |
 | `/api/selfserve/waitlist` *(token)* | `{phone, email, type, employer?, incomeBand?, channel}` | `{status:'ok', referenceId}` (`positionInQueue` and `estimatedWindow` only if real) |
 | `/api/loans` (from `/api/submit-loan`) | validated loan record, see below | `201 {id}` |
 

@@ -24,6 +24,27 @@ export interface SalaryVerifyInput {
   employer?: string;
 }
 
+/**
+ * The "how much can I get" check, before any identity. The back end does the real employment and salary check
+ * from the account details and answers only with a decision and a maximum, never an income or a name.
+ */
+export interface EligibilityCheckInput {
+  employmentType: 'government' | 'paramilitary' | 'corper';
+  governmentLevel?: 'federal' | 'state';
+  nyscMonthsRemaining?: number;
+  channel: 'remita' | 'ippis' | 'dedukt';
+  bankCode: string;
+  accountNumber: string;
+  ippisNumber?: string;
+  employer?: string;
+  captchaToken?: string;
+}
+
+export type EligibilityCheckResult =
+  | { status: 'ok'; decision: 'approved' | 'review' | 'declined'; maxAmount: number; tenorMonths: number }
+  | { status: 'not-found' }
+  | { status: 'service-down' };
+
 export type SalaryVerifyResult =
   | { status: 'ok'; monthlyIncome: number; accountName: string }
   | { status: 'name-mismatch' }

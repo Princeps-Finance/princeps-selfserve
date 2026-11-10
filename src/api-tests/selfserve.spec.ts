@@ -127,6 +127,18 @@ describe('POST /api/selfserve/[op]', () => {
     });
   });
 
+  it('runs the eligibility check without a token, passes on only the decision and maximum, and limits it per account', async () => {
+    fetchMock.mockImplementation(() =>
+      Promise.resolve(new Response(JSON.stringify({ status: 'ok', decision: 'approved', maxAmount: 300000, tenorMonths: 12, monthlyIncome: 250000, accountName: 'Ada Obi' }))),
+    );
+    const body = { employmentType: 'government', governmentLevel: 'federal', channel: 'ippis', bankCode: '058', accountNumber: '0123456789', ippisNumber: '445566' };
+    const res = await handler(req('eligibility-check', body));
+    expect(await res.json()).toEqual({ status: 'ok', decision: 'approved', maxAmount: 300000, tenorMonths: 12 });
+    const codes: number[] = [];
+    for (let i = 0; i < 5; i++) codes.push((await handler(req('eligibility-check', body))).status);
+    expect(codes).toContain(429);
+  });
+
   it('returns a generic 502 when the backoffice errors', async () => {
     fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ stack: 'at db.ts:1' }), { status: 500 }));
     const res = await handler(req('banks', {}));

@@ -5,6 +5,7 @@ import { ApplicationStateService } from '../../../core/application/application-s
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 import { productsFor } from '../../../core/products/products';
+import { telLink, whatsappLink } from '../../../core/support';
 import { ProductMarkComponent } from '../../../shared/product-mark.component';
 
 /**
@@ -17,38 +18,50 @@ import { ProductMarkComponent } from '../../../shared/product-mark.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="step">
-      <header class="head">
-        <h1 class="title">{{ 'check.result.title' | t: { amount: money(max()) } }}</h1>
-        <p class="subtitle">{{ 'check.result.sub' | t: { months: months() } }}</p>
-      </header>
+      @if (declined()) {
+        <header class="head">
+          <h1 class="title">{{ 'check.result.declined.title' | t }}</h1>
+          <p class="subtitle">{{ 'check.result.declined.body' | t }}</p>
+        </header>
+        <div class="actions">
+          <button type="button" class="cta" (click)="checkAgain()">{{ 'check.result.again' | t }}</button>
+          <a class="alt" [attr.href]="whatsapp" target="_blank" rel="noopener">{{ 'step.eligibility.declined.whatsapp' | t }}</a>
+          <a class="alt" [attr.href]="tel">{{ 'step.eligibility.declined.call' | t }}</a>
+        </div>
+      } @else {
+        <header class="head">
+          <h1 class="title">{{ 'check.result.title' | t: { amount: money(max()) } }}</h1>
+          <p class="subtitle">{{ 'check.result.sub' | t: { months: months() } }}</p>
+        </header>
 
-      @if (products().length) {
-        <section class="products" aria-labelledby="products-title">
-          <h2 id="products-title" class="products-title">{{ 'check.result.products' | t }}</h2>
-          <ul class="list">
-            @for (p of products(); track p.product.id) {
-              <li class="item">
-                <app-product-mark [product]="p.product" />
-                <span class="item-text">
-                  <span class="item-name">{{ p.product.name }}</span>
-                  <span class="item-meta">{{ 'check.result.upto' | t: { amount: money(p.upTo) } }}</span>
-                </span>
-              </li>
-            }
-          </ul>
-        </section>
+        @if (products().length) {
+          <section class="products" aria-labelledby="products-title">
+            <h2 id="products-title" class="products-title">{{ 'check.result.products' | t }}</h2>
+            <ul class="list">
+              @for (p of products(); track p.product.id) {
+                <li class="item">
+                  <app-product-mark [product]="p.product" />
+                  <span class="item-text">
+                    <span class="item-name">{{ p.product.name }}</span>
+                    <span class="item-meta">{{ 'check.result.upto' | t: { amount: money(p.upTo) } }}</span>
+                  </span>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+
+        <div class="actions">
+          <button type="button" class="cta" (click)="takeLoan()">
+            <span>{{ 'check.result.take' | t }}</span>
+            <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+          <p class="hint">{{ 'check.result.take.hint' | t }}</p>
+          <button type="button" class="alt" (click)="checkAgain()">{{ 'check.result.again' | t }}</button>
+        </div>
       }
-
-      <div class="actions">
-        <button type="button" class="cta" (click)="takeLoan()">
-          <span>{{ 'check.result.take' | t }}</span>
-          <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-            <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-        </button>
-        <p class="hint">{{ 'check.result.take.hint' | t }}</p>
-        <button type="button" class="alt" (click)="checkAgain()">{{ 'check.result.again' | t }}</button>
-      </div>
     </section>
   `,
   styles: [
@@ -75,6 +88,9 @@ export class CheckResultComponent {
   private readonly flow = inject(FlowNavigator);
 
   protected readonly money = formatNaira;
+  protected readonly declined = computed(() => this.state.eligibility()?.decision === 'declined');
+  protected readonly whatsapp = whatsappLink('Hello Princeps, I checked how much I can get and I would like help.');
+  protected readonly tel = telLink();
   protected readonly max = computed(() => this.state.eligibility()?.maxEligibleAmount ?? 0);
   protected readonly months = computed(() => this.state.eligibility()?.tenorMonths ?? 0);
 

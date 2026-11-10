@@ -21,10 +21,13 @@ import type {
   StatementReviewInput,
   WaitlistInput,
   WaitlistResult,
+  EligibilityCheckInput,
+  EligibilityCheckResult,
 } from './api.types';
 import type { ApiClient } from './api-client';
 import { buildSimplePdf } from '../pdf/simple-pdf';
 import { maskPhoneNg } from './contact.util';
+import { scoreEligibility, type EligibilityInput } from '../eligibility/eligibility-scoring';
 import { NG_BANKS } from './ng-banks';
 import type { EmploymentAvailability } from './employment-availability';
 import type { ReferralDraft } from '../application/application-state.service';
@@ -189,6 +192,25 @@ export class MockApiClient implements ApiClient {
     if (input.accountNumber === '1111111111') return { status: 'name-mismatch' };
     if (input.accountNumber === '4444444444') return { status: 'ok', monthlyIncome: 1_000, accountName: 'A. Adeyemi' };
     return { status: 'ok', monthlyIncome: 180_000, accountName: 'A. Adeyemi' };
+  }
+
+  async checkEligibility(input: EligibilityCheckInput): Promise<EligibilityCheckResult> {
+    await delay(900);
+    if (input.accountNumber === '9999999999') return { status: 'service-down' };
+    if (input.accountNumber === '0000000000') return { status: 'not-found' };
+    // Demo: a made-up pay by channel, scored the same way the app scores a verified one.
+    const monthlyAmount = input.accountNumber === '4444444444' ? 1_000 : input.channel === 'dedukt' ? 150_000 : 180_000;
+    const stability: EligibilityInput['stability'] =
+      input.employmentType === 'corper'
+        ? { type: 'nysc-corper', monthsRemaining: input.nyscMonthsRemaining ?? 0 }
+        : { type: 'mda', category: input.employmentType === 'paramilitary' ? 'paramilitary' : input.governmentLevel === 'state' ? 'state' : 'federal' };
+    const r = scoreEligibility({
+      income: { source: input.channel === 'remita' ? 'remita' : input.channel === 'dedukt' ? 'deduct' : 'wacs', monthlyAmount },
+      stability,
+      repaymentHistory: { isRepeatBorrower: false },
+      exposure: { hasActiveLoanElsewhere: false },
+    });
+    return { status: 'ok', decision: r.decision, maxAmount: r.maxEligibleAmount, tenorMonths: r.tenorMonths };
   }
 
   async verifyBvn(bvn: string, _fullName: string, _dateOfBirth: string): Promise<BvnVerifyResult> {

@@ -32,8 +32,8 @@ export interface SalaryDraft {
   ippisNumber?: string;
   paramilitaryEmployer?: string;
   monthlyIncome: number;
-  /** True when the pay was typed by the customer in the "how much can I get" check and has not been verified yet. */
-  declared?: boolean;
+  /** True when these details were given in the no-identity "how much can I get" check. Pay is not known yet: it is verified after identity. */
+  fromCheck?: boolean;
 }
 
 export interface EligibilityDraft {

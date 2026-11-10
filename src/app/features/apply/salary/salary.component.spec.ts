@@ -5,9 +5,9 @@ import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 import { SalaryComponent } from './salary.component';
 
-function setup() {
+function setup(check = vi.fn()) {
   const go = vi.fn().mockResolvedValue(true);
-  const api = { listBanks: vi.fn().mockResolvedValue([]), verifySalary: vi.fn() };
+  const api = { listBanks: vi.fn().mockResolvedValue([]), verifySalary: vi.fn(), checkEligibility: check };
   TestBed.configureTestingModule({
     providers: [
       { provide: API_CLIENT, useValue: api },
@@ -17,39 +17,52 @@ function setup() {
   return { go, api, state: TestBed.inject(ApplicationStateService) };
 }
 
-describe('SalaryComponent in the no-identity check', () => {
-  it('asks only for pay, saves it as the customer\'s own figure, and goes to eligibility without calling the back end', async () => {
-    const { go, api, state } = setup();
-    state.setIntent('check');
-    state.setEmployment({ type: 'government', governmentLevel: 'state' });
-    const c = TestBed.createComponent(SalaryComponent).componentInstance;
-    expect(c.askPay).toBe(true);
-    expect(c.askAccount).toBe(false);
-    expect(c.canSubmit()).toBe(false);
+function fill(c: SalaryComponent): void {
+  c.form.patchValue({ bankCode: '058', bankName: 'GTBank', accountNumber: '0123456789', ippisNumber: '445566' });
+}
 
-    c.form.controls.monthlyIncome.setValue('250,000');
-    expect(c.canSubmit()).toBe(true);
+describe('SalaryComponent in the no-identity check', () => {
+  it('runs the real check from the account details, keeps the account, and shows the result without asking for pay', async () => {
+    const { go, api, state } = setup(vi.fn().mockResolvedValue({ status: 'ok', decision: 'approved', maxAmount: 300000, tenorMonths: 12 }));
+    state.setIntent('check');
+    state.setEmployment({ type: 'government', governmentLevel: 'federal' });
+    const c = TestBed.createComponent(SalaryComponent).componentInstance;
+    expect(c.showChannelChoice()).toBe(false);
+    fill(c);
     await c.submit();
 
     expect(api.verifySalary).not.toHaveBeenCalled();
-    expect(state.salary()).toMatchObject({ channel: 'remita', monthlyIncome: 250000, declared: true, bankCode: '' });
-    expect(go).toHaveBeenCalledWith(APPLY.eligibility);
+    expect(api.checkEligibility).toHaveBeenCalledWith(expect.objectContaining({ employmentType: 'government', governmentLevel: 'federal', channel: 'ippis', accountNumber: '0123456789' }));
+    expect(state.salary()).toMatchObject({ accountNumber: '0123456789', fromCheck: true, monthlyIncome: 0 });
+    expect(state.eligibility()).toMatchObject({ decision: 'approved', maxEligibleAmount: 300000, tenorMonths: 12 });
+    expect(go).toHaveBeenCalledWith(APPLY.checkResult);
   });
 
-  it('defaults federal government to IPPIS', () => {
-    const { state } = setup();
+  it('shows an error and stays put when the account is not found', async () => {
+    const { go, state } = setup(vi.fn().mockResolvedValue({ status: 'not-found' }));
     state.setIntent('check');
-    state.setEmployment({ type: 'government', governmentLevel: 'federal' });
-    expect(TestBed.createComponent(SalaryComponent).componentInstance.channel()).toBe('ippis');
+    state.setEmployment({ type: 'government', governmentLevel: 'state' });
+    const c = TestBed.createComponent(SalaryComponent).componentInstance;
+    expect(c.channel()).toBe('remita');
+    fill(c);
+    await c.submit();
+    expect(c.errorKey()).toBe('step.salary.error.not.found');
+    expect(go).not.toHaveBeenCalled();
   });
 
-  it('after identity, with pay already given, asks only for the salary account', () => {
-    const { state } = setup();
+  it('after identity, checks the saved account again by itself and does not ask for it', async () => {
+    const { go, api, state } = setup();
+    api.verifySalary.mockResolvedValue({ status: 'ok', monthlyIncome: 200000, accountName: 'Ada Obi' });
     state.setEmployment({ type: 'government', governmentLevel: 'federal' });
-    state.setSalary({ channel: 'ippis', bankCode: '', bankName: '', accountNumber: '', monthlyIncome: 250000, declared: true });
+    state.setProfile({ fullName: 'Ada Obi', dateOfBirth: '1990-01-01', address: { street: 'x', state: 'Lagos', lga: 'Ikeja' }, relationshipStatus: 'single' } as never);
+    state.setSalary({ channel: 'ippis', bankCode: '058', bankName: 'GTBank', accountNumber: '0123456789', ippisNumber: '445566', monthlyIncome: 0, fromCheck: true });
     const c = TestBed.createComponent(SalaryComponent).componentInstance;
     expect(c.mode).toBe('verify');
-    expect(c.askPay).toBe(false);
-    expect(c.askAccount).toBe(true);
+    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => setTimeout(r, 0));
+    expect(api.verifySalary).toHaveBeenCalled();
+    expect(state.salary()).toMatchObject({ monthlyIncome: 200000 });
+    expect(state.salary()?.fromCheck).toBeFalsy();
+    expect(go).toHaveBeenCalledWith(APPLY.eligibility);
   });
 });

@@ -12,6 +12,7 @@ import {
 } from '../../../core/application/application-state.service';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
+import { CaptchaService } from '../../../core/captcha/captcha.service';
 
 const PARAMILITARY_EMPLOYERS = [
   'NSCDC',
@@ -32,19 +33,21 @@ export class SalaryComponent {
   private readonly api = inject(API_CLIENT);
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
+  private readonly captcha = inject(CaptchaService);
 
   /**
-   * check: the no-identity "how much can I get" check. Only pay (and the employer for paramilitary) is asked.
-   * verify: after identity, when pay was already given in the check. Only the salary account is asked.
-   * full: the normal application. Everything is asked.
+   * check: the no-identity "how much can I get" check. The salary account is asked and the back end does the real
+   *        employment and salary check; nothing is verified against a name yet.
+   * verify: after identity, when the account was already given in the check. It is checked again, silently, against
+   *         the name from the BVN, and the real pay replaces the estimate.
+   * full: the normal application.
    */
   readonly mode: 'check' | 'verify' | 'full' =
-    this.state.intent() === 'check' ? 'check' : this.state.salary()?.declared ? 'verify' : 'full';
-  readonly askPay = this.mode === 'check';
-  readonly askAccount = this.mode !== 'check';
+    this.state.intent() === 'check' ? 'check' : this.state.salary()?.fromCheck ? 'verify' : 'full';
 
   readonly channel = signal<SalaryChannel>(this.deriveChannel());
-  readonly showChannelChoice = computed(() => this.askAccount && this.state.employment()?.type === 'government');
+  /** Federal government is paid through IPPIS and state government through Remita, so the choice is only asked when the level is unknown. */
+  readonly showChannelChoice = computed(() => this.state.employment()?.type === 'government' && !this.state.employment()?.governmentLevel);
   readonly paramilitaryEmployers = PARAMILITARY_EMPLOYERS;
   readonly employerOptions: SelectOption[] = PARAMILITARY_EMPLOYERS.map((e) => ({ value: e, label: e }));
 
@@ -74,7 +77,6 @@ export class SalaryComponent {
     }),
     ippisNumber: new FormControl<string>('', { nonNullable: true }),
     employer: new FormControl<string>('', { nonNullable: true }),
-    monthlyIncome: new FormControl<string>('', { nonNullable: true }),
   });
 
   readonly submitting = signal(false);
@@ -98,32 +100,17 @@ export class SalaryComponent {
     this.statusChanges();
     this.valueChanges();
     if (this.form.invalid) return false;
-    if (this.askPay && !(this.payAmount() > 0)) return false;
-    if (this.askAccount && this.needsIppis() && !/^\d+$/.test(this.form.controls.ippisNumber.value)) return false;
+    if (this.needsIppis() && !/^\d+$/.test(this.form.controls.ippisNumber.value)) return false;
     if (this.channel() === 'dedukt' && !this.form.controls.employer.value) return false;
     return true;
   });
 
-  /** The pay typed in the check, in naira. Commas and spaces are ignored. */
-  payAmount(): number {
-    const n = Number(this.form.controls.monthlyIncome.value.replace(/[,\s₦]/g, ''));
-    return Number.isFinite(n) ? Math.round(n) : 0;
-  }
-
   constructor() {
-    if (this.askAccount) void this.api.listBanks().then((b) => this.banks.set(b));
-    else {
-      // Pay-only: the bank and account fields are not on screen, so they must not block the form.
-      for (const c of [this.form.controls.bankCode, this.form.controls.bankName, this.form.controls.accountNumber]) {
-        c.clearValidators();
-        c.updateValueAndValidity();
-      }
-    }
+    void this.api.listBanks().then((b) => this.banks.set(b));
 
     // Rehydrate.
     const saved = this.state.salary();
-    if (saved?.declared && this.mode === 'check') this.form.patchValue({ monthlyIncome: String(saved.monthlyIncome), employer: saved.paramilitaryEmployer ?? '' });
-    if (saved && this.mode !== 'check') {
+    if (saved) {
       this.form.patchValue({
         bankCode: saved.bankCode,
         bankName: saved.bankName,
@@ -133,6 +120,8 @@ export class SalaryComponent {
       });
       this.bankQuery.set(saved.bankName);
     }
+    // The account came from the check: verify it now without asking again. If it fails, the form below shows why.
+    if (this.mode === 'verify' && saved && saved.accountNumber) queueMicrotask(() => void this.submit());
   }
 
   needsIppis(): boolean {
@@ -140,11 +129,11 @@ export class SalaryComponent {
   }
 
   titleKey(): string {
-    return this.mode === 'check' ? 'step.salary.check.title' : `step.salary.${this.channel()}.title`;
+    return `step.salary.${this.channel()}.title`;
   }
 
   subtitleKey(): string {
-    return this.mode === 'check' ? 'step.salary.check.subtitle' : `step.salary.${this.channel()}.subtitle`;
+    return `step.salary.${this.channel()}.subtitle`;
   }
 
   onBankFocus(): void {
@@ -210,18 +199,39 @@ export class SalaryComponent {
     this.serverError.set(null);
     const v = this.form.getRawValue();
     if (this.mode === 'check') {
-      // Nothing can be verified before identity, so the pay is the customer's own figure and is marked as such.
-      this.state.setSalary({
-        channel: this.channel(),
-        bankCode: '',
-        bankName: '',
-        accountNumber: '',
-        paramilitaryEmployer: v.employer || undefined,
-        monthlyIncome: this.payAmount(),
-        declared: true,
-      });
-      this.submitting.set(false);
-      await this.flow.go(APPLY.eligibility);
+      try {
+        const employment = this.state.employment();
+        const res = await this.api.checkEligibility({
+          employmentType: employment?.type === 'paramilitary' || employment?.type === 'corper' ? employment.type : 'government',
+          governmentLevel: employment?.governmentLevel,
+          nyscMonthsRemaining: employment?.nyscMonthsRemaining,
+          channel: this.channel(),
+          bankCode: v.bankCode,
+          accountNumber: v.accountNumber,
+          ippisNumber: v.ippisNumber || undefined,
+          employer: v.employer || undefined,
+          captchaToken: await this.captcha.token(),
+        });
+        if (res.status !== 'ok') {
+          this.serverError.set(res.status);
+          return;
+        }
+        // The account is kept, so it is not asked again after identity. Pay is not known yet: it is verified then.
+        this.state.setSalary({
+          channel: this.channel(),
+          bankCode: v.bankCode,
+          bankName: v.bankName,
+          accountNumber: v.accountNumber,
+          ippisNumber: v.ippisNumber || undefined,
+          paramilitaryEmployer: v.employer || undefined,
+          monthlyIncome: 0,
+          fromCheck: true,
+        });
+        this.state.setEligibility({ score: 0, decision: res.decision, maxEligibleAmount: res.maxAmount, tenorMonths: res.tenorMonths, reasons: [] });
+        await this.flow.go(APPLY.checkResult);
+      } finally {
+        this.submitting.set(false);
+      }
       return;
     }
     try {
