@@ -145,8 +145,9 @@ export class HttpApiClient implements ApiClient {
     try {
       const r = await this.op<{ lgas: string[] }>('lgas', { state });
       return Array.isArray(r.lgas) ? r.lgas.filter((x) => typeof x === 'string') : [];
-    } catch {
-      return []; // The user can type it.
+    } catch (err) {
+        logWarn('api step 1 failed', err);
+return []; // The user can type it.
     }
   }
 
@@ -180,8 +181,9 @@ export class HttpApiClient implements ApiClient {
     try {
       const r = await this.op<{ banks: Bank[] }>('banks', {});
       return Array.isArray(r.banks) && r.banks.length ? r.banks : NG_BANKS;
-    } catch {
-      // The bank list is public reference data, so a static fallback is safe.
+    } catch (err) {
+        logWarn('api step 2 failed', err);
+// The bank list is public reference data, so a static fallback is safe.
       return NG_BANKS;
     }
   }

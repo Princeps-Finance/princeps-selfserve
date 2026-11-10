@@ -1,3 +1,4 @@
+import { logWarn } from '../../../core/log';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { SelectFieldComponent, SelectOption } from '../../../core/ui/select-field.component';
 import { LangService } from '../../../core/i18n/lang.service';
@@ -100,8 +101,9 @@ export class WaitlistComponent {
         channel: v.channel,
       });
       this.result.set(res);
-    } catch {
-      this.failed.set(true);
+    } catch (err) {
+        logWarn('waitlist step 1 failed', err);
+this.failed.set(true);
     } finally {
       this.submitting.set(false);
     }

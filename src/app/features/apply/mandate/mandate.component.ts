@@ -1,3 +1,4 @@
+import { logWarn } from '../../../core/log';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
@@ -104,8 +105,9 @@ export class MandateComponent {
       this.linkRef.set(link.reference);
       this.linkStatus.set('pending');
       this.startPolling();
-    } catch {
-      this.linkError.set(true);
+    } catch (err) {
+        logWarn('mandate step 1 failed', err);
+this.linkError.set(true);
     } finally {
       this.linkBusy.set(false);
     }
@@ -130,8 +132,9 @@ export class MandateComponent {
       const status = await this.api.getMandateStatus(ref);
       this.linkStatus.set(status);
       if (status === 'completed') this.stopPolling();
-    } catch {
-      // Keep the last known state; the next check will try again.
+    } catch (err) {
+        logWarn('mandate step 2 failed', err);
+// Keep the last known state; the next check will try again.
     }
   }
 
@@ -142,8 +145,9 @@ export class MandateComponent {
       await navigator.clipboard.writeText(url);
       this.copied.set(true);
       setTimeout(() => this.copied.set(false), 2500);
-    } catch {
-      // Clipboard blocked: the link is still visible and can be opened.
+    } catch (err) {
+        logWarn('mandate step 3 failed', err);
+// Clipboard blocked: the link is still visible and can be opened.
     }
   }
 

@@ -1,3 +1,4 @@
+import { logWarn } from '../../../core/log';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -137,8 +138,9 @@ export class VerifyIdentityComponent implements OnDestroy {
           this.previewRef.nativeElement.srcObject = this.stream;
         }
       });
-    } catch {
-      this.cameraError.set(
+    } catch (err) {
+        logWarn('identity step 1 failed', err);
+this.cameraError.set(
         this.lang.t(withAudio ? 'camera.error.av' : 'camera.error.v'),
       );
     }
@@ -177,15 +179,17 @@ export class VerifyIdentityComponent implements OnDestroy {
     let recorder: MediaRecorder;
     try {
       recorder = new MediaRecorder(this.stream, { mimeType: 'video/webm' });
-    } catch {
-      recorder = new MediaRecorder(this.stream);
+    } catch (err) {
+        logWarn('identity step 2 failed', err);
+recorder = new MediaRecorder(this.stream);
     }
     recorder.ondataavailable = (e) => { if (e.data.size > 0) this.recordedChunks.push(e.data); };
     recorder.onstop = () => this.onRecordingStopped();
     try {
       recorder.start();
-    } catch {
-      // Some browsers cannot record: say so instead of failing silently.
+    } catch (err) {
+        logWarn('identity step 3 failed', err);
+// Some browsers cannot record: say so instead of failing silently.
       this.toast.error(this.lang.t('toast.video.error'));
       return;
     }

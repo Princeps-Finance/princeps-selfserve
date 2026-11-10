@@ -1,3 +1,4 @@
+import { logWarn } from '../../../core/log';
 import { MAX_UPLOAD_BYTES } from '../../../core/limits';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
@@ -84,8 +85,9 @@ export class StatementComponent implements OnInit {
       this.state.setSubmission({ status: 'received', referenceId: res.referenceId });
       this.drafts.clear();
       await this.flow.go(APPLY.status);
-    } catch {
-      this.failed.set(true);
+    } catch (err) {
+        logWarn('statement step 1 failed', err);
+this.failed.set(true);
     } finally {
       this.submitting.set(false);
     }
