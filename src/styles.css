@@ -256,3 +256,6 @@ h1[tabindex='-1']:focus { outline: none; }
     }
   }
 }
+
+/* Buttons that are links look like buttons, not underlined text. */
+a.cta, a.alt { text-decoration: none; }

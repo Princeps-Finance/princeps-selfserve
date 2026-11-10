@@ -288,6 +288,11 @@ export const ha: Dictionary = {
   'otp.phone': 'Phone',
   'otp.email': 'Email',
   'step.bvn.error.lookup': 'We could not look up your BVN right now. Try again in a moment.',
+  // TODO(translate)
+  'offers.more.title': 'You asked for {amount}.',
+  'offers.more.body': 'Online, this loan goes up to {max}. For a larger amount, an agent can help you.',
+  'offers.more.agent': 'Speak to an agent',
+  'offers.more.call': 'Call us instead',
   'common.close': 'Close',
   'common.retry': 'Try again',
   'common.dismiss': 'Dismiss',

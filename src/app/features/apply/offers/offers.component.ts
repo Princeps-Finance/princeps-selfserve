@@ -11,6 +11,7 @@ import { formatNaira } from '../../../core/money.util';
 import { telLink, whatsappLink } from '../../../core/support';
 import { LangService } from '../../../core/i18n/lang.service';
 import { discountedRate } from '../../../../shared/referral';
+import { resolveAmount } from './amount-request';
 import { AmountSliderComponent } from '../../../shared/amount-slider.component';
 import { ReferralBoxComponent } from './referral-box.component';
 import { APPLY } from '../../../core/flow/apply-routes';
@@ -46,6 +47,14 @@ function tenorChoices(limits: Limits, current: number): number[] {
   return [...set].sort((a, b) => a - b);
 }
 
+/** A copy of the map with one product's entry set, or removed when the value is null. */
+function withEntry(map: Record<string, number>, id: string, value: number | null): Record<string, number> {
+  const copy = { ...map };
+  if (value === null) delete copy[id];
+  else copy[id] = value;
+  return copy;
+}
+
 interface Choice {
   amount: number;
   tenor: number;
@@ -68,6 +77,8 @@ export class OffersComponent implements OnInit {
   private readonly choices = signal<Record<string, Choice>>({});
   /** Set when an amount typed by the customer had to be adjusted to fit. */
   readonly adjusted = signal<Record<string, number>>({});
+  /** Amounts typed above the limit, by product: the customer is offered an agent for these. */
+  readonly askedMore = signal<Record<string, number>>({});
 
   readonly referral = this.state.referral;
 
@@ -138,14 +149,19 @@ export class OffersComponent implements OnInit {
 
   /** Applies a typed or stepped amount, rounding to the product step and range. */
   setAmount(o: OfferView, raw: number, announce = false): void {
-    const next = clampAmount(o.product, Number.isFinite(raw) ? raw : o.amount, o.limits);
-    this.setChoice(o.product.id, { amount: next });
-    this.adjusted.update((a) => {
-      const copy = { ...a };
-      if (announce && next !== raw) copy[o.product.id] = next;
-      else delete copy[o.product.id];
-      return copy;
-    });
+    const out = resolveAmount(o.product, Number.isFinite(raw) ? raw : o.amount, o.limits);
+    this.setChoice(o.product.id, { amount: out.amount });
+    this.adjusted.update((a) => withEntry(a, o.product.id, announce ? out.adjustedTo : null));
+    // Asking for more than the limit is only kept while it is typed; moving the slider or a chip clears it.
+    this.askedMore.update((a) => withEntry(a, o.product.id, announce ? out.askedMore : null));
+  }
+
+  /** A WhatsApp message to an agent that already says what the customer wants and what their limit is. */
+  agentLink(o: OfferView): string {
+    const wanted = this.askedMore()[o.product.id] ?? o.amount;
+    return whatsappLink(
+      `Hello Princeps, I would like ${formatNaira(wanted)} on ${o.product.name} over ${o.tenor} months. My online limit is ${formatNaira(o.limits.maxAmount)}. Please help me.`,
+    );
   }
 
   onAmountInput(o: OfferView, event: Event): void {
