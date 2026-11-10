@@ -1,0 +1,102 @@
+key,english,yoruba_needed,igbo_needed,hausa_needed
+apply.brand,Princeps,YES,YES,YES
+step.otp.error.incomplete,Enter all 6 digits.,YES,YES,YES
+offers.choose.title,Choose your loan,YES,YES,YES
+offers.choose.sub,"Pick a loan, then set how much and for how long.",YES,YES,YES
+offers.step.pick,Choose a loan,YES,YES,YES
+offers.step.set,Set amount and period,YES,YES,YES
+offers.step.cost,What it costs,YES,YES,YES
+offers.cost.borrow,You borrow,YES,YES,YES
+offers.cost.interest,Interest,YES,YES,YES
+offers.cost.apr,Yearly rate (estimated),YES,YES,YES
+offers.note,"These figures are based on your details. Princeps confirms the final terms on the next screen, before you accept anything.",YES,YES,YES
+offers.continue,Continue with this offer,YES,YES,YES
+loans.title,Your loans,YES,YES,YES
+loans.sub,"See what you owe and when it is due, or take a new loan.",YES,YES,YES
+loans.loading,Loading your loans…,YES,YES,YES
+loans.error,We could not load your loans. Check your connection and try again.,YES,YES,YES
+loans.none,You have no loans with us yet.,YES,YES,YES
+loans.open,Open loans,YES,YES,YES
+loans.past,Paid off,YES,YES,YES
+loans.owed,You owe,YES,YES,YES
+loans.next,Next: {amount} on {date},YES,YES,YES
+loans.new,Take a new loan,YES,YES,YES
+loans.new.hint,You will confirm your details again. Nothing is carried over unverified.,YES,YES,YES
+loans.status.active,Active,YES,YES,YES
+loans.status.overdue,Overdue,YES,YES,YES
+loans.status.completed,Paid off,YES,YES,YES
+loans.progress,{paid} of {total} repayments made,YES,YES,YES
+loans.nextdue,Next repayment,YES,YES,YES
+loans.borrowed,Amount borrowed,YES,YES,YES
+loans.monthly,Monthly repayment,YES,YES,YES
+loans.rate,Interest rate,YES,YES,YES
+loans.taken,Loan date,YES,YES,YES
+loans.mandate,Repayment mandate,YES,YES,YES
+loans.mandate.on,In place,YES,YES,YES
+loans.mandate.off,Not active,YES,YES,YES
+loans.back,Back to my loans,YES,YES,YES
+reason.bvn,"Why we ask: to confirm you are who you say you are, as the law requires for every loan. We never see your bank balance or PIN.",YES,YES,YES
+reason.nin,Why we ask: some loans need a second government ID check. It is used only to match your name and date of birth.,YES,YES,YES
+reason.salary,"Why we ask: to confirm your salary is paid into this account, so your repayments can be taken from it.",YES,YES,YES
+reason.docs,"Why we ask: these show your employment, so we can offer you a safe amount to borrow.",YES,YES,YES
+reason.selfie,"Why we ask: a short photo and video prove it is really you applying, and protect you from someone else using your details.",YES,YES,YES
+trust.licence,Licence no.,YES,YES,YES
+trust.official,"Only apply on this official Princeps site. We never ask for your PIN, password, card details or the code we text you, by phone or WhatsApp.",YES,YES,YES
+offers.quick,Quick amounts,YES,YES,YES
+theme.label,Colour theme,YES,YES,YES
+theme.system,Automatic (follows your device),YES,YES,YES
+theme.light,Light,YES,YES,YES
+theme.dark,Dark,YES,YES,YES
+otp.where.title,Where should we send your code?,YES,YES,YES
+otp.where.sub,These are the contacts linked to your BVN. We hide most of each one to keep you safe.,YES,YES,YES
+otp.where.none,We could not find a phone or email linked to your BVN that we can use.,YES,YES,YES
+otp.where.noaccess,I can't reach any of these,YES,YES,YES
+otp.alt.label,Phone number to send the code to,YES,YES,YES
+otp.alt.hint,"This number is not linked to your BVN, so we may ask for an extra check before your application is approved.",YES,YES,YES
+otp.alt.back,Use a contact linked to my BVN,YES,YES,YES
+otp.alt.invalid,Enter a valid Nigerian phone number.,YES,YES,YES
+otp.send,Send code,YES,YES,YES
+otp.phone,Phone,YES,YES,YES
+otp.email,Email,YES,YES,YES
+step.bvn.error.lookup,We could not look up your BVN right now. Try again in a moment.,YES,YES,YES
+pdf.loading,Loading your offer letter…,YES,YES,YES
+pdf.error,We could not show this document.,YES,YES,YES
+pdf.download,Download the PDF,YES,YES,YES
+pdf.page,Page,YES,YES,YES
+pdf.letter.title,Your offer letter,YES,YES,YES
+pdf.letter.hint,Read it before you accept the terms.,YES,YES,YES
+pdf.letter.read,Read letter,YES,YES,YES
+pdf.letter.error,We could not load your offer letter. Check your connection and try again.,YES,YES,YES
+offers.more.title,You asked for {amount}.,YES,YES,YES
+offers.more.body,"Online, this loan goes up to {max}. For a larger amount, an agent can help you.",YES,YES,YES
+offers.more.agent,Speak to an agent,YES,YES,YES
+offers.more.call,Call us instead,YES,YES,YES
+common.close,Close,YES,YES,YES
+common.retry,Try again,YES,YES,YES
+common.dismiss,Dismiss,YES,YES,YES
+common.remove,Remove,YES,YES,YES
+common.cancel,Cancel,YES,YES,YES
+common.apply,Apply,YES,YES,YES
+support.label,Support,YES,YES,YES
+referral.toggle,Have a referral code?,YES,YES,YES
+referral.label,Referral code,YES,YES,YES
+referral.placeholder,e.g. PRINCEPS10,YES,YES,YES
+referral.invalid,This code isn’t valid. Check it and try again.,YES,YES,YES
+referral.applied,applied,YES,YES,YES
+install.banner.title,Get Princeps on your phone,YES,YES,YES
+install.banner.desc,Track your loan and get reminders.,YES,YES,YES
+install.banner.cta,Install,YES,YES,YES
+install.card.title,Get repayment reminders,YES,YES,YES
+install.card.desc,Add Princeps to your home screen to track your loan and never miss a payment.,YES,YES,YES
+install.card.cta,Add to home screen,YES,YES,YES
+install.hint.ios,"Tap the Share icon, then ""Add to Home Screen"".",YES,YES,YES
+install.hint.other,"Open your browser menu and choose ""Install app"" or ""Add to Home screen"".",YES,YES,YES
+step.otp.warn,Never share this code with anyone. Princeps staff will never ask you for it.,YES,YES,YES
+waitlist.income.100to250k,"₦100,000 – ₦250,000",YES,YES,YES
+waitlist.income.250to500k,"₦250,000 – ₦500,000",YES,YES,YES
+waitlist.income.500to1m,"₦500,000 – ₦1,000,000",YES,YES,YES
+waitlist.channel.whatsapp,WhatsApp,YES,YES,YES
+waitlist.channel.email,Email,,YES,YES
+step.mandate.channel.ippis,IPPIS,YES,YES,YES
+step.mandate.channel.remita,Remita,YES,YES,YES
+step.mandate.channel.dedukt,Dedukt,YES,YES,YES
