@@ -133,7 +133,8 @@ export default async function handler(req: Request): Promise<Response> {
     monthlyRepaymentKobo: monthly * 100,
     interestModel: product.interestModel,
     ratePercent,
-    referralCode: referral?.code ?? null,
+    // Sent only when a code was used, so back-office versions that do not know the field are unaffected.
+    ...(referral ? { referralCode: referral.code } : {}),
     channel: product.channel,
     bankCode: b.bankCode,
     accountNumber: b.accountNumber,
