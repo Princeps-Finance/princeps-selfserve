@@ -66,7 +66,7 @@ export default async function handler(req: Request): Promise<Response> {
   if (!isSameOrigin(req)) return fail('FORBIDDEN', 'Request not allowed.', 403);
 
   const ip = clientIp(req);
-  if (rateLimited(`submit:${ip}`, 5, 10 * 60_000)) {
+  if (await rateLimited(`submit:${ip}`, 5, 10 * 60_000)) {
     return fail('RATE_LIMITED', 'Too many attempts. Try again later.', 429);
   }
 

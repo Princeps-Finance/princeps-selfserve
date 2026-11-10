@@ -66,12 +66,14 @@ export class HttpError extends Error {
 }
 
 // ---- Rate limiting -------------------------------------------------------
-// In-memory, per function instance. Serverless instances do not share memory,
-// so this only slows casual abuse. Put Vercel Firewall rate limits (or Upstash)
-// in front for a hard guarantee — see SECURITY.md.
+// One shared counter store (Upstash Redis over REST) so limits hold across serverless instances.
+// - UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN set: every limit is counted in Redis.
+// - Not set, not production (local, preview, tests): an in-memory counter, per instance, for development only.
+// - Not set, production: FAIL CLOSED. Every limited call is refused, so the app cannot go live without the store.
+// Keys are hashed before they reach Redis, so no BVN, phone number or token is ever stored there.
 const buckets = new Map<string, { count: number; resetAt: number }>();
 
-export function rateLimited(key: string, limit: number, windowMs = 60_000): boolean {
+function memoryLimited(key: string, limit: number, windowMs: number): boolean {
   const now = Date.now();
   if (buckets.size > 5_000) {
     for (const [k, v] of buckets) if (v.resetAt <= now) buckets.delete(k);
@@ -83,6 +85,46 @@ export function rateLimited(key: string, limit: number, windowMs = 60_000): bool
   }
   b.count += 1;
   return b.count > limit;
+}
+
+async function sha256Hex(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function sharedLimited(url: string, token: string, key: string, limit: number, windowMs: number): Promise<boolean> {
+  try {
+    const redisKey = `rl:${await sha256Hex(key)}`;
+    const res = await fetch(`${url.replace(/\/+$/, '')}/pipeline`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify([
+        ['INCR', redisKey],
+        ['PEXPIRE', redisKey, String(windowMs), 'NX'],
+      ]),
+      signal: AbortSignal.timeout(2_000),
+    });
+    const data = (await res.json()) as Array<{ result?: unknown }>;
+    const count = Number(data?.[0]?.result);
+    if (!res.ok || !Number.isFinite(count)) throw new Error('bad response');
+    return count > limit;
+  } catch {
+    // The store is down: refuse rather than let abuse through.
+    console.error('rate limit store unreachable; refusing the call');
+    return true;
+  }
+}
+
+/** True when this key has used up its allowance for the window (so the caller should answer 429). */
+export async function rateLimited(key: string, limit: number, windowMs = 60_000): Promise<boolean> {
+  const url = process.env['UPSTASH_REDIS_REST_URL'];
+  const token = process.env['UPSTASH_REDIS_REST_TOKEN'];
+  if (url && token) return sharedLimited(url, token, key, limit, windowMs);
+  if (process.env['VERCEL_ENV'] === 'production') {
+    console.error('rate limit store not configured (UPSTASH_REDIS_REST_URL / _TOKEN); refusing the call');
+    return true;
+  }
+  return memoryLimited(key, limit, windowMs);
 }
 
 // ---- Backoffice ----------------------------------------------------------
