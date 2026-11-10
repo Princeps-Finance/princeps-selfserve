@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, inject, signal, viewChi
 import { TPipe } from '../../core/i18n/t.pipe';
 import { APP_VERSION } from '../../core/app-version';
 import { Router } from '@angular/router';
-import { SUPPORT_EMAIL, SUPPORT_PHONE, telLink, whatsappLink } from '../../core/support';
+import { SUPPORT_EMAIL, SUPPORT_PHONE, ZOHO_CHAT_SCRIPT_URL, telLink, whatsappLink } from '../../core/support';
 import { LiveChatService, chatAllowedOn } from '../../core/support-chat/live-chat.service';
 
 /**
@@ -42,6 +42,14 @@ import { LiveChatService, chatAllowedOn } from '../../core/support-chat/live-cha
         </button>
         <p class="sheet-title">{{ 'help.title' | t }}</p>
         <p class="sheet-sub">{{ 'help.sub' | t }}</p>
+        @if (chatAvailable()) {
+          <button type="button" class="row row-btn" (click)="startChat()">
+            <span class="row-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>
+            </span>
+            <span>{{ 'help.chat' | t }}</span>
+          </button>
+        }
         <a class="row" [attr.href]="wa" target="_blank" rel="noopener">
           <span class="row-icon" aria-hidden="true">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.5 15.2L2 22l4.9-1.4A10 10 0 1 0 12 2zm5.5 14.3c-.2.6-1.3 1.2-1.8 1.3-.5.1-1.1.1-1.7-.1-.4-.1-1-.3-1.7-.6-3-1.3-4.9-4.4-5.1-4.6-.1-.2-1.2-1.6-1.2-3s.8-2.1 1-2.4c.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .6.5.2.6.7 2 .8 2.1.1.1.1.3 0 .5s-.1.3-.3.5-.3.4-.5.6c-.1.1-.3.3-.1.6.2.3.9 1.5 2 2.4 1.4 1.2 2.6 1.6 2.9 1.7.3.2.5.1.7-.1.2-.2.8-.9 1-1.2.2-.3.4-.3.7-.2.3.1 1.9.9 2.2 1 .3.2.6.2.6.4.1.1.1.9-.1 1.5z"/></svg>
@@ -91,6 +99,7 @@ import { LiveChatService, chatAllowedOn } from '../../core/support-chat/live-cha
         display: flex; align-items: center; gap: var(--space-3); min-height: 52px; padding: 0 var(--space-3);
         border-radius: var(--radius-md); color: var(--ink); text-decoration: none; font-weight: 500;
       }
+      .row-btn { width: 100%; border: 0; background: none; font: inherit; font-weight: 500; text-align: left; cursor: pointer; }
       .row:hover { background: var(--surface-2); }
       .row:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
       .row-icon { display: inline-flex; width: 32px; height: 32px; border-radius: 50%; align-items: center; justify-content: center; background: var(--grey-100); color: var(--ink); }
@@ -112,15 +121,18 @@ export class HelpLauncherComponent {
   readonly wa = whatsappLink();
   readonly version = APP_VERSION;
 
-  /** Support opens the live chat. Where chat is not allowed, or cannot load, it opens the contact sheet instead. */
-  async toggle(): Promise<void> {
-    if (this.open()) {
-      this.close();
-      return;
-    }
-    if (chatAllowedOn(this.router.url) && (await this.chat.open())) return;
-    this.open.set(true);
-    setTimeout(() => this.sheet()?.nativeElement.querySelector<HTMLElement>('a')?.focus());
+  /** Live chat is one option in the sheet, next to WhatsApp, call and email. It is left out where it must not start. */
+  protected chatAvailable(): boolean {
+    return !!ZOHO_CHAT_SCRIPT_URL && chatAllowedOn(this.router.url);
+  }
+
+  toggle(): void {
+    this.open.update((v) => !v);
+    if (this.open()) setTimeout(() => this.sheet()?.nativeElement.querySelector<HTMLElement>('a, button.row')?.focus());
+  }
+
+  protected async startChat(): Promise<void> {
+    if (await this.chat.open()) this.open.set(false);
   }
 
   close(): void {

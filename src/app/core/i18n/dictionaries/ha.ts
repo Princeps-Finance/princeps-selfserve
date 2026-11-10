@@ -19,6 +19,7 @@ export const ha: Dictionary = {
   'help.version': 'Sigar {v}',
   'help.title': 'Kana buƙatar taimako?',
   'help.sub': 'Zaɓi yadda za ka tuntuɓe mu.',
+  'help.chat': 'Yi hira da mu kai tsaye',
   'help.call': 'Kira {tel}',
   'help.email': 'Aika imel zuwa tallafi',
   'help.dialog': 'Tuntuɓi tallafi',

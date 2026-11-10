@@ -19,6 +19,7 @@ export const en: Dictionary = {
   'help.version': 'Version {v}',
   'help.title': 'Need help?',
   'help.sub': 'Choose how to reach us.',
+  'help.chat': 'Chat with us',
   'help.call': 'Call {tel}',
   'help.email': 'Email support',
   'help.dialog': 'Contact support',

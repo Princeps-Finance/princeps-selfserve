@@ -19,6 +19,7 @@ export const ig: Dictionary = {
   'help.version': 'Ụdị {v}',
   'help.title': 'Ịchọrọ enyemaka?',
   'help.sub': 'Họrọ otu ị ga-esi kpọtụrụ anyị.',
+  'help.chat': "Soro anyị kwurịta n'ịntanetị",
   'help.call': 'Kpọọ {tel}',
   'help.email': 'Zipu imeel nye nkwado',
   'help.dialog': 'Kpọtụrụ nkwado',
