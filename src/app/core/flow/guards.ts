@@ -22,6 +22,12 @@ export const requiresBvnGuard = requires((s) => !!s.bvn()?.verified, APPLY.bvn);
 export const requiresContactGuard = requires((s) => !!s.contact(), APPLY.bvn);
 export const requiresPhoneVerifiedGuard = requires((s) => s.phoneVerified(), APPLY.verify);
 export const requiresProfileGuard = requires((s) => !!s.profile(), APPLY.profile);
+/** The work questions open for the no-identity "how much can I get" check, or after identity is verified. */
+export const requiresIdentityOrCheckGuard = requires(
+  (s) => s.intent() === 'check' || (!!s.contact() && s.phoneVerified() && !!s.profile()),
+  APPLY.welcome,
+);
+export const requiresCheckResultGuard = requires((s) => s.intent() === 'check' && !!s.eligibility(), APPLY.welcome);
 export const requiresEmploymentGuard = requires((s) => !!s.employment(), APPLY.employment);
 export const requiresSalaryGuard = requires((s) => !!s.salary(), APPLY.salary);
 export const requiresApprovedGuard = requires(

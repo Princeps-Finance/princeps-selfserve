@@ -127,6 +127,16 @@ describe('POST /api/selfserve/[op]', () => {
     });
   });
 
+  it('runs the eligibility check without a token, passes on the maximum and verified pay but not the account name, and limits it per account', async () => {
+    fetchMock.mockImplementation(() =>
+      Promise.resolve(new Response(JSON.stringify({ status: 'ok', decision: 'approved', maxAmount: 300000, tenorMonths: 12, monthlyIncome: 250000, accountName: 'Ada Obi' }))),
+    );
+    const body = { employmentType: 'government', governmentLevel: 'federal', channel: 'ippis', bankCode: '058', accountNumber: '0123456789', ippisNumber: '445566' };
+    const res = await handler(req('eligibility-check', body));
+    expect(await res.json()).toEqual({ status: 'ok', decision: 'approved', maxAmount: 300000, tenorMonths: 12, monthlyIncome: 250000 });
+    const codes: number[] = [];
+    for (let i = 0; i < 5; i++) codes.push((await handler(req('eligibility-check', body))).status);
+    expect(codes).toContain(429);
   it('accepts a push subscription only with a token and an https endpoint', async () => {
     fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ status: 'ok', extra: 1 }))));
     const body = { endpoint: 'https://push.example.com/abc', keys: { p256dh: 'k', auth: 'a' } };

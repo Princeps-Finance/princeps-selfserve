@@ -126,7 +126,7 @@
     }
 
     <button type="submit" class="cta" [disabled]="submitting()">
-      <span>{{ submitting() ? ('step.salary.verifying' | t) : ('step.salary.verify' | t) }}</span>
+      <span>{{ submitting() ? ('step.salary.verifying' | t) : (mode === 'check' ? ('step.salary.check.continue' | t) : ('step.salary.verify' | t)) }}</span>
       @if (!submitting()) {
         <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
           <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
@@ -135,3 +135,12 @@
     </button>
   </form>
 </section>
+
+<app-modal [open]="limited()" [title]="'check.limit.title' | t" (closed)="limited.set(false)">
+  <h2 class="limit-title">{{ 'check.limit.title' | t }}</h2>
+  <p class="limit-body">{{ 'check.limit.body' | t }}</p>
+  <div class="limit-actions">
+    <a class="alt" [attr.href]="whatsapp" target="_blank" rel="noopener">{{ 'step.eligibility.declined.whatsapp' | t }}</a>
+    <a class="alt" [attr.href]="tel">{{ 'step.eligibility.declined.call' | t }}</a>
+  </div>
+</app-modal>

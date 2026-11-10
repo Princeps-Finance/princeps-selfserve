@@ -24,6 +24,14 @@ const BACK_MAP: Record<string, string> = {
   [APPLY.verifyIdentity]: APPLY.documents,
   [APPLY.mandate]: APPLY.verifyIdentity,
   [APPLY.submit]: APPLY.mandate,
+  [APPLY.checkResult]: APPLY.salary,
+};
+
+/** In the no-identity check the steps lead back through the work questions, not through the profile. */
+const CHECK_BACK: Record<string, string> = {
+  [APPLY.employment]: APPLY.welcome,
+  [APPLY.salary]: APPLY.employment,
+  [APPLY.eligibility]: APPLY.salary,
 };
 
 @Component({
@@ -62,7 +70,8 @@ export class BackButtonComponent {
 
   goBack(): void {
     const here = this.router.url.split('?')[0];
-    let target = BACK_MAP[here] ?? (here.startsWith(`${APPLY.loans}/`) ? APPLY.loans : APPLY.welcome);
+    const checking = this.state.intent() === 'check';
+    let target = (checking ? CHECK_BACK[here] : undefined) ?? BACK_MAP[here] ?? (here.startsWith(`${APPLY.loans}/`) ? APPLY.loans : APPLY.welcome);
     if (here === APPLY.documents) {
       const needsNin = productById(this.state.offer()?.productId ?? '')?.settings.requiresNin ?? false;
       target = needsNin ? APPLY.nin : APPLY.terms;
