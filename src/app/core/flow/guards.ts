@@ -4,6 +4,7 @@ import { ApplicationStateService } from '../application/application-state.servic
 import { LangService } from '../i18n/lang.service';
 import { ReturningService } from '../application/returning.service';
 import { productById } from '../products/products';
+import { JOURNEY_ROUTE, JourneyKey, JourneyService } from './journey';
 import { APPLY } from './apply-routes';
 
 /** Builds a route guard: the step opens when `isReady` is true, otherwise the customer is sent to `fallback`. */
@@ -64,4 +65,10 @@ export const requiresMandateGuard = requires((s) => !!s.mandate()?.authorized, A
 /** A received application is final: going back to the submit step must not create a second loan. */
 export const requiresNotSubmittedGuard = requires((s) => s.submission().status !== 'received', APPLY.status);
 /** The status screen only exists once the application has been received. */
-export const requiresReceivedGuard = requires((s) => s.submission().status === 'received', APPLY.bvn);
+export const requiresReceivedGuard = requires((s) => s.restoreReceipt(), APPLY.welcome);
+
+/** A step after the offer opens only when every step before it, in this product's order, is done. */
+export const journeyGuard = (key: JourneyKey): CanMatchFn => () => {
+  const blocked = inject(JourneyService).blockedAt(key);
+  return blocked && blocked !== JOURNEY_ROUTE[key] ? inject(Router).parseUrl(blocked) : true;
+};

@@ -22,7 +22,10 @@
           <h2 class="doc-label">{{ spec.labelKey | t }}</h2>
           <p class="doc-hint">{{ spec.hintKey | t }}</p>
           @if (d?.status === 'uploading') {
-            <span class="badge badge--pending">{{ 'step.docs.uploading' | t }}</span>
+            <span class="badge badge--pending">{{ 'step.docs.uploading' | t }}@if (progress()[spec.id] > 0) { · {{ (progress()[spec.id] * 100) | number: '1.0-0' }}% }</span>
+            <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="(progress()[spec.id] || 0) * 100" [attr.aria-label]="'step.docs.uploading' | t">
+              <span class="bar-fill" [style.width.%]="(progress()[spec.id] || 0) * 100"></span>
+            </div>
           } @else if (d?.status === 'uploaded') {
             <span class="badge badge--ok">{{ 'step.docs.uploaded' | t }}</span>
           }
@@ -31,6 +34,10 @@
           }
           @if (errors()[spec.id] === 'too-large') {
             <p class="doc-error">{{ 'step.docs.too.large' | t }}</p>
+          } @else if (errors()[spec.id] === 'bad-type') {
+            <p class="doc-error">{{ 'step.docs.bad.type' | t }}</p>
+          } @else if (errors()[spec.id] === 'too-small') {
+            <p class="doc-error">{{ 'step.docs.too.small' | t }}</p>
           } @else if (d?.status === 'failed') {
             <p class="doc-error">{{ 'step.docs.failed' | t }}</p>
           }
@@ -48,9 +55,12 @@
               {{ 'step.docs.replace' | t }}
             </label>
           } @else if (d?.status === 'failed') {
+            @if (canRetry(spec.id)) {
+              <button type="button" class="pill-btn" (click)="retry(spec.id)">{{ 'step.docs.retry' | t }}</button>
+            }
             <label class="ghost-btn">
               <input type="file" class="sr-only" (change)="onFile(spec.id, $event)" accept="image/*,application/pdf" />
-              {{ 'step.docs.retry' | t }}
+              {{ (canRetry(spec.id) ? 'step.docs.replace' : 'step.docs.retry') | t }}
             </label>
           } @else {
             <label class="pill-btn">

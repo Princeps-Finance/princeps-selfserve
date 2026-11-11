@@ -1,4 +1,6 @@
 import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
+import { HelpLinksComponent } from '../../../shared/help-links.component';
+import { ApiUnavailableError } from '../../../core/api/http-api-client';
 import { CheckboxComponent } from '../../../shared/checkbox.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { TPipe } from '../../../core/i18n/t.pipe';
@@ -15,7 +17,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 @Component({
   selector: 'app-submit',
-  imports: [AnimatedIconComponent, CheckboxComponent, TPipe, WizardProgressComponent],
+  imports: [AnimatedIconComponent, CheckboxComponent, HelpLinksComponent, TPipe, WizardProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './submit.component.html',
   styleUrl: './submit.component.css',
@@ -35,12 +37,24 @@ export class SubmitComponent {
   readonly attempted = signal(false);
   readonly submitting = signal(false);
   readonly failed = signal(false);
+  /** Which message to show for a failed send: offline, a known problem the server named, or the general one. */
+  readonly failureKey = signal('submit.error.failed');
   readonly formatNaira = formatNaira;
 
   readonly canSubmit = computed(() => this.agreed() && !this.submitting());
 
   toggleAgree(v: boolean): void { this.agreed.set(v);
     if (v) this.attempted.set(false); }
+
+  /** Says what went wrong in terms the customer can act on. Codes are what the API sends back for known problems. */
+  private failureFor(err: unknown): string {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return 'submit.error.offline';
+    const code = err instanceof ApiUnavailableError ? err.code : '';
+    if (/duplicate|already|in-progress/.test(code)) return 'submit.error.duplicate';
+    if (/active-loan|exposure/.test(code)) return 'submit.error.activeLoan';
+    if (/closed|cancel|expired|offer-changed/.test(code)) return 'submit.error.changed';
+    return 'submit.error.failed';
+  }
 
   async submit(): Promise<void> {
     if (this.submitting()) return;
@@ -65,15 +79,18 @@ export class SubmitComponent {
         manualReview: this.state.eligibility()?.decision === 'review',
       });
       this.drafts.clear();
-      // The photo and video were only needed for review; drop them from memory.
+      // Success screen first; the photo and video were only needed for review and are dropped once it is open.
+      const arrived = await this.flow.go(APPLY.status);
+      // The application is in and its receipt is saved: if the router could not open the screen, load it fresh.
+      if (!arrived) window.location.assign(APPLY.status);
       this.state.setIdentityVerification(null);
-      await this.flow.go(APPLY.status);
     } catch (err) {
       console.warn('Submit failed', err instanceof Error ? err.message : 'unknown');
       // Never invent an outcome: tell the user it did not go through and let them retry.
       this.state.setSubmission({ status: 'idle' });
+      this.failureKey.set(this.failureFor(err));
       this.failed.set(true);
-      this.toast.error(this.lang.t('submit.error.failed'), {
+      this.toast.error(this.lang.t(this.failureKey()), {
         action: { label: this.lang.t('common.retry'), run: () => void this.submit() },
       });
     } finally {

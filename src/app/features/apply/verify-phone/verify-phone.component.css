@@ -10,6 +10,7 @@
 }
 
 .otp {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: var(--space-2);
@@ -17,6 +18,7 @@
 }
 
 .otp-cell {
+  display: flex; align-items: center; justify-content: center;
   aspect-ratio: 1 / 1;
   width: 100%;
   padding: 0;
@@ -29,8 +31,15 @@
   border: 1px solid var(--input-border);
   border-radius: var(--input-radius);
   transition: border-color 140ms ease, box-shadow 140ms ease, transform 100ms ease-out;
-  caret-color: var(--action-primary);
 }
+
+/* The real field lies over the boxes, invisible, so a tap anywhere reaches it. 16px stops iPhone from zooming in. */
+.otp-field {
+  position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; padding: 0; border: 0;
+  background: transparent; color: transparent; caret-color: transparent; font-size: 16px; opacity: 1; cursor: text;
+}
+.otp-field:focus { outline: none; }
+.otp-cell.is-active { border-color: var(--input-border-focus); box-shadow: var(--input-shadow-focus); }
 
 .otp-cell::-webkit-inner-spin-button,
 .otp-cell::-webkit-outer-spin-button {
@@ -40,17 +49,11 @@
 
 @media (hover: hover) and (pointer: fine) { .otp-cell:hover { border-color: var(--input-border-hover); } }
 
-.otp-cell:focus,
-.otp-cell:focus-visible {
-  outline: 2px solid transparent; outline-offset: 2px;
-  border-color: var(--input-border-focus);
-  box-shadow: var(--input-shadow-focus);
-}
 
 .otp.is-invalid .otp-cell {
   border-color: var(--danger);
 }
-.otp.is-invalid .otp-cell:focus {
+.otp.is-invalid .otp-cell.is-active {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 18%, transparent);
 }
 

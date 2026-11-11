@@ -22,6 +22,7 @@ describe('flow guards', () => {
   let router: Router;
 
   beforeEach(() => {
+    localStorage.clear();
     TestBed.configureTestingModule({ providers: [provideRouter([])] });
     state = TestBed.inject(ApplicationStateService);
     router = TestBed.inject(Router);
@@ -51,17 +52,5 @@ describe('flow guards', () => {
     expect(run(requiresReceivedGuard)).toBeInstanceOf(UrlTree);
     state.setSubmission({ status: 'received', referenceId: 'PR-1' });
     expect(run(requiresReceivedGuard)).toBe(true);
-  });
-});
-
-describe('FlowNavigator', () => {
-  it('goes to the ID check only when the product needs it', async () => {
-    TestBed.configureTestingModule({ providers: [provideRouter([])] });
-    const nav = TestBed.inject(FlowNavigator);
-    const seen: string[] = [];
-    nav.go = (url: string) => (seen.push(url), Promise.resolve(true));
-    await nav.afterTerms(true);
-    await nav.afterTerms(false);
-    expect(seen).toEqual([APPLY.nin, APPLY.documents]);
   });
 });

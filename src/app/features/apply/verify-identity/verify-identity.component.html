@@ -158,6 +158,9 @@
   <h2 class="ts-title">{{ 'troubleshoot.title' | t }}</h2>
   <p class="ts-reason" role="status">{{ trouble() }}</p>
   <p class="ts-sub">{{ 'troubleshoot.sub' | t }}</p>
+  @if (denied()) {
+    <p class="ts-reason">{{ 'troubleshoot.denied' | t }}</p>
+  }
   <ul class="ts-tips">
     <li>{{ 'troubleshoot.tip1' | t }}</li>
     <li>{{ 'troubleshoot.tip2' | t }}</li>

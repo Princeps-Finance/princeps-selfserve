@@ -11,7 +11,7 @@ import {
   computed,
   inject,
   signal,
-  viewChildren,
+  viewChild,
 } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
@@ -58,7 +58,10 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly length = OTP_LENGTH;
   readonly indices = Array.from({ length: OTP_LENGTH }, (_, i) => i);
   readonly cells = signal<string[]>(Array(OTP_LENGTH).fill(''));
-  readonly cellRefs = viewChildren<ElementRef<HTMLInputElement>>('cell');
+  readonly field = viewChild<ElementRef<HTMLInputElement>>('otpField');
+  readonly focused = signal(false);
+  /** The box the next digit goes into. */
+  readonly activeIndex = computed(() => Math.min(this.code().length, OTP_LENGTH - 1));
 
   readonly maskedTarget = signal<string>('');
   readonly submitting = signal(false);
@@ -93,6 +96,7 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
       }
       this.maskedTarget.set(res.target);
       this.startCooldown();
+      this.listenForSms();
     } catch (err) {
         logWarn('verify-phone step 1 failed', err);
 this.error.set({ kind: 'service' });
@@ -100,67 +104,68 @@ this.error.set({ kind: 'service' });
   }
 
   ngAfterViewInit(): void {
-    queueMicrotask(() => this.cellRefs()[0]?.nativeElement.focus());
+    queueMicrotask(() => this.field()?.nativeElement.focus());
+  }
+
+  private smsAbort: AbortController | null = null;
+
+  /** Android Chrome can read the code from the text message itself (when it ends with the site and code), so nothing is typed. */
+  private listenForSms(): void {
+    if (typeof window === 'undefined' || !('OTPCredential' in window) || !navigator.credentials) return;
+    this.smsAbort?.abort();
+    this.smsAbort = new AbortController();
+    const options = { otp: { transport: ['sms'] }, signal: this.smsAbort.signal } as unknown as CredentialRequestOptions;
+    navigator.credentials
+      .get(options)
+      .then((c) => {
+        const code = (c as { code?: string } | null)?.code;
+        if (code && /^\d+$/.test(code)) this.setCode(code);
+      })
+      .catch(() => undefined);
   }
 
   ngOnDestroy(): void {
+    this.smsAbort?.abort();
     if (this.cooldownTimer) clearInterval(this.cooldownTimer);
   }
 
-  onCellInput(i: number, evt: Event): void {
+  /**
+   * One real input holds the whole code and the six boxes only show it. A single field is what lets the keyboard offer the
+   * code from the text message (iPhone, Samsung, Huawei and others) and fill all six digits in one go; separate one-digit
+   * fields cannot take it.
+   */
+  onCodeInput(evt: Event): void {
     const input = evt.target as HTMLInputElement;
-    const digits = input.value.replace(/\D/g, '');
-
-    if (digits.length > 1) {
-      // Handle paste / autofill: distribute across cells.
-      this.setCode(digits);
-      return;
-    }
-
-    const next = [...this.cells()];
-    next[i] = digits;
-    this.cells.set(next);
-    input.value = digits;
-
-    this.error.set(null);
-    if (digits && i < OTP_LENGTH - 1) this.cellRefs()[i + 1]?.nativeElement.focus();
-    if (this.code().length === OTP_LENGTH) void this.submit();
+    this.setCode(input.value);
   }
 
-  onCellKeydown(i: number, evt: KeyboardEvent): void {
-    if (evt.key === 'Backspace' && !this.cells()[i] && i > 0) {
-      this.cellRefs()[i - 1]?.nativeElement.focus();
-      return;
-    }
-    if (evt.key === 'ArrowLeft' && i > 0) this.cellRefs()[i - 1]?.nativeElement.focus();
-    if (evt.key === 'ArrowRight' && i < OTP_LENGTH - 1) this.cellRefs()[i + 1]?.nativeElement.focus();
-  }
+  /** The "Paste code" button, for phones whose keyboard does not offer the code: reads what was copied from the text message. */
+  readonly canPaste = typeof navigator !== 'undefined' && typeof navigator.clipboard?.readText === 'function';
 
-  onCellPaste(evt: ClipboardEvent): void {
-    const pasted = (evt.clipboardData?.getData('text') ?? '').replace(/\D/g, '');
-    if (!pasted) return;
-    evt.preventDefault();
-    this.setCode(pasted);
+  async pasteCode(): Promise<void> {
+    try {
+      this.setCode(await navigator.clipboard.readText());
+    } catch {
+      /* permission refused or nothing copied: the customer can still type it */
+    }
   }
 
   private setCode(raw: string): void {
-    const digits = raw.slice(0, OTP_LENGTH).split('');
+    const digits = raw.replace(/\D/g, '').slice(0, OTP_LENGTH);
     const next = Array(OTP_LENGTH).fill('') as string[];
-    digits.forEach((d, i) => (next[i] = d));
+    digits.split('').forEach((d, i) => (next[i] = d));
     this.cells.set(next);
-    const refs = this.cellRefs();
-    refs.forEach((r, i) => (r.nativeElement.value = next[i]));
-    const focusIdx = Math.min(digits.length, OTP_LENGTH - 1);
-    refs[focusIdx]?.nativeElement.focus();
-    if (this.code().length === OTP_LENGTH) void this.submit();
+    const field = this.field()?.nativeElement;
+    if (field && field.value !== digits) field.value = digits;
+    this.error.set(null);
+    if (digits.length === OTP_LENGTH) void this.submit();
   }
 
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (this.code().length !== OTP_LENGTH) {
       this.attempted.set(true);
-      const empty = this.cells().findIndex((c) => !c);
-      this.cellRefs()[empty === -1 ? 0 : empty]?.nativeElement.focus();
+      this.field()?.nativeElement.focus();
       return;
     }
     const bvn = this.state.bvn();
@@ -195,8 +200,11 @@ this.error.set({ kind: 'service' });
       else if (res.status === 'expired') this.error.set({ kind: 'expired' });
       else this.error.set({ kind: 'locked', retryAfterSeconds: res.retryAfterSeconds });
       this.cells.set(Array(OTP_LENGTH).fill(''));
-      this.cellRefs().forEach((r) => (r.nativeElement.value = ''));
-      this.cellRefs()[0]?.nativeElement.focus();
+      const field = this.field()?.nativeElement;
+      if (field) {
+        field.value = '';
+        field.focus();
+      }
     } catch (err) {
         logWarn('verify-phone step 2 failed', err);
 this.error.set({ kind: 'service' });

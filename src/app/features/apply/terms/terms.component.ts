@@ -1,4 +1,5 @@
 import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
+import { ResultTimerComponent } from '../../../core/eligibility/result-timer.component';
 import { IconComponent } from '../../../shared/icon.component';
 import { dueDateOf, firstPaydayAfter } from '../../../core/products/payday';
 import { CardComponent } from '../../../shared/card.component';
@@ -23,7 +24,7 @@ interface ScheduleRow {
 
 @Component({
   selector: 'app-terms',
-  imports: [AnimatedIconComponent, IconComponent, CardComponent, TPipe, WizardProgressComponent],
+  imports: [AnimatedIconComponent, IconComponent, ResultTimerComponent, CardComponent, TPipe, WizardProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './terms.component.html',
   styleUrl: './terms.component.css',
@@ -77,7 +78,6 @@ export class TermsComponent {
 
   /** On to the documents. The offer letter comes after them, right before the repayment set-up. */
   take(): void {
-    const needsNin = productById(this.offer()?.productId ?? '')?.settings.requiresNin ?? false;
-    void this.flow.afterTerms(needsNin);
+    void this.flow.afterTerms();
   }
 }

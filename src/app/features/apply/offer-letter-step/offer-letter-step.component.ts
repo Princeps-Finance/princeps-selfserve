@@ -114,6 +114,6 @@ export class OfferLetterStepComponent {
       return;
     }
     this.state.setTermsAccepted(new Date().toISOString());
-    void this.flow.go(APPLY.mandate);
+    void this.flow.next(APPLY.offerLetter);
   }
 }

@@ -265,6 +265,11 @@ export class MockApiClient implements ApiClient {
     return [{ key: 'id', optional: false }, { key: input.employmentType === 'corper' ? 'callup' : 'payslip', optional: false }];
   }
 
+  /** Demo: the standard order. */
+  async getJourney(_productId: string): Promise<string[] | null> {
+    return null;
+  }
+
   /** Demo: ask for religion so the field can be tried. Production asks only what the back end lists. */
   async getRequiredProfileFields(): Promise<RequiredProfileField[]> {
     return [{ key: 'religion', optional: true }];

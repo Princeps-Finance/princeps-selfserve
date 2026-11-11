@@ -12,6 +12,7 @@ describe('wizard route guards (bio data → work → offer → loan documentatio
   let injector: EnvironmentInjector;
 
   beforeEach(() => {
+    localStorage.clear();
     TestBed.configureTestingModule({ providers: [provideRouter(routes)] });
     state = TestBed.inject(ApplicationStateService);
     injector = TestBed.inject(EnvironmentInjector);

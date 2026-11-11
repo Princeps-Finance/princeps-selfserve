@@ -15,6 +15,7 @@ import {
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 import { IconComponent } from '../../../shared/icon.component';
+import { HelpLinksComponent } from '../../../shared/help-links.component';
 import { ModalComponent } from '../../../shared/modal.component';
 import { telLink, whatsappLink } from '../../../core/support';
 import { CaptchaService } from '../../../core/captcha/captcha.service';
@@ -29,7 +30,7 @@ const PARAMILITARY_EMPLOYERS = [
 
 @Component({
   selector: 'app-salary',
-  imports: [AnimatedIconComponent, WhyAskComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent, ModalComponent, IconComponent],
+  imports: [AnimatedIconComponent, WhyAskComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent, ModalComponent, IconComponent, HelpLinksComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './salary.component.html',
   styleUrl: './salary.component.css',

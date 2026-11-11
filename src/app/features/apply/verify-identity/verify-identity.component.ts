@@ -24,6 +24,10 @@ import { logWarn } from '../../../core/log';
 import { readAsDataUrl } from '../../../core/ui/file-data-url';
 import { CameraSession } from './camera-session';
 
+/** Fewer seconds than this cannot cover the lines; more bytes than this will not upload. */
+const MIN_RECORD_SECONDS = 4;
+const MAX_CLIP_BYTES = 25 * 1024 * 1024;
+
 type Stage = 'intro' | 'face' | 'video' | 'review';
 
 @Component({
@@ -88,6 +92,8 @@ export class VerifyIdentityComponent implements OnDestroy {
 
   /** Why the help window is open (null: closed). It opens after any camera or video problem, so nobody is left stuck. */
   readonly trouble = signal<string | null>(null);
+  /** The camera was refused: the help window then explains how to allow it again in the phone's settings. */
+  readonly denied = signal(false);
   private watchdog: ReturnType<typeof setTimeout> | null = null;
 
   private fail(messageKey: string): void {
@@ -106,6 +112,7 @@ export class VerifyIdentityComponent implements OnDestroy {
   /** "Try again" in the help window: start over from the camera for the step the customer is on. */
   retryAfterTrouble(): void {
     this.trouble.set(null);
+    this.denied.set(false);
     this.cameraError.set(null);
     this.videoDataUrl.set(null);
     this.revokePreview();
@@ -161,6 +168,7 @@ export class VerifyIdentityComponent implements OnDestroy {
     } catch (err) {
       logWarn('identity camera could not open', err);
       this.cameraError.set(this.lang.t(withAudio ? 'camera.error.av' : 'camera.error.v'));
+      this.denied.set((err as { name?: string })?.name === 'NotAllowedError' || (err as { name?: string })?.name === 'SecurityError');
       this.fail(withAudio ? 'camera.error.av' : 'camera.error.v');
     }
   }
@@ -207,6 +215,10 @@ export class VerifyIdentityComponent implements OnDestroy {
   }
 
   startRecording(): void {
+    if (typeof MediaRecorder === 'undefined') {
+      this.fail('troubleshoot.norecord');
+      return;
+    }
     if (!this.camera.active) {
       this.fail('camera.error.av');
       return;
@@ -220,6 +232,14 @@ export class VerifyIdentityComponent implements OnDestroy {
         this.camera.close();
         if (clip.blob.size === 0) {
           this.fail('toast.video.error');
+          return;
+        }
+        if (this.recordSeconds() < MIN_RECORD_SECONDS) {
+          this.fail('troubleshoot.short');
+          return;
+        }
+        if (clip.blob.size > MAX_CLIP_BYTES) {
+          this.fail('step.verify.upload.toolarge');
           return;
         }
         this.showClip(clip.blob);
@@ -288,7 +308,7 @@ export class VerifyIdentityComponent implements OnDestroy {
       capturedAt: new Date().toISOString(),
       offerKey: this.offerKey(),
     });
-    void this.flow.go(APPLY.offerLetter);
+    void this.flow.next(APPLY.verifyIdentity);
   }
 
   ngOnDestroy(): void {

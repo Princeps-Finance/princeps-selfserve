@@ -74,6 +74,8 @@ export interface ApiClient {
   getRequiredDocuments(input: RequiredDocumentsInput): Promise<RequiredDocument[]>;
   /** Extra details to ask on the details screen. Production asks only for what is returned; unreachable means none. */
   getRequiredProfileFields(): Promise<RequiredProfileField[]>;
+  /** The order of the steps after the offer, for this product. Null: use the standard order. */
+  getJourney(productId: string): Promise<string[] | null>;
   getEmploymentTypes(): Promise<EmploymentAvailability[] | null>;
   /** Checks a referral code with the server. Null when the code is not valid or the check could not be made. */
   checkReferral(code: string): Promise<ReferralDraft | null>;

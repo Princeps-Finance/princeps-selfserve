@@ -36,8 +36,21 @@ export class InstallService {
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       this.deferred = e as BeforeInstallPromptEvent;
+      this.announce();
     });
     window.addEventListener('appinstalled', () => this.installed.set(true));
+  }
+
+  /** Once per visit, a short while after the browser says the app can be installed, say so with an Install button. Desktop only: phones get the card's own instructions. */
+  private announce(): void {
+    if (!window.matchMedia?.('(min-width: 1024px)').matches) return;
+    setTimeout(() => {
+      if (!this.offer() || !this.deferred) return;
+      this.toast.info(this.lang.t('install.notice'), {
+        durationMs: 10_000,
+        action: { label: this.lang.t('install.notice.cta'), run: () => void this.install() },
+      });
+    }, 15_000);
   }
 
   async install(): Promise<void> {

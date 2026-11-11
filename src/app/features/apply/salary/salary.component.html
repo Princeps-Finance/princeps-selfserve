@@ -99,7 +99,7 @@
     }
 
     @if (errorKey(); as key) {
-      <p class="server-error" role="alert">{{ key | t }}</p>
+      <p class="server-error" role="alert">{{ key | t }}<app-help-links /></p>
     }
 
     @if (attempted() && !canSubmit()) {

@@ -34,6 +34,8 @@
         {{ key | t }}
         @if (serverError() === 'name-mismatch') {
           <br /><a class="link" [attr.href]="support" target="_blank" rel="noopener">{{ 'step.nin.support' | t }}</a>
+        } @else {
+          <app-help-links />
         }
       </p>
     }

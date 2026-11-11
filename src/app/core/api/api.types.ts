@@ -99,10 +99,12 @@ export interface DocUploadInput {
   docId: string;
   fileName: string;
   sizeBytes: number;
+  contentType?: string;
 }
 
 export type DocUploadResult =
-  | { status: 'ok' }
+  /** `uploadUrl`: where to send the file itself, when the server wants it sent straight to storage. */
+  | { status: 'ok'; uploadUrl?: string }
   | { status: 'too-large' }
   | { status: 'bad-type' }
   | { status: 'network' };

@@ -118,6 +118,8 @@ export interface DocDraft {
   fileName?: string;
 }
 
+const RECEIPT_KEY = 'princeps.receipt';
+
 export type SubmissionStatus = 'idle' | 'submitting' | 'received';
 
 export interface SubmissionDraft {
@@ -167,6 +169,8 @@ export interface ApplicationDraft {
   employment: EmploymentDraft | null;
   salary: SalaryDraft | null;
   eligibility: EligibilityDraft | null;
+  /** When the eligibility result arrived (ISO time). It stays valid for one hour. */
+  eligibilityAt: string | null;
   offer: OfferDraft | null;
   offerPreference: OfferPreference | null;
   referral: ReferralDraft | null;
@@ -190,7 +194,7 @@ function withoutAcceptance(s: ApplicationDraft): ApplicationDraft {
 
 /** Everything the customer decided after the work and salary details: eligibility, offer and what follows. */
 function withoutDecisions(s: ApplicationDraft): ApplicationDraft {
-  return { ...withoutAcceptance(s), eligibility: null, offer: null, nin: null };
+  return { ...withoutAcceptance(s), eligibility: null, eligibilityAt: null, offer: null, nin: null };
 }
 
 const empty: ApplicationDraft = {
@@ -204,6 +208,7 @@ const empty: ApplicationDraft = {
   employment: null,
   salary: null,
   eligibility: null,
+  eligibilityAt: null,
   offer: null,
   offerPreference: null,
   referral: null,
@@ -231,6 +236,7 @@ export class ApplicationStateService {
   readonly employment = computed(() => this.state().employment);
   readonly salary = computed(() => this.state().salary);
   readonly eligibility = computed(() => this.state().eligibility);
+  readonly eligibilityAt = computed(() => this.state().eligibilityAt);
   readonly offer = computed(() => this.state().offer);
   readonly offerPreference = computed(() => this.state().offerPreference);
   readonly referral = computed(() => this.state().referral);
@@ -294,7 +300,12 @@ export class ApplicationStateService {
   }
 
   setEligibility(eligibility: EligibilityDraft): void {
-    this.state.update((s) => ({ ...s, eligibility }));
+    this.state.update((s) => ({ ...s, eligibility, eligibilityAt: new Date().toISOString() }));
+  }
+
+  /** The result is older than an hour: forget it and everything decided from it. Work and salary details stay. */
+  expireEligibility(): void {
+    this.state.update((s) => (s.submission.status === 'idle' ? withoutDecisions(s) : s));
   }
 
   setOffer(offer: OfferDraft): void {
@@ -355,6 +366,37 @@ export class ApplicationStateService {
 
   setSubmission(submission: SubmissionDraft): void {
     this.state.update((s) => ({ ...s, submission }));
+    if (submission.status === 'received') this.rememberReceipt(submission);
+  }
+
+  /**
+   * The receipt (reference and time only, no personal details) is kept for a day on this device. If the page is
+   * reloaded or updated right after submitting, the customer still lands on the success screen, not at the BVN.
+   */
+  private rememberReceipt(submission: SubmissionDraft): void {
+    try {
+      localStorage.setItem(RECEIPT_KEY, JSON.stringify({ ...submission, savedAt: Date.now() }));
+    } catch {
+      /* storage blocked: the receipt lasts for this visit only */
+    }
+  }
+
+  /** Brings back the receipt after a reload. True when there is a recent one. */
+  restoreReceipt(): boolean {
+    if (this.state().submission.status === 'received') return true;
+    try {
+      const raw = localStorage.getItem(RECEIPT_KEY);
+      if (!raw) return false;
+      const r = JSON.parse(raw) as SubmissionDraft & { savedAt?: number };
+      if (r.status !== 'received' || typeof r.referenceId !== 'string' || Date.now() - (r.savedAt ?? 0) > 24 * 60 * 60 * 1000) {
+        localStorage.removeItem(RECEIPT_KEY);
+        return false;
+      }
+      this.state.update((s) => ({ ...s, submission: { status: 'received', referenceId: r.referenceId, submittedAt: r.submittedAt, manualReview: r.manualReview } }));
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /** Restores the answers saved on this device. Verification-grade data is never restored. */
@@ -382,6 +424,11 @@ export class ApplicationStateService {
   }
 
   reset(): void {
+    try {
+      localStorage.removeItem(RECEIPT_KEY);
+    } catch {
+      /* nothing stored */
+    }
     this._returningRef.set(null);
     this._bvnIdentity.set(null);
     this._otpDestination.set(null);

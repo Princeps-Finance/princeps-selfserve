@@ -2,6 +2,7 @@ import { MAX_UPLOAD_BYTES, REQUEST_TIMEOUT_MS } from '../limits';
 import { logWarn } from '../log';
 import { Injectable, inject } from '@angular/core';
 import { IdempotencyService } from './idempotency.service';
+import { NetworkActivityService } from '../network/network-activity.service';
 import {
   ApiClient,
   Bank,
@@ -68,29 +69,57 @@ interface Reply<T> {
 /** About 5 MB of PDF once decoded; anything larger is refused. */
 const MAX_LETTER_BASE64 = 7_000_000;
 
+/** Reads: asking twice changes nothing, so a dropped connection is simply tried again. */
+const SAFE_TO_REPEAT = new Set(['banks', 'lgas', 'list-loans', 'mandate-status', 'offer-letter', 'journey', 'profile-fields', 'required-documents', 'resolve-account', 'bvn-contacts']);
+
 @Injectable({ providedIn: 'root' })
 export class HttpApiClient implements ApiClient {
   private token: string | null = null;
   private readonly idempotency = inject(IdempotencyService);
 
-  private async post<T>(path: string, body: unknown, idempotencyKey?: string): Promise<Reply<T>> {
+  private readonly net = inject(NetworkActivityService);
+
+  /**
+   * One request. Calls that are safe to repeat (reads, and anything sent with an idempotency key) are tried up to three
+   * times when the connection fails or the server is busy, with a growing pause; the rest are tried once. A phone that
+   * says it is offline fails at once instead of waiting for the time-out.
+   */
+  private async post<T>(path: string, body: unknown, idempotencyKey?: string, retry = false): Promise<Reply<T>> {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (this.token) headers['X-Application-Token'] = this.token;
     if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
-    try {
-      const res = await fetch(path, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(body),
-        credentials: 'same-origin',
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-      });
-      const data = (await res.json().catch(() => null)) as T | null;
-      return { ok: res.ok, status: res.status, data };
-    } catch (err) {
-      logWarn(`request failed: ${path}`, err);
-      return { ok: false, status: 0, data: null };
+    const attempts = retry ? 3 : 1;
+    let last: Reply<T> = { ok: false, status: 0, data: null };
+    for (let attempt = 0; attempt < attempts; attempt++) {
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) return { ok: false, status: 0, data: null };
+      const activity = this.net.begin();
+      try {
+        const res = await fetch(path, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body),
+          credentials: 'same-origin',
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        });
+        this.net.noteServerDate(res.headers.get('date'));
+        const data = (await res.json().catch(() => null)) as T | null;
+        last = { ok: res.ok, status: res.status, data };
+        // The server no longer accepts this visit's session: say so once, and stop using the old token.
+        if ((res.status === 401 || res.status === 419) && this.token) {
+          this.token = null;
+          this.net.sessionExpired.set(true);
+          return last;
+        }
+        if (res.ok || !(res.status === 429 || res.status >= 500)) return last;
+      } catch (err) {
+        logWarn(`request failed: ${path}`, err);
+        last = { ok: false, status: 0, data: null };
+      } finally {
+        this.net.end(activity);
+      }
+      if (attempt < attempts - 1) await new Promise((r) => setTimeout(r, 600 * 2 ** attempt + Math.random() * 300));
     }
+    return last;
   }
 
   /** Runs an API call; when the service cannot be reached, answers with `fallback` instead of throwing. */
@@ -104,7 +133,7 @@ export class HttpApiClient implements ApiClient {
   }
 
   private async op<T>(name: string, body: unknown, idempotencyKey?: string): Promise<T> {
-    const r = await this.post<T>(`/api/selfserve/${name}`, withoutEmptyEmail(body), idempotencyKey);
+    const r = await this.post<T>(`/api/selfserve/${name}`, withoutEmptyEmail(body), idempotencyKey, !!idempotencyKey || SAFE_TO_REPEAT.has(name));
     if (!r.ok || r.data === null) throw new ApiUnavailableError(name, r.status);
     return r.data;
   }
@@ -263,7 +292,10 @@ return []; // The user can type it.
 
   async uploadDocument(input: DocUploadInput): Promise<DocUploadResult> {
     if (input.sizeBytes > MAX_UPLOAD_BYTES) return { status: 'too-large' };
-    return this.opOr<DocUploadResult>('upload-document', input, { status: 'network' });
+    const r = await this.opOr<DocUploadResult>('upload-document', input, { status: 'network' });
+    // The address must be a secure web address; anything else is ignored rather than trusted.
+    if (r.status === 'ok' && r.uploadUrl && !/^https:\/\//i.test(r.uploadUrl)) return { status: 'ok' };
+    return r;
   }
 
   async createMandateLink(input: {
@@ -294,6 +326,8 @@ return []; // The user can type it.
     const r = await this.post<{ id?: unknown; error?: { code?: string } }>(
       '/api/submit-loan',
       payload.loan,
+      payload.loan.idempotencyKey,
+      true,
     );
     if (!r.ok || typeof r.data?.id !== 'string') {
       throw new ApiUnavailableError(r.data?.error?.code ?? 'submit', r.status);
@@ -341,6 +375,11 @@ return []; // The user can type it.
     return r.documents
       .filter((d): d is { key: string; optional?: boolean } => !!d && typeof (d as { key?: unknown }).key === 'string')
       .map((d) => ({ key: d.key.slice(0, 40), optional: d.optional === true }));
+  }
+
+  async getJourney(productId: string): Promise<string[] | null> {
+    const r = await this.opOr<{ steps?: unknown }>('journey', { productId }, {});
+    return Array.isArray(r.steps) ? r.steps.filter((x): x is string => typeof x === 'string').slice(0, 12) : null;
   }
 
   async getRequiredProfileFields(): Promise<RequiredProfileField[]> {

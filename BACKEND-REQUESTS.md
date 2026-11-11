@@ -170,3 +170,21 @@ Banks, states and local governments, one salary check for IPPIS, Remita and Dedu
 - Our server holds the resume token in an httpOnly, secure, same-site cookie. Script on the page can never read it. If that is not possible, keep it in memory and never in `localStorage`.
 - Our server allows only the routes above, validates every body, removes anything that is not meant for the customer (for example the raw Caltos customer record), and keeps the bot check and rate limits on code sending.
 - Keep the demo build on the mock. The old `/api/selfserve/*` calls are retired once this is wired.
+
+## What the app now expects from the back end (added with the resilience work)
+
+The app works without these (it falls back to safe defaults), but each one removes a dead end.
+
+| Need | What the app does today | What the API should provide |
+| --- | --- | --- |
+| Step order after the offer | Uses the standard order, or the order set on the product | `POST /api/selfserve/journey` `{ productId }` returning `{ steps: ["nin","documents","identity","offer-letter","mandate","submit"] }` in the order that product needs. Unknown steps are ignored; `submit` is always last; `documents` and `mandate` are never dropped |
+| Account name | Shows the name under the account number; the check button waits for it. If the lookup is down, the customer can still continue | `POST /api/selfserve/resolve-account` `{ bankCode, accountNumber }` returning `{ status: "ok", accountName }`, `{ status: "not-found" }` or `{ status: "service-down" }` |
+| Why a submit failed | Shows a general message, or a specific one for these codes | On `submit-loan` errors, an `error.code` containing `duplicate`, `already` or `in-progress` (an application is already open), `active-loan` or `exposure` (a loan is still running), or `closed`, `cancel`, `expired` or `offer-changed` (the offer is no longer valid) |
+| Session ended | A 401 or 419 on a call that carried the application token opens "Your session timed out" | Return 401 (or 419) when the token has expired, not a generic 500 |
+| Safe retries | Reads and anything sent with an idempotency key are tried up to three times on a dropped connection or a 429 or 5xx | Make `submit-loan`, `waitlist` and `statement-review` honour `Idempotency-Key`, so a repeat returns the same record |
+| Result validity | The app clears an eligibility result after one hour | Enforce the same hour on the server: `offers` and `submit` should refuse a result older than that |
+| Clock check | The app compares the phone clock with the `Date` header on replies and warns when they are more than ten minutes apart | Keep a correct `Date` header on API replies |
+| SMS autofill | Android Chrome can read the code from the text message | End the OTP text with `@<site host> #<code>` (the WebOTP format) |
+| Face and document checks | Photo, video and documents are collected and sent as before | Match the selfie with the BVN photo, run liveness on the video, read and classify documents, and send only mismatches and edge cases to a person |
+| Document upload address | When `upload-document` answers `{ status: "ok", uploadUrl }` with an `https` address, the app sends the file there with a progress bar and up to three tries. Without an address it only records the file name and size, as before | Return a one-time `uploadUrl` (for example a presigned PUT) and allow its host in the page's `connect-src` |
+| Holidays that follow the moon | Payday moves back from a weekend or a public holiday; Easter-based and fixed-date holidays are built in | Send the dates of Eid and the Prophet's birthday each year, to add to `EXTRA_HOLIDAYS` in `payday.ts` |

@@ -36,7 +36,7 @@
   }
 
   @if (failed()) {
-    <p class="msg--error" role="alert">{{ 'submit.error.failed' | t }}</p>
+    <p class="msg--error" role="alert">{{ failureKey() | t }}<app-help-links /></p>
   }
 
   <button type="button" class="cta" [disabled]="submitting()" (click)="submit()">

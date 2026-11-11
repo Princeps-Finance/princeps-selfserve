@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { TPipe } from '../../core/i18n/t.pipe';
 import { ApplicationStateService } from '../../core/application/application-state.service';
-import { productById } from '../../core/products/products';
+import { JourneyService } from '../../core/flow/journey';
 import { APPLY } from '../../core/flow/apply-routes';
 import { FlowNavigator } from '../../core/flow/flow-navigator.service';
 
@@ -22,10 +22,6 @@ const BACK_MAP: Record<string, string> = {
   [APPLY.terms]: APPLY.offers,
   [APPLY.nin]: APPLY.terms,
   [APPLY.statement]: APPLY.employment,
-  [APPLY.verifyIdentity]: APPLY.documents,
-  [APPLY.offerLetter]: APPLY.verifyIdentity,
-  [APPLY.mandate]: APPLY.offerLetter,
-  [APPLY.submit]: APPLY.mandate,
   [APPLY.checkResult]: APPLY.salary,
 };
 
@@ -68,16 +64,16 @@ export class BackButtonComponent {
   private readonly router = inject(Router);
   private readonly flow = inject(FlowNavigator);
   private readonly state = inject(ApplicationStateService);
+  private readonly journey = inject(JourneyService);
 
   goBack(): void {
     const here = this.router.url.split('?')[0];
     const checking = this.state.intent() === 'check';
     let target = (checking ? CHECK_BACK[here] : undefined) ?? BACK_MAP[here] ?? (here.startsWith(`${APPLY.loans}/`) ? APPLY.loans : APPLY.welcome);
     if (here === APPLY.checkResult && this.state.employment()?.type === 'private-sector') target = APPLY.statement;
-    if (here === APPLY.documents) {
-      const needsNin = productById(this.state.offer()?.productId ?? '')?.settings.requiresNin ?? false;
-      target = needsNin ? APPLY.nin : APPLY.terms;
-    }
+    // The steps after the offer go back along this product's own order.
+    const before = this.journey.previous(here);
+    if (before) target = before;
     void this.flow.go(target);
   }
 }

@@ -1,3 +1,4 @@
+import { HelpLinksComponent } from '../../../shared/help-links.component';
 import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
 import { WhyAskComponent } from '../../../shared/why-ask.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
@@ -16,7 +17,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 @Component({
   selector: 'app-nin',
-  imports: [AnimatedIconComponent, WhyAskComponent, TPipe, WizardProgressComponent, ReactiveFormsModule],
+  imports: [AnimatedIconComponent, WhyAskComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, HelpLinksComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './nin.component.html',
   styleUrl: './nin.component.css',
@@ -81,7 +82,7 @@ export class NinComponent {
       }
       this.state.setNin({ value: this.nin.value, verified: true });
       this.toast.success(this.lang.t('toast.nin.ok'));
-      await this.flow.go(APPLY.documents);
+      await this.flow.next(APPLY.nin);
     } finally {
       this.submitting.set(false);
     }
