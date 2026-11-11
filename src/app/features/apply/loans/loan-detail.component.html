@@ -30,7 +30,7 @@
 
     <button type="button" class="cta" (click)="newLoan()">
       <span>{{ 'loans.new' | t }}</span>
-      <app-icon name="outline-arrow-right" [size]="18" />
+      <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
     </button>
     <button type="button" class="alt" (click)="back()">{{ 'loans.back' | t }}</button>
   } @else if (book.status() === 'error') {

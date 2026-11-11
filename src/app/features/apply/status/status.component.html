@@ -50,7 +50,7 @@
 
   <a class="cta" [attr.href]="trackUrl" rel="noopener">
     <span>{{ 'received.track' | t }}</span>
-    <app-icon name="outline-arrow-right" [size]="18" />
+    <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
   </a>
   <button type="button" class="alt" (click)="done()">
     <span>{{ 'status.done' | t }}</span>

@@ -41,7 +41,7 @@
 
       <button type="button" class="cta" (click)="begin()">
         <span>{{ 'step.verify.begin' | t }}</span>
-        <app-icon name="outline-arrow-right" [size]="18" />
+        <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
       </button>
     }
 
@@ -66,7 +66,7 @@
           <button type="button" class="ghost" (click)="retakePhoto()">{{ 'step.verify.retake' | t }}</button>
           <button type="button" class="cta" (click)="proceedToVideo()">
             <span>{{ 'step.verify.next' | t }}</span>
-            <app-icon name="outline-arrow-right" [size]="18" />
+            <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
           </button>
         </div>
       }
@@ -152,7 +152,7 @@
 
       <button type="button" class="cta" (click)="confirm()">
         <span>{{ 'step.verify.confirm' | t }}</span>
-        <app-icon name="outline-arrow-right" [size]="18" />
+        <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
       </button>
     }
   }

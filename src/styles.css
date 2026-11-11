@@ -276,7 +276,7 @@ h1[tabindex='-1']:focus { outline: none; }
 /* A primary button's label is centred; its arrow sits at the right edge. The label never shifts because of the arrow. */
 .cta { position: relative; }
 .cta:has(> svg) { padding-inline: 52px; }
-.cta > svg, .cta > .app-icon { position: absolute; right: var(--space-5); top: 0; bottom: 0; margin-block: auto; }
+.cta > svg, .cta > .app-icon, .cta > .animated-icon { position: absolute; right: var(--space-5); top: 0; bottom: 0; margin-block: auto; }
 
 /* Every button-like control centres its label, whatever its own component CSS forgets to set. */
 .cta, .alt, .alt-btn, .next-action, .ghost, .promo-cta {

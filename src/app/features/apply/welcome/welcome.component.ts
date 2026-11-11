@@ -1,4 +1,4 @@
-import { IconComponent } from '../../../shared/icon.component';
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { PromoBannerComponent } from '../../../shared/promo-banner.component';
@@ -12,7 +12,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 /** First choice: apply now, or just find out how much they could get. Both use the same journey. */
 @Component({
   selector: 'app-welcome-intent',
-  imports: [IconComponent, PromoBannerComponent, TPipe, IllustrationComponent, TrustFooterComponent],
+  imports: [AnimatedIconComponent, PromoBannerComponent, TPipe, IllustrationComponent, TrustFooterComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="step">
@@ -39,7 +39,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
         <div class="choice">
           <button type="button" class="cta" (click)="choose('apply')">
             <span>{{ 'welcome.intent.apply' | t }}</span>
-            <app-icon name="outline-arrow-right" [size]="18" />
+            <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
           </button>
           <p class="hint">{{ 'welcome.intent.apply.hint' | t }}</p>
         </div>

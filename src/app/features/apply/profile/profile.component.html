@@ -68,7 +68,7 @@
 
     <button type="submit" class="cta" [disabled]="submitting()">
       <span>{{ 'step.profile.continue' | t }}</span>
-      <app-icon name="outline-arrow-right" [size]="18" />
+      <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
     </button>
   </form>
 </section>

@@ -1,4 +1,4 @@
-import { IconComponent } from '../../../shared/icon.component';
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal, type OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 import { API_CLIENT } from '../../../core/api/api-client';
@@ -38,7 +38,7 @@ const OPTIONS: Option[] = [
 
 @Component({
   selector: 'app-employment',
-  imports: [IconComponent, CardComponent, ModalComponent, TPipe, WizardProgressComponent, ReactiveFormsModule],
+  imports: [AnimatedIconComponent, CardComponent, ModalComponent, TPipe, WizardProgressComponent, ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './employment.component.html',
   styleUrl: './employment.component.css',

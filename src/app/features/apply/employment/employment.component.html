@@ -73,7 +73,7 @@
 
       <button type="button" class="cta" [disabled]="submitting()" (click)="continue()">
         <span>{{ 'step.employment.continue' | t }}</span>
-        <app-icon name="outline-arrow-right" [size]="18" />
+        <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
       </button>
     </div>
   </app-modal>

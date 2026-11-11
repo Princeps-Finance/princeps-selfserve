@@ -1,4 +1,4 @@
-import { IconComponent } from '../../../shared/icon.component';
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CardComponent } from '../../../shared/card.component';
 import { ProductMarkComponent } from '../../../shared/product-mark.component';
@@ -64,7 +64,7 @@ interface Choice {
 
 @Component({
   selector: 'app-offers',
-  imports: [IconComponent, CardComponent, ProductMarkComponent, IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective, ReferralBoxComponent, AmountSliderComponent],
+  imports: [AnimatedIconComponent, CardComponent, ProductMarkComponent, IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective, ReferralBoxComponent, AmountSliderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './offers.component.html',
   styleUrl: './offers.component.css',

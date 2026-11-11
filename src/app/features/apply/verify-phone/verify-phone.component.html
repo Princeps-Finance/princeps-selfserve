@@ -75,7 +75,7 @@
     <button type="submit" class="cta" [disabled]="submitting()">
       <span>{{ submitting() ? ('step.otp.verifying' | t) : ('step.otp.verify' | t) }}</span>
       @if (!submitting()) {
-        <app-icon name="outline-arrow-right" [size]="18" />
+        <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
       }
     </button>
   </form>

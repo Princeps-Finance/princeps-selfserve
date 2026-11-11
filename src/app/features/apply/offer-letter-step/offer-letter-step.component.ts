@@ -1,4 +1,4 @@
-import { IconComponent } from '../../../shared/icon.component';
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
@@ -13,7 +13,7 @@ import { OfferLetterComponent } from '../terms/offer-letter.component';
  */
 @Component({
   selector: 'app-offer-letter-step',
-  imports: [IconComponent, TPipe, CheckboxComponent, OfferLetterComponent],
+  imports: [AnimatedIconComponent, TPipe, CheckboxComponent, OfferLetterComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="step">
@@ -34,7 +34,7 @@ import { OfferLetterComponent } from '../terms/offer-letter.component';
 
       <button type="button" class="cta" (click)="accept()">
         <span>{{ 'step.offerletter.accept' | t }}</span>
-        <app-icon name="outline-arrow-right" [size]="18" />
+        <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
       </button>
     </section>
   `,
