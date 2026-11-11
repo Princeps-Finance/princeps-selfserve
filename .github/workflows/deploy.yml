@@ -6,6 +6,13 @@ name: Deploy
 on:
   push:
     branches: [self-service-development, self-service-production]
+    # Build filter: a push that only touches notes, docs or local tooling does not need a new deploy.
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.claude/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - 'design/**'
 
 permissions:
   contents: read
