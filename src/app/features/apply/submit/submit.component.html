@@ -42,9 +42,7 @@
   <button type="button" class="cta" [disabled]="submitting()" (click)="submit()">
     <span>{{ submitting() ? ('step.submit.submitting' | t) : ('step.submit.submit' | t) }}</span>
     @if (!submitting()) {
-      <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-        <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
+      <app-icon name="outline-arrow-right" [size]="18" />
     }
   </button>
 </section>

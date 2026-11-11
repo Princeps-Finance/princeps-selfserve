@@ -1,3 +1,4 @@
+import { IconComponent } from '../../../shared/icon.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -16,7 +17,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 @Component({
   selector: 'app-profile',
-  imports: [TPipe, WizardProgressComponent, ReactiveFormsModule, DobFieldComponent, SelectFieldComponent],
+  imports: [IconComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, DobFieldComponent, SelectFieldComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css',

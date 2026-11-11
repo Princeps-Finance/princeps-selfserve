@@ -1,3 +1,4 @@
+import { IconComponent } from '../../../shared/icon.component';
 import { WhyAskComponent } from '../../../shared/why-ask.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -15,7 +16,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 @Component({
   selector: 'app-nin',
-  imports: [WhyAskComponent, TPipe, WizardProgressComponent, ReactiveFormsModule],
+  imports: [IconComponent, WhyAskComponent, TPipe, WizardProgressComponent, ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './nin.component.html',
   styleUrl: './nin.component.css',

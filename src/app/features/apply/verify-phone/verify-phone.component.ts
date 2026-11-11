@@ -1,3 +1,4 @@
+import { IconComponent } from '../../../shared/icon.component';
 import { logWarn } from '../../../core/log';
 import {
   AfterViewInit,
@@ -38,7 +39,7 @@ type OtpError =
 
 @Component({
   selector: 'app-verify-phone',
-  imports: [IllustrationComponent, TPipe, WizardProgressComponent],
+  imports: [IconComponent, IllustrationComponent, TPipe, WizardProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './verify-phone.component.html',
   styleUrl: './verify-phone.component.css',
