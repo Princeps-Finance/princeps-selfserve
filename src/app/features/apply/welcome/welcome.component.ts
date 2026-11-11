@@ -46,7 +46,6 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
         </div>
         <div class="choice">
           <button type="button" class="alt" (click)="choose('check')">{{ 'welcome.intent.check' | t }}</button>
-          <p class="hint">{{ 'welcome.intent.check.hint' | t }}</p>
         </div>
       </div>
 
@@ -54,7 +53,6 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
       @if (accountsUrl) {
         <div class="signin">
           <a class="link" [attr.href]="accountsUrl">{{ 'welcome.signin' | t }}</a>
-          <p class="hint">{{ 'welcome.signin.hint' | t }}</p>
         </div>
       }
 
@@ -63,7 +61,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
   `,
   styles: [
     `
-.step { gap: var(--space-5); padding-top: var(--space-6); }
+.step { gap: var(--space-5); padding-top: var(--space-6); padding-bottom: var(--space-12, 56px); } /* clears the floating Support button */
 .intro { display: flex; flex-direction: column; gap: var(--space-2); }
 .subtitle { margin: 0; text-align: center; color: var(--ink-soft); line-height: 1.5; }
 .title { text-align: center; font-size: clamp(24px, 6.5vw, 30px); line-height: 1.15; letter-spacing: -0.02em; }
