@@ -1,6 +1,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "princeps-selfserve",
+  // Pins every deploy to the Princeps account (product@princepsfinance.com), so a wrong login cannot deploy elsewhere.
+  "account_id": "539867059fd00e71e24ce5ed00041db8",
   "main": "worker/index.ts",
   "compatibility_date": "2026-06-01",
   // process.env is filled from the vars and secrets below, which is how the API handlers read their settings.

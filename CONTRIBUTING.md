@@ -27,7 +27,8 @@ npx ng build
 
 ## Deployments
 The app and its API run as one Cloudflare Worker (`wrangler.jsonc`, `worker/index.ts`) on the Princeps Cloudflare account
-(product@princepsfinance.com). Deploys are manual for now:
+(product@princepsfinance.com). A push to `self-service-development` deploys the development Worker and a push to `self-service-production`
+deploys production (`.github/workflows/deploy.yml`, after the tests; production also runs the go-live gate). Manual deploys:
 
 ```bash
 npx wrangler whoami            # confirm the account first
