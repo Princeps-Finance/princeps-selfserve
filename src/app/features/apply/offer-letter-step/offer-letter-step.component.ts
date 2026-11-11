@@ -1,3 +1,4 @@
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
@@ -12,7 +13,7 @@ import { OfferLetterComponent } from '../terms/offer-letter.component';
  */
 @Component({
   selector: 'app-offer-letter-step',
-  imports: [TPipe, CheckboxComponent, OfferLetterComponent],
+  imports: [AnimatedIconComponent, TPipe, CheckboxComponent, OfferLetterComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="step">
@@ -33,9 +34,7 @@ import { OfferLetterComponent } from '../terms/offer-letter.component';
 
       <button type="button" class="cta" (click)="accept()">
         <span>{{ 'step.offerletter.accept' | t }}</span>
-        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
       </button>
     </section>
   `,

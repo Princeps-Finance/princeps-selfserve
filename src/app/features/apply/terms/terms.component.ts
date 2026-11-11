@@ -1,3 +1,4 @@
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
 import { estimateApr } from '../../../../shared/pricing';
 import { dueDateOf, firstPaydayAfter } from '../../../core/products/payday';
 import { CardComponent } from '../../../shared/card.component';
@@ -22,7 +23,7 @@ interface ScheduleRow {
 
 @Component({
   selector: 'app-terms',
-  imports: [CardComponent, TPipe, WizardProgressComponent],
+  imports: [AnimatedIconComponent, CardComponent, TPipe, WizardProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './terms.component.html',
   styleUrl: './terms.component.css',

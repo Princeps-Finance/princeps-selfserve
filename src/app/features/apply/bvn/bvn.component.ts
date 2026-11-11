@@ -1,3 +1,4 @@
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
 import { WhyAskComponent } from '../../../shared/why-ask.component';
 import { CheckboxComponent } from '../../../shared/checkbox.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
@@ -24,7 +25,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
  */
 @Component({
   selector: 'app-bvn',
-  imports: [WhyAskComponent, CheckboxComponent, IllustrationComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, OtpChannelDialogComponent],
+  imports: [AnimatedIconComponent, WhyAskComponent, CheckboxComponent, IllustrationComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, OtpChannelDialogComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './bvn.component.html',
   styleUrl: './bvn.component.css',

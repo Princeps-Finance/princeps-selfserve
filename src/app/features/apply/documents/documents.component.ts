@@ -1,3 +1,4 @@
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
 import { WhyAskComponent } from '../../../shared/why-ask.component';
 import { logWarn } from '../../../core/log';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
@@ -29,7 +30,7 @@ function specFor(doc: RequiredDocument): DocSpec {
 
 @Component({
   selector: 'app-documents',
-  imports: [WhyAskComponent, TPipe, WizardProgressComponent],
+  imports: [AnimatedIconComponent, WhyAskComponent, TPipe, WizardProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './documents.component.html',
   styleUrl: './documents.component.css',

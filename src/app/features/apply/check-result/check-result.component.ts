@@ -1,3 +1,4 @@
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { formatNaira } from '../../../core/money.util';
@@ -15,7 +16,7 @@ import { ProductMarkComponent } from '../../../shared/product-mark.component';
  */
 @Component({
   selector: 'app-check-result',
-  imports: [TPipe, ProductMarkComponent],
+  imports: [AnimatedIconComponent, TPipe, ProductMarkComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="step">
@@ -58,9 +59,7 @@ import { ProductMarkComponent } from '../../../shared/product-mark.component';
         <div class="actions">
           <button type="button" class="cta" (click)="takeLoan()">
             <span>{{ 'check.result.take' | t }}</span>
-            <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
+            <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
           </button>
           <p class="hint">{{ 'check.result.take.hint' | t }}</p>
           <button type="button" class="alt" (click)="checkAgain()">{{ 'check.result.again' | t }}</button>

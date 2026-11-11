@@ -1,3 +1,4 @@
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
 import { CheckboxComponent } from '../../../shared/checkbox.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { TPipe } from '../../../core/i18n/t.pipe';
@@ -14,7 +15,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 @Component({
   selector: 'app-submit',
-  imports: [CheckboxComponent, TPipe, WizardProgressComponent],
+  imports: [AnimatedIconComponent, CheckboxComponent, TPipe, WizardProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './submit.component.html',
   styleUrl: './submit.component.css',

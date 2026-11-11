@@ -1,3 +1,4 @@
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
 import { WhyAskComponent } from '../../../shared/why-ask.component';
 import {
   ChangeDetectionStrategy,
@@ -28,7 +29,7 @@ type Stage = 'intro' | 'face' | 'video' | 'review';
 
 @Component({
   selector: 'app-verify-identity',
-  imports: [WhyAskComponent, TPipe, WizardProgressComponent],
+  imports: [AnimatedIconComponent, WhyAskComponent, TPipe, WizardProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './verify-identity.component.html',
   styleUrl: './verify-identity.component.css',

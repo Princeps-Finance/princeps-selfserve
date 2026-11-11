@@ -41,9 +41,7 @@
 
       <button type="button" class="cta" (click)="begin()">
         <span>{{ 'step.verify.begin' | t }}</span>
-        <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
       </button>
     }
 
@@ -68,9 +66,7 @@
           <button type="button" class="ghost" (click)="retakePhoto()">{{ 'step.verify.retake' | t }}</button>
           <button type="button" class="cta" (click)="proceedToVideo()">
             <span>{{ 'step.verify.next' | t }}</span>
-            <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
+            <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
           </button>
         </div>
       }
@@ -156,9 +152,7 @@
 
       <button type="button" class="cta" (click)="confirm()">
         <span>{{ 'step.verify.confirm' | t }}</span>
-        <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
       </button>
     }
   }

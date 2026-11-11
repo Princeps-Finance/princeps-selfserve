@@ -1,3 +1,4 @@
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
 import { logWarn } from '../../../core/log';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { SelectFieldComponent, SelectOption } from '../../../core/ui/select-field.component';
@@ -19,7 +20,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 @Component({
   selector: 'app-waitlist',
-  imports: [TPipe, ReactiveFormsModule, SelectFieldComponent],
+  imports: [AnimatedIconComponent, TPipe, ReactiveFormsModule, SelectFieldComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './waitlist.component.html',
   styleUrl: './waitlist.component.css',
