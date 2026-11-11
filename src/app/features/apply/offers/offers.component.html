@@ -125,7 +125,8 @@
                     <p class="quote-error" role="alert">{{ 'offers.quote.invalid' | t }}</p>
                   }
                   @default {
-                    <p class="quote-line quote-line--est"><span>{{ 'offers.monthly.estimate' | t }}</span> <strong>{{ formatNaira(o.quote.monthly) }}</strong> <span class="quote-wait">{{ 'offers.quote.loading' | t }}</span></p>
+                    <!-- Same line as the confirmed one, just dimmed while the server answers; the button waits. -->
+                    <p class="quote-line quote-line--pending" aria-busy="true"><span>{{ 'offers.monthly.exact' | t }}</span> <strong>{{ formatNaira(o.quote.monthly) }}</strong></p>
                   }
                 }
               </div>

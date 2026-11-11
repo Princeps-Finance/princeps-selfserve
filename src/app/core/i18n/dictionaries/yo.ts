@@ -280,7 +280,6 @@ export const yo: Dictionary = {
   'offers.more.body': 'Ààlà rẹ jẹ́ {max}. Fún {amount}, aṣojú kan lè ràn ọ́ lọ́wọ́.',
   'offers.monthly.exact': 'Ìwọ yóò san',
   'offers.monthly.estimate': 'Ní àkókò yìí',
-  'offers.quote.loading': 'lóṣooṣù · à ń jẹ́risi…',
   'offers.quote.error': 'A kò rí iye ìsanwó rẹ gan-an. Wo ìsopọ̀ rẹ kí o sì gbìyànjú. O kò lè tẹ̀síwájú títí a ó fi rí i.',
   'offers.quote.invalid': 'Àwọn òfin wọ̀nyí kò sí. Yí iye tàbí àkókò padà.',
   'quote.changed': 'Àwọn iye ti yípadà. Jọ̀wọ́ tún wò wọ́n kí o tó tẹ̀síwájú.',

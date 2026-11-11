@@ -280,7 +280,6 @@ export const ha: Dictionary = {
   'offers.more.body': 'Iyakarka ita ce {max}. Don {amount}, wakili zai iya taimaka maka.',
   'offers.monthly.exact': 'Za ka biya',
   'offers.monthly.estimate': 'Kusan',
-  'offers.quote.loading': 'a wata · ana tabbatarwa…',
   'offers.quote.error': 'Ba mu iya samun ainihin kuɗin biyanka ba. Duba hanyar sadarwarka ka sake gwadawa. Ba za ka ci gaba ba sai mun same shi.',
   'offers.quote.invalid': 'Waɗannan sharuɗɗan ba su nan. Canja adadin ko lokacin.',
   'quote.changed': 'Lambobin sun canza. Da fatan ka sake duba su kafin ka ci gaba.',

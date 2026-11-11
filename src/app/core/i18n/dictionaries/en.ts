@@ -280,7 +280,6 @@ export const en: Dictionary = {
   'offers.more.body': 'Your limit is {max}. For {amount}, an agent can help.',
   'offers.monthly.exact': 'You will repay',
   'offers.monthly.estimate': 'About',
-  'offers.quote.loading': 'a month · confirming…',
   'offers.quote.error': 'We could not get your exact repayment. Check your connection and try again. You cannot continue until we have it.',
   'offers.quote.invalid': 'These terms are not available. Change the amount or the period.',
   'quote.changed': 'The figures changed. Please look at them again before you go on.',

@@ -48,10 +48,10 @@ describe('OffersComponent with the server quote', () => {
     const { el, settle, comp } = await setup(async (i) => ({ status: 'ok', quote: serverQuote(i.amount, i.tenorMonths) }));
     const cta = () => el.querySelector<HTMLButtonElement>('button.cta')!;
     expect(cta().disabled).toBe(true);
-    expect(el.querySelector('.quote-line--est')).not.toBeNull();
+    expect(el.querySelector('.quote-line--pending strong')?.textContent).toContain('₦'); // the amount is shown, dimmed
     await settle();
     expect(cta().disabled).toBe(false);
-    expect(el.querySelector('.quote-line--est')).toBeNull();
+    expect(el.querySelector('.quote-line--pending')).toBeNull();
     expect(el.querySelector('.quote-line strong')?.textContent).toContain('₦');
     expect(comp.quoteReady()).toBe(true);
   });

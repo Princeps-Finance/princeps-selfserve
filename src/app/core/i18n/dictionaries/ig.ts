@@ -280,7 +280,6 @@ export const ig: Dictionary = {
   'offers.more.body': 'Oke gị bụ {max}. Maka {amount}, onye nnọchi anya nwere ike inyere gị aka.',
   'offers.monthly.exact': 'Ị ga-akwụ',
   'offers.monthly.estimate': 'Ihe dị ka',
-  'offers.quote.loading': 'kwa ọnwa · na-ekwenye…',
   'offers.quote.error': 'Anyị enweghị ike inweta ogo ịkwụ ụgwọ gị n\'ezie. Lelee njikọ gị ma nwaa ọzọ. Ị nweghị ike ịga n\'ihu ruo mgbe anyị nwetara ya.',
   'offers.quote.invalid': 'Usoro ndị a adịghị. Gbanwee ego ma ọ bụ oge.',
   'quote.changed': 'Ọnụọgụ gbanwere. Biko lelee ha ọzọ tupu ịga n\'ihu.',
