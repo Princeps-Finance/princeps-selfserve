@@ -94,13 +94,13 @@ describe('POST /api/selfserve/[op]', () => {
 
   describe('shared limit store', () => {
     afterEach(() => {
-      delete process.env['VERCEL_ENV'];
+      delete process.env['APP_ENV'];
       delete process.env['UPSTASH_REDIS_REST_URL'];
       delete process.env['UPSTASH_REDIS_REST_TOKEN'];
     });
 
     it('refuses every limited call in production when the store is not configured', async () => {
-      process.env['VERCEL_ENV'] = 'production';
+      process.env['APP_ENV'] = 'production';
       const res = await handler(req('banks', {}));
       expect(res.status).toBe(429);
       expect(fetchMock).not.toHaveBeenCalled();

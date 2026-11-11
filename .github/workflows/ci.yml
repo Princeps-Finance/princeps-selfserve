@@ -18,7 +18,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Type-check Vercel functions
+      - name: Type-check the API and Worker
         run: npm run typecheck:api
       - name: Unit tests
         run: npm run test:ci

@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "princeps-selfserve",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-06-01",
+  // process.env is filled from the vars and secrets below, which is how the API handlers read their settings.
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "dist/princeps-selfserve/browser",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    // Requests for /api/* go to the Worker first; everything else is a file or the app shell.
+    "run_worker_first": ["/api/*"]
+  },
+  "observability": { "enabled": true },
+  "vars": { "APP_ENV": "development", "SELF_SERVICE_API_URL": "https://self-service-api.princeps.cloud" },
+  "env": {
+    "production": {
+      "name": "princeps-selfserve-production",
+      "vars": { "APP_ENV": "production", "SELF_SERVICE_API_URL": "https://self-service-api.princeps.cloud" }
+    }
+  }
+}

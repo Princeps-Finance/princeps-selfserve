@@ -1,4 +1,4 @@
-// Vercel Function: validates a loan submission, recomputes every money figure
+// API handler (runs in the Cloudflare Worker): validates a loan submission, recomputes every money figure
 // from the shared pricing catalogue, and forwards it to princeps-backoffice
 // with the ingest token (which never reaches the browser).
 //
@@ -29,7 +29,6 @@ import {
   readJson,
 } from './_lib/http';
 
-export const config = { runtime: 'nodejs' };
 
 const digits = (n: number) => z.string().regex(new RegExp(`^\\d{${n}}$`));
 

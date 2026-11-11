@@ -3,7 +3,7 @@
 ## Branches
 - `self-service-development`: where work lands. It uses the mock API and shows the "Demo" strip.
 - `self-service-production`: the live site. It uses the real API and shows no demo strip. Release by pull request from development.
-- `main`: left over from before. It is still the GitHub default and the Vercel production branch, so keep it until both settings point at the branches above.
+- `main`: left over from before. It is still the GitHub default, so keep it until that setting points at the branches above.
 
 Branch from `self-service-development` and name the branch for the change: `fix/…`, `feat/…`, `refactor/…`, `docs/…`.
 
@@ -26,7 +26,15 @@ npx ng build
 ```
 
 ## Deployments
-Only `self-service-development` and `self-service-production` (and `main`, until it is retired) deploy to Vercel. Pull-request
-branches do not get a preview build: `scripts/vercel-ignore.sh` skips them, because every build counts against the account's
-daily build limit. Test a change by merging it into `self-service-development`. GitHub Actions still runs the tests and the
-build on every pull request.
+The app and its API run as one Cloudflare Worker (`wrangler.jsonc`, `worker/index.ts`) on the Princeps Cloudflare account
+(product@princepsfinance.com). Deploys are manual for now:
+
+```bash
+npx wrangler whoami            # confirm the account first
+npm run deploy                 # development: princeps-selfserve
+npm run deploy:production      # production: princeps-selfserve-production
+```
+
+Settings the API needs are set with `npx wrangler secret put <NAME>` (never in the repo): `BACKOFFICE_API_URL`,
+`SELFSERVE_INGEST_TOKEN`, `TURNSTILE_SECRET`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `REFERRAL_CODES`,
+and `ALLOWED_ORIGINS` once there is a domain. GitHub Actions runs the tests and the build on every pull request.
