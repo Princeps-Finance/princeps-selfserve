@@ -229,7 +229,7 @@ export class VerifyIdentityComponent implements OnDestroy {
       capturedAt: new Date().toISOString(),
       offerKey: this.offerKey(),
     });
-    void this.flow.go(APPLY.mandate);
+    void this.flow.go(APPLY.submit);
   }
 
   ngOnDestroy(): void {

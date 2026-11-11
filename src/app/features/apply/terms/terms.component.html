@@ -98,16 +98,6 @@
     </section>
   }
 
-  <app-offer-letter [request]="letterRequest()" (readToEnd)="letterRead.set(true)" />
-
-  <label class="agree" [class.is-locked]="!letterRead()">
-    <app-checkbox [invalid]="attempted() && !agreed()" describedBy="agree-error" [disabled]="!letterRead()" [checked]="agreed()" (checkedChange)="toggleAgree($event)" />
-    <span>{{ 'step.terms.agree' | t }}</span>
-  </label>
-  @if (attempted() && !agreed()) {
-    <p class="msg--error" id="agree-error" role="alert">{{ 'form.agree.required' | t }}</p>
-  }
-
   <div class="actions">
     <button type="button" class="link-btn" (click)="back()">{{ 'step.terms.change' | t }}</button>
     <button type="button" class="cta" (click)="take()">

@@ -1,4 +1,5 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, OnDestroy, computed, input, output, signal, viewChild } from '@angular/core';
+import { ModalComponent } from '../../../shared/modal.component';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MaskedContact, OtpDestination } from '../../../core/api/api-client';
@@ -12,25 +13,25 @@ import { TPipe } from '../../../core/i18n/t.pipe';
  */
 @Component({
   selector: 'app-otp-channel-dialog',
-  imports: [TPipe, ReactiveFormsModule],
+  imports: [ModalComponent, TPipe, ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <dialog #dlg class="sheet glass" aria-labelledby="otp-where-title" (cancel)="onCancel($event)">
+    <app-modal [open]="true" [title]="'otp.where.title' | t" (closed)="cancelled.emit()">
       <div class="panel">
-        <h2 id="otp-where-title" class="title">{{ 'otp.where.title' | t }}</h2>
+        <h2 class="title">{{ 'otp.where.title' | t }}</h2>
 
         @if (!alternate()) {
           <p class="sub">{{ 'otp.where.sub' | t }}</p>
           <div class="options" role="radiogroup" [attr.aria-label]="'otp.where.title' | t">
             @for (c of phones(); track c.id) {
-              <button type="button" role="radio" class="option" [attr.aria-checked]="selected() === c.id" (click)="selected.set(c.id)">
+              <button type="button" role="radio" class="option" [attr.aria-checked]="selected() === c.id" (click)="pick(c.id)" [disabled]="busy()">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h3l2 4-2 1a10 10 0 0 0 4 4l1-2 4 2v3a2 2 0 0 1-2 2A13 13 0 0 1 3 6a2 2 0 0 1 1-2z" /></svg>
                 <span class="option-text"><span class="kind">{{ 'otp.phone' | t }}</span><span class="value">{{ c.masked }}</span></span>
                 <span class="mark" aria-hidden="true"></span>
               </button>
             }
             @for (c of emails(); track c.id) {
-              <button type="button" role="radio" class="option" [attr.aria-checked]="selected() === c.id" (click)="selected.set(c.id)">
+              <button type="button" role="radio" class="option" [attr.aria-checked]="selected() === c.id" (click)="pick(c.id)" [disabled]="busy()">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18v12H3z" /><path d="M3 6l9 7 9-7" /></svg>
                 <span class="option-text"><span class="kind">{{ 'otp.email' | t }}</span><span class="value">{{ c.masked }}</span></span>
                 <span class="mark" aria-hidden="true"></span>
@@ -54,21 +55,16 @@ import { TPipe } from '../../../core/i18n/t.pipe';
         }
 
         <div class="actions">
-          <button type="button" class="cta" [disabled]="busy() || (!alternate() && !selected())" (click)="send()">{{ 'otp.send' | t }}</button>
-          <button type="button" class="alt" (click)="cancelled.emit()">{{ 'common.cancel' | t }}</button>
+          @if (alternate()) {
+            <button type="button" class="cta" [disabled]="busy()" (click)="send()">{{ 'otp.send' | t }}</button>
+          }
         </div>
       </div>
-    </dialog>
+    </app-modal>
   `,
   styles: [
     `
-      .sheet {
-        width: min(480px, 100vw); max-width: 100vw; max-height: 92dvh; margin: auto auto 0; padding: 0; border: 0;
-        border-radius: var(--radius-lg) var(--radius-lg) 0 0; color: var(--ink); box-shadow: var(--shadow-4);
-      }
-      @media (min-width: 560px) { .sheet { margin: auto; border-radius: var(--radius-lg); } }
-      .sheet::backdrop { background: var(--overlay); }
-      .panel { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-5); }
+      .panel { display: flex; flex-direction: column; gap: var(--space-3); }
       .title { margin: 0; font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 600; }
       .sub, .hint { margin: 0; font-size: var(--fs-md); line-height: 1.5; color: var(--ink-soft); }
       .hint { font-size: var(--fs-sm); color: var(--ink-muted); }
@@ -99,14 +95,13 @@ import { TPipe } from '../../../core/i18n/t.pipe';
     `,
   ],
 })
-export class OtpChannelDialogComponent implements AfterViewInit, OnDestroy {
+export class OtpChannelDialogComponent {
   readonly phones = input<MaskedContact[]>([]);
   readonly emails = input<MaskedContact[]>([]);
   readonly busy = input(false);
   readonly confirmed = output<OtpDestination>();
   readonly cancelled = output<void>();
 
-  private readonly dlg = viewChild.required<ElementRef<HTMLDialogElement>>('dlg');
   protected readonly hasContacts = computed(() => this.phones().length + this.emails().length > 0);
   protected readonly selected = signal<string | null>(null);
   /** Showing the "another number" form: chosen by the customer, or forced when nothing is tied to the BVN. */
@@ -120,19 +115,11 @@ export class OtpChannelDialogComponent implements AfterViewInit, OnDestroy {
   private readonly attempted = signal(false);
   protected readonly showInvalid = computed(() => this.attempted() && !normalizePhoneNg(this.altValue()));
 
-  ngAfterViewInit(): void {
-    const el = this.dlg().nativeElement;
-    if (!el.open) el.showModal();
-  }
-
-  ngOnDestroy(): void {
-    const el = this.dlg().nativeElement;
-    if (el.open) el.close();
-  }
-
-  protected onCancel(event: Event): void {
-    event.preventDefault();
-    this.cancelled.emit();
+  /** Tapping a contact sends the code to it straight away: no second "Send code" tap. */
+  protected pick(id: string): void {
+    if (this.busy()) return;
+    this.selected.set(id);
+    this.confirmed.emit({ kind: 'bvn-contact', id });
   }
 
   protected send(): void {
@@ -142,7 +129,5 @@ export class OtpChannelDialogComponent implements AfterViewInit, OnDestroy {
       if (phone) this.confirmed.emit({ kind: 'alternate-phone', phone });
       return;
     }
-    const id = this.selected();
-    if (id) this.confirmed.emit({ kind: 'bvn-contact', id });
   }
 }

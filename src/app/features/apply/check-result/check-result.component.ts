@@ -6,6 +6,7 @@ import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 import { productsFor } from '../../../core/products/products';
 import { telLink, whatsappLink } from '../../../core/support';
+import { HapticsService } from '../../../core/ui/haptics.service';
 import { ProductMarkComponent } from '../../../shared/product-mark.component';
 
 /**
@@ -90,6 +91,12 @@ import { ProductMarkComponent } from '../../../shared/product-mark.component';
 export class CheckResultComponent {
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
+  private readonly haptics = inject(HapticsService);
+
+  constructor() {
+    // The answer arrived: a little double tick.
+    if (this.state.eligibility()?.decision !== 'declined') this.haptics.success();
+  }
 
   protected readonly money = formatNaira;
   protected readonly declined = computed(() => this.state.eligibility()?.decision === 'declined');

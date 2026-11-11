@@ -21,9 +21,10 @@ const BACK_MAP: Record<string, string> = {
   [APPLY.terms]: APPLY.offers,
   [APPLY.nin]: APPLY.terms,
   [APPLY.statement]: APPLY.employment,
-  [APPLY.verifyIdentity]: APPLY.documents,
-  [APPLY.mandate]: APPLY.verifyIdentity,
-  [APPLY.submit]: APPLY.mandate,
+  [APPLY.offerLetter]: APPLY.documents,
+  [APPLY.mandate]: APPLY.offerLetter,
+  [APPLY.verifyIdentity]: APPLY.mandate,
+  [APPLY.submit]: APPLY.verifyIdentity,
   [APPLY.checkResult]: APPLY.salary,
 };
 

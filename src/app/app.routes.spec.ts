@@ -67,7 +67,7 @@ describe('wizard route guards (bio data → work → offer → loan documentatio
     expect(allows('eligibility')).toBe(true);
   });
 
-  it('asks for the documentation details only after an offer is chosen and the terms accepted', () => {
+  it('asks for the documentation details only after an offer is chosen', () => {
     verified();
     state.setBvn({ value: '12345678901', verified: true }); // BVN is confirmed first, at sign-in
     state.setProfile({} as never);
@@ -78,9 +78,7 @@ describe('wizard route guards (bio data → work → offer → loan documentatio
     expect(allows('documents')).toBe(false);
     state.setOffer({ productId: 'ippis-advance' } as never);
     expect(allows('terms')).toBe(true);
-    expect(allows('documents')).toBe(false);
-    state.setTermsAccepted(new Date().toISOString());
-    expect(allows('documents')).toBe(true);
+    expect(allows('documents')).toBe(true); // the review comes first, then the documents
   });
 
   it('asks for the BVN first, then the code, and only then the rest of the application', () => {
@@ -108,29 +106,31 @@ describe('wizard route guards (bio data → work → offer → loan documentatio
   });
 
   it('only asks for NIN when the chosen product needs it', () => {
+    approve();
     state.setBvn({ value: '12345678901', verified: true });
     state.setOffer({ productId: 'ippis-advance' } as never); // NIN not required
-    state.setTermsAccepted(new Date().toISOString());
     expect(allows('documents')).toBe(true);
-    state.setOffer({ productId: 'corper-allowee' } as never); // NIN required; a new offer must be accepted again
-    state.setTermsAccepted(new Date().toISOString());
+    state.setOffer({ productId: 'corper-allowee' } as never); // NIN required
     expect(allows('documents')).toBe(false);
     state.setNin({ value: '12345678901', verified: true });
     expect(allows('documents')).toBe(true);
   });
 
-  it('puts identity capture after documents, the mandate after identity, and submit last', () => {
+  it('puts the offer letter after the documents, then the mandate, then identity capture, and submit last', () => {
     state.setBvn({ value: '12345678901', verified: true });
     state.setOffer({ productId: 'ippis-advance' } as never);
     state.setDocs([{ id: 'a', name: 'A', status: 'uploaded' }, { id: 'b', name: 'B', status: 'pending' }]);
-    expect(allows('verify-identity')).toBe(false);
+    expect(allows('offer-letter')).toBe(false);
     state.setDocs([{ id: 'a', name: 'A', status: 'uploaded' }, { id: 'b', name: 'B', status: 'uploaded' }]);
-    expect(allows('verify-identity')).toBe(true);
-    expect(allows('mandate')).toBe(false);
-    state.setIdentityVerification({ facePhotoDataUrl: 'x', videoDataUrl: 'y', capturedAt: 'z' });
+    expect(allows('offer-letter')).toBe(true);
+    expect(allows('mandate')).toBe(false); // needs the offer letter accepted
+    state.setTermsAccepted(new Date().toISOString());
     expect(allows('mandate')).toBe(true);
-    expect(allows('submit')).toBe(false);
+    expect(allows('verify-identity')).toBe(false); // needs the mandate
     state.setMandate({ authorized: true } as never);
+    expect(allows('verify-identity')).toBe(true);
+    expect(allows('submit')).toBe(false); // needs the identity capture
+    state.setIdentityVerification({ facePhotoDataUrl: 'x', videoDataUrl: 'y', capturedAt: 'z' });
     expect(allows('submit')).toBe(true);
   });
 

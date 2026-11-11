@@ -30,10 +30,10 @@ import { API_CLIENT } from '../../../core/api/api-client';
     } @else {
       @if (!open()) {
         <button type="button" class="referral-toggle" (click)="toggle()">
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-            <path d="M4 8h12M8 4v12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-          </svg>
           <span>{{ 'referral.toggle' | t }}</span>
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </button>
       } @else {
         <div class="referral-form">
@@ -67,11 +67,13 @@ import { API_CLIENT } from '../../../core/api/api-client';
   styles: [
     `
 .referral { display: flex; flex-direction: column; margin-bottom: var(--space-4); }
+/* A plain text link with a small arrow showing it opens: not a box with a plus, which looked like an "add" button. */
 .referral-toggle {
-  align-self: flex-start; display: inline-flex; align-items: center; gap: var(--space-2);
-  padding: 10px 14px; border: 1px dashed var(--hairline-strong); border-radius: var(--radius-md);
-  background: transparent; color: var(--ink-soft); font-size: var(--fs-md); cursor: pointer;
+  align-self: flex-start; display: inline-flex; align-items: center; gap: var(--space-1);
+  min-height: var(--tap-min); padding: 0; border: 0; background: none;
+  color: var(--ink-soft); font: inherit; font-size: var(--fs-md); text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
 }
+.referral-toggle:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); border-radius: 4px; }
 .referral-form, .referral-applied {
   display: flex; gap: var(--space-2); padding: 14px; border-radius: var(--radius-md);
   background: var(--surface-0); border: 1px solid var(--hairline);

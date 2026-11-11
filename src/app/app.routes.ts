@@ -108,7 +108,7 @@ export const routes: Routes = [
       },
       {
         path: 'nin',
-        canMatch: [requiresTermsGuard, requiresBvnGuard],
+        canMatch: [requiresOfferGuard, requiresBvnGuard],
         loadComponent: () =>
           import('./features/apply/nin/nin.component').then((m) => m.NinComponent),
       },
@@ -145,14 +145,20 @@ export const routes: Routes = [
           import('./features/apply/terms/terms.component').then((m) => m.TermsComponent),
       },
       {
+        path: 'offer-letter',
+        canMatch: [requiresOfferGuard, requiresDocumentsGuard],
+        loadComponent: () =>
+          import('./features/apply/offer-letter-step/offer-letter-step.component').then((m) => m.OfferLetterStepComponent),
+      },
+      {
         path: 'mandate',
-        canMatch: [requiresOfferGuard, requiresDocumentsGuard, requiresIdentityVerificationGuard],
+        canMatch: [requiresOfferGuard, requiresDocumentsGuard, requiresTermsGuard],
         loadComponent: () =>
           import('./features/apply/mandate/mandate.component').then((m) => m.MandateComponent),
       },
       {
         path: 'documents',
-        canMatch: [requiresTermsGuard, requiresNinIfNeededGuard],
+        canMatch: [requiresApprovedGuard, requiresOfferGuard, requiresNinIfNeededGuard],
         loadComponent: () =>
           import('./features/apply/documents/documents.component').then(
             (m) => m.DocumentsComponent,
@@ -160,7 +166,7 @@ export const routes: Routes = [
       },
       {
         path: 'verify-identity',
-        canMatch: [requiresNinIfNeededGuard, requiresDocumentsGuard],
+        canMatch: [requiresNinIfNeededGuard, requiresDocumentsGuard, requiresMandateGuard],
         loadComponent: () =>
           import('./features/apply/verify-identity/verify-identity.component').then(
             (m) => m.VerifyIdentityComponent,
@@ -168,7 +174,7 @@ export const routes: Routes = [
       },
       {
         path: 'submit',
-        canMatch: [requiresNotSubmittedGuard, requiresBvnGuard, requiresOfferGuard, requiresMandateGuard],
+        canMatch: [requiresNotSubmittedGuard, requiresBvnGuard, requiresOfferGuard, requiresMandateGuard, requiresIdentityVerificationGuard],
         loadComponent: () =>
           import('./features/apply/submit/submit.component').then((m) => m.SubmitComponent),
       },

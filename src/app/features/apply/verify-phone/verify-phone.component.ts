@@ -21,6 +21,7 @@ import { API_CLIENT } from '../../../core/api/api-client';
 import { normalizePhoneNg } from '../../../core/api/contact.util';
 import { CaptchaService } from '../../../core/captcha/captcha.service';
 import { ReturningService } from '../../../core/application/returning.service';
+import { HapticsService } from '../../../core/ui/haptics.service';
 import { DraftService } from '../../../core/application/draft.service';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { APPLY } from '../../../core/flow/apply-routes';
@@ -48,6 +49,7 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly captcha = inject(CaptchaService);
   private readonly drafts = inject(DraftService);
   private readonly returning = inject(ReturningService);
+  private readonly haptics = inject(HapticsService);
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
   private readonly lang = inject(LangService);
@@ -183,9 +185,11 @@ this.error.set({ kind: 'service' });
         this.state.setBvnIdentity(res.identity);
         this.state.setBvn({ value: verifiedBvn, verified: true });
         this.state.markPhoneVerified();
+        this.haptics.success();
         await this.flow.go(await this.nextAfterVerified(contact));
         return;
       }
+      this.haptics.error();
       if (res.status === 'wrong') this.error.set({ kind: 'wrong' });
       else if (res.status === 'expired') this.error.set({ kind: 'expired' });
       else this.error.set({ kind: 'locked', retryAfterSeconds: res.retryAfterSeconds });

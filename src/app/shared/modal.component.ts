@@ -27,7 +27,7 @@ import { TPipe } from '../core/i18n/t.pipe';
     `
       /* Phone: a sheet that rises from the bottom. Wider screens: a centred panel. Same content either way. */
       .modal {
-        width: min(680px, 100vw); max-width: 100vw; height: min(92dvh, 900px); max-height: 100dvh;
+        width: min(680px, 100vw); max-width: 100vw; height: fit-content; max-height: min(92dvh, 900px);
         margin: auto auto 0; padding: 0; border: 0; border-radius: var(--radius-xl) var(--radius-xl) 0 0;
         background: var(--surface-2); color: var(--ink); box-shadow: var(--shadow-4);
         overflow: hidden;
@@ -35,11 +35,11 @@ import { TPipe } from '../core/i18n/t.pipe';
       .modal[open] { animation: sheet-up 240ms cubic-bezier(0.23, 1, 0.32, 1) both; }
       .modal[open]::backdrop { animation: fade-in 200ms ease-out both; }
       @media (min-width: 640px) {
-        .modal { margin: auto; border-radius: var(--radius-xl); height: min(88dvh, 820px); }
+        .modal { margin: auto; border-radius: var(--radius-xl); max-height: min(88dvh, 820px); }
         .modal[open] { animation-name: pop-in; }
       }
       .modal::backdrop { background: var(--overlay); }
-      .panel { display: flex; flex-direction: column; gap: var(--space-3); height: 100%; padding: var(--space-4) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom)); box-sizing: border-box; }
+      .panel { display: flex; flex-direction: column; gap: var(--space-3); max-height: min(92dvh, 900px); padding: var(--space-4) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom)); box-sizing: border-box; }
       .back {
         flex: none; align-self: flex-start; display: inline-flex; align-items: center; gap: var(--space-1);
         min-height: 44px; padding: 0 var(--space-4) 0 var(--space-3); border: 0; border-radius: var(--radius-md);
@@ -49,7 +49,7 @@ import { TPipe } from '../core/i18n/t.pipe';
       .back:active { transform: scale(0.97); }
       .back:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
       @media (hover: hover) and (pointer: fine) { .back:hover { background: color-mix(in srgb, var(--ink) 12%, transparent); } }
-      .card { flex: 1; min-height: 0; overflow: auto; padding: var(--space-4); border-radius: var(--radius-lg); background: var(--surface-0); box-shadow: var(--shadow-1); }
+      .card { flex: 0 1 auto; min-height: 0; overflow: auto; padding: var(--space-4); border-radius: var(--radius-lg); background: var(--surface-0); box-shadow: var(--shadow-1); }
       .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
       @keyframes sheet-up { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
       @keyframes pop-in { from { transform: scale(0.97); opacity: 0; } to { transform: none; opacity: 1; } }

@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal, type OnIn
 import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 import { API_CLIENT } from '../../../core/api/api-client';
 import { availabilityByType } from '../../../core/api/employment-availability';
+import { CardComponent } from '../../../shared/card.component';
+import { ModalComponent } from '../../../shared/modal.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { focusFirstInvalid } from '../../../core/a11y/focus';
 import { DEFAULT_ELIGIBILITY_CONFIG } from '../../../core/eligibility/eligibility-scoring';
@@ -35,7 +37,7 @@ const OPTIONS: Option[] = [
 
 @Component({
   selector: 'app-employment',
-  imports: [TPipe, WizardProgressComponent, ReactiveFormsModule],
+  imports: [CardComponent, ModalComponent, TPipe, WizardProgressComponent, ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './employment.component.html',
   styleUrl: './employment.component.css',
@@ -51,6 +53,8 @@ export class EmploymentComponent implements OnInit {
   readonly options = computed(() => OPTIONS.map((o) => ({ ...o, live: this.open()[o.type] ?? o.live })));
   /** Which row is picked. Government has two rows, so the type alone is not enough. */
   readonly selectedKey = signal<string | null>(this.initialKey());
+  /** The months-left sheet for a corper. */
+  readonly corperOpen = signal(false);
   readonly selected = computed<EmploymentType | null>(() => OPTIONS.find((o) => o.key === this.selectedKey())?.type ?? null);
   readonly submitting = signal(false);
   readonly attempted = signal(false);
@@ -95,7 +99,8 @@ export class EmploymentComponent implements OnInit {
   select(opt: Option): void {
     this.selectedKey.set(opt.key);
     this.attempted.set(false);
-    if (opt.type !== 'corper') void this.continue();
+    if (opt.type === 'corper') this.corperOpen.set(true);
+    else void this.continue();
   }
 
   private initialKey(): string | null {

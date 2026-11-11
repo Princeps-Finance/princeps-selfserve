@@ -35,11 +35,10 @@
 
   @switch (push.state()) {
     @case ('ask') {
-      <section class="notify" aria-labelledby="notify-title">
-        <h2 id="notify-title" class="notify-title">{{ 'push.title' | t }}</h2>
+      <app-card [title]="'push.title' | t">
         <p class="notify-body">{{ 'push.body' | t }}</p>
         <button type="button" class="alt" (click)="push.enable()">{{ 'push.action' | t }}</button>
-      </section>
+      </app-card>
     }
     @case ('on') {
       <p class="notify-note" role="status">{{ 'push.on' | t }}</p>

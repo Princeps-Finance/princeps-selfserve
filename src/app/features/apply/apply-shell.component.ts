@@ -12,7 +12,7 @@ import { LoanSummaryComponent } from '../../shared/loan-summary.component';
 import { ThemeToggleComponent } from '../../shared/theme-toggle.component';
 
 /** The steps after the review, where the chosen amount and period stay one tap away. */
-const SUMMARY_ROUTES = new Set<string>([APPLY.nin, APPLY.documents, APPLY.verifyIdentity, APPLY.mandate, APPLY.submit]);
+const SUMMARY_ROUTES = new Set<string>([APPLY.nin, APPLY.documents, APPLY.offerLetter, APPLY.verifyIdentity, APPLY.mandate, APPLY.submit]);
 
 const NO_BACK_ROUTES = new Set<string>([APPLY.root, `${APPLY.root}/`, APPLY.status, APPLY.loans]);
 
