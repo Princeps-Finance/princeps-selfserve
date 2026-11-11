@@ -16,7 +16,7 @@ describe('OfferLetterStepComponent', () => {
       ],
     });
     const state = TestBed.inject(ApplicationStateService);
-    state.setOffer({ productId: 'ippis-advance', productName: 'IPPIS Salary Advance', amount: 300000, tenorMonths: 6, ratePercent: 5, interestModel: 'Flat Rate', monthlyRepayment: 57500, fees: [] });
+    state.setOffer({ productId: 'ippis-advance', productName: 'IPPIS Salary Advance', amount: 300000, tenorMonths: 6, ratePercent: 5, interestModel: 'Flat Rate', monthlyRepayment: 57500, fees: [], quote: { quoteId: 'q1', expiresAt: new Date(Date.now() + 3_600_000).toISOString() } as never });
     return { go: next, state, c: TestBed.createComponent(OfferLetterStepComponent).componentInstance };
   }
 
@@ -29,14 +29,14 @@ describe('OfferLetterStepComponent', () => {
     expect(c.agreed()).toBe(true);
   });
 
-  it('records the acceptance and goes on to the repayment set-up only once agreed', () => {
+  it('records the acceptance and goes on to the repayment set-up only once agreed', async () => {
     const { c, state, go } = create();
-    c.accept();
+    await c.accept();
     expect(state.termsAcceptedAt()).toBeNull();
     expect(go).not.toHaveBeenCalled();
     c.letterRead.set(true);
     c.toggleAgree(true);
-    c.accept();
+    await c.accept();
     expect(state.termsAcceptedAt()).not.toBeNull();
     expect(go).toHaveBeenCalledWith(APPLY.offerLetter);
   });

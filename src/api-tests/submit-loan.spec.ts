@@ -1,4 +1,5 @@
 import handler from '../../api/submit-loan';
+import { signQuote } from '../../api/_lib/quote-token';
 import { estimateMonthlyRepayment } from '../shared/pricing';
 
 const ORIGIN = 'https://selfserve.example.com';
@@ -189,5 +190,39 @@ describe('POST /api/submit-loan', () => {
   it('enforces the product tenor and amount step, not just the global range', async () => {
     const offStep = await handler(req(valid({ amountKobo: 200_100 * 100 })));
     expect(offStep.status).toBe(400);
+  });
+
+  describe('the quote the customer accepted', () => {
+    const monthly = estimateMonthlyRepayment(200_000, 6, 5, 'Flat Rate');
+    const claims = (over: Record<string, number | string> = {}) => ({ p: 'ippis-standard', a: 200_000 * 100, t: 6, m: monthly * 100, r: 5, x: Date.now() + 600_000, ...over });
+
+    it('goes through when the id is the server\'s own and matches the figures sent', async () => {
+      const quoteId = await signQuote(claims());
+      expect((await handler(req(valid({ quoteId })))).status).toBe(200);
+    });
+
+    it('is refused when the id was made for other figures', async () => {
+      const quoteId = await signQuote(claims({ a: 100_000 * 100 }));
+      const res = await handler(req(valid({ quoteId })));
+      expect(res.status).toBe(409);
+      expect(((await res.json()) as { error: { code: string } }).error.code).toBe('QUOTE_MISMATCH');
+    });
+
+    it('is refused once it has expired, so the customer reviews the offer again', async () => {
+      const quoteId = await signQuote(claims({ x: Date.now() - 1000 }));
+      const res = await handler(req(valid({ quoteId })));
+      expect(res.status).toBe(409);
+      expect(((await res.json()) as { error: { code: string } }).error.code).toBe('QUOTE_EXPIRED');
+    });
+
+    it('is refused when the id is forged', async () => {
+      const res = await handler(req(valid({ quoteId: 'eyJwIjoieCJ9.AAAA' })));
+      expect(res.status).toBe(409);
+      expect(((await res.json()) as { error: { code: string } }).error.code).toBe('QUOTE_INVALID');
+    });
+
+    it('still accepts a submission with no quote id (older app versions)', async () => {
+      expect((await handler(req(valid({ quoteId: null })))).status).toBe(200);
+    });
   });
 });

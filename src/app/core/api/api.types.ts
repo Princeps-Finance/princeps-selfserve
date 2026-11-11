@@ -95,6 +95,22 @@ export type BvnVerifyResult =
   | { status: 'not-found' }
   | { status: 'service-down' };
 
+export type { Quote, QuoteLine } from '../../../shared/quote';
+
+export interface QuoteInput {
+  productId: string;
+  amount: number;
+  tenorMonths: number;
+  referralCode?: string;
+}
+
+export type QuoteResult =
+  | { status: 'ok'; quote: import('../../../shared/quote').Quote }
+  /** The server refused these terms (outside the limits, unknown code). Asking again will not help. */
+  | { status: 'invalid' }
+  /** No answer: offline, slow, or the service is down. Asking again may work. */
+  | { status: 'unavailable' };
+
 export interface DocUploadInput {
   docId: string;
   fileName: string;
@@ -127,6 +143,8 @@ export interface SubmitPayload {
     mandateReference: string | null;
     /** Same value on every retry of one application, so the server can refuse a duplicate. */
     idempotencyKey: string;
+    /** The server's quote the customer accepted. The server checks its figures and that it has not expired. */
+    quoteId?: string | null;
     referralCode: string | null;
     borrowerBvn: string;
     borrowerName: string;
@@ -250,6 +268,8 @@ export interface OfferLetterRequest {
   tenorMonths: number;
   monthlyRepayment: number;
   ratePercent: number;
+  /** The quote the letter is written from, so its figures are the ones the customer was shown. */
+  quoteId?: string;
 }
 
 export interface StatementReviewInput {

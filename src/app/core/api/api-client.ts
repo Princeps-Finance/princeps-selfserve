@@ -3,7 +3,7 @@ import type { EmploymentAvailability } from './employment-availability';
 import type { ReferralDraft } from '../application/application-state.service';
 import type {
   Bank, BvnContactsResult, EligibilityCheckInput, EligibilityCheckResult, RequiredDocument, RequiredDocumentsInput, RequiredProfileField, ReturningOtpSendResult, ReturningOtpVerifyResult, StatementCheckInput, BvnOtpSendResult, BvnOtpVerifyResult, BvnVerifyResult, DocUploadInput, DocUploadResult,
-  AccountLookupResult, LoanSummary, LookupResult, MandateLink, OfferLetterRequest, MandateStatus, OtpDestination, SalaryVerifyInput, SalaryVerifyResult,
+  AccountLookupResult, QuoteInput, QuoteResult, LoanSummary, LookupResult, MandateLink, OfferLetterRequest, MandateStatus, OtpDestination, SalaryVerifyInput, SalaryVerifyResult,
   StatementReviewInput, SubmitPayload, SubmitResult, WaitlistInput, WaitlistResult,
 } from './api.types';
 
@@ -39,6 +39,8 @@ export interface ApiClient {
     | { status: 'expired' }
     | { status: 'locked'; retryAfterSeconds: number }
   >;
+  /** Prices a loan on the server: the repayment, fees, totals and dated schedule the customer will see and sign. */
+  getQuote(input: QuoteInput): Promise<QuoteResult>;
   listBanks(): Promise<Bank[]>;
   /** The name on a bank account, so the customer can confirm it before the salary check. */
   resolveAccount(bankCode: string, accountNumber: string): Promise<AccountLookupResult>;

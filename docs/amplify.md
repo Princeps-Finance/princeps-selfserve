@@ -25,7 +25,8 @@ Pick one region for everything. If customer data location matters, decide that f
 
 1. **Secrets.** In AWS Secrets Manager create a secret named `princeps/selfserve-prod` of type "other", with these keys:
    `BACKOFFICE_API_URL`, `SELFSERVE_INGEST_TOKEN`, `TURNSTILE_SECRET`, `UPSTASH_REDIS_REST_URL`,
-   `UPSTASH_REDIS_REST_TOKEN`, `REFERRAL_CODES`. Type the values in the console, never in chat or in the repo.
+   `UPSTASH_REDIS_REST_TOKEN`, `REFERRAL_CODES`, `QUOTE_SECRET` (at least 16 random characters; it signs the repayment quotes,
+   and production refuses to issue quotes without it). Type the values in the console, never in chat or in the repo.
 2. **Deploy the API.** With the AWS CLI and SAM CLI installed and signed in:
    ```bash
    sam build -t aws/template.yaml

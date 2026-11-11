@@ -1,4 +1,5 @@
 import type { OtpDestination } from '../api/api-client';
+import type { Quote } from '../../../shared/quote';
 import { Injectable, computed, signal } from '@angular/core';
 import type { BvnIdentity } from "../api/api-client";
 
@@ -55,6 +56,8 @@ export interface OfferDraft {
   monthlyRepayment: number;
   fees: { name: string; amount: number }[];
   referralCode?: string;
+  /** The server's quote this offer was built from: its id, figures and dated schedule. */
+  quote?: Quote;
 }
 
 export interface ReferralDraft {
@@ -310,6 +313,11 @@ export class ApplicationStateService {
 
   setOffer(offer: OfferDraft): void {
     this.state.update((s) => (sameValue(s.offer, offer) ? s : { ...withoutAcceptance(s), offer }));
+  }
+
+  /** A new quote with exactly the same figures replaces the old one (same terms, later expiry) without asking the customer to accept again. */
+  renewQuote(quote: Quote): void {
+    this.state.update((s) => (s.offer ? { ...s, offer: { ...s.offer, quote } } : s));
   }
 
   setOfferPreference(offerPreference: OfferPreference | null): void {

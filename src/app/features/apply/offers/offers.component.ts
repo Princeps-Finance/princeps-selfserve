@@ -1,5 +1,5 @@
 import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, signal, untracked } from '@angular/core';
 import { CardComponent } from '../../../shared/card.component';
 import { ProductMarkComponent } from '../../../shared/product-mark.component';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
@@ -13,6 +13,7 @@ import { formatNaira } from '../../../core/money.util';
 import { telLink, whatsappLink } from '../../../core/support';
 import { ResultTimerComponent } from '../../../core/eligibility/result-timer.component';
 import { IconComponent } from '../../../shared/icon.component';
+import { QuoteService, offerFromQuote } from '../../../core/pricing/quote.service';
 import { ToastService } from '../../../core/toast/toast.service';
 import { LangService } from '../../../core/i18n/lang.service';
 import { discountedRate } from '../../../../shared/referral';
@@ -77,6 +78,36 @@ export class OffersComponent implements OnInit {
   private readonly flow = inject(FlowNavigator);
   private readonly lang = inject(LangService);
   private readonly toast = inject(ToastService);
+  private readonly quotes = inject(QuoteService);
+
+  constructor() {
+    // Whenever the customer settles on an amount and period, the server prices it. Until it answers, the screen
+    // shows a local estimate and the button waits.
+    effect(() => {
+      const input = this.quoteInput();
+      if (input) untracked(() => this.quotes.request(input));
+    });
+  }
+
+  /** The terms of the open product, as the server is asked about them. */
+  readonly quoteInput = computed(() => {
+    const o = this.selected();
+    if (!o) return null;
+    const code = this.referral()?.code;
+    return { productId: o.product.id, amount: o.amount, tenorMonths: o.tenor, ...(code ? { referralCode: code } : {}) };
+  });
+
+  /** The server's answer for exactly those terms, or null while none has been asked for. */
+  readonly quoteView = computed(() => {
+    const input = this.quoteInput();
+    return input ? this.quotes.viewFor(input.productId, input) : null;
+  });
+  readonly quoteReady = computed(() => this.quoteView()?.status === 'ready');
+
+  retryQuote(): void {
+    const input = this.quoteInput();
+    if (input) this.quotes.request(input, { immediately: true });
+  }
 
   private readonly catalogue = signal<{ product: Product; limits: Limits }[]>([]);
   /** What the customer has chosen per product. Starts at the most they are eligible for. */
@@ -223,17 +254,10 @@ export class OffersComponent implements OnInit {
   }
 
   pick(o: OfferView): void {
-    this.state.setOffer({
-      productId: o.product.id,
-      productName: o.product.name,
-      amount: o.amount,
-      tenorMonths: o.tenor,
-      ratePercent: o.product.ratePercent,
-      interestModel: o.product.interestModel,
-      monthlyRepayment: o.quote.monthly,
-      fees: o.quote.fees,
-      ...(this.referral() ? { referralCode: this.referral()?.code } : {}),
-    });
+    // Only the server's figures go forward; with no answer yet there is nothing to accept.
+    const quote = this.quoteView();
+    if (quote?.status !== 'ready' || !quote.quote) return;
+    this.state.setOffer(offerFromQuote(quote.quote, o.product.name, this.referral()?.code));
     this.state.setOfferPreference({ productId: o.product.id, amount: o.amount, tenorMonths: o.tenor });
     void this.flow.go(APPLY.terms);
   }

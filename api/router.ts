@@ -1,6 +1,7 @@
 // Maps an API path to its handler. Shared by every host (the Cloudflare Worker and the AWS Lambda), so a route is
 // added once.
 import employmentTypes from './employment-types';
+import quote from './quote';
 import referral from './referral';
 import submitLoan from './submit-loan';
 import selfserve from './selfserve/[op]';
@@ -10,6 +11,7 @@ type Handler = (req: Request) => Promise<Response>;
 
 const ROUTES: Record<string, Handler> = {
   '/api/employment-types': employmentTypes,
+  '/api/quote': quote,
   '/api/referral': referral,
   '/api/submit-loan': submitLoan,
 };

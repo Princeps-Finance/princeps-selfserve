@@ -21,6 +21,8 @@ import {
   MandateStatus,
   SalaryVerifyInput,
   AccountLookupResult,
+  QuoteInput,
+  QuoteResult,
   SalaryVerifyResult,
   StatementReviewInput,
   EligibilityCheckInput,
@@ -36,6 +38,7 @@ import {
   WaitlistInput,
   WaitlistResult,
 } from './api-client';
+import type { Quote } from '../../../shared/quote';
 import { NG_BANKS } from './ng-banks';
 import type { EmploymentAvailability } from './employment-availability';
 import type { ReferralDraft } from '../application/application-state.service';
@@ -263,6 +266,13 @@ return []; // The user can type it.
     }
   }
 
+  async getQuote(input: QuoteInput): Promise<QuoteResult> {
+    const r = await this.post<{ quote?: unknown }>('/api/quote', input, undefined, true);
+    if (r.status >= 400 && r.status < 500 && r.status !== 429) return { status: 'invalid' };
+    const quote = r.ok ? sanitizeQuote(r.data?.quote) : null;
+    return quote ? { status: 'ok', quote } : { status: 'unavailable' };
+  }
+
   async listBanks(): Promise<Bank[]> {
     try {
       const r = await this.op<{ banks: Bank[] }>('banks', {});
@@ -346,6 +356,7 @@ return []; // The user can type it.
       productId: request.productId,
       amountKobo: Math.round(request.amount * 100),
       tenorMonths: request.tenorMonths,
+      ...(request.quoteId ? { quoteId: request.quoteId } : {}),
     });
     if (typeof r.pdfBase64 !== 'string' || r.pdfBase64.length > MAX_LETTER_BASE64) throw new ApiUnavailableError('offer-letter', 502);
     const bytes = Uint8Array.from(atob(r.pdfBase64), (c) => c.charCodeAt(0));
@@ -430,4 +441,20 @@ function withoutEmptyEmail<B>(body: B): B {
     out[k] = v && typeof v === 'object' && !Array.isArray(v) ? withoutEmptyEmail(v) : v;
   }
   return out as B;
+}
+
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Accepts a quote only if every figure is a real number and the schedule is complete; anything else is treated as no answer. */
+export function sanitizeQuote(raw: unknown): Quote | null {
+  const q = raw as Partial<Quote> | null;
+  if (!q || typeof q !== 'object') return null;
+  const nums = [q.amount, q.tenorMonths, q.ratePercent, q.monthlyRepayment, q.totalFees, q.totalInterest, q.totalRepayable];
+  if (!nums.every((n) => typeof n === 'number' && Number.isFinite(n) && n >= 0)) return null;
+  if (typeof q.quoteId !== 'string' || q.quoteId.length > 600 || typeof q.productId !== 'string' || typeof q.firstDueDate !== 'string' || !DAY.test(q.firstDueDate)) return null;
+  if (typeof q.expiresAt !== 'string' || Number.isNaN(Date.parse(q.expiresAt))) return null;
+  if (!Array.isArray(q.schedule) || q.schedule.length !== q.tenorMonths || q.schedule.length > 60) return null;
+  if (!q.schedule.every((l) => l && Number.isFinite(l.month) && Number.isFinite(l.payment) && Number.isFinite(l.balance) && typeof l.dueDate === 'string' && DAY.test(l.dueDate))) return null;
+  if (!Array.isArray(q.fees) || !q.fees.every((f) => f && typeof f.name === 'string' && Number.isFinite(f.amount))) return null;
+  return q as Quote;
 }

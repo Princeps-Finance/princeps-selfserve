@@ -5,6 +5,7 @@ import { ApplicationStateService } from '../../../core/application/application-s
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 import { ModalComponent } from '../../../shared/modal.component';
+import { QuoteService } from '../../../core/pricing/quote.service';
 import { formatNaira } from '../../../core/money.util';
 import { CheckboxComponent } from '../../../shared/checkbox.component';
 import { OfferLetterComponent } from '../terms/offer-letter.component';
@@ -79,6 +80,7 @@ import { OfferLetterComponent } from '../terms/offer-letter.component';
 })
 export class OfferLetterStepComponent {
   protected readonly state = inject(ApplicationStateService);
+  private readonly quotes = inject(QuoteService);
   protected readonly naira = formatNaira;
   readonly letterOpen = signal(false);
   private readonly flow = inject(FlowNavigator);
@@ -98,6 +100,7 @@ export class OfferLetterStepComponent {
       tenorMonths: o?.tenorMonths ?? 0,
       monthlyRepayment: o?.monthlyRepayment ?? 0,
       ratePercent: o?.ratePercent ?? 0,
+      quoteId: o?.quote?.quoteId,
     };
   });
 
@@ -107,12 +110,14 @@ export class OfferLetterStepComponent {
     if (v) this.attempted.set(false);
   }
 
-  accept(): void {
+  async accept(): Promise<void> {
     if (!this.agreed()) {
       this.attempted.set(true);
       document.querySelector<HTMLElement>('.agree input')?.focus();
       return;
     }
+    // The letter was written from the quote; make sure that quote is still good before it is accepted.
+    if (!(await this.quotes.confirm())) return;
     this.state.setTermsAccepted(new Date().toISOString());
     void this.flow.next(APPLY.offerLetter);
   }

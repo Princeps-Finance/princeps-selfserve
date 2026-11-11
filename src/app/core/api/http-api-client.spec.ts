@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { ApiUnavailableError, HttpApiClient } from './http-api-client';
+import { ApiUnavailableError, HttpApiClient, sanitizeQuote } from './http-api-client';
 
 function reply(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status });
@@ -149,6 +149,38 @@ describe('HttpApiClient', () => {
       const net = TestBed.inject((await import('../network/network-activity.service')).NetworkActivityService);
       await client.verifySalary({ channel: 'ippis', bankCode: '058', accountNumber: '0123456789', fullName: 'Ada Obi' }).catch(() => undefined);
       expect(net.sessionExpired()).toBe(true);
+    });
+  });
+
+  describe('getQuote', () => {
+    const good = {
+      quoteId: 'a.b', expiresAt: '2026-11-11T15:00:00.000Z', productId: 'ippis-standard', amount: 200_000, tenorMonths: 2, ratePercent: 5, interestModel: 'Flat Rate',
+      monthlyRepayment: 105_000, fees: [{ name: 'Fee', amount: 100 }], totalFees: 100, totalInterest: 10_000, totalRepayable: 210_000, firstDueDate: '2026-11-25',
+      schedule: [{ month: 1, dueDate: '2026-11-25', payment: 105_000, balance: 100_000 }, { month: 2, dueDate: '2026-12-24', payment: 105_000, balance: 0 }],
+    };
+
+    it('returns the server\'s quote', async () => {
+      fetchMock.mockResolvedValueOnce(reply({ quote: good }));
+      expect(await client.getQuote({ productId: 'ippis-standard', amount: 200_000, tenorMonths: 2 })).toEqual({ status: 'ok', quote: good });
+    });
+
+    it('tells a refusal from an outage', async () => {
+      fetchMock.mockResolvedValueOnce(reply({ error: { code: 'VALIDATION_ERROR' } }, 400));
+      expect((await client.getQuote({ productId: 'x', amount: 1, tenorMonths: 2 })).status).toBe('invalid');
+      vi.useFakeTimers();
+      fetchMock.mockResolvedValue(reply({}, 503));
+      const pending = client.getQuote({ productId: 'ippis-standard', amount: 200_000, tenorMonths: 2 });
+      await vi.advanceTimersByTimeAsync(5000);
+      expect((await pending).status).toBe('unavailable');
+      vi.useRealTimers();
+    });
+
+    it('treats a damaged quote as no answer', () => {
+      expect(sanitizeQuote(good)).not.toBeNull();
+      expect(sanitizeQuote({ ...good, monthlyRepayment: 'lots' })).toBeNull();
+      expect(sanitizeQuote({ ...good, schedule: good.schedule.slice(0, 1) })).toBeNull();
+      expect(sanitizeQuote({ ...good, firstDueDate: 'tomorrow' })).toBeNull();
+      expect(sanitizeQuote(null)).toBeNull();
     });
   });
 });

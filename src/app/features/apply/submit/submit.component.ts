@@ -1,4 +1,5 @@
 import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
+import { QuoteService } from '../../../core/pricing/quote.service';
 import { HelpLinksComponent } from '../../../shared/help-links.component';
 import { ApiUnavailableError } from '../../../core/api/http-api-client';
 import { CheckboxComponent } from '../../../shared/checkbox.component';
@@ -29,6 +30,7 @@ export class SubmitComponent {
   private readonly toast = inject(ToastService);
   private readonly drafts = inject(DraftService);
   private readonly lang = inject(LangService);
+  private readonly quotes = inject(QuoteService);
 
   readonly contact = this.state.contact;
   readonly employment = this.state.employment;
@@ -64,6 +66,10 @@ export class SubmitComponent {
       return;
     }
     if (this.state.submission().status === 'submitting') return;
+    this.submitting.set(true);
+    const quoteOk = await this.quotes.confirm();
+    this.submitting.set(false);
+    if (!quoteOk) return;
 
     this.submitting.set(true);
     this.failed.set(false);

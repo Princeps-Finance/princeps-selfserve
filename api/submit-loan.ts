@@ -17,6 +17,7 @@ import {
 } from '../src/shared/pricing';
 import { discountedRate } from '../src/shared/referral';
 import { findReferral } from './_lib/referral-codes';
+import { verifyQuote } from './_lib/quote-token';
 import {
   HttpError,
   backofficeConfig,
@@ -59,6 +60,7 @@ const Body = z
     monthlyRepaymentKobo: z.number().int().positive(),
     ratePercent: z.number(),
     interestModel: z.string().max(40),
+    quoteId: z.string().max(600).nullish(),
   })
   .strict();
 
@@ -123,6 +125,16 @@ export default async function handler(req: Request): Promise<Response> {
   ) {
     console.warn('submit-loan: client pricing mismatch', product.id);
     return fail('VALIDATION_ERROR', 'Offer is out of date. Please restart your application.', 409);
+  }
+
+  // When the app names the quote it accepted, the figures must be the ones this server signed, and still valid.
+  if (b.quoteId) {
+    const claims = await verifyQuote(b.quoteId);
+    if (!claims) return fail('QUOTE_INVALID', 'Offer is not valid. Please restart your application.', 409);
+    if (claims.x < Date.now()) return fail('QUOTE_EXPIRED', 'Offer has expired. Please review it again.', 409);
+    if (claims.p !== product.id || claims.a !== b.amountKobo || claims.t !== b.tenorMonths || claims.m !== monthly * 100 || claims.r !== ratePercent) {
+      return fail('QUOTE_MISMATCH', 'Offer is out of date. Please restart your application.', 409);
+    }
   }
 
   const payload = {

@@ -101,7 +101,7 @@
 
   <div class="actions">
     <button type="button" class="link-btn" (click)="back()">{{ 'step.terms.change' | t }}</button>
-    <button type="button" class="cta" (click)="take()">
+    <button type="button" class="cta" [disabled]="checking()" (click)="take()">
       <span>{{ 'step.terms.take' | t }}</span>
       <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
     </button>

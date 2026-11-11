@@ -188,3 +188,16 @@ The app works without these (it falls back to safe defaults), but each one remov
 | Face and document checks | Photo, video and documents are collected and sent as before | Match the selfie with the BVN photo, run liveness on the video, read and classify documents, and send only mismatches and edge cases to a person |
 | Document upload address | When `upload-document` answers `{ status: "ok", uploadUrl }` with an `https` address, the app sends the file there with a progress bar and up to three tries. Without an address it only records the file name and size, as before | Return a one-time `uploadUrl` (for example a presigned PUT) and allow its host in the page's `connect-src` |
 | Holidays that follow the moon | Payday moves back from a weekend or a public holiday; Easter-based and fixed-date holidays are built in | Send the dates of Eid and the Prophet's birthday each year, to add to `EXTRA_HOLIDAYS` in `payday.ts` |
+
+## Repayments come from the server (quote)
+
+The app no longer works out the repayment figures. `POST /api/quote` `{ productId, amount, tenorMonths, referralCode? }` returns the quote
+the customer sees, reads aloud, signs and is deducted:
+
+`{ quoteId, expiresAt, productId, amount, tenorMonths, ratePercent, interestModel, monthlyRepayment, fees[], totalFees, totalInterest, totalRepayable, firstDueDate, schedule: [{ month, dueDate, payment, balance }] }`
+
+- **Today** our own server answers it (`api/quote.ts`, using the shared pricing and pay-date rules in `src/shared`), and `submit-loan` checks the
+  `quoteId` it receives: the id is signed with `QUOTE_SECRET`, so figures the server never offered, or an expired quote, are refused with 409
+  (`QUOTE_INVALID`, `QUOTE_MISMATCH`, `QUOTE_EXPIRED`). Set `QUOTE_SECRET` (16 or more random characters) in production.
+- **Later**, when Caltos prices loans, `api/quote.ts` should call it and pass its figures through unchanged. The app needs no change.
+- Amounts are in naira, due dates are plain days (`YYYY-MM-DD`), and a quote is valid for one hour.

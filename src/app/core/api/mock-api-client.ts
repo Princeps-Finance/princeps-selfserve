@@ -5,6 +5,8 @@ import type {
   LookupResult,
   SalaryVerifyInput,
   AccountLookupResult,
+  QuoteInput,
+  QuoteResult,
   SalaryVerifyResult,
   BvnVerifyResult,
   DocUploadInput,
@@ -32,6 +34,9 @@ import type {
   RequiredProfileField,
 } from './api.types';
 import type { ApiClient } from './api-client';
+import { buildQuote } from '../../../shared/quote';
+import { pricingProductById } from '../../../shared/pricing';
+import { discountedRate } from '../../../shared/referral';
 import { buildSimplePdf } from '../pdf/simple-pdf';
 import { maskPhoneNg } from './contact.util';
 import { scoreEligibility, type EligibilityInput } from '../eligibility/eligibility-scoring';
@@ -204,6 +209,16 @@ export class MockApiClient implements ApiClient {
     if (code === '123456') return { status: 'ok' } as const;
     if (code === '000000') return { status: 'expired' } as const;
     return { status: 'wrong' } as const;
+  }
+
+  /** Demo: priced here with the same code the server uses, so the figures match what production would return. */
+  async getQuote(input: QuoteInput): Promise<QuoteResult> {
+    await delay(350);
+    const product = pricingProductById(input.productId);
+    if (!product || input.amount < product.minAmount || input.amount > product.maxAmount || input.tenorMonths < product.minTenorMonths || input.tenorMonths > product.maxTenorMonths) return { status: 'invalid' };
+    const discount = input.referralCode?.trim().toUpperCase() === 'DEMO10' ? { code: 'DEMO10', rateDiscountPct: 1, label: '' } : null;
+    const quote = buildQuote(product, input.amount, input.tenorMonths, discountedRate(product.ratePercent, discount), 'demo-' + randomRef());
+    return { status: 'ok', quote };
   }
 
   async listBanks(): Promise<Bank[]> {

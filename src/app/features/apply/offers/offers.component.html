@@ -110,6 +110,26 @@
                 </div>
               </div>
 
+              <!-- The monthly figure: an estimate while the server works it out, then the server's exact figure. -->
+              <div class="quote" aria-live="polite">
+                @switch (quoteView()?.status) {
+                  @case ('ready') {
+                    <p class="quote-line"><span>{{ 'offers.monthly.exact' | t }}</span> <strong>{{ formatNaira(quoteView()?.quote?.monthlyRepayment ?? o.quote.monthly) }}</strong></p>
+                  }
+                  @case ('error') {
+                    <p class="quote-line quote-line--est"><span>{{ 'offers.monthly.estimate' | t }}</span> <strong>{{ formatNaira(o.quote.monthly) }}</strong></p>
+                    <p class="quote-error" role="alert">{{ 'offers.quote.error' | t }}</p>
+                    <button type="button" class="alt" (click)="retryQuote()">{{ 'common.retry' | t }}</button>
+                  }
+                  @case ('invalid') {
+                    <p class="quote-error" role="alert">{{ 'offers.quote.invalid' | t }}</p>
+                  }
+                  @default {
+                    <p class="quote-line quote-line--est"><span>{{ 'offers.monthly.estimate' | t }}</span> <strong>{{ formatNaira(o.quote.monthly) }}</strong> <span class="quote-wait">{{ 'offers.quote.loading' | t }}</span></p>
+                  }
+                }
+              </div>
+
               <app-referral-box />
             </div>
           }
@@ -118,7 +138,7 @@
     </div>
 
     @if (selected(); as o) {
-      <button type="button" class="cta" (click)="pick(o)">
+      <button type="button" class="cta" [disabled]="!quoteReady()" [attr.aria-busy]="quoteView()?.status === 'loading' ? 'true' : null" (click)="pick(o)">
         <span>{{ 'offers.continue' | t }}</span>
         <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
       </button>
