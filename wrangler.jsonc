@@ -15,11 +15,5 @@
     "run_worker_first": ["/api/*"]
   },
   "observability": { "enabled": true },
-  "vars": { "APP_ENV": "development", "SELF_SERVICE_API_URL": "https://self-service-api.princeps.cloud" },
-  "env": {
-    "production": {
-      "name": "princeps-selfserve-production",
-      "vars": { "APP_ENV": "production", "SELF_SERVICE_API_URL": "https://self-service-api.princeps.cloud" }
-    }
-  }
+  "vars": { "APP_ENV": "development", "SELF_SERVICE_API_URL": "https://self-service-api.princeps.cloud" }
 }

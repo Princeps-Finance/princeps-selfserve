@@ -26,16 +26,12 @@ npx ng build
 ```
 
 ## Deployments
-The app and its API run as one Cloudflare Worker (`wrangler.jsonc`, `worker/index.ts`) on the Princeps Cloudflare account
-(product@princepsfinance.com). A push to `self-service-development` deploys the development Worker and a push to `self-service-production`
-deploys production (`.github/workflows/deploy.yml`, after the tests; production also runs the go-live gate). Manual deploys:
+- **Development** runs as a Cloudflare Worker (`wrangler.jsonc`, `worker/index.ts`) on the Princeps Cloudflare account
+  (product@princepsfinance.com). A push to `self-service-development` deploys it (`.github/workflows/deploy.yml`, after the
+  tests; pushes that only change docs, `design/` or `.claude/` are skipped). Manual deploy: `npx wrangler whoami`, then
+  `npm run deploy`.
+- **Production** runs on AWS Amplify (the app) and a Lambda (the API). See `docs/amplify.md`. It builds from
+  `self-service-production`, and the go-live gate (`npm run check:live`) runs on every pull request into that branch.
 
-```bash
-npx wrangler whoami            # confirm the account first
-npm run deploy                 # development: princeps-selfserve
-npm run deploy:production      # production: princeps-selfserve-production
-```
-
-Settings the API needs are set with `npx wrangler secret put <NAME>` (never in the repo): `BACKOFFICE_API_URL`,
-`SELFSERVE_INGEST_TOKEN`, `TURNSTILE_SECRET`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `REFERRAL_CODES`,
-and `ALLOWED_ORIGINS` once there is a domain. GitHub Actions runs the tests and the build on every pull request.
+Settings the development API needs are set with `npx wrangler secret put <NAME>` (never in the repo). Production secrets
+live in AWS Secrets Manager.

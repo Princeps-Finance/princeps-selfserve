@@ -7,9 +7,9 @@ Tick a box only when it is done and tested, not when it is planned.
 ## 1. Settings on the production branch
 - [ ] `environment.production.ts`: `useMockApi: false`, `demoBanner: false`, `turnstileSiteKey` set, `customerModuleUrl` on the Princeps domain.
 - [x] `support.ts`: real support phone, WhatsApp and email. (The licence number is optional: leave `LICENCE_NUMBER` empty and nothing is shown.)
-- [ ] The production domain is set up on Cloudflare and `ALLOWED_ORIGINS` lists it.
+- [ ] The production domain is set up on Amplify and `ALLOWED_ORIGINS` lists it.
 
-## 2. Cloudflare Worker settings (production only)
+## 2. AWS settings (Secrets Manager and the SAM stack) (production only)
 - [ ] `BACKOFFICE_API_URL` and `SELFSERVE_INGEST_TOKEN`: where our server sends calls, and its key.
 - [ ] `SELF_SERVICE_API_URL`: the live self-service API, `https://self-service-api.princeps.cloud`. Used to read which employment types are open.
 - [ ] `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`: the shared rate-limit store. Without them the app refuses every limited call on purpose.

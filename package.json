@@ -10,7 +10,6 @@
     "typecheck:api": "tsc -p tsconfig.api.json",
     "test:ci": "ng test --watch=false",
     "deploy": "ng build && wrangler deploy",
-    "deploy:production": "ng build && wrangler deploy --env production",
     "preview:worker": "ng build && wrangler dev",
     "build:icons": "node scripts/build-icons.mjs",
     "check:live": "node scripts/check-live-config.mjs"

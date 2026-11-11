@@ -1,0 +1,38 @@
+# Security and cache headers for Amplify Hosting (the same set as public/_headers, which Cloudflare reads).
+customHeaders:
+  - pattern: "**"
+    headers:
+      - key: "Content-Security-Policy"
+        value: "default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://salesiq.zohopublic.com https://*.zohopublic.com https://*.zohostatic.com; frame-src https://challenges.cloudflare.com https://*.zohopublic.com; style-src 'self' 'unsafe-inline' https://*.zohopublic.com https://*.zohostatic.com; font-src 'self' https://*.zohostatic.com https://*.zohopublic.com; img-src 'self' data: blob: https://*.zohopublic.com https://*.zohostatic.com https://*.zoho.com; media-src 'self' blob: data:; connect-src 'self' https://challenges.cloudflare.com https://*.zohopublic.com wss://*.zohopublic.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+      - key: "X-Content-Type-Options"
+        value: "nosniff"
+      - key: "X-Frame-Options"
+        value: "DENY"
+      - key: "Referrer-Policy"
+        value: "strict-origin-when-cross-origin"
+      - key: "Permissions-Policy"
+        value: "camera=(self), microphone=(self), geolocation=(), payment=()"
+      - key: "Strict-Transport-Security"
+        value: "max-age=63072000; includeSubDomains"
+      - key: "Cross-Origin-Opener-Policy"
+        value: "same-origin"
+  - pattern: "/ngsw-worker.js"
+    headers:
+      - key: "Cache-Control"
+        value: "no-cache"
+  - pattern: "/ngsw.json"
+    headers:
+      - key: "Cache-Control"
+        value: "no-cache"
+  - pattern: "/manifest.webmanifest"
+    headers:
+      - key: "Cache-Control"
+        value: "no-cache"
+  - pattern: "/index.html"
+    headers:
+      - key: "Cache-Control"
+        value: "no-cache"
+  - pattern: "/"
+    headers:
+      - key: "Cache-Control"
+        value: "no-cache"
