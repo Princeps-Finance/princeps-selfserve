@@ -29,7 +29,10 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
         />
       }
       <app-illustration name="coins" [size]="176" />
-      <h1 class="title">{{ 'welcome.intent.title' | t }}</h1>
+      <div class="intro">
+        <h1 class="title">{{ 'welcome.intent.title' | t }}</h1>
+        <p class="subtitle">{{ 'welcome.intent.subtitle' | t }}</p>
+      </div>
 
       <div class="actions">
         <div class="choice">
@@ -53,6 +56,8 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
   styles: [
     `
 .step { gap: var(--space-5); padding-top: var(--space-6); }
+.intro { display: flex; flex-direction: column; gap: var(--space-2); }
+.subtitle { margin: 0; text-align: center; color: var(--ink-soft); line-height: 1.5; }
 .title { text-align: center; font-size: clamp(24px, 6.5vw, 30px); line-height: 1.15; letter-spacing: -0.02em; }
       .actions { margin-top: auto; display: flex; flex-direction: column; gap: var(--space-5); padding-top: var(--space-6); }
       .choice { display: flex; flex-direction: column; gap: var(--space-2); }
