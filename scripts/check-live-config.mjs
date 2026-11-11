@@ -10,7 +10,7 @@ const env = read('src/environments/environment.production.ts');
 if (!/useMockApi:\s*false/.test(env)) problems.push('environment.production.ts: useMockApi must be false.');
 if (!/demoBanner:\s*false/.test(env)) problems.push('environment.production.ts: demoBanner must be false.');
 if (!/turnstileSiteKey:\s*'[^']{10,}'/.test(env)) problems.push('environment.production.ts: turnstileSiteKey is empty (bot check off).');
-if (/customerModuleUrl:\s*'[^']*vercel\.app/.test(env)) problems.push('environment.production.ts: customerModuleUrl still points at a vercel.app address. Use the Princeps domain.');
+if (/customerModuleUrl:\s*'[^']*(vercel\.app|workers\.dev)/.test(env)) problems.push('environment.production.ts: customerModuleUrl still points at a vercel.app address. Use the Princeps domain.');
 
 const support = read('src/app/core/support.ts');
 if (/2348001234567|support@princeps\.ng/.test(support)) problems.push('support.ts: the support phone, WhatsApp or email is still the placeholder.');

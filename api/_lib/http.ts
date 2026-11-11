@@ -1,4 +1,4 @@
-// Shared helpers for the Vercel functions: JSON responses, same-origin check,
+// Shared helpers for the API handlers: JSON responses, same-origin check,
 // body-size limit, best-effort rate limiting and the backoffice fetch wrapper.
 
 export function json(payload: unknown, status = 200): Response {
@@ -120,7 +120,7 @@ export async function rateLimited(key: string, limit: number, windowMs = 60_000)
   const url = process.env['UPSTASH_REDIS_REST_URL'];
   const token = process.env['UPSTASH_REDIS_REST_TOKEN'];
   if (url && token) return sharedLimited(url, token, key, limit, windowMs);
-  if (process.env['VERCEL_ENV'] === 'production') {
+  if (process.env['APP_ENV'] === 'production') {
     console.error('rate limit store not configured (UPSTASH_REDIS_REST_URL / _TOKEN); refusing the call');
     return true;
   }
@@ -175,7 +175,7 @@ export async function callBackoffice(
 export async function verifyCaptcha(token: string | undefined, ip: string): Promise<boolean> {
   const secret = process.env['TURNSTILE_SECRET'];
   // No secret is acceptable only while developing; in production a missing secret must not switch the check off.
-  if (!secret) return process.env['VERCEL_ENV'] !== 'production';
+  if (!secret) return process.env['APP_ENV'] !== 'production';
   if (!token) return false;
   try {
     const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {

@@ -18,6 +18,7 @@
   },
   "include": [
     "api/**/*.ts",
+    "worker/**/*.ts",
     "src/shared/**/*.ts"
   ],
   "exclude": [

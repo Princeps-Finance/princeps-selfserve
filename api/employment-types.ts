@@ -1,9 +1,8 @@
-// Vercel Function: the employment types the Princeps self-service API can serve right now.
+// API handler (runs in the Cloudflare Worker): the employment types the Princeps self-service API can serve right now.
 // A read-only pass-through, so the app can show only the choices that are really open. It sends nothing about
 // the customer, and only the fields the app uses go back to the browser.
 import { clientIp, fail, isSameOrigin, json, rateLimited } from './_lib/http';
 
-export const config = { runtime: 'nodejs' };
 
 export default async function handler(req: Request): Promise<Response> {
   if (req.method !== 'GET') return fail('METHOD_NOT_ALLOWED', 'GET only.', 405);

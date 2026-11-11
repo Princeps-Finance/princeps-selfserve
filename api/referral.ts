@@ -1,10 +1,9 @@
-// Vercel Function: checks a referral code the customer typed and answers with the discount, so the codes
+// API handler (runs in the Cloudflare Worker): checks a referral code the customer typed and answers with the discount, so the codes
 // never ship in the browser bundle. The discount is granted again, from the same table, in /api/submit-loan.
 import { z } from 'zod';
 import { HttpError, clientIp, fail, isSameOrigin, json, rateLimited, readJson } from './_lib/http';
 import { findReferral } from './_lib/referral-codes';
 
-export const config = { runtime: 'nodejs' };
 
 const Body = z.object({ code: z.string().trim().regex(/^[A-Za-z0-9]{3,20}$/) }).strict();
 

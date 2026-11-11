@@ -1,4 +1,4 @@
-// Vercel Function: validated, rate-limited proxy for the identity and
+// API handler (runs in the Cloudflare Worker): validated, rate-limited proxy for the identity and
 // verification calls (OTP, BVN, NIN, salary, waitlist...) that the browser
 // may not make directly. The backoffice implements POST /api/selfserve/<op>
 // and returns the JSON shapes documented in API.md. Responses are filtered to
@@ -18,7 +18,6 @@ import {
   readJson,
 } from '../_lib/http';
 
-export const config = { runtime: 'nodejs' };
 
 const phone = z.string().regex(/^\+234[789]\d{9}$/);
 const digits = (n: number) => z.string().regex(new RegExp(`^\\d{${n}}$`));
