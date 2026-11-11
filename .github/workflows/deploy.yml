@@ -1,11 +1,12 @@
 name: Deploy
 
-# Development and production each deploy to Cloudflare when their branch changes. The tests run first.
+# Development deploys to Cloudflare when self-service-development changes. The tests run first.
+# Production is on AWS Amplify (see docs/amplify.md) and builds from self-service-production on its own.
 # Needs two repository secrets: CLOUDFLARE_API_TOKEN (a token limited to Workers on the Princeps account)
 # and CLOUDFLARE_ACCOUNT_ID.
 on:
   push:
-    branches: [self-service-development, self-service-production]
+    branches: [self-service-development]
     # Build filter: a push that only touches notes, docs or local tooling does not need a new deploy.
     paths-ignore:
       - '**.md'
@@ -24,7 +25,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name == 'self-service-production' && 'production' || 'development' }}
+    environment: development
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -34,17 +35,9 @@ jobs:
       - run: npm ci
       - run: npm run typecheck:api
       - run: npm run test:ci
-      - name: Go-live gate (production only)
-        if: github.ref_name == 'self-service-production'
-        run: npm run check:live
       - run: npm run build
       - name: Deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          if [ "${{ github.ref_name }}" = "self-service-production" ]; then
-            npx wrangler deploy --env production
-          else
-            npx wrangler deploy
-          fi
+        run: npx wrangler deploy

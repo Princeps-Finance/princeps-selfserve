@@ -16,9 +16,19 @@ export function fail(code: string, message: string, status: number): Response {
   return json({ error: { code, message } }, status);
 }
 
+/**
+ * The caller's address, for rate limits. A client can send its own X-Forwarded-For, so the first entry is never
+ * trusted: Cloudflare's own header wins, otherwise the proxies in front of us (TRUSTED_PROXY_HOPS, default 1) each add
+ * one entry at the end, and the real address is that many from the end.
+ */
 export function clientIp(req: Request): string {
+  const cf = req.headers.get('cf-connecting-ip');
+  if (cf) return cf.trim();
   const fwd = req.headers.get('x-forwarded-for');
-  return (fwd ? fwd.split(',')[0] : req.headers.get('x-real-ip') ?? 'unknown').trim();
+  if (!fwd) return (req.headers.get('x-real-ip') ?? 'unknown').trim();
+  const parts = fwd.split(',').map((p) => p.trim()).filter(Boolean);
+  const hops = Math.max(1, Number(process.env['TRUSTED_PROXY_HOPS']) || 1);
+  return parts[Math.max(0, parts.length - hops)] ?? 'unknown';
 }
 
 /**

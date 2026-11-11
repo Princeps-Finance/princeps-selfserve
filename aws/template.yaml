@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Princeps self-service API (production). One Lambda behind an HTTP API; Amplify Hosting proxies /api/* to it.
+
+Parameters:
+  AllowedOrigins:
+    Type: String
+    Description: The production site address(es), comma separated, e.g. https://apply.example.com
+  SelfServiceApiUrl:
+    Type: String
+    Default: https://self-service-api.princeps.cloud
+  SecretName:
+    Type: String
+    Default: princeps/selfserve-prod
+    Description: Secrets Manager secret (JSON) holding BACKOFFICE_API_URL, SELFSERVE_INGEST_TOKEN, TURNSTILE_SECRET, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN and REFERRAL_CODES.
+
+Globals:
+  Function:
+    Runtime: nodejs22.x
+    Architectures: [arm64]
+    MemorySize: 256
+    Timeout: 15
+
+Resources:
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Format: esm
+        Target: es2022
+        Minify: true
+        OutExtension: ['.js=.mjs']
+        EntryPoints: [aws/handler.ts]
+    Properties:
+      CodeUri: ../
+      Handler: handler.handler
+      Environment:
+        Variables:
+          APP_ENV: production
+          # The proxies in front of the function that each add one X-Forwarded-For entry (CloudFront, then API Gateway).
+          # Check this after the first deploy: see docs/amplify.md.
+          TRUSTED_PROXY_HOPS: '2'
+          ALLOWED_ORIGINS: !Ref AllowedOrigins
+          SELF_SERVICE_API_URL: !Ref SelfServiceApiUrl
+          BACKOFFICE_API_URL: !Sub '{{resolve:secretsmanager:${SecretName}:SecretString:BACKOFFICE_API_URL}}'
+          SELFSERVE_INGEST_TOKEN: !Sub '{{resolve:secretsmanager:${SecretName}:SecretString:SELFSERVE_INGEST_TOKEN}}'
+          TURNSTILE_SECRET: !Sub '{{resolve:secretsmanager:${SecretName}:SecretString:TURNSTILE_SECRET}}'
+          UPSTASH_REDIS_REST_URL: !Sub '{{resolve:secretsmanager:${SecretName}:SecretString:UPSTASH_REDIS_REST_URL}}'
+          UPSTASH_REDIS_REST_TOKEN: !Sub '{{resolve:secretsmanager:${SecretName}:SecretString:UPSTASH_REDIS_REST_TOKEN}}'
+          REFERRAL_CODES: !Sub '{{resolve:secretsmanager:${SecretName}:SecretString:REFERRAL_CODES}}'
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /api/{proxy+}
+            Method: ANY
+
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      # A ceiling on top of the app's own rate limits, so a flood cannot run up the bill.
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 50
+        ThrottlingRateLimit: 25
+
+Outputs:
+  ApiUrl:
+    Description: Point the Amplify /api/ rewrite at this address.
+    Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com'
