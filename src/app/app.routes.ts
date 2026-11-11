@@ -149,13 +149,13 @@ export const routes: Routes = [
       },
       {
         path: 'offer-letter',
-        canMatch: [requiresOfferGuard, requiresDocumentsGuard],
+        canMatch: [requiresOfferGuard, requiresDocumentsGuard, requiresIdentityVerificationGuard],
         loadComponent: () =>
           import('./features/apply/offer-letter-step/offer-letter-step.component').then((m) => m.OfferLetterStepComponent),
       },
       {
         path: 'mandate',
-        canMatch: [requiresOfferGuard, requiresDocumentsGuard, requiresTermsGuard],
+        canMatch: [requiresOfferGuard, requiresDocumentsGuard, requiresIdentityVerificationGuard, requiresTermsGuard],
         loadComponent: () =>
           import('./features/apply/mandate/mandate.component').then((m) => m.MandateComponent),
       },
@@ -169,7 +169,7 @@ export const routes: Routes = [
       },
       {
         path: 'verify-identity',
-        canMatch: [requiresNinIfNeededGuard, requiresDocumentsGuard, requiresMandateGuard],
+        canMatch: [requiresNinIfNeededGuard, requiresDocumentsGuard],
         loadComponent: () =>
           import('./features/apply/verify-identity/verify-identity.component').then(
             (m) => m.VerifyIdentityComponent,

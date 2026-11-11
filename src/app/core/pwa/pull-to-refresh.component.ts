@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { TPipe } from '../i18n/t.pipe';
 import { HapticsService } from '../ui/haptics.service';
 
-const THRESHOLD = 72;
-const MAX_PULL = 110;
+const THRESHOLD = 90;
+const MAX_PULL = 120;
 
 /**
  * Pull down from the top of the page to reload it, like a phone app. The installed app has no browser reload
@@ -23,8 +23,8 @@ const MAX_PULL = 110;
   },
   template: `
     @if (pull() > 0 || loading()) {
-      <div class="ptr" role="status" [style.transform]="'translateY(' + offset() + 'px)'" [class.is-ready]="ready()" [class.is-loading]="loading()">
-        <svg class="icon" [style.transform]="loading() ? null : 'rotate(' + rotation() + 'deg)'" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <div class="ptr" role="status" [style.transform]="'translateY(' + offset() + 'px)'" [style.--fill.%]="loading() ? 100 : progress()" [class.is-ready]="ready()" [class.is-loading]="loading()">
+        <svg class="icon" [style.transform]="loading() ? null : 'rotate(' + rotation() + 'deg)'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M20 11a8 8 0 1 0-2.3 5.7" />
           <path d="M20 4v7h-7" />
         </svg>
@@ -38,10 +38,13 @@ const MAX_PULL = 110;
         position: fixed; top: calc(env(safe-area-inset-top) - 52px); left: 50%; margin-left: -80px; width: 160px; z-index: 90;
         display: flex; align-items: center; justify-content: center; gap: var(--space-2);
         height: 40px; border-radius: var(--radius-pill); pointer-events: none;
-        background: var(--surface-0); color: var(--ink); border: 1px solid var(--hairline-strong); box-shadow: var(--shadow-2);
+        /* The pill fills from the left as the pull gets longer; fully filled means letting go will reload. */
+        background: linear-gradient(to right, color-mix(in srgb, var(--action-primary) 38%, var(--surface-0)) var(--fill), var(--surface-0) var(--fill));
+        color: var(--ink); border: 1px solid var(--hairline-strong); box-shadow: var(--shadow-2);
         font-size: var(--fs-sm); font-weight: 500;
       }
       .icon { flex: none; }
+      .is-ready { border-color: var(--action-primary); }
       .is-ready .icon { color: var(--text-accent); }
       .is-loading .icon { animation: ptr-spin 800ms linear infinite; }
       @keyframes ptr-spin { to { transform: rotate(360deg); } }
@@ -56,6 +59,7 @@ export class PullToRefreshComponent {
   protected readonly loading = signal(false);
   protected readonly ready = computed(() => this.pull() >= THRESHOLD);
   protected readonly offset = computed(() => (this.loading() ? 64 : this.pull()));
+  protected readonly progress = computed(() => Math.min(this.pull() / THRESHOLD, 1) * 100);
   protected readonly rotation = computed(() => Math.min(this.pull() / THRESHOLD, 1) * 270);
 
   private startY: number | null = null;

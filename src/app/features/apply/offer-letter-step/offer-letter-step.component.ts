@@ -4,7 +4,6 @@ import { TPipe } from '../../../core/i18n/t.pipe';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
-import { IconComponent } from '../../../shared/icon.component';
 import { ModalComponent } from '../../../shared/modal.component';
 import { formatNaira } from '../../../core/money.util';
 import { CheckboxComponent } from '../../../shared/checkbox.component';
@@ -16,7 +15,7 @@ import { OfferLetterComponent } from '../terms/offer-letter.component';
  */
 @Component({
   selector: 'app-offer-letter-step',
-  imports: [AnimatedIconComponent, IconComponent, ModalComponent, TPipe, CheckboxComponent, OfferLetterComponent],
+  imports: [AnimatedIconComponent, ModalComponent, TPipe, CheckboxComponent, OfferLetterComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="step">
@@ -33,34 +32,31 @@ import { OfferLetterComponent } from '../terms/offer-letter.component';
         </dl>
       }
 
-      <button type="button" class="alt read" (click)="letterOpen.set(true)">
-        <span>{{ (letterRead() ? 'step.offerletter.reread' : 'step.offerletter.read') | t }}</span>
-        @if (letterRead()) {
-          <app-icon name="bold-success" [size]="18" class="read-ok" />
-        }
+      <button type="button" class="cta" (click)="letterOpen.set(true)">
+        <span>{{ 'step.offerletter.read' | t }}</span>
+        <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
       </button>
-      @if (!letterRead()) {
-        <p class="note">{{ 'step.offerletter.readfirst' | t }}</p>
-      }
 
+      <!-- The letter, the agreement and the accept button live in the window: the box unlocks once the letter is read to the end. -->
       <app-modal [open]="letterOpen()" [title]="'pdf.letter.title' | t" (closed)="letterOpen.set(false)">
         @if (letterOpen()) {
           <app-offer-letter [request]="letterRequest()" (readToEnd)="letterRead.set(true)" />
+          <label class="agree" [class.is-locked]="!letterRead()">
+            <app-checkbox [invalid]="attempted() && !agreed()" describedBy="agree-error" [disabled]="!letterRead()" [checked]="agreed()" (checkedChange)="toggleAgree($event)" />
+            <span>{{ 'step.terms.agree' | t }}</span>
+          </label>
+          @if (!letterRead()) {
+            <p class="note">{{ 'step.offerletter.readfirst' | t }}</p>
+          }
+          @if (attempted() && !agreed()) {
+            <p class="msg--error" id="agree-error" role="alert">{{ 'form.agree.required' | t }}</p>
+          }
+          <button type="button" class="cta accept" [disabled]="!agreed()" (click)="accept()">
+            <span>{{ 'step.offerletter.accept' | t }}</span>
+            <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
+          </button>
         }
       </app-modal>
-
-      <label class="agree" [class.is-locked]="!letterRead()">
-        <app-checkbox [invalid]="attempted() && !agreed()" describedBy="agree-error" [disabled]="!letterRead()" [checked]="agreed()" (checkedChange)="toggleAgree($event)" />
-        <span>{{ 'step.terms.agree' | t }}</span>
-      </label>
-      @if (attempted() && !agreed()) {
-        <p class="msg--error" id="agree-error" role="alert">{{ 'form.agree.required' | t }}</p>
-      }
-
-      <button type="button" class="cta" (click)="accept()">
-        <span>{{ 'step.offerletter.accept' | t }}</span>
-        <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
-      </button>
     </section>
   `,
   styles: [
@@ -76,9 +72,8 @@ import { OfferLetterComponent } from '../terms/offer-letter.component';
       .facts > div { display: flex; justify-content: space-between; gap: var(--space-4); padding: var(--space-4) 0; border-bottom: 1px solid var(--hairline); }
       .facts dt { color: var(--ink-soft); }
       .facts dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
-      .read { gap: var(--space-2); }
-      .read-ok { color: var(--success-text); }
-      .note { margin: calc(var(--space-2) * -1) 0 0; font-size: var(--fs-sm); color: var(--ink-muted); }
+      .accept { margin-top: var(--space-3); }
+      .note { margin: var(--space-2) 0 0; font-size: var(--fs-sm); color: var(--ink-muted); }
     `,
   ],
 })

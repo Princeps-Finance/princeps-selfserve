@@ -13,9 +13,10 @@ import { TPipe } from '../core/i18n/t.pipe';
   template: `
     <dialog #dlg class="modal" aria-labelledby="modal-title" (close)="closed.emit()" (click)="onBackdrop($event)">
       <div class="panel">
+        <!-- A window has no screen behind it to go "back" to, so it offers Close, on the right. -->
         <button type="button" class="back" (click)="dlg.close()">
-          <app-icon name="bold-chevron-down" [size]="16" [rotate]="90" />
-          <span>{{ 'common.back' | t }}</span>
+          <span>{{ 'common.close' | t }}</span>
+          <app-icon name="bold-close" [size]="16" />
         </button>
         <h2 id="modal-title" class="sr-only" tabindex="-1" autofocus>{{ title() }}</h2>
         <div class="card"><ng-content /></div>
@@ -40,8 +41,8 @@ import { TPipe } from '../core/i18n/t.pipe';
       .modal::backdrop { background: var(--overlay); }
       .panel { display: flex; flex-direction: column; gap: var(--space-3); max-height: min(92dvh, 900px); padding: var(--space-4) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom)); box-sizing: border-box; }
       .back {
-        flex: none; align-self: flex-start; display: inline-flex; align-items: center; gap: var(--space-1);
-        min-height: 44px; padding: 0 var(--space-4) 0 var(--space-3); border: 0; border-radius: var(--radius-md);
+        flex: none; align-self: flex-end; display: inline-flex; align-items: center; gap: var(--space-1);
+        min-height: 44px; padding: 0 var(--space-3) 0 var(--space-4); border: 0; border-radius: var(--radius-md);
         background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); font: 500 var(--fs-base) var(--font-sans); cursor: pointer;
         transition: transform 120ms ease-out, background 160ms ease;
       }

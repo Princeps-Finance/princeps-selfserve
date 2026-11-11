@@ -179,8 +179,29 @@ export class VerifyIdentityComponent implements OnDestroy {
     void this.startCamera(false);
   }
 
+  /** Set when a picture or video is retaken from the review page: after it, the customer goes straight back to the review. */
+  private fromReview = false;
+
+  retakeFromReview(what: 'photo' | 'video'): void {
+    this.fromReview = true;
+    this.cameraError.set(null);
+    if (what === 'photo') {
+      this.facePhoto.set(null);
+      this.stage.set('face');
+      void this.startCamera(false);
+    } else {
+      this.stage.set('video');
+      this.retakeVideo();
+    }
+  }
+
   proceedToVideo(): void {
     if (!this.facePhoto()) return;
+    if (this.fromReview && this.videoDataUrl()) {
+      this.fromReview = false;
+      this.stage.set('review');
+      return;
+    }
     this.stage.set('video');
     void this.startCamera(true);
   }
@@ -250,7 +271,10 @@ export class VerifyIdentityComponent implements OnDestroy {
     if (url) URL.revokeObjectURL(url);
   }
 
-  goReview(): void { this.stage.set('review'); }
+  goReview(): void {
+    this.fromReview = false;
+    this.stage.set('review');
+  }
 
   confirm(): void {
     if (!this.canContinue()) {
@@ -264,7 +288,7 @@ export class VerifyIdentityComponent implements OnDestroy {
       capturedAt: new Date().toISOString(),
       offerKey: this.offerKey(),
     });
-    void this.flow.go(APPLY.submit);
+    void this.flow.go(APPLY.offerLetter);
   }
 
   ngOnDestroy(): void {

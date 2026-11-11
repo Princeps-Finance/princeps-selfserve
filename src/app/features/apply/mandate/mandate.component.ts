@@ -167,7 +167,7 @@ this.linkError.set(true);
       mode: 'link',
       reference: this.linkRef() ?? undefined,
     });
-    void this.flow.go(APPLY.verifyIdentity);
+    void this.flow.go(APPLY.submit);
   }
 
   toggleAgree(v: boolean): void {
@@ -192,6 +192,6 @@ this.linkError.set(true);
       authorizedAt: new Date().toISOString(),
       mode: 'authorize',
     });
-    void this.flow.go(APPLY.verifyIdentity);
+    void this.flow.go(APPLY.submit);
   }
 }

@@ -51,7 +51,7 @@
         <input
           id="account"
           [attr.aria-invalid]="invalid('accountNumber')"
-          [attr.aria-describedby]="invalid('accountNumber') ? 'account-error' : 'account-hint'"
+          [attr.aria-describedby]="invalid('accountNumber') ? 'account-error' : lookup().state === 'ok' ? null : 'account-hint'"
           class="input"
           type="text"
           inputmode="numeric"
@@ -69,14 +69,14 @@
       <div class="lookup" aria-live="polite">
         @switch (lookup().state) {
           @case ('loading') { <p class="msg">{{ 'step.salary.account.checking' | t }}</p> }
-          @case ('ok') { <p class="name"><app-icon name="bold-success" [size]="16" /> {{ lookup().name }}</p> }
+          @case ('ok') { <p class="name-pill"><app-icon name="bold-success" [size]="16" /><span>{{ lookup().name }}</span></p> }
           @case ('not-found') { <p class="msg msg--error">{{ 'step.salary.account.notfound' | t }}</p> }
           @case ('unavailable') { <p class="msg">{{ 'step.salary.account.unavailable' | t }}</p> }
         }
       </div>
       @if (form.controls.accountNumber.touched && form.controls.accountNumber.invalid) {
         <p class="msg msg--error" id="account-error" role="alert">{{ 'step.salary.account.invalid' | t }}</p>
-      } @else {
+      } @else if (lookup().state !== 'ok') {
         <p class="msg" id="account-hint">{{ 'step.salary.account.hint' | t }}</p>
       }
     </div>

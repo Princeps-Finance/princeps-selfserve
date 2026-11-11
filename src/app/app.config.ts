@@ -16,7 +16,7 @@ export const appConfig: ApplicationConfig = {
     // Production only. Waits for the app to settle so the first paint is never delayed.
     provideServiceWorker('ngsw-worker.js', {
       enabled: environment.production,
-      registrationStrategy: 'registerWhenStable:30000',
+      registrationStrategy: 'registerImmediately',
     }),
     { provide: API_CLIENT, useExisting: environment.useMockApi ? MockApiClient : HttpApiClient },
   ],

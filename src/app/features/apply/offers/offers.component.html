@@ -80,16 +80,13 @@
                 />
                 @if (askedMore()[o.product.id]; as more) {
                   <div class="agent" role="status">
-                    <app-icon name="bold-info" [size]="22" class="agent-icon" />
-                    <div class="agent-main">
-                      <p class="agent-text">
-                        <strong>{{ 'offers.more.title' | t: { amount: formatNaira(more) } }}</strong>
-                        {{ 'offers.more.body' | t: { max: formatNaira(o.limits.maxAmount) } }}
-                      </p>
-                      <div class="agent-actions">
-                        <a class="alt agent-btn" [attr.href]="agentLink(o)" target="_blank" rel="noopener">{{ 'offers.more.agent' | t }}</a>
-                        <a class="alt agent-btn" [attr.href]="tel">{{ 'offers.more.call' | t }}</a>
-                      </div>
+                    <p class="agent-text">
+                      <app-icon name="bold-info" [size]="18" class="agent-icon" />
+                      <span>{{ 'offers.more.body' | t: { amount: formatNaira(more), max: formatNaira(o.limits.maxAmount) } }}</span>
+                    </p>
+                    <div class="agent-actions">
+                      <a class="alt agent-btn" [attr.href]="agentLink(o)" target="_blank" rel="noopener">{{ 'offers.more.agent' | t }}</a>
+                      <a class="alt agent-btn" [attr.href]="tel">{{ 'offers.more.call' | t }}</a>
                     </div>
                   </div>
                 }

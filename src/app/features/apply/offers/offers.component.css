@@ -71,14 +71,14 @@
 
 .alt--primary { background: var(--action-primary); color: var(--action-on-primary); border-color: var(--action-primary); }
 @media (hover: hover) and (pointer: fine) { .alt--primary:hover { background: var(--action-primary-hover); } }
-.agent-text { margin: 0; line-height: 1.5; }
 
 .card-text { margin: 0; font-size: var(--fs-md); line-height: 1.5; color: var(--ink); }
 .agent {
-  display: flex; gap: var(--space-3); padding: var(--space-4);
+  display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4);
   background: var(--surface-0); border: 1px solid var(--hairline-strong); border-radius: var(--radius-md);
 }
+.agent-text { margin: 0; display: flex; align-items: flex-start; gap: var(--space-2); font-size: var(--fs-md); line-height: 1.45; }
 .agent-icon { flex: none; margin-top: 2px; color: var(--ink-soft); }
-.agent-main { flex: 1; display: flex; flex-direction: column; gap: var(--space-3); }
-.agent-actions { display: flex; flex-direction: column; gap: var(--space-2); }
-.agent-btn { min-height: 48px; background: var(--surface-2); border: 1px solid var(--hairline-strong); }
+/* Two equal buttons side by side, so neither looks like the main action. */
+.agent-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+.agent-btn { min-height: 48px; padding: 0 var(--space-2); text-align: center; background: var(--surface-2); border: 1px solid var(--hairline-strong); font-size: var(--fs-md); }

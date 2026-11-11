@@ -71,6 +71,11 @@
     }
 
     @case ('video') {
+      <div class="script">
+        <p class="script-label">{{ 'step.verify.script.label' | t }}</p>
+        <p class="script-body">{{ scriptLines().join(' ') }}</p>
+      </div>
+
       @if (canRecord() || videoPreviewUrl()) {
       <div class="frame frame--video">
         @if (videoPreviewUrl(); as u) {
@@ -89,11 +94,6 @@
       }
 
       <p class="stage-label">{{ 'step.verify.stage.video' | t }}</p>
-
-      <div class="script">
-        <p class="script-label">{{ 'step.verify.script.label' | t }}</p>
-        <p class="script-body">{{ scriptLines().join(' ') }}</p>
-      </div>
 
       @if (checkingVideo()) {
         <p class="processing">{{ 'step.verify.processing' | t }}</p>
@@ -130,12 +130,14 @@
           <figure class="review-photo">
             <img [attr.src]="p" alt="" />
             <figcaption>{{ 'step.verify.review.face' | t }}</figcaption>
+            <button type="button" class="ghost" (click)="retakeFromReview('photo')">{{ 'step.verify.retake.photo' | t }}</button>
           </figure>
         }
         @if (videoDataUrl(); as v) {
           <figure class="review-video">
             <video [attr.src]="v" controls playsinline></video>
             <figcaption>{{ 'step.verify.review.video' | t }}</figcaption>
+            <button type="button" class="ghost" (click)="retakeFromReview('video')">{{ 'step.verify.retake.video' | t }}</button>
           </figure>
         }
       </div>
