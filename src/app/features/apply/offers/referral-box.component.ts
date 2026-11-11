@@ -1,3 +1,4 @@
+import { IconComponent } from '../../../shared/icon.component';
 import { ChangeDetectionStrategy, Component, inject, signal, type OnInit } from '@angular/core';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { LangService } from '../../../core/i18n/lang.service';
@@ -8,7 +9,7 @@ import { API_CLIENT } from '../../../core/api/api-client';
 /** "Have a referral code?" on the offers step. The server re-checks the code; this only previews the discount. */
 @Component({
   selector: 'app-referral-box',
-  imports: [TPipe],
+  imports: [IconComponent, TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
   <div class="referral">
@@ -16,9 +17,7 @@ import { API_CLIENT } from '../../../core/api/api-client';
       <div class="referral-applied" role="status">
         <div class="referral-applied-main">
           <span class="referral-check" aria-hidden="true">
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-              <path d="M5 10.5L8.5 14L15 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <app-icon name="bold-success" [size]="14" />
           </span>
           <div>
             <div class="referral-code">{{ r.code }}</div>
@@ -31,9 +30,7 @@ import { API_CLIENT } from '../../../core/api/api-client';
       @if (!open()) {
         <button type="button" class="referral-toggle" (click)="toggle()">
           <span>{{ 'referral.toggle' | t }}</span>
-          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-            <path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <app-icon name="bold-chevron-down" [size]="14" />
         </button>
       } @else {
         <div class="referral-form">

@@ -33,9 +33,7 @@ import { Toast, ToastService } from './toast.service';
             <button type="button" class="action" (click)="run(t, a.run)">{{ a.label }}</button>
           }
           <button type="button" class="close" (click)="toastSvc.dismiss(t.id)" [attr.aria-label]="'common.dismiss' | t">
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-            </svg>
+            <app-icon name="bold-close" [size]="14" />
           </button>
         </div>
       }

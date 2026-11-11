@@ -1,3 +1,4 @@
+import { IconComponent } from './icon.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { TPipe } from '../core/i18n/t.pipe';
 import { formatNaira } from '../core/money.util';
@@ -15,7 +16,7 @@ import { ProductMarkComponent } from './product-mark.component';
  */
 @Component({
   selector: 'app-loan-summary',
-  imports: [TPipe, ModalComponent, ProductMarkComponent],
+  imports: [IconComponent, TPipe, ModalComponent, ProductMarkComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (offer(); as o) {
@@ -24,9 +25,7 @@ import { ProductMarkComponent } from './product-mark.component';
           <span class="bar-label">{{ 'summary.title' | t }}</span>
           <span class="bar-main">{{ money(o.amount) }} · {{ o.tenorMonths }} {{ 'step.offers.months' | t }}</span>
         </span>
-        <svg class="chev" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <app-icon name="bold-chevron-down" [size]="18" class="chev" />
       </button>
 
       <app-modal [open]="open()" [title]="'summary.title' | t" (closed)="open.set(false)">

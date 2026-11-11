@@ -1,9 +1,10 @@
+import { IconComponent } from './icon.component';
 import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 @Component({
   selector: 'app-promo-banner',
-  imports: [NgOptimizedImage],
+  imports: [IconComponent, NgOptimizedImage],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="banner" aria-labelledby="banner-title">
@@ -14,9 +15,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
       </div>
       <button type="button" class="promo-cta" (click)="action.emit()">{{ ctaLabel() }}</button>
       <button type="button" class="close" [attr.aria-label]="dismissLabel()" (click)="dismissed.emit()">
-        <svg width="12" height="12" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-        </svg>
+        <app-icon name="bold-close" [size]="14" />
       </button>
     </section>
   `,

@@ -1,3 +1,4 @@
+import { IconComponent } from '../../../shared/icon.component';
 import { logWarn } from '../../../core/log';
 import { MAX_UPLOAD_BYTES } from '../../../core/limits';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
@@ -26,7 +27,7 @@ const MAX_BYTES = MAX_UPLOAD_BYTES;
  */
 @Component({
   selector: 'app-statement',
-  imports: [IllustrationComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent, ModalComponent],
+  imports: [IconComponent, IllustrationComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent, ModalComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './statement.component.html',
   styleUrl: './statement.component.css',

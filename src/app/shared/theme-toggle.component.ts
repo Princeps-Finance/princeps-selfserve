@@ -1,3 +1,4 @@
+import { IconComponent } from './icon.component';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { ToastService } from '../core/toast/toast.service';
 import { LangService } from '../core/i18n/lang.service';
@@ -10,25 +11,22 @@ const ORDER: readonly ThemeMode[] = ['system', 'light', 'dark'];
  * next choice, and a short message says which one is on, so the three states are never a guess.
  */
 @Component({
+  imports: [IconComponent],
   selector: 'app-theme-toggle',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <button type="button" class="toggle glass-btn" [attr.aria-label]="label()" [attr.title]="label()" (click)="next()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        @switch (mode()) {
-          @case ('light') {
-            <circle cx="12" cy="12" r="4" />
-            <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-          }
-          @case ('dark') {
-            <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />
-          }
-          @default {
+      @switch (mode()) {
+        @case ('light') { <app-icon name="bold-sun" [size]="20" /> }
+        @case ('dark') { <app-icon name="bold-moon" [size]="20" /> }
+        @default {
+          <!-- Follows the device: Iconly has no matching glyph, so this half disc stays hand drawn. -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
             <circle cx="12" cy="12" r="9" />
             <path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" />
-          }
+          </svg>
         }
-      </svg>
+      }
     </button>
   `,
   styles: [

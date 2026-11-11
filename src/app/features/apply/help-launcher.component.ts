@@ -1,3 +1,4 @@
+import { IconComponent } from '../../shared/icon.component';
 import { ModalComponent } from '../../shared/modal.component';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { TPipe } from '../../core/i18n/t.pipe';
@@ -12,7 +13,7 @@ import { LiveChatService, chatAllowedOn } from '../../core/support-chat/live-cha
  */
 @Component({
   selector: 'app-help-launcher',
-  imports: [ModalComponent, TPipe],
+  imports: [IconComponent, ModalComponent, TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <button
@@ -23,11 +24,7 @@ import { LiveChatService, chatAllowedOn } from '../../core/support-chat/live-cha
       aria-haspopup="dialog"
       [attr.aria-label]="'help.open' | t"
     >
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <circle cx="12" cy="12" r="9.5" />
-        <path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1.9-1.1 1.8" />
-        <circle cx="12" cy="17" r="0.6" fill="currentColor" />
-      </svg>
+      <app-icon name="bold-help" [size]="20" />
       <span>{{ 'support.label' | t }}</span>
     </button>
 
@@ -37,7 +34,7 @@ import { LiveChatService, chatAllowedOn } from '../../core/support-chat/live-cha
         @if (chatAvailable()) {
           <button type="button" class="row row-btn" (click)="startChat()">
             <span class="row-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>
+              <app-icon name="bold-chat" [size]="18" />
             </span>
             <span>{{ 'help.chat' | t }}</span>
           </button>
@@ -50,13 +47,13 @@ import { LiveChatService, chatAllowedOn } from '../../core/support-chat/live-cha
         </a>
         <a class="row" [attr.href]="tel">
           <span class="row-icon" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h3l2 4-2 1a10 10 0 0 0 4 4l1-2 4 2v3a2 2 0 0 1-2 2A13 13 0 0 1 3 6a2 2 0 0 1 1-2z"/></svg>
+            <app-icon name="bold-call" [size]="18" />
           </span>
           <span>{{ 'help.call' | t: { tel: phone } }}</span>
         </a>
         <a class="row" [attr.href]="'mailto:' + email + '?subject=Loan%20application%20help'">
           <span class="row-icon" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3z"/><path d="M3 6l9 7 9-7"/></svg>
+            <app-icon name="bold-message" [size]="18" />
           </span>
           <span>{{ 'help.email' | t }}</span>
         </a>
