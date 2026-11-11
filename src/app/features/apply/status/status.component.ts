@@ -7,9 +7,9 @@ import { logWarn } from '../../../core/log';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
+import { environment } from '../../../../environments/environment';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { AGENTS, OFFICES } from '../../../core/directory/contacts';
-import { environment } from '../../../../environments/environment';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
@@ -39,7 +39,8 @@ export class StatusComponent {
   readonly submission = this.state.submission;
   readonly agents = AGENTS;
   readonly offices = OFFICES;
-  readonly trackUrl = environment.customerModuleUrl;
+  /** Your loans live in Princeps Accounts, a separate app. */
+  readonly accountsUrl = environment.accountsUrl;
   readonly copied = signal(false);
   /** Private-sector applicants get a person-led bank statement review, not the scored loan path. */
   readonly isReview = this.state.employment()?.type === 'private-sector';

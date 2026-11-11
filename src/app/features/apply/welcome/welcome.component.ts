@@ -5,6 +5,7 @@ import { PromoBannerComponent } from '../../../shared/promo-banner.component';
 import { TrustFooterComponent } from '../../../shared/trust-footer.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { ReturningService } from '../../../core/application/returning.service';
+import { environment } from '../../../../environments/environment';
 import { ApplicationStateService, ApplyIntent } from '../../../core/application/application-state.service';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
@@ -49,6 +50,14 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
         </div>
       </div>
 
+      <!-- A customer who already has a loan signs in to Princeps Accounts to see it. Applying and checking stay right here. -->
+      @if (accountsUrl) {
+        <div class="signin">
+          <a class="link" [attr.href]="accountsUrl">{{ 'welcome.signin' | t }}</a>
+          <p class="hint">{{ 'welcome.signin.hint' | t }}</p>
+        </div>
+      }
+
       <app-trust-footer />
     </section>
   `,
@@ -59,6 +68,12 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 .subtitle { margin: 0; text-align: center; color: var(--ink-soft); line-height: 1.5; }
 .title { text-align: center; font-size: clamp(24px, 6.5vw, 30px); line-height: 1.15; letter-spacing: -0.02em; }
       .actions { margin-top: auto; display: flex; flex-direction: column; gap: var(--space-5); padding-top: var(--space-6); }
+      .signin { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); }
+      .link {
+        display: inline-flex; align-items: center; min-height: var(--tap-min); padding: 0 var(--space-3);
+        font: inherit; font-weight: var(--fw-medium); color: var(--text-accent); text-decoration: underline; text-underline-offset: 3px;
+      }
+      .link:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
       .choice { display: flex; flex-direction: column; gap: var(--space-2); }
       .hint { margin: 0; text-align: center; font-size: var(--fs-md); color: var(--ink-soft); }
       .cta, .alt {
@@ -82,6 +97,7 @@ export class WelcomeIntentComponent {
   private readonly flow = inject(FlowNavigator);
 
   protected readonly returning = inject(ReturningService);
+  protected readonly accountsUrl = environment.accountsUrl;
   /** Keeps the masked number on one line. */
   protected nbsp(text: string): string {
     return text.replace(/ /g, '\u00a0');

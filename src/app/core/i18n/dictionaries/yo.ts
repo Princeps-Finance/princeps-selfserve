@@ -173,6 +173,8 @@ export const yo: Dictionary = {
   'privacy.rights.title': 'Àwọn ẹ̀tọ́ rẹ',
   'privacy.rights.body': 'O lè béèrè láti rí, ṣàtúnṣe tàbí pa ìsọfúnni rẹ rẹ́, tàbí yọ ìfohùnsí rẹ kúrò, nípa kíkàn sí wa. Tí o kò bá tẹ́ ọ lọ́rùn, o lè fi ẹ̀sùn kàn wá tàbí alábòójútó.',
   'privacy.back': 'Padà',
+  'welcome.signin': 'Ṣé oníbàárà ni ọ́ tẹ́lẹ̀? Wọlé',
+  'welcome.signin.hint': 'Wo àwọn ìgbèsè rẹ, ohun tí o jẹ àti ìgbà tí ó yẹ kí o san.',
   'welcome.intent.title': 'Káàbọ̀ sí Princeps',
   'welcome.intent.subtitle': 'Ìgbèsè owó oṣù tí o lè béèrè fún láti fóònù rẹ. Kò sí ìlọ sí ẹ̀ka.',
   'welcome.intent.apply': 'Béèrè fún ìgbèsè',

@@ -173,6 +173,8 @@ export const en: Dictionary = {
   'privacy.rights.title': 'Your rights',
   'privacy.rights.body': 'You can ask to see, correct or delete your information, or withdraw your consent, by contacting us. If you are not satisfied you can complain to us or to the regulator.',
   'privacy.back': 'Back',
+  'welcome.signin': 'Already a customer? Sign in',
+  'welcome.signin.hint': 'See your loans, what you owe and when it is due.',
   'welcome.intent.title': 'Welcome to Princeps',
   'welcome.intent.subtitle': 'Salary loans you can apply for from your phone. No branch visit.',
   'welcome.intent.apply': 'Apply for a loan',

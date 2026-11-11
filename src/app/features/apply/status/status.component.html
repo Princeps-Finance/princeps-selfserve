@@ -48,10 +48,12 @@
     }
   }
 
-  <a class="cta" [attr.href]="trackUrl" rel="noopener">
+  @if (accountsUrl) {
+  <a class="cta" [attr.href]="accountsUrl" rel="noopener">
     <span>{{ 'received.track' | t }}</span>
     <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
   </a>
+  }
   <button type="button" class="alt" (click)="done()">
     <span>{{ 'status.done' | t }}</span>
   </button>

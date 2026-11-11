@@ -173,6 +173,8 @@ export const ig: Dictionary = {
   'privacy.rights.title': 'Ikike gị',
   'privacy.rights.body': 'Ị nwere ike ịrịọ ka ahụ, dozie ma ọ bụ hichapụ ozi gị, ma ọ bụ wepụ nkwenye gị, site n\'ịkpọtụrụ anyị. Ọ bụrụ na afọ adịghị eju gị, ị nwere ike ịkpesa anyị ma ọ bụ onye nchịkwa.',
   'privacy.back': 'Laghachi',
+  'welcome.signin': 'Ị bụla onye ahịa? Banye',
+  'welcome.signin.hint': 'Hụ mgbazinye ego gị, ihe ị ji na mgbe ọ ga-adịrị.',
   'welcome.intent.title': 'Nnọọ na Princeps',
   'welcome.intent.subtitle': 'Mgbazinye ego ụgwọ ọrụ ị nwere ike ịrịọ site na ekwentị gị. Enweghị mkpa ịga ụlọ ọrụ.',
   'welcome.intent.apply': 'Rịọọ mgbazinye ego',

@@ -201,3 +201,10 @@ the customer sees, reads aloud, signs and is deducted:
   (`QUOTE_INVALID`, `QUOTE_MISMATCH`, `QUOTE_EXPIRED`). Set `QUOTE_SECRET` (16 or more random characters) in production.
 - **Later**, when Caltos prices loans, `api/quote.ts` should call it and pass its figures through unchanged. The app needs no change.
 - Amounts are in naira, due dates are plain days (`YYYY-MM-DD`), and a quote is valid for one hour.
+
+## Customer accounts
+
+The customer account (sign in, loans, repayments, cards, payoff) is a separate Princeps-owned app, **Princeps Accounts** (repo `princeps-accounts`),
+and works across salary backed, BNPL and SME loans. Its model, the API it needs and the delivery order are in that repo's
+`docs/accounts-module.md`. Caltos keeps the ledger. This app only links to it ("Already a customer? Sign in" on the welcome page and
+"Track your loan" after submitting, through `environment.accountsUrl`).

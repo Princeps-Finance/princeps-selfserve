@@ -173,6 +173,8 @@ export const ha: Dictionary = {
   'privacy.rights.title': 'Haƙƙoƙinka',
   'privacy.rights.body': 'Za ka iya neman gani, gyara ko share bayananka, ko janye yardarka, ta hanyar tuntuɓar mu. Idan ba ka gamsu ba za ka iya kai ƙara gare mu ko mai kula.',
   'privacy.back': 'Koma baya',
+  'welcome.signin': 'Kai abokin ciniki ne? Shiga',
+  'welcome.signin.hint': 'Duba rance-rancenka, abin da kake bi da kuma lokacin da ya dace.',
   'welcome.intent.title': 'Barka da zuwa Princeps',
   'welcome.intent.subtitle': 'Rancen albashi da za ka iya nema daga wayarka. Ba sai ka je reshe ba.',
   'welcome.intent.apply': 'Nemi rance',
