@@ -14,6 +14,7 @@ import {
 } from '../../../core/application/application-state.service';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
+import { IconComponent } from '../../../shared/icon.component';
 import { ModalComponent } from '../../../shared/modal.component';
 import { telLink, whatsappLink } from '../../../core/support';
 import { CaptchaService } from '../../../core/captcha/captcha.service';
@@ -28,7 +29,7 @@ const PARAMILITARY_EMPLOYERS = [
 
 @Component({
   selector: 'app-salary',
-  imports: [AnimatedIconComponent, WhyAskComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent, ModalComponent],
+  imports: [AnimatedIconComponent, WhyAskComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent, ModalComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './salary.component.html',
   styleUrl: './salary.component.css',
@@ -61,16 +62,12 @@ export class SalaryComponent {
   }
 
   readonly banks = signal<Bank[]>([]);
-  readonly bankQuery = signal('');
-  readonly bankOpen = signal(false);
-  readonly activeBank = signal(-1);
-
-  readonly filteredBanks = computed(() => {
-    const q = this.bankQuery().trim().toLowerCase();
-    const list = this.banks();
-    if (!q) return list;
-    return list.filter((b) => b.name.toLowerCase().includes(q));
-  });
+  readonly bankOptions = computed<SelectOption[]>(() => this.banks().map((b) => ({ value: b.code, label: b.name })));
+  /** What the bank says about the typed account: nothing yet, looking, a name, no such account, or the lookup is down. */
+  readonly lookup = signal<{ state: 'idle' | 'loading' | 'ok' | 'not-found' | 'unavailable'; name?: string }>({ state: 'idle' });
+  /** The check button waits for the account name. If the lookup itself is down the customer can still go on. */
+  readonly lookupReady = computed(() => this.lookup().state === 'ok' || this.lookup().state === 'unavailable');
+  private lookupSeq = 0;
 
   readonly form = new FormGroup({
     bankCode: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -108,6 +105,7 @@ export class SalaryComponent {
     this.statusChanges();
     this.valueChanges();
     if (this.form.invalid) return false;
+    if (!this.lookupReady()) return false;
     if (this.needsIppis() && !/^\d+$/.test(this.form.controls.ippisNumber.value)) return false;
     if (this.channel() === 'dedukt' && !this.form.controls.employer.value) return false;
     return true;
@@ -126,8 +124,8 @@ export class SalaryComponent {
         ippisNumber: saved.ippisNumber ?? '',
         employer: saved.paramilitaryEmployer ?? '',
       });
-      this.bankQuery.set(saved.bankName);
     }
+    this.watchAccount();
     // The account came from the check: verify it now without asking again. If it fails, the form below shows why.
     if (this.mode === 'verify' && saved && saved.accountNumber) queueMicrotask(() => void this.submit());
   }
@@ -144,47 +142,34 @@ export class SalaryComponent {
     return `step.salary.${this.channel()}.subtitle`;
   }
 
-  onBankFocus(): void {
-    this.bankOpen.set(true);
+  clearAccount(): void {
+    this.form.controls.accountNumber.setValue('');
+    document.getElementById('account')?.focus();
   }
 
-  onBankKeydown(evt: KeyboardEvent): void {
-    const list = this.filteredBanks();
-    if (evt.key === 'ArrowDown' || evt.key === 'ArrowUp') {
-      evt.preventDefault();
-      if (!list.length) return;
-      this.bankOpen.set(true);
-      const step = evt.key === 'ArrowDown' ? 1 : -1;
-      this.activeBank.update((i) => (i + step + list.length) % list.length);
-    } else if (evt.key === 'Enter' && this.bankOpen() && this.activeBank() >= 0) {
-      evt.preventDefault();
-      this.pickBank(list[this.activeBank()]);
-    } else if (evt.key === 'Escape' && this.bankOpen()) {
-      evt.preventDefault();
-      this.bankOpen.set(false);
-    }
-  }
-
-  onBankInput(evt: Event): void {
-    this.activeBank.set(-1);
-    const v = (evt.target as HTMLInputElement).value;
-    this.bankQuery.set(v);
-    this.bankOpen.set(true);
-    this.form.controls.bankCode.setValue('');
-    this.form.controls.bankName.setValue('');
-  }
-
-  onBankBlur(): void {
-    // Delay so option click registers.
-    setTimeout(() => this.bankOpen.set(false), 150);
-  }
-
-  pickBank(bank: Bank): void {
-    this.form.controls.bankCode.setValue(bank.code);
-    this.form.controls.bankName.setValue(bank.name);
-    this.bankQuery.set(bank.name);
-    this.bankOpen.set(false);
-    this.activeBank.set(-1);
+  /** Looks the name up once a bank and all 10 digits are in; any change starts over. */
+  private watchAccount(): void {
+    const bank = this.form.controls.bankCode;
+    const acct = this.form.controls.accountNumber;
+    const run = async (): Promise<void> => {
+      const seq = ++this.lookupSeq;
+      const code = bank.value;
+      const num = acct.value;
+      if (!code || !/^\d{10}$/.test(num)) {
+        this.lookup.set({ state: 'idle' });
+        return;
+      }
+      this.lookup.set({ state: 'loading' });
+      const res = await this.api.resolveAccount(code, num);
+      if (seq !== this.lookupSeq) return;
+      this.lookup.set(res.status === 'ok' ? { state: 'ok', name: res.accountName } : res.status === 'not-found' ? { state: 'not-found' } : { state: 'unavailable' });
+    };
+    bank.valueChanges.subscribe((code) => {
+      this.form.controls.bankName.setValue(this.banks().find((b) => b.code === code)?.name ?? '');
+      void run();
+    });
+    acct.valueChanges.subscribe(() => void run());
+    void run();
   }
 
   errorKey(): string | null {

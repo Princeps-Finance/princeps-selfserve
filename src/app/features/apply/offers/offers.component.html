@@ -79,14 +79,19 @@
                   (valueChange)="setAmount(o, $event)"
                 />
                 @if (askedMore()[o.product.id]; as more) {
-                  <app-card tone="accent" role="status" class="agent">
-                    <p class="agent-text">
-                      <strong>{{ 'offers.more.title' | t: { amount: formatNaira(more) } }}</strong>
-                      {{ 'offers.more.body' | t: { max: formatNaira(o.limits.maxAmount) } }}
-                    </p>
-                    <a class="cta" [attr.href]="agentLink(o)" target="_blank" rel="noopener">{{ 'offers.more.agent' | t }}</a>
-                    <a class="alt" [attr.href]="tel">{{ 'offers.more.call' | t }}</a>
-                  </app-card>
+                  <div class="agent" role="status">
+                    <app-icon name="bold-info" [size]="22" class="agent-icon" />
+                    <div class="agent-main">
+                      <p class="agent-text">
+                        <strong>{{ 'offers.more.title' | t: { amount: formatNaira(more) } }}</strong>
+                        {{ 'offers.more.body' | t: { max: formatNaira(o.limits.maxAmount) } }}
+                      </p>
+                      <div class="agent-actions">
+                        <a class="alt agent-btn" [attr.href]="agentLink(o)" target="_blank" rel="noopener">{{ 'offers.more.agent' | t }}</a>
+                        <a class="alt agent-btn" [attr.href]="tel">{{ 'offers.more.call' | t }}</a>
+                      </div>
+                    </div>
+                  </div>
                 }
                 <p class="hint" id="amt-hint">
                   @if (adjusted()[o.product.id]; as a) {

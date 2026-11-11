@@ -42,57 +42,38 @@
 
     <div class="field">
       <label class="label" for="bank">{{ 'step.salary.bank.label' | t }}</label>
-      <div class="combo">
-        <input
-          id="bank"
-          [attr.aria-invalid]="invalid('bankCode')"
-          class="input"
-          type="text"
-          autocomplete="off"
-          [value]="bankQuery()"
-          [placeholder]="'step.salary.bank.placeholder' | t"
-          (input)="onBankInput($event)"
-          (focus)="onBankFocus()"
-          (blur)="onBankBlur()"
-          (keydown)="onBankKeydown($event)"
-          [attr.aria-activedescendant]="activeBank() >= 0 ? 'bank-opt-' + activeBank() : null"
-          role="combobox"
-          [attr.aria-expanded]="bankOpen()"
-          aria-autocomplete="list"
-          aria-controls="bank-listbox"
-        />
-        @if (bankOpen() && filteredBanks().length) {
-          <ul id="bank-listbox" class="listbox" role="listbox">
-            @for (b of filteredBanks(); track b.code; let i = $index) {
-              <li
-                role="option"
-                [id]="'bank-opt-' + i"
-                [class.is-active]="i === activeBank()"
-                class="listbox-item"
-                [attr.aria-selected]="form.controls.bankCode.value === b.code"
-                (mousedown)="pickBank(b)"
-              >
-                {{ b.name }}
-              </li>
-            }
-          </ul>
-        }
-      </div>
+      <app-select-field inputId="bank" [options]="bankOptions()" [searchable]="true" [title]="'step.salary.bank.label' | t" [placeholder]="'step.salary.bank.placeholder' | t" [invalid]="invalid('bankCode')" formControlName="bankCode" />
     </div>
 
     <div class="field" [class.is-invalid]="form.controls.accountNumber.touched && form.controls.accountNumber.invalid">
       <label class="label" for="account">{{ 'step.salary.account.label' | t }}</label>
-      <input
-        id="account"
-        [attr.aria-invalid]="invalid('accountNumber')"
-        [attr.aria-describedby]="invalid('accountNumber') ? 'account-error' : 'account-hint'"
-        class="input"
-        type="text"
-        inputmode="numeric"
-        maxlength="10"
-        formControlName="accountNumber"
-        placeholder="0123456789"
-      />
+      <div class="clearable">
+        <input
+          id="account"
+          [attr.aria-invalid]="invalid('accountNumber')"
+          [attr.aria-describedby]="invalid('accountNumber') ? 'account-error' : 'account-hint'"
+          class="input"
+          type="text"
+          inputmode="numeric"
+          maxlength="10"
+          autocomplete="off"
+          formControlName="accountNumber"
+          placeholder="0123456789"
+        />
+        @if (form.controls.accountNumber.value) {
+          <button type="button" class="clear" [attr.aria-label]="'step.salary.account.clear' | t" (click)="clearAccount()">
+            <app-icon name="bold-close" [size]="14" />
+          </button>
+        }
+      </div>
+      <div class="lookup" aria-live="polite">
+        @switch (lookup().state) {
+          @case ('loading') { <p class="msg">{{ 'step.salary.account.checking' | t }}</p> }
+          @case ('ok') { <p class="name"><app-icon name="bold-success" [size]="16" /> {{ lookup().name }}</p> }
+          @case ('not-found') { <p class="msg msg--error">{{ 'step.salary.account.notfound' | t }}</p> }
+          @case ('unavailable') { <p class="msg">{{ 'step.salary.account.unavailable' | t }}</p> }
+        }
+      </div>
       @if (form.controls.accountNumber.touched && form.controls.accountNumber.invalid) {
         <p class="msg msg--error" id="account-error" role="alert">{{ 'step.salary.account.invalid' | t }}</p>
       } @else {
@@ -125,7 +106,7 @@
       <p class="msg--error" id="form-error" role="alert">{{ 'form.fix.required' | t }}</p>
     }
 
-    <button type="submit" class="cta" [disabled]="submitting()">
+    <button type="submit" class="cta" [disabled]="submitting() || !lookupReady()">
       <span>{{ submitting() ? ('step.salary.verifying' | t) : (mode === 'check' ? ('step.salary.check.continue' | t) : ('step.salary.verify' | t)) }}</span>
       @if (!submitting()) {
         <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />

@@ -71,7 +71,7 @@ import { Toast, ToastService } from './toast.service';
         background: transparent; color: var(--on-dark); font: var(--fw-bold) var(--fs-md) var(--font-sans);
         text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
       }
-      .action:hover, .close:hover { background: rgba(255, 255, 255, 0.16); }
+      @media (hover: hover) and (pointer: fine) { .action:hover, .close:hover { background: rgba(255, 255, 255, 0.16); } }
       .close {
         flex: none; display: inline-flex; align-items: center; justify-content: center;
         width: var(--tap-min); height: var(--tap-min); border: 0; border-radius: 50%;

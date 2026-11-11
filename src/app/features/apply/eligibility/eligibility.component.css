@@ -32,7 +32,7 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2s; } }
 .cta { align-self: flex-start; }
-.cta:hover { background: var(--action-primary-hover); }
+@media (hover: hover) and (pointer: fine) { .cta:hover { background: var(--action-primary-hover); } }
 
 
 .next-title { margin: var(--space-6) 0 var(--space-3); font-size: var(--fs-lg); }
@@ -44,5 +44,5 @@
   background: var(--grey-100); color: var(--ink);
   font: inherit; font-weight: var(--btn-weight); text-decoration: none; cursor: pointer;
 }
-.next-action:hover { background: var(--hover-tint); }
+@media (hover: hover) and (pointer: fine) { .next-action:hover { background: var(--hover-tint); } }
 .next-action:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }

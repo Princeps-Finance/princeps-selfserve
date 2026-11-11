@@ -2,17 +2,28 @@ import { inject } from '@angular/core';
 import { CanMatchFn, Router } from '@angular/router';
 import { ApplicationStateService } from '../application/application-state.service';
 import { LangService } from '../i18n/lang.service';
+import { ReturningService } from '../application/returning.service';
 import { productById } from '../products/products';
 import { APPLY } from './apply-routes';
 
 /** Builds a route guard: the step opens when `isReady` is true, otherwise the customer is sent to `fallback`. */
 function requires(isReady: (state: ApplicationStateService) => boolean, fallback: string): CanMatchFn {
-  return () => (isReady(inject(ApplicationStateService)) ? true : inject(Router).parseUrl(fallback));
+  return () => {
+    if (isReady(inject(ApplicationStateService))) return true;
+    // After a reload or a re-opened app the answers in memory are gone. A device that already knows the customer
+    // offers "Continue as ..." on the welcome screen instead of asking for the BVN from scratch.
+    const known = fallback === APPLY.bvn && !!inject(ReturningService).saved();
+    return inject(Router).parseUrl(known ? APPLY.welcome : fallback);
+  };
 }
 
 function needsNin(state: ApplicationStateService): boolean {
   return productById(state.offer()?.productId ?? '')?.settings.requiresNin ?? false;
 }
+
+/** The language screen is for first visits only: once a language is chosen on this device, the app opens straight in. */
+export const languageNotChosenGuard: CanMatchFn = () =>
+  inject(LangService).hasChosen() ? inject(Router).parseUrl(APPLY.root) : true;
 
 export const languageChosenGuard: CanMatchFn = () =>
   inject(LangService).hasChosen() ? true : inject(Router).parseUrl(APPLY.home);

@@ -10,6 +10,9 @@ describe('PwaBannerComponent', () => {
   const apply = vi.fn();
 
   beforeEach(() => {
+    // The test DOM has no native <dialog> behaviour.
+    HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) { this.setAttribute('open', ''); };
+    HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) { this.removeAttribute('open'); };
     updateReady.set(false);
     offline.set(false);
     apply.mockClear();
@@ -32,50 +35,39 @@ describe('PwaBannerComponent', () => {
     await router.navigateByUrl(url);
     const fixture = TestBed.createComponent(PwaBannerComponent);
     fixture.detectChanges();
-    return fixture.nativeElement as HTMLElement;
+    return fixture;
   }
 
-  it('never offers or applies an update once real details have been entered', async () => {
+  it('tells the customer about a ready update on every step after the start, even mid-application', async () => {
     updateReady.set(true);
-    for (const path of ['/apply/profile', '/apply/employment', '/apply/offers', '/apply/documents']) {
-      const el = await at(path);
-      expect(el.querySelector('app-promo-banner')).toBeNull();
+    for (const path of ['/apply/bvn', '/apply/profile', '/apply/employment', '/apply/offers', '/apply/documents', '/apply/status']) {
+      const f = await at(path);
+      expect(f.componentInstance.showUpdate()).toBe(true);
     }
     expect(apply).not.toHaveBeenCalled();
   });
 
-  it('only offers (never forces) the update on the BVN screen, where something may be typed', async () => {
+  it('updates and reloads when the customer taps Update', async () => {
     updateReady.set(true);
-    const el = await at('/apply/bvn');
-    expect(el.querySelector('app-promo-banner')).not.toBeNull();
-    expect(apply).not.toHaveBeenCalled();
-  });
-
-  it('applies a ready update by itself on the welcome screen', async () => {
-    updateReady.set(true);
-    await at('/apply/welcome');
-    TestBed.tick();
-    expect(apply).toHaveBeenCalled();
-  });
-
-  it('shows the Update button after submission, on the status page', async () => {
-    updateReady.set(true);
-    const el = await at('/apply/status');
-    expect(el.querySelector('app-promo-banner')).not.toBeNull();
-    el.querySelector<HTMLButtonElement>('.promo-cta')!.click();
+    const f = await at('/apply/status');
+    f.nativeElement.querySelector('.update .cta').click();
     expect(apply).toHaveBeenCalledTimes(1);
   });
 
-  it('applies a ready update by itself on the start screen', async () => {
+  it('applies a ready update by itself on the welcome and start screens, with no window', async () => {
     updateReady.set(true);
-    await at('/');
-    TestBed.tick();
-    expect(apply).toHaveBeenCalled();
+    for (const path of ['/apply/welcome', '/']) {
+      apply.mockClear();
+      const f = await at(path);
+      TestBed.tick();
+      expect(apply).toHaveBeenCalled();
+      expect(f.componentInstance.showUpdate()).toBe(false);
+    }
   });
 
   it('shows an offline notice anywhere without covering controls', async () => {
     offline.set(true);
-    const el = await at('/apply/status');
+    const el = (await at('/apply/status')).nativeElement as HTMLElement;
     expect(el.querySelector('.banner--offline')).not.toBeNull();
   });
 });

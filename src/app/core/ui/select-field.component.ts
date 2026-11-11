@@ -79,7 +79,7 @@ export interface SelectOption {
         font-family: var(--font-sans); font-size: var(--fs-base); color: var(--ink); text-align: start; cursor: pointer;
         transition: border-color 140ms ease, box-shadow 140ms ease;
       }
-      .trigger:hover:not(:disabled) { border-color: var(--input-border-hover); }
+      @media (hover: hover) and (pointer: fine) { .trigger:hover:not(:disabled) { border-color: var(--input-border-hover); } }
       .trigger:focus-visible { outline: 2px solid transparent; border-color: var(--input-border-focus); box-shadow: var(--input-shadow-focus); }
       .trigger[aria-invalid='true'] { border-color: var(--danger-text); }
       .trigger:disabled { opacity: 0.55; cursor: not-allowed; }
@@ -100,7 +100,7 @@ export interface SelectOption {
         background: transparent; font: inherit; font-size: var(--fs-base); color: var(--ink); text-align: start; cursor: pointer;
       }
       .opt[aria-selected='true'] { font-weight: 600; color: var(--text-accent); }
-      .opt:hover { background: var(--hover-tint); }
+      @media (hover: hover) and (pointer: fine) { .opt:hover { background: var(--hover-tint); } }
       .opt:focus-visible, .search:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
       .none { margin: 0; padding: var(--space-5) var(--space-2); color: var(--ink-soft); }
     `,

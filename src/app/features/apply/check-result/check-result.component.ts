@@ -83,7 +83,7 @@ import { ProductMarkComponent } from '../../../shared/product-mark.component';
       .actions { margin-top: auto; display: flex; flex-direction: column; gap: var(--space-2); padding-top: var(--space-4); }
       .hint { margin: 0; text-align: center; font-size: var(--fs-md); color: var(--ink-soft); }
       .cta-arrow { transition: transform 200ms cubic-bezier(0.2, 0.7, 0.1, 1); }
-      .cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); }
+      @media (hover: hover) and (pointer: fine) { .cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); } }
     `,
   ],
 })

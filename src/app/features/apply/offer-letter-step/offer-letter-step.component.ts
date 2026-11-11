@@ -4,6 +4,9 @@ import { TPipe } from '../../../core/i18n/t.pipe';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
+import { IconComponent } from '../../../shared/icon.component';
+import { ModalComponent } from '../../../shared/modal.component';
+import { formatNaira } from '../../../core/money.util';
 import { CheckboxComponent } from '../../../shared/checkbox.component';
 import { OfferLetterComponent } from '../terms/offer-letter.component';
 
@@ -13,7 +16,7 @@ import { OfferLetterComponent } from '../terms/offer-letter.component';
  */
 @Component({
   selector: 'app-offer-letter-step',
-  imports: [AnimatedIconComponent, TPipe, CheckboxComponent, OfferLetterComponent],
+  imports: [AnimatedIconComponent, IconComponent, ModalComponent, TPipe, CheckboxComponent, OfferLetterComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="step">
@@ -22,7 +25,29 @@ import { OfferLetterComponent } from '../terms/offer-letter.component';
         <p class="subtitle">{{ 'step.offerletter.subtitle' | t }}</p>
       </header>
 
-      <app-offer-letter [request]="letterRequest()" (readToEnd)="letterRead.set(true)" />
+      @if (state.offer(); as o) {
+        <dl class="facts">
+          <div><dt>{{ 'step.terms.principal' | t }}</dt><dd>{{ naira(o.amount) }}</dd></div>
+          <div><dt>{{ 'step.terms.tenor' | t }}</dt><dd>{{ o.tenorMonths }} {{ 'step.offers.months' | t }}</dd></div>
+          <div><dt>{{ 'step.terms.monthly' | t }}</dt><dd>{{ naira(o.monthlyRepayment) }}</dd></div>
+        </dl>
+      }
+
+      <button type="button" class="alt read" (click)="letterOpen.set(true)">
+        <span>{{ (letterRead() ? 'step.offerletter.reread' : 'step.offerletter.read') | t }}</span>
+        @if (letterRead()) {
+          <app-icon name="bold-success" [size]="18" class="read-ok" />
+        }
+      </button>
+      @if (!letterRead()) {
+        <p class="note">{{ 'step.offerletter.readfirst' | t }}</p>
+      }
+
+      <app-modal [open]="letterOpen()" [title]="'pdf.letter.title' | t" (closed)="letterOpen.set(false)">
+        @if (letterOpen()) {
+          <app-offer-letter [request]="letterRequest()" (readToEnd)="letterRead.set(true)" />
+        }
+      </app-modal>
 
       <label class="agree" [class.is-locked]="!letterRead()">
         <app-checkbox [invalid]="attempted() && !agreed()" describedBy="agree-error" [disabled]="!letterRead()" [checked]="agreed()" (checkedChange)="toggleAgree($event)" />
@@ -47,11 +72,20 @@ import { OfferLetterComponent } from '../terms/offer-letter.component';
       .agree.is-locked { opacity: 0.6; cursor: not-allowed; }
       .msg--error { margin: 0; color: var(--danger-text); font-size: var(--fs-sm); }
       .cta { margin-top: auto; }
+      .facts { margin: 0; display: flex; flex-direction: column; border-top: 1px solid var(--hairline); }
+      .facts > div { display: flex; justify-content: space-between; gap: var(--space-4); padding: var(--space-4) 0; border-bottom: 1px solid var(--hairline); }
+      .facts dt { color: var(--ink-soft); }
+      .facts dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+      .read { gap: var(--space-2); }
+      .read-ok { color: var(--success-text); }
+      .note { margin: calc(var(--space-2) * -1) 0 0; font-size: var(--fs-sm); color: var(--ink-muted); }
     `,
   ],
 })
 export class OfferLetterStepComponent {
-  private readonly state = inject(ApplicationStateService);
+  protected readonly state = inject(ApplicationStateService);
+  protected readonly naira = formatNaira;
+  readonly letterOpen = signal(false);
   private readonly flow = inject(FlowNavigator);
 
   readonly agreed = signal(false);

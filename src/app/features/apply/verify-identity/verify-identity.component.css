@@ -54,7 +54,6 @@
   font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: 0.08em;
   font-weight: 600; color: var(--text-accent);
 }
-.script-lines { margin: 0; padding-left: 1.25em; display: flex; flex-direction: column; gap: var(--space-2); }
 .script-body {
   margin: 0;
   font-family: var(--font-display);
@@ -72,7 +71,7 @@
   aspect-ratio: 1 / 1;
   display: flex; align-items: center; justify-content: center;
 }
-.frame--video { aspect-ratio: 4 / 5; }
+.frame--video { aspect-ratio: 1 / 1; }
 .media, .captured {
   width: 100%; height: 100%; object-fit: cover; display: block;
   background: var(--camera-bg);
@@ -125,9 +124,9 @@
 
 
 .cta.danger { background: var(--danger); }
-.cta.danger:hover:not(:disabled) { background: color-mix(in srgb, var(--danger) 88%, black); }
+@media (hover: hover) and (pointer: fine) { .cta.danger:hover:not(:disabled) { background: color-mix(in srgb, var(--danger) 88%, black); } }
 .cta-arrow { transition: transform 200ms cubic-bezier(0.2, 0.7, 0.1, 1); }
-.cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); }
+@media (hover: hover) and (pointer: fine) { .cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); } }
 
 .ghost {
   min-height: var(--btn-height);
@@ -140,7 +139,7 @@
   cursor: pointer;
   transition: background 160ms ease;
 }
-.ghost:hover { background: var(--hover-tint); }
+@media (hover: hover) and (pointer: fine) { .ghost:hover { background: var(--hover-tint); } }
 .ghost:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 
 .review-grid {
@@ -179,3 +178,10 @@
 .upload { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; cursor: pointer; }
 .file { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
 .upload:focus-within { box-shadow: var(--focus-ring); }
+
+.ts-title { margin: 0 0 var(--space-2); font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 600; }
+.ts-reason { margin: 0 0 var(--space-2); font-weight: 600; color: var(--danger-text); }
+.ts-sub { margin: 0 0 var(--space-2); color: var(--ink-soft); }
+.ts-tips { margin: 0 0 var(--space-4); padding-left: 1.2em; display: flex; flex-direction: column; gap: var(--space-2); color: var(--ink); line-height: 1.45; }
+.ts-actions { display: flex; flex-direction: column; gap: var(--space-2); }
+.ts-actions a.ghost { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }

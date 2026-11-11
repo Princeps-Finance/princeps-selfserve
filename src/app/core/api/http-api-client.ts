@@ -19,6 +19,7 @@ import {
   MandateLink,
   MandateStatus,
   SalaryVerifyInput,
+  AccountLookupResult,
   SalaryVerifyResult,
   StatementReviewInput,
   EligibilityCheckInput,
@@ -242,6 +243,10 @@ return []; // The user can type it.
 // The bank list is public reference data, so a static fallback is safe.
       return NG_BANKS;
     }
+  }
+
+  resolveAccount(bankCode: string, accountNumber: string): Promise<AccountLookupResult> {
+    return this.opOr<AccountLookupResult>('resolve-account', { bankCode, accountNumber }, { status: 'service-down' });
   }
 
   verifySalary(input: SalaryVerifyInput): Promise<SalaryVerifyResult> {

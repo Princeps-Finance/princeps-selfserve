@@ -68,9 +68,9 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
         transition: background 160ms ease, transform 120ms ease-out;
       }
 .cta { border: 0; margin-top: 0 !important; }
-      .cta:hover { background: var(--action-primary-hover); }
+      @media (hover: hover) and (pointer: fine) { .cta:hover { background: var(--action-primary-hover); } }
 
-.alt:hover { background: var(--hover-tint); }
+@media (hover: hover) and (pointer: fine) { .alt:hover { background: var(--hover-tint); } }
       .cta:active, .alt:active { transform: scale(0.99); }
       .cta:focus-visible, .alt:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
       @media (prefers-reduced-motion: reduce) { .cta, .alt { transition: none; } }

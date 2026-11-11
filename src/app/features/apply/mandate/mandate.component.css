@@ -83,7 +83,7 @@
 
 
 .cta-arrow { transition: transform 200ms cubic-bezier(0.2, 0.7, 0.1, 1); }
-.cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); }
+@media (hover: hover) and (pointer: fine) { .cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); } }
 
 @media (max-width: 380px) {
   .row { flex-direction: column; align-items: flex-start; gap: 2px; }
@@ -117,6 +117,6 @@ a.cta { text-decoration: none; justify-content: center; }
   font: inherit; font-size: var(--fs-body); font-weight: var(--btn-weight); color: var(--text-accent);
   text-decoration: underline; text-underline-offset: 4px; border-radius: var(--btn-radius);
 }
-.text-btn:hover { background: var(--hover-tint); }
+@media (hover: hover) and (pointer: fine) { .text-btn:hover { background: var(--hover-tint); } }
 .text-btn:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
 .link-actions .cta { justify-content: center; text-decoration: none; }

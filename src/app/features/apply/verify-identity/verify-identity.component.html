@@ -1,15 +1,13 @@
 <section class="step">
   <app-wizard-progress [current]="12" [total]="14" [label]="'step.verify.eyebrow' | t" />
 
-  <header class="head">
-    <h1 class="title">{{ 'step.verify.title' | t }}</h1>
-    <p class="subtitle">{{ 'step.verify.subtitle' | t }}</p>
-    <app-why-ask [text]="'reason.selfie' | t" />
-  </header>
-
-  @if (cameraError()) {
-    <p class="error" role="alert">{{ cameraError() }}</p>
-    <a class="help-link" [attr.href]="helpLink" target="_blank" rel="noopener">{{ 'step.verify.help' | t }}</a>
+  <!-- While the camera is on, the picture comes first: the long introduction would push it below the fold. -->
+  @if (stage() === 'intro' || stage() === 'review') {
+    <header class="head">
+      <h1 class="title">{{ 'step.verify.title' | t }}</h1>
+      <p class="subtitle">{{ 'step.verify.subtitle' | t }}</p>
+      <app-why-ask [text]="'reason.selfie' | t" />
+    </header>
   }
 
   @switch (stage()) {
@@ -46,8 +44,6 @@
     }
 
     @case ('face') {
-      <p class="stage-label">{{ 'step.verify.stage.face2' | t }}</p>
-
       <div class="frame frame--face">
         @if (facePhoto(); as p) {
           <img [attr.src]="p" alt="" class="captured" />
@@ -56,6 +52,8 @@
           <div class="oval-guide" aria-hidden="true"></div>
         }
       </div>
+
+      <p class="stage-label">{{ 'step.verify.stage.face2' | t }}</p>
 
       @if (!facePhoto()) {
         <button type="button" class="cta" (click)="capturePhoto()">
@@ -73,17 +71,6 @@
     }
 
     @case ('video') {
-      <p class="stage-label">{{ 'step.verify.stage.video' | t }}</p>
-
-      <div class="script">
-        <p class="script-label">{{ 'step.verify.script.label' | t }}</p>
-        <ol class="script-lines">
-          @for (line of scriptLines(); track $index) {
-            <li class="script-body">{{ line }}</li>
-          }
-        </ol>
-      </div>
-
       @if (canRecord() || videoPreviewUrl()) {
       <div class="frame frame--video">
         @if (videoPreviewUrl(); as u) {
@@ -100,6 +87,13 @@
       </div>
 
       }
+
+      <p class="stage-label">{{ 'step.verify.stage.video' | t }}</p>
+
+      <div class="script">
+        <p class="script-label">{{ 'step.verify.script.label' | t }}</p>
+        <p class="script-body">{{ scriptLines().join(' ') }}</p>
+      </div>
 
       @if (checkingVideo()) {
         <p class="processing">{{ 'step.verify.processing' | t }}</p>
@@ -157,3 +151,24 @@
     }
   }
 </section>
+
+<app-modal [open]="trouble() !== null" [title]="'troubleshoot.title' | t" (closed)="trouble.set(null)">
+  <h2 class="ts-title">{{ 'troubleshoot.title' | t }}</h2>
+  <p class="ts-reason" role="status">{{ trouble() }}</p>
+  <p class="ts-sub">{{ 'troubleshoot.sub' | t }}</p>
+  <ul class="ts-tips">
+    <li>{{ 'troubleshoot.tip1' | t }}</li>
+    <li>{{ 'troubleshoot.tip2' | t }}</li>
+    <li>{{ 'troubleshoot.tip3' | t }}</li>
+  </ul>
+  <div class="ts-actions">
+    <button type="button" class="cta" (click)="retryAfterTrouble()"><span>{{ 'troubleshoot.retry' | t }}</span></button>
+    @if (canUpload()) {
+      <label class="ghost upload">
+        <input type="file" accept="video/*" capture="user" class="file" (change)="trouble.set(null); onVideoFile($event)" />
+        <span>{{ 'step.verify.upload' | t }}</span>
+      </label>
+    }
+    <a class="ghost" [attr.href]="helpLink" target="_blank" rel="noopener">{{ 'step.verify.help' | t }}</a>
+  </div>
+</app-modal>

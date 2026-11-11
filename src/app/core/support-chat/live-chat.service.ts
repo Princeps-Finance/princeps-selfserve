@@ -13,7 +13,7 @@ type ZohoWindow = Window & { $zoho?: { salesiq?: ZohoSalesIq } };
  * Screens where the customer types a BVN, a code or an ID number. Chat is never started from them, because
  * once the Zoho script is loaded it stays on the page for the rest of the visit.
  */
-const NO_CHAT_ROUTES = ['/apply/bvn', '/apply/verify', '/apply/nin', '/apply/verify-identity'];
+const NO_CHAT_ROUTES = ['/apply/bvn', '/apply/verify', '/apply/nin'];
 
 /** True when live chat may be started from this address. */
 export function chatAllowedOn(url: string): boolean {

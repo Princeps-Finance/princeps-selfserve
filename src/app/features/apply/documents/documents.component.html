@@ -40,6 +40,9 @@
           @if (d?.status === 'uploading') {
             <!-- status shown under the title -->
           } @else if (d?.status === 'uploaded') {
+            @if (canView(spec.id)) {
+              <button type="button" class="ghost-btn" (click)="view(spec.id)">{{ 'step.docs.view' | t }}</button>
+            }
             <label class="ghost-btn">
               <input type="file" class="sr-only" (change)="onFile(spec.id, $event)" accept="image/*,application/pdf" />
               {{ 'step.docs.replace' | t }}
@@ -69,3 +72,10 @@
     <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
   </button>
 </section>
+
+<app-modal [open]="previewing() !== null" [title]="'step.docs.view' | t" (closed)="previewing.set(null)">
+  @if (previewing(); as p) {
+    <img class="preview" [src]="p.url" [alt]="p.name" />
+    <p class="preview-name">{{ p.name }}</p>
+  }
+</app-modal>

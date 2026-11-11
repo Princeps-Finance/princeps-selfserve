@@ -1,4 +1,5 @@
 import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
+import { ModalComponent } from '../../../shared/modal.component';
 import { WhyAskComponent } from '../../../shared/why-ask.component';
 import {
   ChangeDetectionStrategy,
@@ -16,9 +17,7 @@ import { ApplicationStateService } from '../../../core/application/application-s
 import { LangService } from '../../../core/i18n/lang.service';
 import { productById } from '../../../core/products/products';
 import { whatsappLink } from '../../../core/support';
-import { ToastService } from '../../../core/toast/toast.service';
 import { formatNaira, spokenNaira } from '../../../core/money.util';
-import { dueDateOf, firstPaydayAfter } from '../../../core/products/payday';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 import { logWarn } from '../../../core/log';
@@ -29,7 +28,7 @@ type Stage = 'intro' | 'face' | 'video' | 'review';
 
 @Component({
   selector: 'app-verify-identity',
-  imports: [AnimatedIconComponent, WhyAskComponent, TPipe, WizardProgressComponent],
+  imports: [AnimatedIconComponent, ModalComponent, WhyAskComponent, TPipe, WizardProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './verify-identity.component.html',
   styleUrl: './verify-identity.component.css',
@@ -37,7 +36,6 @@ type Stage = 'intro' | 'face' | 'video' | 'review';
 export class VerifyIdentityComponent implements OnDestroy {
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
-  private readonly toast = inject(ToastService);
   private readonly lang = inject(LangService);
   readonly helpLink = whatsappLink('Hello Princeps, I cannot complete the identity check and need help.');
 
@@ -61,31 +59,20 @@ export class VerifyIdentityComponent implements OnDestroy {
   readonly monthlyRepayment = computed(() => this.offer()?.monthlyRepayment ?? 0);
 
   /**
-   * What the customer reads aloud on the video: every figure of the loan, exact to the kobo, so the recording
-   * stands as a clear confirmation of the terms. It is built from the same offer the customer accepted.
+   * What the customer reads aloud on the video: three short sentences with the amount and the monthly repayment,
+   * built from the same offer the customer accepted.
    */
   readonly scriptLines = computed<string[]>(() => {
     const o = this.offer();
     if (!o) return [];
-    const first = firstPaydayAfter(new Date());
-    const last = dueDateOf(first, o.tenorMonths);
-    const date = (d: Date) => d.toLocaleDateString('en-NG', { day: 'numeric', month: 'long', year: 'numeric' });
-    const fees = o.fees.reduce((sum, f) => sum + f.amount, 0);
-    const channel = (this.state.salary()?.channel ?? 'ippis').toUpperCase().replace('REMITA', 'Remita').replace('DEDUKT', 'Dedukt');
     const p = {
       name: this.state.bvnIdentity()?.fullName ?? this.state.profile()?.fullName ?? '',
       product: o.productName,
       amount: spokenNaira(o.amount),
       months: String(o.tenorMonths),
       monthly: spokenNaira(o.monthlyRepayment),
-      first: date(first),
-      last: date(last),
-      rate: String(o.ratePercent),
-      fees: spokenNaira(fees),
-      total: spokenNaira(o.monthlyRepayment * o.tenorMonths),
-      channel,
     };
-    return [1, 2, 3, 4, 5, 6, 7].map((n) => this.lang.t(`step.verify.script.l${n}`).replace(/\{(\w+)\}/g, (_, k: string) => (p as Record<string, string>)[k] ?? ''));
+    return [1, 2, 3].map((n) => this.lang.t(`step.verify.script.l${n}`).replace(/\{(\w+)\}/g, (_, k: string) => (p as Record<string, string>)[k] ?? ''));
   });
 
   readonly attempted = signal(false);
@@ -95,7 +82,36 @@ export class VerifyIdentityComponent implements OnDestroy {
     () => productById(this.offer()?.productId ?? '')?.settings.identityVideo ?? 'record',
   );
   readonly canRecord = computed(() => this.videoMode() === 'record' || this.videoMode() === 'either');
-  readonly canUpload = computed(() => this.videoMode() === 'upload' || this.videoMode() === 'either');
+  /** Set once recording has failed, so a customer whose phone cannot record can still send a video file. */
+  private readonly uploadFallback = signal(false);
+  readonly canUpload = computed(() => this.videoMode() === 'upload' || this.videoMode() === 'either' || this.uploadFallback());
+
+  /** Why the help window is open (null: closed). It opens after any camera or video problem, so nobody is left stuck. */
+  readonly trouble = signal<string | null>(null);
+  private watchdog: ReturnType<typeof setTimeout> | null = null;
+
+  private fail(messageKey: string): void {
+    this.isRecording.set(false);
+    this.checkingVideo.set(false);
+    this.clearWatchdog();
+    this.uploadFallback.set(true);
+    this.trouble.set(this.lang.t(messageKey));
+  }
+
+  private clearWatchdog(): void {
+    if (this.watchdog) clearTimeout(this.watchdog);
+    this.watchdog = null;
+  }
+
+  /** "Try again" in the help window: start over from the camera for the step the customer is on. */
+  retryAfterTrouble(): void {
+    this.trouble.set(null);
+    this.cameraError.set(null);
+    this.videoDataUrl.set(null);
+    this.revokePreview();
+    this.videoPreviewUrl.set(null);
+    if (this.stage() === 'face' || this.stage() === 'video') void this.startCamera(this.stage() === 'video');
+  }
 
   private offerKey(): string {
     const o = this.offer();
@@ -109,7 +125,7 @@ export class VerifyIdentityComponent implements OnDestroy {
     input.value = '';
     if (!file) return;
     if (file.size > 25 * 1024 * 1024) {
-      this.toast.error(this.lang.t('step.verify.upload.toolarge'));
+      this.fail('step.verify.upload.toolarge');
       return;
     }
     this.showClip(file);
@@ -145,6 +161,7 @@ export class VerifyIdentityComponent implements OnDestroy {
     } catch (err) {
       logWarn('identity camera could not open', err);
       this.cameraError.set(this.lang.t(withAudio ? 'camera.error.av' : 'camera.error.v'));
+      this.fail(withAudio ? 'camera.error.av' : 'camera.error.v');
     }
   }
 
@@ -169,7 +186,10 @@ export class VerifyIdentityComponent implements OnDestroy {
   }
 
   startRecording(): void {
-    if (!this.camera.active) return;
+    if (!this.camera.active) {
+      this.fail('camera.error.av');
+      return;
+    }
     this.isRecording.set(true);
     this.recordSeconds.set(0);
     this.camera
@@ -177,13 +197,16 @@ export class VerifyIdentityComponent implements OnDestroy {
       .then((clip) => {
         this.isRecording.set(false);
         this.camera.close();
+        if (clip.blob.size === 0) {
+          this.fail('toast.video.error');
+          return;
+        }
         this.showClip(clip.blob);
       })
       .catch((err) => {
         // Some browsers cannot record: say so instead of failing silently.
         logWarn('identity recording failed', err);
-        this.isRecording.set(false);
-        this.toast.error(this.lang.t('toast.video.error'));
+        this.fail('toast.video.error');
       });
   }
 
@@ -191,6 +214,14 @@ export class VerifyIdentityComponent implements OnDestroy {
     if (!this.isRecording()) return;
     this.checkingVideo.set(true);
     this.camera.stopRecording();
+    // Some phones never finish saving the clip. Do not leave the customer on "Processing" for ever.
+    this.clearWatchdog();
+    this.watchdog = setTimeout(() => {
+      if (this.checkingVideo() && !this.videoDataUrl()) {
+        this.camera.close();
+        this.fail('troubleshoot.stuck');
+      }
+    }, 12_000);
   }
 
   /** Shows a clip (recorded or uploaded) in the preview and keeps its data for the submit step. */
@@ -200,8 +231,11 @@ export class VerifyIdentityComponent implements OnDestroy {
     this.videoPreviewUrl.set(URL.createObjectURL(clip));
     readAsDataUrl(clip)
       .then((dataUrl) => this.videoDataUrl.set(dataUrl))
-      .catch(() => this.toast.error(this.lang.t('toast.video.error')))
-      .finally(() => this.checkingVideo.set(false));
+      .catch(() => this.fail('toast.video.error'))
+      .finally(() => {
+        this.clearWatchdog();
+        this.checkingVideo.set(false);
+      });
   }
 
   retakeVideo(): void {
@@ -235,6 +269,7 @@ export class VerifyIdentityComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.camera.close();
+    this.clearWatchdog();
     this.revokePreview();
   }
 }

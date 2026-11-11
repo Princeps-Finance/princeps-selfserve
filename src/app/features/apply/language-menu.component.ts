@@ -103,9 +103,8 @@ import { TPipe } from '../../core/i18n/t.pipe';
         cursor: pointer; text-align: left; color: var(--ink);
         font-family: var(--font-sans);
       }
-      .option:hover, .option:focus-visible {
-        background: var(--canvas); outline: 2px solid transparent; outline-offset: 2px;
-      }
+      .option:focus-visible { background: var(--canvas); outline: 2px solid transparent; outline-offset: 2px; }
+      @media (hover: hover) and (pointer: fine) { .option:hover { background: var(--canvas); } }
       .option-endonym {
         font-family: var(--font-display); font-size: var(--fs-body); font-weight: 500;
         letter-spacing: -0.01em;

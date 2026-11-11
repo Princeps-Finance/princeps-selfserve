@@ -45,7 +45,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         background: var(--scrim); color: var(--on-dark);
         transition: background 120ms ease;
       }
-      .close:hover { background: var(--scrim-strong); }
+      @media (hover: hover) and (pointer: fine) { .close:hover { background: var(--scrim-strong); } }
       .close:focus-visible, .promo-cta:focus-visible { outline: 2px solid var(--focus-color); outline-offset: 2px; }
       .close:focus-visible { outline-color: var(--on-dark); }
       .body { padding: var(--space-4); }
@@ -66,7 +66,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         font: var(--btn-weight) 14px/1 var(--font-sans); cursor: pointer;
         transition: background 120ms ease;
       }
-      .promo-cta:hover { background: var(--action-primary-hover); }
+      @media (hover: hover) and (pointer: fine) { .promo-cta:hover { background: var(--action-primary-hover); } }
       .promo-cta:active { background: var(--action-primary-active); }
       @media (prefers-reduced-motion: reduce) { .close, .promo-cta { transition: none; } }
     `,

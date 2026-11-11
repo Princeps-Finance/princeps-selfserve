@@ -15,7 +15,7 @@ describe('formatNaira', () => {
 describe('spokenNaira', () => {
   it('reads an amount exact to the kobo', async () => {
     const { spokenNaira } = await import('./money.util');
-    expect(spokenNaira(57500)).toBe('57,500 naira and 0 kobo');
+    expect(spokenNaira(57500)).toBe('57,500 naira');
     expect(spokenNaira(300000.5)).toBe('300,000 naira and 50 kobo');
     expect(spokenNaira(1234.07)).toBe('1,234 naira and 7 kobo');
   });

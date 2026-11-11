@@ -36,12 +36,12 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         background: var(--action-primary); color: var(--action-on-primary);
         font: var(--btn-weight) 15px/1 var(--font-sans); cursor: pointer;
       }
-      .promo-cta:hover { background: var(--action-primary-hover); }
+      @media (hover: hover) and (pointer: fine) { .promo-cta:hover { background: var(--action-primary-hover); } }
       .close {
         flex: none; width: 28px; height: 28px; margin-right: calc(var(--space-1) * -1); border: 0; border-radius: 50%;
         display: grid; place-items: center; background: transparent; color: var(--grey-500); cursor: pointer;
       }
-      .close:hover { background: var(--grey-200); }
+      @media (hover: hover) and (pointer: fine) { .close:hover { background: var(--grey-200); } }
       .promo-cta:focus-visible, .close:focus-visible { outline: 2px solid var(--grey-900); outline-offset: 2px; }
       @media (max-width: 359px) {
         .thumb { display: none; }

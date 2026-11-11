@@ -6,7 +6,7 @@
   font: inherit; color: var(--ink); cursor: pointer; background: var(--grey-100); border: 0; border-radius: var(--radius-md);
   transition: background var(--dur-base) ease;
 }
-.loan:hover { background: var(--grey-200); }
+@media (hover: hover) and (pointer: fine) { .loan:hover { background: var(--grey-200); } }
 .loan:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
 .loan--past { opacity: 0.85; }
 .loan-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }

@@ -2,7 +2,7 @@ import { chatAllowedOn } from './live-chat.service';
 
 describe('chatAllowedOn', () => {
   it('blocks the screens where a BVN, code or ID number is typed', () => {
-    for (const url of ['/apply/bvn', '/apply/bvn?error=not-found', '/apply/verify', '/apply/nin', '/apply/verify-identity']) {
+    for (const url of ['/apply/bvn', '/apply/bvn?error=not-found', '/apply/verify', '/apply/nin']) {
       expect(chatAllowedOn(url)).toBe(false);
     }
   });

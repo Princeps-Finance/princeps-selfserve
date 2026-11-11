@@ -15,18 +15,22 @@
   </section>
 
   <!-- When the money leaves the account: the schedule comes straight after the monthly figure. -->
-  <app-card [title]="'step.terms.schedule' | t">
+  <app-card>
+    <button type="button" class="sched-toggle" [attr.aria-expanded]="scheduleOpen()" aria-controls="schedule-body" (click)="scheduleOpen.set(!scheduleOpen())">
+      <span class="sched-title">{{ 'step.terms.schedule' | t }}</span>
+      <app-icon name="bold-chevron-down" [size]="18" class="sched-caret" [class.is-open]="scheduleOpen()" />
+    </button>
     <app-card tone="accent" class="first-pay">
       <p class="first-pay-date">{{ 'step.terms.payday.first' | t }}: <strong>{{ formatDueDate(firstDueDate()) }}</strong></p>
       <p class="first-pay-note">{{ 'step.terms.payday.note' | t }}</p>
     </app-card>
-    <div class="table-scroll" tabindex="0" role="region" [attr.aria-label]="'step.terms.schedule' | t">
+    @if (scheduleOpen()) {
+    <div class="table-scroll" id="schedule-body" tabindex="0" role="region" [attr.aria-label]="'step.terms.schedule' | t">
       <table class="schedule">
         <thead>
           <tr>
             <th scope="col">{{ 'step.terms.month' | t }}</th>
             <th scope="col">{{ 'step.terms.dueCol' | t }}</th>
-            <th scope="col">{{ 'step.terms.interestCol' | t }}</th>
             <th scope="col">{{ 'step.terms.paymentCol' | t }}</th>
             <th scope="col">{{ 'step.terms.balanceCol' | t }}</th>
           </tr>
@@ -36,7 +40,6 @@
             <tr>
               <td>{{ r.month }}</td>
               <td>{{ formatDueDate(r.dueDate) }}</td>
-              <td>{{ formatNaira(r.interest) }}</td>
               <td>{{ formatNaira(r.payment) }}</td>
               <td>{{ formatNaira(r.balance) }}</td>
             </tr>
@@ -44,6 +47,7 @@
         </tbody>
       </table>
     </div>
+    }
   </app-card>
 
   <!-- What it costs: the figures that used to sit on the offers screen. -->
@@ -64,10 +68,6 @@
       <div class="row">
         <dt>{{ 'step.terms.tenor' | t }}</dt>
         <dd>{{ o.tenorMonths }} {{ 'step.offers.months' | t }}</dd>
-      </div>
-      <div class="row">
-        <dt>{{ 'offers.cost.apr' | t }}</dt>
-        <dd>≈ {{ apr() }}%</dd>
       </div>
       <div class="row row--strong">
         <dt>{{ 'step.terms.total' | t }}</dt>

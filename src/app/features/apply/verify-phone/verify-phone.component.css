@@ -38,7 +38,7 @@
   margin: 0;
 }
 
-.otp-cell:hover { border-color: var(--input-border-hover); }
+@media (hover: hover) and (pointer: fine) { .otp-cell:hover { border-color: var(--input-border-hover); } }
 
 .otp-cell:focus,
 .otp-cell:focus-visible {
@@ -108,7 +108,7 @@
 
 
 .cta-arrow { transition: transform 200ms cubic-bezier(0.2, 0.7, 0.1, 1); }
-.cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); }
+@media (hover: hover) and (pointer: fine) { .cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); } }
 
 @media (prefers-reduced-motion: reduce) {
   .cta, .cta-arrow, .otp-cell, .link-btn { transition: none; }

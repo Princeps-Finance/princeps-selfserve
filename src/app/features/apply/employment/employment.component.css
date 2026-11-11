@@ -17,7 +17,7 @@
   transition: border-color 140ms ease, background-color 140ms ease, transform 120ms ease-out;
 }
 
-.option:hover { border-color: var(--ink); background: var(--hover-tint); }
+@media (hover: hover) and (pointer: fine) { .option:hover { border-color: var(--ink); background: var(--hover-tint); } }
 .option:active { transform: scale(0.99); }
 .option:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 @media (prefers-reduced-motion: reduce) { .option, .option:active { transition: none; transform: none; } }
@@ -70,7 +70,7 @@
 
 
 .cta-arrow { transition: transform 200ms cubic-bezier(0.2,0.7,0.1,1); }
-.cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); }
+@media (hover: hover) and (pointer: fine) { .cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); } }
 
 @media (prefers-reduced-motion: reduce) {
   .cta, .cta-arrow, .option, .mark, .input { transition: none; }
@@ -94,7 +94,7 @@
 .other-link { min-height: 44px; padding: 0; border: 0; background: none; color: var(--text-accent); font: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .other-link:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); border-radius: 4px; }
 .go { flex: none; color: var(--ink-soft); }
-.option:hover .go { color: var(--ink); transform: translateX(2px); }
+@media (hover: hover) and (pointer: fine) { .option:hover .go { color: var(--ink); transform: translateX(2px); } }
 .go { transition: transform 160ms ease, color 160ms ease; }
 @media (prefers-reduced-motion: reduce) { .go { transition: none; } }
 

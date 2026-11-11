@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
+import { HapticsService } from '../core/ui/haptics.service';
 
 /**
  * Pick an amount between two limits. A large, filled slider for rough choices, the two limits named under it,
@@ -56,7 +57,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
         width: 20px; height: 20px; border-radius: 50%; background: var(--action-primary); border: 4px solid var(--canvas);
         box-shadow: 0 0 0 1px var(--action-primary), var(--shadow-2);
       }
-      input[type='range']:hover::-webkit-slider-thumb { transform: scale(1.08); }
+      @media (hover: hover) and (pointer: fine) { input[type='range']:hover::-webkit-slider-thumb { transform: scale(1.08); } }
       input[type='range']:active::-webkit-slider-thumb { transform: scale(1.15); }
       input[type='range']:focus-visible { outline: none; }
       input[type='range']:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 1px var(--action-primary), var(--focus-ring); }
@@ -68,7 +69,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
         background: var(--grey-100); color: var(--ink); font: var(--fw-medium) var(--fs-sm) var(--font-sans);
         font-variant-numeric: tabular-nums; cursor: pointer; transition: background var(--dur-fast) ease;
       }
-      .chip:hover { background: var(--grey-200); }
+      @media (hover: hover) and (pointer: fine) { .chip:hover { background: var(--grey-200); } }
       .chip[aria-pressed='true'] { background: var(--action-primary); color: var(--action-on-primary); font-weight: var(--fw-bold); }
       .chip:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
       @media (prefers-reduced-motion: reduce) { input[type='range']::-webkit-slider-thumb, .chip { transition: none; } }
@@ -97,7 +98,11 @@ export class AmountSliderComponent {
     return [...new Set([0.25, 0.5, 0.75, 1].map((f) => snap(min + (max - min) * f)))];
   });
 
+  private readonly haptics = inject(HapticsService);
+
   protected onInput(event: Event): void {
-    this.valueChange.emit(Number((event.target as HTMLInputElement).value));
+    const next = Number((event.target as HTMLInputElement).value);
+    if (next !== this.value()) this.haptics.step();
+    this.valueChange.emit(next);
   }
 }

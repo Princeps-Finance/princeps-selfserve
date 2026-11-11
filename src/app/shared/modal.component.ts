@@ -17,7 +17,7 @@ import { TPipe } from '../core/i18n/t.pipe';
           <app-icon name="bold-chevron-down" [size]="16" [rotate]="90" />
           <span>{{ 'common.back' | t }}</span>
         </button>
-        <h2 id="modal-title" class="sr-only">{{ title() }}</h2>
+        <h2 id="modal-title" class="sr-only" tabindex="-1" autofocus>{{ title() }}</h2>
         <div class="card"><ng-content /></div>
       </div>
     </dialog>

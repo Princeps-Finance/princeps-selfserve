@@ -1,7 +1,8 @@
 import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
+import { ModalComponent } from '../../../shared/modal.component';
 import { WhyAskComponent } from '../../../shared/why-ask.component';
 import { logWarn } from '../../../core/log';
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { API_CLIENT, RequiredDocument } from '../../../core/api/api-client';
@@ -30,7 +31,7 @@ function specFor(doc: RequiredDocument): DocSpec {
 
 @Component({
   selector: 'app-documents',
-  imports: [AnimatedIconComponent, WhyAskComponent, TPipe, WizardProgressComponent],
+  imports: [AnimatedIconComponent, ModalComponent, WhyAskComponent, TPipe, WizardProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './documents.component.html',
   styleUrl: './documents.component.css',
@@ -47,6 +48,25 @@ export class DocumentsComponent implements OnInit {
   readonly errors = signal<Record<string, 'too-large' | 'network' | 'bad-type' | null>>({});
 
   readonly attempted = signal(false);
+
+  /** The files picked on this screen, kept so the customer can look at what they sent. Gone after a reload: only the name is saved. */
+  private readonly previews = new Map<string, { url: string; isImage: boolean; name: string }>();
+  readonly previewing = signal<{ url: string; name: string } | null>(null);
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.previews.forEach((p) => URL.revokeObjectURL(p.url)));
+  }
+
+  canView(id: string): boolean {
+    return this.docs().find((d) => d.id === id)?.status === 'uploaded' && this.previews.has(id);
+  }
+
+  view(id: string): void {
+    const p = this.previews.get(id);
+    if (!p) return;
+    if (p.isImage) this.previewing.set({ url: p.url, name: p.name });
+    else window.open(p.url, '_blank', 'noopener');
+  }
 
   readonly allUploaded = computed(() => {
     const s = this.specs();
@@ -104,6 +124,9 @@ export class DocumentsComponent implements OnInit {
   async upload(id: string, file: File): Promise<void> {
     this.errors.update((e) => ({ ...e, [id]: null }));
     this.state.updateDoc(id, { status: 'uploading', fileName: file.name });
+    const old = this.previews.get(id);
+    if (old) URL.revokeObjectURL(old.url);
+    this.previews.set(id, { url: URL.createObjectURL(file), isImage: file.type.startsWith('image/'), name: file.name });
     let res: Awaited<ReturnType<typeof this.api.uploadDocument>>;
     try {
       res = await this.api.uploadDocument({ docId: id, fileName: file.name, sizeBytes: file.size });

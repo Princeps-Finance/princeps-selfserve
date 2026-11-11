@@ -16,7 +16,7 @@ import { environment } from '../../../environments/environment';
     `
       .demo p { margin: 0; }
       .demo {
-        margin: 0; padding: 6px var(--space-4); text-align: center;
+        margin: 0; padding: calc(6px + env(safe-area-inset-top)) var(--space-4) 6px; text-align: center;
         background: var(--navy-950); color: var(--on-dark); font-size: var(--fs-xs); line-height: 1.4;
       }
     `,

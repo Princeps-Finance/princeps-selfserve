@@ -3,44 +3,35 @@ import { NavigationEnd, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
 import { TPipe } from '../i18n/t.pipe';
-import { PromoBannerComponent } from '../../shared/promo-banner.component';
+import { ModalComponent } from '../../shared/modal.component';
 import { AppUpdateService } from './app-update.service';
 
 /** Nothing has been typed yet: a ready update is applied automatically. */
 const AUTO_APPLY_ROUTES = new Set(['/', '/apply', '/apply/welcome']);
-/** Little or nothing to lose: offer the update, the customer decides. */
-const OFFER_ROUTES = new Set([...AUTO_APPLY_ROUTES, '/apply/bvn', '/apply/status']);
 
 @Component({
   selector: 'app-pwa-banner',
-  imports: [TPipe, PromoBannerComponent],
+  imports: [TPipe, ModalComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (updater.offline()) {
       <p class="banner banner--offline" role="status">{{ 'pwa.offline' | t }}</p>
     }
-    @if (showUpdate() && !dismissed()) {
-      <app-promo-banner
-        class="update"
-        role="status"
-        [title]="'pwa.update.title' | t"
-        [description]="'pwa.update.ready' | t"
-        [ctaLabel]="'pwa.update.action' | t"
-        [dismissLabel]="'common.dismiss' | t"
-        imageSrc="icons/icon-192.png"
-        [imageWidth]="192"
-        [imageHeight]="192"
-        (action)="updater.apply()"
-        (dismissed)="dismissed.set(true)"
-      />
-    }
+    <app-modal [open]="showUpdate() && !dismissed()" [title]="'pwa.update.title' | t" (closed)="dismissed.set(true)">
+      <div class="update">
+        <h2 class="update-title">{{ 'pwa.update.title' | t }}</h2>
+        <p class="update-body">{{ 'pwa.update.ready' | t }}</p>
+        <button type="button" class="cta" (click)="updater.apply()"><span>{{ 'pwa.update.action' | t }}</span></button>
+        <button type="button" class="alt" (click)="dismissed.set(true)">{{ 'pwa.update.later' | t }}</button>
+      </div>
+    </app-modal>
   `,
   styles: [
     `
       /* In flow (sticky), so the notice pushes content down instead of covering controls. */
       :host {
-        display: block; position: sticky; top: 0; z-index: 70;
-        padding: env(safe-area-inset-top) var(--space-4) 0;
+        display: block; position: sticky; top: env(safe-area-inset-top); z-index: 70;
+        padding: 0 var(--space-4);
       }
       .banner {
         margin: var(--space-2) auto 0; max-width: 520px; width: 100%;
@@ -52,7 +43,9 @@ const OFFER_ROUTES = new Set([...AUTO_APPLY_ROUTES, '/apply/bvn', '/apply/status
         box-shadow: var(--shadow-3);
       }
       .banner--offline { background: var(--navy-950); }
-      .update { margin: var(--space-2) auto 0; max-width: 520px; width: 100%; box-shadow: var(--shadow-3); border-radius: var(--radius-lg); }
+      .update { display: flex; flex-direction: column; gap: var(--space-3); }
+      .update-title { margin: 0; font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 600; }
+      .update-body { margin: 0; color: var(--ink-soft); line-height: 1.5; }
     `,
   ],
 })
@@ -71,8 +64,8 @@ export class PwaBannerComponent {
     { initialValue: '/' },
   );
 
-  private readonly atSafePoint = computed(() => OFFER_ROUTES.has(this.path()));
-  readonly showUpdate = computed(() => this.updater.updateReady() && this.atSafePoint());
+  /** On every screen: the customer is told, and chooses Update (reloads at once) or Later (this visit only). */
+  readonly showUpdate = computed(() => this.updater.updateReady() && !AUTO_APPLY_ROUTES.has(this.path()));
 
   constructor() {
     // On the first screens nothing can be lost, so a ready update is applied automatically.

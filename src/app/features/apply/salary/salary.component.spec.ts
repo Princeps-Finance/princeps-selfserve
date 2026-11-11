@@ -7,7 +7,7 @@ import { SalaryComponent } from './salary.component';
 
 function setup(check = vi.fn()) {
   const go = vi.fn().mockResolvedValue(true);
-  const api = { listBanks: vi.fn().mockResolvedValue([]), verifySalary: vi.fn(), checkEligibility: check };
+  const api = { listBanks: vi.fn().mockResolvedValue([]), resolveAccount: vi.fn().mockResolvedValue({ status: 'ok', accountName: 'A ADEYEMI' }), verifySalary: vi.fn(), checkEligibility: check };
   TestBed.configureTestingModule({
     providers: [
       { provide: API_CLIENT, useValue: api },
@@ -17,8 +17,9 @@ function setup(check = vi.fn()) {
   return { go, api, state: TestBed.inject(ApplicationStateService) };
 }
 
-function fill(c: SalaryComponent): void {
+async function fill(c: SalaryComponent): Promise<void> {
   c.form.patchValue({ bankCode: '058', bankName: 'GTBank', accountNumber: '0123456789', ippisNumber: '445566' });
+  await new Promise((r) => setTimeout(r));
 }
 
 describe('SalaryComponent in the no-identity check', () => {
@@ -28,7 +29,7 @@ describe('SalaryComponent in the no-identity check', () => {
     state.setEmployment({ type: 'government', governmentLevel: 'federal' });
     const c = TestBed.createComponent(SalaryComponent).componentInstance;
     expect(c.showChannelChoice()).toBe(false);
-    fill(c);
+    await fill(c);
     await c.submit();
 
     expect(api.verifySalary).not.toHaveBeenCalled();
@@ -44,7 +45,7 @@ describe('SalaryComponent in the no-identity check', () => {
     state.setEmployment({ type: 'government', governmentLevel: 'state' });
     const c = TestBed.createComponent(SalaryComponent).componentInstance;
     expect(c.channel()).toBe('remita');
-    fill(c);
+    await fill(c);
     await c.submit();
     expect(c.errorKey()).toBe('step.salary.error.not.found');
     expect(go).not.toHaveBeenCalled();
@@ -55,7 +56,7 @@ describe('SalaryComponent in the no-identity check', () => {
     state.setIntent('check');
     state.setEmployment({ type: 'government', governmentLevel: 'federal' });
     const c = TestBed.createComponent(SalaryComponent).componentInstance;
-    fill(c);
+    await fill(c);
     await c.submit();
     expect(c.limited()).toBe(true);
     expect(go).not.toHaveBeenCalled();

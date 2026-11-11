@@ -3,7 +3,7 @@ import type { EmploymentAvailability } from './employment-availability';
 import type { ReferralDraft } from '../application/application-state.service';
 import type {
   Bank, BvnContactsResult, EligibilityCheckInput, EligibilityCheckResult, RequiredDocument, RequiredDocumentsInput, RequiredProfileField, ReturningOtpSendResult, ReturningOtpVerifyResult, StatementCheckInput, BvnOtpSendResult, BvnOtpVerifyResult, BvnVerifyResult, DocUploadInput, DocUploadResult,
-  LoanSummary, LookupResult, MandateLink, OfferLetterRequest, MandateStatus, OtpDestination, SalaryVerifyInput, SalaryVerifyResult,
+  AccountLookupResult, LoanSummary, LookupResult, MandateLink, OfferLetterRequest, MandateStatus, OtpDestination, SalaryVerifyInput, SalaryVerifyResult,
   StatementReviewInput, SubmitPayload, SubmitResult, WaitlistInput, WaitlistResult,
 } from './api.types';
 
@@ -40,6 +40,8 @@ export interface ApiClient {
     | { status: 'locked'; retryAfterSeconds: number }
   >;
   listBanks(): Promise<Bank[]>;
+  /** The name on a bank account, so the customer can confirm it before the salary check. */
+  resolveAccount(bankCode: string, accountNumber: string): Promise<AccountLookupResult>;
   verifySalary(input: SalaryVerifyInput): Promise<SalaryVerifyResult>;
   verifyBvn(bvn: string, fullName: string, dateOfBirth: string): Promise<BvnVerifyResult>;
   verifyNin(nin: string, fullName: string, dateOfBirth: string): Promise<BvnVerifyResult>;

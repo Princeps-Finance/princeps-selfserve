@@ -54,7 +54,7 @@
 }
 .ref span { color: var(--ink); }
 .cta { transition: background 160ms ease; }
-.cta:hover { background: var(--action-primary-hover); }
+@media (hover: hover) and (pointer: fine) { .cta:hover { background: var(--action-primary-hover); } }
 
 
 .wa {
@@ -68,7 +68,7 @@
   text-decoration: none;
   transition: background 160ms ease, transform 120ms ease-out;
 }
-.wa:hover { background: color-mix(in srgb, var(--whatsapp) 18%, transparent); }
+@media (hover: hover) and (pointer: fine) { .wa:hover { background: color-mix(in srgb, var(--whatsapp) 18%, transparent); } }
 .wa:active { transform: scale(0.99); }
 .wa:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 .wa-icon {
@@ -149,7 +149,7 @@
   transition: background 160ms ease;
   margin-top: var(--space-2);
 }
-.tel:hover { background: var(--hover-tint); }
+@media (hover: hover) and (pointer: fine) { .tel:hover { background: var(--hover-tint); } }
 .tel:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 .office .tel { align-self: flex-start; }
 

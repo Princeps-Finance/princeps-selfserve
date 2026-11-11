@@ -36,7 +36,7 @@
 
 
 
-.input:hover { border-color: var(--input-border-hover); }
+@media (hover: hover) and (pointer: fine) { .input:hover { border-color: var(--input-border-hover); } }
 
 
 
@@ -44,42 +44,24 @@
 .msg--error { color: var(--danger-text); }
 
 
-.combo { position: relative; }
-
-.listbox {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0; right: 0;
-  z-index: 10;
-  max-height: 240px;
-  overflow-y: auto;
-  background: var(--surface-0);
-  border: 1px solid var(--input-border);
-  border-radius: var(--input-radius);
-  box-shadow: var(--shadow-3);
-  list-style: none; padding: var(--space-1); margin: 0;
+.clearable { position: relative; }
+.clearable .input { padding-right: 52px; }
+.clear {
+  position: absolute; top: 50%; right: 6px; transform: translateY(-50%);
+  width: 40px; height: 40px; display: grid; place-items: center;
+  border: 0; border-radius: 50%; background: transparent; color: var(--ink-soft); cursor: pointer;
 }
-
-.listbox-item {
-  padding: 10px var(--space-3);
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: var(--fs-md);
-}
-
-.listbox-item:hover,
-.listbox-item.is-active,
-.listbox-item[aria-selected="true"] {
-  background: var(--info-soft);
-  color: var(--text-accent);
-}
+.clear:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
+.lookup:empty, .lookup:not(:has(*)) { display: none; }
+.name { margin: 0; display: flex; align-items: center; gap: var(--space-2); font-size: var(--fs-md); font-weight: 600; color: var(--ink); }
+.name app-icon { color: var(--success-text, var(--text-accent)); }
 .cta { margin-top: var(--space-3); }
 
 
 
 
 .cta-arrow { transition: transform 200ms cubic-bezier(0.2,0.7,0.1,1); }
-.cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); }
+@media (hover: hover) and (pointer: fine) { .cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); } }
 
 .limit-title { margin: 0 0 var(--space-2); font-size: var(--fs-xl); }
 .limit-body { margin: 0 0 var(--space-4); color: var(--ink-soft); line-height: 1.5; }

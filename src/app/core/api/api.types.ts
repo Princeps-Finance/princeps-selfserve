@@ -72,6 +72,12 @@ export type EligibilityCheckResult =
   | { status: 'rate-limited' }
   | { status: 'service-down' };
 
+/** The name the bank holds for an account number, shown so a person can see they typed the right one. */
+export type AccountLookupResult =
+  | { status: 'ok'; accountName: string }
+  | { status: 'not-found' }
+  | { status: 'service-down' };
+
 export type SalaryVerifyResult =
   | { status: 'ok'; monthlyIncome: number; accountName: string }
   | { status: 'name-mismatch' }

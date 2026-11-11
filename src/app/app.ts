@@ -13,11 +13,12 @@ import { InstallService } from './core/pwa/install.service';
 import { HapticsService } from './core/ui/haptics.service';
 import { CheckProgressService } from './core/application/check-progress.service';
 import { ReferralLinkService } from './core/referral/referral-link.service';
+import { PullToRefreshComponent } from './core/pwa/pull-to-refresh.component';
 import { PromoCardComponent } from './shared/promo-card.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, ToastHostComponent, PwaBannerComponent, PrivacyDialogComponent, DemoBannerComponent, PromoCardComponent, HelpLauncherComponent, TPipe],
+  imports: [RouterOutlet, ToastHostComponent, PwaBannerComponent, PrivacyDialogComponent, DemoBannerComponent, PromoCardComponent, HelpLauncherComponent, PullToRefreshComponent, TPipe],
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

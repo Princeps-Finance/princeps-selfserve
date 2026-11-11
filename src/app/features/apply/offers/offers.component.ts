@@ -11,6 +11,8 @@ import { Product, RepaymentFrequency, productsFor } from '../../../core/products
 import { LoanQuote, clampAmount, estimateApr, offerLimits, quoteLoan } from '../../../../shared/pricing';
 import { formatNaira } from '../../../core/money.util';
 import { telLink, whatsappLink } from '../../../core/support';
+import { IconComponent } from '../../../shared/icon.component';
+import { ToastService } from '../../../core/toast/toast.service';
 import { LangService } from '../../../core/i18n/lang.service';
 import { discountedRate } from '../../../../shared/referral';
 import { resolveAmount } from './amount-request';
@@ -64,7 +66,7 @@ interface Choice {
 
 @Component({
   selector: 'app-offers',
-  imports: [AnimatedIconComponent, CardComponent, ProductMarkComponent, IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective, ReferralBoxComponent, AmountSliderComponent],
+  imports: [AnimatedIconComponent, CardComponent, ProductMarkComponent, IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective, ReferralBoxComponent, AmountSliderComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './offers.component.html',
   styleUrl: './offers.component.css',
@@ -73,6 +75,7 @@ export class OffersComponent implements OnInit {
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
   private readonly lang = inject(LangService);
+  private readonly toast = inject(ToastService);
 
   private readonly catalogue = signal<{ product: Product; limits: Limits }[]>([]);
   /** What the customer has chosen per product. Starts at the most they are eligible for. */
@@ -157,6 +160,9 @@ export class OffersComponent implements OnInit {
     this.adjusted.update((a) => withEntry(a, o.product.id, announce ? out.adjustedTo : null));
     // Asking for more than the limit is only kept while it is typed; moving the slider or a chip clears it.
     this.askedMore.update((a) => withEntry(a, o.product.id, announce ? out.askedMore : null));
+    if (announce && out.askedMore) {
+      this.toast.show('info', this.lang.t('offers.more.toast').replace('{max}', formatNaira(o.limits.maxAmount)), 5000);
+    }
   }
 
   /** A WhatsApp message to an agent that already says what the customer wants and what their limit is. */

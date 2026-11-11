@@ -16,5 +16,6 @@ export function spokenNaira(amount: number): string {
   const totalKobo = Math.round(amount * 100);
   const naira = Math.floor(totalKobo / 100);
   const kobo = totalKobo % 100;
-  return `${naira.toLocaleString('en-NG')} naira and ${kobo} kobo`;
+  const nairaText = `${naira.toLocaleString('en-NG')} naira`;
+  return kobo === 0 ? nairaText : `${nairaText} and ${kobo} kobo`;
 }

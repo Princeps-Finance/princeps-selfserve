@@ -21,4 +21,4 @@
 
 
 .cta-arrow { transition: transform 200ms cubic-bezier(0.2,0.7,0.1,1); }
-.cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); }
+@media (hover: hover) and (pointer: fine) { .cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); } }

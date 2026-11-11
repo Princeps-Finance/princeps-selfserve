@@ -1,8 +1,8 @@
 import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
-import { estimateApr } from '../../../../shared/pricing';
+import { IconComponent } from '../../../shared/icon.component';
 import { dueDateOf, firstPaydayAfter } from '../../../core/products/payday';
 import { CardComponent } from '../../../shared/card.component';
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { productById } from '../../../core/products/products';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
@@ -23,7 +23,7 @@ interface ScheduleRow {
 
 @Component({
   selector: 'app-terms',
-  imports: [AnimatedIconComponent, CardComponent, TPipe, WizardProgressComponent],
+  imports: [AnimatedIconComponent, IconComponent, CardComponent, TPipe, WizardProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './terms.component.html',
   styleUrl: './terms.component.css',
@@ -34,6 +34,8 @@ export class TermsComponent {
 
   readonly offer = this.state.offer;
   readonly formatNaira = formatNaira;
+  /** The schedule can be long, so it starts folded; the first payday above it stays in view. */
+  readonly scheduleOpen = signal(false);
 
   modelKey(m: string): string {
     if (m === 'Flat Rate') return 'step.offers.model.flat';
@@ -63,13 +65,8 @@ export class TermsComponent {
     this.schedule().reduce((acc, r) => acc + r.payment, 0),
   );
 
-  /** Interest over the whole loan, and the yearly rate it works out to once fees are counted. */
+  /** Interest over the whole loan. */
   readonly totalInterest = computed(() => Math.max(0, this.totalRepayable() - (this.offer()?.amount ?? 0)));
-  readonly apr = computed(() => {
-    const o = this.offer();
-    return o ? Math.round(estimateApr(o.amount, this.totalFees(), o.monthlyRepayment, o.tenorMonths)) : 0;
-  });
-
   readonly totalFees = computed(() =>
     (this.offer()?.fees ?? []).reduce((acc, f) => acc + f.amount, 0),
   );

@@ -24,7 +24,7 @@
 .label--optional::after { content: ' · optional'; color: var(--ink-muted); font-weight: 400; }
 
 
-.input:hover { border-color: var(--input-border-hover); }
+@media (hover: hover) and (pointer: fine) { .input:hover { border-color: var(--input-border-hover); } }
 
 
 .msg { margin: 0; font-size: var(--fs-sm); color: var(--ink-muted); }
@@ -34,7 +34,7 @@
 
 
 .cta-arrow { transition: transform 200ms cubic-bezier(0.2,0.7,0.1,1); }
-.cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); }
+@media (hover: hover) and (pointer: fine) { .cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); } }
 
 .locked { margin: 0; padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); background: var(--surface-0); border: 1px solid var(--hairline); border-radius: var(--radius-md, 12px); }
 .locked > div { display: flex; flex-direction: column; gap: 2px; }
@@ -49,7 +49,7 @@
   border: 1.5px dashed var(--input-border); border-radius: var(--input-radius); background: var(--input-bg);
   color: var(--ink); cursor: pointer; transition: border-color 140ms ease, background-color 140ms ease;
 }
-.drop:hover { border-color: var(--ink); }
+@media (hover: hover) and (pointer: fine) { .drop:hover { border-color: var(--ink); } }
 .drop.has-file { border-style: solid; border-color: var(--action-primary); }
 .drop.is-invalid { border-color: var(--danger-text); }
 .drop-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-base); }

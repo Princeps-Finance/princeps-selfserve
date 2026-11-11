@@ -75,14 +75,14 @@ import { TPipe } from '../../../core/i18n/t.pipe';
         border: 2px solid transparent; border-radius: var(--radius-md); background: var(--grey-100); color: var(--ink);
         font: inherit; text-align: left; cursor: pointer;
       }
-      .option:hover { background: var(--grey-200); }
+      @media (hover: hover) and (pointer: fine) { .option:hover { background: var(--grey-200); } }
       .option[aria-checked='true'] { border-color: var(--action-primary); background: var(--action-primary-soft); }
       .option:focus-visible, .link:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
       .option-text { flex: 1; display: flex; flex-direction: column; }
       .kind { font-size: var(--fs-xs); color: var(--ink-muted); }
       .value { font-size: var(--fs-base); font-weight: 600; font-variant-numeric: tabular-nums; }
-      .mark { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--input-border); }
-      .option[aria-checked='true'] .mark { border-color: var(--action-primary); background: radial-gradient(circle, var(--action-primary) 45%, transparent 50%); }
+      .mark { flex: none; width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--input-border); }
+      .option[aria-checked='true'] .mark { border-color: var(--action-primary); background: radial-gradient(circle, var(--action-primary) 50%, transparent 55%); }
       .link { align-self: flex-start; min-height: var(--tap-min); padding: 0; border: 0; background: none; color: var(--text-accent); font: inherit; font-weight: var(--fw-medium); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
       .label { font-size: var(--fs-sm); font-weight: 500; }
       .input {

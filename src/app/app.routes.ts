@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import {
   languageChosenGuard,
+  languageNotChosenGuard,
   requiresApprovedGuard,
   requiresBvnEnteredGuard,
   requiresBvnGuard,
@@ -24,6 +25,8 @@ import {
 export const routes: Routes = [
   {
     path: '',
+    pathMatch: 'full',
+    canMatch: [languageNotChosenGuard],
     loadComponent: () =>
       import('./features/language-select/language-select.component').then(
         (m) => m.LanguageSelectComponent,

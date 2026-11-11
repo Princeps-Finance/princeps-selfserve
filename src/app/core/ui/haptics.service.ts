@@ -18,15 +18,21 @@ export class HapticsService {
   /** Listens for presses on the whole page. Call once at startup. */
   listen(): void {
     if (typeof document === 'undefined' || this.reduced) return;
-    document.addEventListener(
-      'pointerdown',
-      (e) => {
-        if (e.pointerType !== 'touch') return;
-        const el = (e.target as Element | null)?.closest?.(PRESSABLE);
-        if (el && !(el as HTMLButtonElement).disabled && el.getAttribute('aria-disabled') !== 'true') this.tap();
-      },
-      { passive: true },
-    );
+    let touched = false;
+    document.addEventListener('pointerdown', (e) => (touched = e.pointerType === 'touch'), { passive: true, capture: true });
+    // iPhone only plays its tick from a gesture Safari counts as a tap (click), not from pointerdown. Android buzzes at once.
+    const press = (e: Event): void => {
+      if (!touched) return;
+      const el = (e.target as Element | null)?.closest?.(PRESSABLE);
+      if (el && !(el as HTMLButtonElement).disabled && el.getAttribute('aria-disabled') !== 'true') this.tap();
+    };
+    if (this.canVibrate) document.addEventListener('pointerdown', (e) => e.pointerType === 'touch' && press(e), { passive: true });
+    else document.addEventListener('click', press, { passive: true, capture: true });
+  }
+
+  /** A soft tick for each step of a slider while it is dragged. */
+  step(): void {
+    this.buzz(5);
   }
 
   tap(): void {
@@ -62,6 +68,8 @@ export class HapticsService {
       input.type = 'checkbox';
       input.setAttribute('switch', '');
       input.tabIndex = -1;
+      // The hidden switch must never look like a click on the page: it would close open menus.
+      label.addEventListener('click', (e) => e.stopPropagation());
       label.appendChild(input);
       document.body.appendChild(label);
       this.tickLabel = label;

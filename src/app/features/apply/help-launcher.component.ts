@@ -31,6 +31,15 @@ import { LiveChatService, chatAllowedOn } from '../../core/support-chat/live-cha
     <app-modal [open]="open()" [title]="'help.dialog' | t" (closed)="open.set(false)">
         <p class="sheet-title">{{ 'help.title' | t }}</p>
         <p class="sheet-sub">{{ 'help.sub' | t }}</p>
+        @if (chatConfigured && !chatAvailable()) {
+          <div class="row row--off" aria-disabled="true">
+            <span class="row-icon" aria-hidden="true"><app-icon name="bold-chat" [size]="18" /></span>
+            <span class="off-text">
+              <span>{{ 'help.chat' | t }}</span>
+              <span class="off-note">{{ 'help.chat.paused' | t }}</span>
+            </span>
+          </div>
+        }
         @if (chatAvailable()) {
           <button type="button" class="row row-btn" (click)="startChat()">
             <span class="row-icon" aria-hidden="true">
@@ -70,8 +79,11 @@ import { LiveChatService, chatAllowedOn } from '../../core/support-chat/live-cha
         display: flex; align-items: center; gap: var(--space-3); min-height: 52px; padding: 0 var(--space-3);
         border-radius: var(--radius-md); color: var(--ink); text-decoration: none; font-weight: 500;
       }
+      .row--off { opacity: 0.7; align-items: flex-start; padding-block: var(--space-3); }
+      .off-text { display: flex; flex-direction: column; gap: 2px; }
+      .off-note { font-size: var(--fs-xs); font-weight: 400; color: var(--ink-muted); line-height: 1.4; }
       .row-btn { width: 100%; border: 0; background: none; font: inherit; font-weight: 500; text-align: left; cursor: pointer; }
-      .row:hover { background: var(--surface-2); }
+      @media (hover: hover) and (pointer: fine) { .row:hover { background: var(--surface-2); } }
       .row:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
       .row-icon { display: inline-flex; width: 32px; height: 32px; border-radius: 50%; align-items: center; justify-content: center; background: var(--grey-100); color: var(--ink); }
       .sheet-version { margin: var(--space-2) 0 0; font-size: var(--fs-xs); color: var(--ink-muted); }
@@ -91,8 +103,10 @@ export class HelpLauncherComponent {
   readonly version = APP_VERSION;
 
   /** Live chat is one option in the sheet, next to WhatsApp, call and email. It is left out where it must not start. */
+  protected readonly chatConfigured = !!ZOHO_CHAT_SCRIPT_URL;
+
   protected chatAvailable(): boolean {
-    return !!ZOHO_CHAT_SCRIPT_URL && chatAllowedOn(this.router.url);
+    return this.chatConfigured && chatAllowedOn(this.router.url);
   }
 
   toggle(): void {

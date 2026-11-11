@@ -32,6 +32,11 @@ export class AppUpdateService {
     // If the cached app is broken, a reload is the only safe recovery.
     this.sw.unrecoverable.subscribe(() => this.updateReady.set(true));
 
+    // An installed app is rarely closed, only put away: look for a new version each time it comes back to the front.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && !this.offline()) void this.sw?.checkForUpdate().catch(() => undefined);
+    });
+
     setInterval(() => {
       if (!this.offline()) void this.sw?.checkForUpdate().catch(() => undefined);
     }, CHECK_EVERY_MS);

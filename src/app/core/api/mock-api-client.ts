@@ -4,6 +4,7 @@ import type {
   OfferLetterRequest,
   LookupResult,
   SalaryVerifyInput,
+  AccountLookupResult,
   SalaryVerifyResult,
   BvnVerifyResult,
   DocUploadInput,
@@ -208,6 +209,13 @@ export class MockApiClient implements ApiClient {
   async listBanks(): Promise<Bank[]> {
     await delay(150);
     return NG_BANKS;
+  }
+
+  async resolveAccount(_bankCode: string, accountNumber: string): Promise<AccountLookupResult> {
+    await delay(600);
+    if (accountNumber === '9999999999') return { status: 'service-down' };
+    if (accountNumber === '0000000000') return { status: 'not-found' };
+    return { status: 'ok', accountName: 'ADEYEMI ADEBAYO ADEWALE' };
   }
 
   async verifySalary(input: SalaryVerifyInput): Promise<SalaryVerifyResult> {
