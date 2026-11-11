@@ -49,7 +49,7 @@ export class AnimatedIconComponent {
   }
 
   private async start(): Promise<void> {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (typeof matchMedia !== 'function' || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const trigger = this.host.nativeElement.closest<HTMLElement>('button, a');
     if (!trigger) return;
 
