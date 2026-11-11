@@ -1,3 +1,4 @@
+import { IconComponent } from './icon.component';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { CardComponent } from './card.component';
 
@@ -7,14 +8,12 @@ import { CardComponent } from './card.component';
  */
 @Component({
   selector: 'app-why-ask',
-  imports: [CardComponent],
+  imports: [IconComponent, CardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-card>
       <p class="why">
-        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8v.01" />
-        </svg>
+        <app-icon name="bold-info" [size]="18" class="icon" />
         <span>
           @if (lead()) { <strong>{{ lead() }}</strong> }
           {{ rest() }}

@@ -1,3 +1,4 @@
+import { IconComponent } from '../../shared/icon.component';
 import { ModalComponent } from '../../shared/modal.component';
 import {
   ChangeDetectionStrategy, Component, ElementRef, computed, forwardRef, inject, input, model, signal, viewChild,
@@ -17,7 +18,7 @@ export interface SelectOption {
  */
 @Component({
   selector: 'app-select-field',
-  imports: [ModalComponent, TPipe],
+  imports: [IconComponent, ModalComponent, TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => SelectFieldComponent), multi: true }],
   template: `
@@ -33,9 +34,7 @@ export interface SelectOption {
       (click)="show()"
     >
       <span class="value" [class.placeholder]="!selected()">{{ selected()?.label ?? placeholder() }}</span>
-      <svg class="chev" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-        <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
+      <app-icon name="bold-chevron-down" [size]="18" class="chev" />
     </button>
 
     <app-modal [open]="open()" [title]="title()" (closed)="onClosed()">
@@ -59,9 +58,7 @@ export interface SelectOption {
             <button type="button" role="option" class="opt" [attr.aria-selected]="o.value === value()" (click)="pick(o)">
               <span>{{ o.label }}</span>
               @if (o.value === value()) {
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                  <path d="M4.5 10.5L8.5 14.5L15.5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
+                <app-icon name="bold-success" [size]="18" />
               }
             </button>
           } @empty {

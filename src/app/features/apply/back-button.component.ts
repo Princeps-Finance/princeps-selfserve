@@ -1,3 +1,4 @@
+import { IconComponent } from '../../shared/icon.component';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { TPipe } from '../../core/i18n/t.pipe';
@@ -38,13 +39,11 @@ const CHECK_BACK: Record<string, string> = {
 
 @Component({
   selector: 'app-back-button',
-  imports: [TPipe],
+  imports: [IconComponent, TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <button type="button" class="back glass-btn" (click)="goBack()" [attr.aria-label]="'apply.back' | t">
-      <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-        <path d="M12.5 4.5L7 10L12.5 15.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
+      <app-icon name="bold-chevron-down" [size]="22" [rotate]="90" />
       <span>{{ 'apply.back' | t }}</span>
     </button>
   `,
@@ -56,11 +55,11 @@ const CHECK_BACK: Record<string, string> = {
       }
       /* Icon only; the accessible name stays. */
       .back span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-      .back svg { transition: transform 160ms cubic-bezier(0.2, 0.7, 0.1, 1); }
-      .back:hover svg { transform: translateX(-2px); }
+      .back app-icon { transition: transform 160ms cubic-bezier(0.2, 0.7, 0.1, 1); }
+      .back:hover app-icon { transform: translateX(-2px); }
       .back:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
       @media (prefers-reduced-motion: reduce) {
-        .back, .back svg { transition: none; }
+        .back, .back app-icon { transition: none; }
       }
     `,
   ],

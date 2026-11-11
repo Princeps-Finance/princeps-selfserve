@@ -22,9 +22,7 @@
     <div class="field">
       <label class="label" for="statement-file">{{ 'step.statement.file' | t }}</label>
       <label class="drop" [class.has-file]="file()" [class.is-invalid]="fileError()" for="statement-file">
-        <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="M10 13V4M10 4L6.5 7.5M10 4L13.5 7.5M4 14v1.5A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5V14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <app-icon name="bold-upload" [size]="22" />
         <span class="drop-text">{{ file() ? file()!.name : ('step.statement.choose' | t) }}</span>
       </label>
       <input id="statement-file" class="file" type="file" accept="application/pdf,.pdf" (change)="onFile($event)" [attr.aria-invalid]="fileError() ? true : null" aria-describedby="statement-hint" />

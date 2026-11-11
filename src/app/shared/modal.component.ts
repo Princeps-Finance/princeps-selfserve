@@ -1,3 +1,4 @@
+import { IconComponent } from './icon.component';
 import { ChangeDetectionStrategy, Component, ElementRef, effect, input, output, viewChild } from '@angular/core';
 import { TPipe } from '../core/i18n/t.pipe';
 
@@ -7,15 +8,13 @@ import { TPipe } from '../core/i18n/t.pipe';
  */
 @Component({
   selector: 'app-modal',
-  imports: [TPipe],
+  imports: [IconComponent, TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <dialog #dlg class="modal" aria-labelledby="modal-title" (close)="closed.emit()" (click)="onBackdrop($event)">
       <div class="panel">
         <button type="button" class="back" (click)="dlg.close()">
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-            <path d="M12 4L6 10l6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
+          <app-icon name="bold-chevron-down" [size]="16" [rotate]="90" />
           <span>{{ 'common.back' | t }}</span>
         </button>
         <h2 id="modal-title" class="sr-only">{{ title() }}</h2>

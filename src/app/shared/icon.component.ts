@@ -10,9 +10,9 @@ import { ICONS, IconName } from './icons/icons.generated';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'app-icon', '[style.width.px]': 'size()', '[style.height.px]': 'size()' },
   template: `
-    <svg viewBox="0 0 24 24" fill="currentColor" width="100%" height="100%" [attr.aria-hidden]="label() ? null : 'true'" [attr.role]="label() ? 'img' : null" [attr.aria-label]="label() || null" focusable="false">
+    <svg [style.transform]="rotate() ? 'rotate(' + rotate() + 'deg)' : null" viewBox="0 0 24 24" fill="currentColor" width="100%" height="100%" [attr.aria-hidden]="label() ? null : 'true'" [attr.role]="label() ? 'img' : null" [attr.aria-label]="label() || null" focusable="false">
       @for (p of paths(); track $index) {
-        <path [attr.d]="p.d" [attr.fill-rule]="p.evenodd ? 'evenodd' : null" [attr.clip-rule]="p.evenodd ? 'evenodd' : null" />
+        <path [attr.d]="p.d" [attr.transform]="p.t ?? null" [attr.fill-rule]="p.evenodd ? 'evenodd' : null" [attr.clip-rule]="p.evenodd ? 'evenodd' : null" />
       }
     </svg>
   `,
@@ -22,5 +22,7 @@ export class IconComponent {
   readonly name = input.required<IconName>();
   readonly size = input(20);
   readonly label = input('');
+  /** Turns the icon, in degrees: the chevron points down, so -90 points it right and 180 points it up. */
+  readonly rotate = input(0);
   protected readonly paths = computed(() => ICONS[this.name()] ?? []);
 }

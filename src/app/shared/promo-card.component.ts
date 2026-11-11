@@ -1,9 +1,10 @@
+import { IconComponent } from './icon.component';
 import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 @Component({
   selector: 'app-promo-card',
-  imports: [NgOptimizedImage],
+  imports: [IconComponent, NgOptimizedImage],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="card glass" [attr.aria-labelledby]="'promo-title'">
@@ -11,9 +12,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         <img [ngSrc]="imageSrc()" [width]="664" [height]="420" [alt]="imageAlt()" />
         @if (dismissible()) {
           <button type="button" class="close" [attr.aria-label]="dismissLabel()" (click)="dismissed.emit()">
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-            </svg>
+            <app-icon name="bold-close" [size]="14" />
           </button>
         }
       </div>

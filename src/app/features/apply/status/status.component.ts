@@ -1,3 +1,4 @@
+import { IconComponent } from '../../../shared/icon.component';
 import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
 import { HapticsService } from '../../../core/ui/haptics.service';
 import { CardComponent } from '../../../shared/card.component';
@@ -19,7 +20,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
  */
 @Component({
   selector: 'app-status',
-  imports: [AnimatedIconComponent, CardComponent, IllustrationComponent, TPipe],
+  imports: [IconComponent, AnimatedIconComponent, CardComponent, IllustrationComponent, TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './status.component.html',
   styleUrl: './status.component.css',

@@ -1,3 +1,4 @@
+import { IconComponent } from '../../../shared/icon.component';
 import { ModalComponent } from '../../../shared/modal.component';
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -13,7 +14,7 @@ import { TPipe } from '../../../core/i18n/t.pipe';
  */
 @Component({
   selector: 'app-otp-channel-dialog',
-  imports: [ModalComponent, TPipe, ReactiveFormsModule],
+  imports: [IconComponent, ModalComponent, TPipe, ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-modal [open]="true" [title]="'otp.where.title' | t" (closed)="cancelled.emit()">
@@ -25,14 +26,14 @@ import { TPipe } from '../../../core/i18n/t.pipe';
           <div class="options" role="radiogroup" [attr.aria-label]="'otp.where.title' | t">
             @for (c of phones(); track c.id) {
               <button type="button" role="radio" class="option" [attr.aria-checked]="selected() === c.id" (click)="pick(c.id)" [disabled]="busy()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h3l2 4-2 1a10 10 0 0 0 4 4l1-2 4 2v3a2 2 0 0 1-2 2A13 13 0 0 1 3 6a2 2 0 0 1 1-2z" /></svg>
+                <app-icon name="bold-call" [size]="20" />
                 <span class="option-text"><span class="kind">{{ 'otp.phone' | t }}</span><span class="value">{{ c.masked }}</span></span>
                 <span class="mark" aria-hidden="true"></span>
               </button>
             }
             @for (c of emails(); track c.id) {
               <button type="button" role="radio" class="option" [attr.aria-checked]="selected() === c.id" (click)="pick(c.id)" [disabled]="busy()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18v12H3z" /><path d="M3 6l9 7 9-7" /></svg>
+                <app-icon name="bold-message" [size]="20" />
                 <span class="option-text"><span class="kind">{{ 'otp.email' | t }}</span><span class="value">{{ c.masked }}</span></span>
                 <span class="mark" aria-hidden="true"></span>
               </button>

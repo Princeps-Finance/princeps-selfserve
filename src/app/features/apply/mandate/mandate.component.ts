@@ -1,3 +1,4 @@
+import { IconComponent } from '../../../shared/icon.component';
 import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
 import { CheckboxComponent } from '../../../shared/checkbox.component';
 import { logWarn } from '../../../core/log';
@@ -16,7 +17,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 @Component({
   selector: 'app-mandate',
-  imports: [AnimatedIconComponent, CheckboxComponent, TPipe, WizardProgressComponent, IllustrationComponent],
+  imports: [IconComponent, AnimatedIconComponent, CheckboxComponent, TPipe, WizardProgressComponent, IllustrationComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './mandate.component.html',
   styleUrl: './mandate.component.css',
