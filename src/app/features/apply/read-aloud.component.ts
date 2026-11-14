@@ -1,3 +1,4 @@
+import { ButtonDirective } from '../../shared/components/button/button.directive';
 import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { LangService } from '../../core/i18n/lang.service';
 
@@ -10,11 +11,12 @@ const VOICE_LOCALE: Record<string, string> = {
 
 @Component({
   selector: 'app-read-aloud',
+  imports: [ButtonDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <button
       type="button"
-      class="tts glass-btn"
+      class="tts" appButton variant="glass"
       (click)="toggle()"
       [class.is-speaking]="speaking()"
       [class.is-unavailable]="!hasVoice()"

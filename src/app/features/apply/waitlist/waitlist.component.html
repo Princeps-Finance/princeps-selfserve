@@ -8,7 +8,7 @@
     <form class="form" [formGroup]="form" (ngSubmit)="join()" novalidate>
       <div class="field">
         <label class="label" for="employer">{{ 'waitlist.employer.label' | t }}</label>
-        <input id="employer" class="input" type="text" formControlName="employer" autocomplete="organization" />
+        <input appInput id="employer" class="input" type="text" formControlName="employer" autocomplete="organization" />
         <p class="msg">{{ 'waitlist.employer.hint' | t }}</p>
       </div>
 
@@ -34,7 +34,7 @@
         <p class="msg--error" role="alert">{{ 'step.contact.error.generic' | t }}</p>
       }
 
-      <button type="submit" class="cta" [disabled]="submitting()">
+      <button type="submit" class="cta" appButton variant="primary" [disabled]="submitting()">
         <span>{{ submitting() ? ('waitlist.joining' | t) : ('waitlist.join' | t) }}</span>
         @if (!submitting()) {
           <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">

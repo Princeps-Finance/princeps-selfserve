@@ -1,3 +1,4 @@
+import { ButtonDirective } from '../../../shared/components/button/button.directive';
 import { logWarn } from '../../../core/log';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { TPipe } from '../../../core/i18n/t.pipe';
@@ -22,7 +23,7 @@ const CORPER: DocSpec = { id: 'callup', labelKey: 'step.docs.callup', hintKey: '
 
 @Component({
   selector: 'app-documents',
-  imports: [TPipe, WizardProgressComponent],
+  imports: [ButtonDirective, TPipe, WizardProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './documents.component.html',
   styleUrl: './documents.component.css',

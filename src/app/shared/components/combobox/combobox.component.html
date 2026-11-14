@@ -1,0 +1,53 @@
+<input
+  appInput
+  cdkOverlayOrigin
+  #origin="cdkOverlayOrigin"
+  type="text"
+  role="combobox"
+  autocomplete="off"
+  aria-autocomplete="list"
+  [id]="inputId()"
+  [attr.aria-invalid]="invalid()"
+  [attr.aria-expanded]="open()"
+  [attr.aria-controls]="open() ? listId() : null"
+  [attr.aria-activedescendant]="active() ? optionId(active()!) : null"
+  [disabled]="disabled()"
+  [placeholder]="placeholder()"
+  [value]="text()"
+  (focus)="open.set(true)"
+  (click)="open.set(true)"
+  (input)="edit($event)"
+  (blur)="blur()"
+  (keydown)="onKeydown($event)"
+/>
+
+<ng-template
+  cdkConnectedOverlay
+  [cdkConnectedOverlayOrigin]="origin"
+  [cdkConnectedOverlayOpen]="open()"
+  [cdkConnectedOverlayPositions]="positions"
+  [cdkConnectedOverlayMatchWidth]="true"
+  [cdkConnectedOverlayViewportMargin]="8"
+  [cdkConnectedOverlayPush]="true"
+  (overlayOutsideClick)="close()"
+  (detach)="close()"
+>
+  <div class="popup">
+    <ul class="listbox" role="listbox" [id]="listId()" [attr.aria-label]="label()">
+      @for (option of filtered(); track option.value) {
+        <li
+          role="option"
+          class="option"
+          [id]="optionId(option)"
+          [class.is-active]="active() === option"
+          [attr.aria-selected]="value() === option.value"
+          (mousedown)="$event.preventDefault()"
+          (click)="select(option)"
+        >{{ option.label }}</li>
+      }
+    </ul>
+    @if (!filtered().length) {
+      <p class="empty" role="status">{{ 'select.none' | t }}</p>
+    }
+  </div>
+</ng-template>

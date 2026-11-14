@@ -1,3 +1,4 @@
+import { ButtonDirective } from '../../../shared/components/button/button.directive';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -26,7 +27,7 @@ type Stage = 'intro' | 'face' | 'video' | 'review';
 
 @Component({
   selector: 'app-verify-identity',
-  imports: [TPipe, WizardProgressComponent],
+  imports: [ButtonDirective, TPipe, WizardProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './verify-identity.component.html',
   styleUrl: './verify-identity.component.css',

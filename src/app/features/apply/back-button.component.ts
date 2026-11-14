@@ -1,3 +1,4 @@
+import { ButtonDirective } from '../../shared/components/button/button.directive';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { TPipe } from '../../core/i18n/t.pipe';
@@ -28,10 +29,10 @@ const BACK_MAP: Record<string, string> = {
 
 @Component({
   selector: 'app-back-button',
-  imports: [TPipe],
+  imports: [ButtonDirective, TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <button type="button" class="back glass-btn" (click)="goBack()" [attr.aria-label]="'apply.back' | t">
+    <button type="button" class="back" appButton variant="glass" (click)="goBack()" [attr.aria-label]="'apply.back' | t">
       <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true">
         <path d="M12.5 4.5L7 10L12.5 15.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
       </svg>

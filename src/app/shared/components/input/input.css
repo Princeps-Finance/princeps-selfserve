@@ -1,0 +1,26 @@
+:where(input[appInput]) {
+  width: 100%;
+  min-height: var(--input-height);
+  padding: 0 var(--space-4);
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  color: var(--ink);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+:where(input[appInput]:hover:not(:disabled)) { border-color: var(--input-border-hover); }
+
+input[appInput]:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  border-color: var(--input-border-focus);
+  box-shadow: var(--input-shadow-focus);
+}
+
+input[appInput][aria-invalid='true'],
+.field.is-invalid input[appInput] {
+  border-color: var(--danger-text);
+}

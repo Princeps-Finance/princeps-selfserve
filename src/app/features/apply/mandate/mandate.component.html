@@ -23,11 +23,11 @@
 
   <div class="link-actions">
     @if (linkStatus() === 'completed') {
-      <button type="button" class="cta" (click)="continueWithLink()">
+      <button type="button" class="cta" appButton variant="primary" (click)="continueWithLink()">
         <span>{{ 'mandate.continue' | t }}</span>
       </button>
     } @else if (linkUrl(); as url) {
-      <a class="cta" [attr.href]="url" target="_blank" rel="noopener noreferrer">
+      <a class="cta" appButton variant="primary" [attr.href]="url" target="_blank" rel="noopener noreferrer">
         <span>{{ 'mandate.link.open' | t }}</span>
       </a>
       <button type="button" class="text-btn" (click)="copyLink()">
@@ -35,7 +35,7 @@
       </button>
       <button type="button" class="text-btn" (click)="checkNow()">{{ 'mandate.link.check' | t }}</button>
     } @else if (linkError()) {
-      <button type="button" class="cta" (click)="prepareLink()"><span>{{ 'mandate.link.retry' | t }}</span></button>
+      <button type="button" class="cta" appButton variant="primary" (click)="prepareLink()"><span>{{ 'mandate.link.retry' | t }}</span></button>
       <a class="text-btn" [attr.href]="help" target="_blank" rel="noopener">{{ 'step.eligibility.declined.whatsapp' | t }}</a>
     }
   </div>
@@ -89,7 +89,7 @@
   </div>
 
   @if (mode() === 'link') {
-    <button type="button" class="cta" (click)="showLink()">
+    <button type="button" class="cta" appButton variant="primary" (click)="showLink()">
       <span>{{ 'mandate.continue' | t }}</span>
       <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
         <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
@@ -111,7 +111,7 @@
     <p class="msg--error" id="agree-error" role="alert">{{ 'form.agree.required' | t }}</p>
   }
 
-  <button type="button" class="cta" (click)="authorize()">
+  <button type="button" class="cta" appButton variant="primary" (click)="authorize()">
     <span>{{ 'step.mandate.authorize' | t }}</span>
     <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />

@@ -1,0 +1,33 @@
+.princeps-dialog {
+  width: min(520px, calc(100vw - 24px));
+  --dialog-max-height: calc(100dvh - 24px);
+}
+
+.princeps-dialog--sheet {
+  width: min(480px, 100vw);
+  --dialog-max-height: 82dvh;
+}
+
+.princeps-dialog--wide-sheet {
+  width: min(760px, 100vw);
+  --dialog-max-height: 100dvh;
+  --dialog-height: min(92dvh, 900px);
+}
+
+.princeps-dialog-backdrop {
+  background: var(--overlay);
+}
+
+@media (width < 560px) {
+  .princeps-dialog--sheet {
+    align-self: flex-end;
+    --dialog-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+}
+
+@media (width < 640px) {
+  .princeps-dialog--wide-sheet {
+    align-self: flex-end;
+    --dialog-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+}

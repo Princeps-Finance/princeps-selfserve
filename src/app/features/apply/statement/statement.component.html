@@ -11,7 +11,7 @@
   <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <div class="field">
       <label class="label" for="employer">{{ 'step.statement.employer' | t }}</label>
-      <input id="employer" class="input" type="text" formControlName="employer" autocomplete="organization" [attr.aria-invalid]="invalid('employer')" />
+      <input appInput id="employer" class="input" type="text" formControlName="employer" autocomplete="organization" [attr.aria-invalid]="invalid('employer')" />
     </div>
 
     <div class="field">
@@ -39,7 +39,7 @@
       <p class="msg msg--error" role="alert">{{ 'step.statement.error.send' | t }}</p>
     }
 
-    <button type="submit" class="cta" [disabled]="submitting()">
+    <button type="submit" class="cta" appButton variant="primary" [disabled]="submitting()">
       <span>{{ submitting() ? ('step.statement.sending' | t) : ('step.statement.send' | t) }}</span>
     </button>
   </form>

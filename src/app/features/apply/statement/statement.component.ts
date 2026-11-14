@@ -1,3 +1,5 @@
+import { InputDirective } from '../../../shared/components/input/input.directive';
+import { ButtonDirective } from '../../../shared/components/button/button.directive';
 import { logWarn } from '../../../core/log';
 import { MAX_UPLOAD_BYTES } from '../../../core/limits';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
@@ -10,7 +12,8 @@ import { WizardProgressComponent } from '../wizard-progress.component';
 import { API_CLIENT, Bank } from '../../../core/api/api-client';
 import { NG_BANKS } from '../../../core/api/ng-banks';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
-import { SelectFieldComponent, SelectOption } from '../../../core/ui/select-field.component';
+import { SelectFieldComponent } from '../../../shared/components/select/select-field.component';
+import type { SelectOption } from '../../../shared/components/select/select-option';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { DraftService } from '../../../core/application/draft.service';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
@@ -23,7 +26,7 @@ const MAX_BYTES = MAX_UPLOAD_BYTES;
  */
 @Component({
   selector: 'app-statement',
-  imports: [IllustrationComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent],
+  imports: [InputDirective, ButtonDirective, IllustrationComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './statement.component.html',
   styleUrl: './statement.component.css',

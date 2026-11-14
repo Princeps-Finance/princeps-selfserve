@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { InputDirective } from '../../../shared/components/input/input.directive';
+import { ButtonDirective } from '../../../shared/components/button/button.directive';
+import { ChangeDetectionStrategy, Component, ElementRef, afterNextRender, computed, inject, Injector, signal, viewChild } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { ActivatedRoute } from '@angular/router';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -22,12 +24,14 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
  */
 @Component({
   selector: 'app-bvn',
-  imports: [IllustrationComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, OtpChannelDialogComponent],
+  imports: [InputDirective, ButtonDirective, IllustrationComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, OtpChannelDialogComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './bvn.component.html',
   styleUrl: './bvn.component.css',
 })
 export class BvnComponent {
+  private readonly injector = inject(Injector);
+  private readonly submitButton = viewChild.required<ElementRef<HTMLButtonElement>>('submitButton');
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
   private readonly lang = inject(LangService);
@@ -106,5 +110,6 @@ export class BvnComponent {
   onDialogCancelled(): void {
     this.contacts.set(null);
     this.submitting.set(false);
+    afterNextRender(() => this.submitButton().nativeElement.focus(), { injector: this.injector });
   }
 }

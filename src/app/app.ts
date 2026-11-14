@@ -2,9 +2,10 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { DemoBannerComponent } from './core/demo/demo-banner.component';
 import { PrivacyDialogComponent } from './core/privacy/privacy-dialog.component';
+import { PrivacyService } from './core/privacy/privacy.service';
 import { DraftService } from './core/application/draft.service';
 import { PwaBannerComponent } from './core/pwa/pwa-banner.component';
-import { ToastHostComponent } from './core/toast/toast-host.component';
+import { ToastHostComponent } from './shared/components/toast/toast-host.component';
 import { HelpLauncherComponent } from './features/apply/help-launcher.component';
 import { RouteAnnouncerService } from './core/a11y/route-announcer.service';
 import { ThemeService } from './core/theme/theme.service';
@@ -28,5 +29,6 @@ export class App {
   // Created at startup so every route change is announced.
   private readonly announcer = inject(RouteAnnouncerService);
 
+  protected readonly privacy = inject(PrivacyService);
   protected readonly install = inject(InstallService);
 }

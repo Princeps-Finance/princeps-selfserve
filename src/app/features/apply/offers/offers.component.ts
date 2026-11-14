@@ -1,3 +1,4 @@
+import { ButtonDirective } from '../../../shared/components/button/button.directive';
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
@@ -62,7 +63,7 @@ interface Choice {
 
 @Component({
   selector: 'app-offers',
-  imports: [IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective, ReferralBoxComponent, AmountSliderComponent, DecimalPipe],
+  imports: [ButtonDirective, IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective, ReferralBoxComponent, AmountSliderComponent, DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './offers.component.html',
   styleUrl: './offers.component.css',

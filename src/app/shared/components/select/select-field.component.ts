@@ -1,13 +1,12 @@
 import {
-  ChangeDetectionStrategy, Component, ElementRef, computed, forwardRef, input, model, signal, viewChild,
+  ChangeDetectionStrategy, Component, computed, forwardRef, input, model, signal, viewChild,
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { TPipe } from '../i18n/t.pipe';
-
-export interface SelectOption {
-  readonly value: string;
-  readonly label: string;
-}
+import { CdkListbox, CdkOption } from '@angular/cdk/listbox';
+import { TPipe } from '../../../core/i18n/t.pipe';
+import { DialogComponent } from '../dialog/dialog.component';
+import { InputDirective } from '../input/input.directive';
+import type { SelectOption } from './select-option';
 
 /**
  * Branded select. A button opens a sheet (bottom sheet on phones, centred on larger screens)
@@ -16,12 +15,11 @@ export interface SelectOption {
  */
 @Component({
   selector: 'app-select-field',
-  imports: [TPipe],
+  imports: [TPipe, DialogComponent, InputDirective, CdkListbox, CdkOption],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => SelectFieldComponent), multi: true }],
   template: `
     <button
-      #trigger
       type="button"
       class="trigger"
       [id]="inputId()"
@@ -30,6 +28,7 @@ export interface SelectOption {
       aria-haspopup="dialog"
       [attr.aria-expanded]="open()"
       (click)="show()"
+      (blur)="!open() && markTouched()"
     >
       <span class="value" [class.placeholder]="!selected()">{{ selected()?.label ?? placeholder() }}</span>
       <svg class="chev" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -37,19 +36,11 @@ export interface SelectOption {
       </svg>
     </button>
 
-    <dialog #dlg class="sheet glass" [attr.aria-label]="title()" (close)="onClosed()" (click)="onBackdrop($event)">
-      <div class="panel">
-        <div class="bar">
-          <h2 class="sheet-title">{{ title() }}</h2>
-          <button type="button" class="x" [attr.aria-label]="'select.close' | t" (click)="hide()">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-            </svg>
-          </button>
-        </div>
+    <app-dialog #dialog [open]="open()" [title]="title()" layout="sheet" [autoFocus]="initialFocus()" (closed)="onClosed()">
+      <ng-template>
         @if (searchable()) {
           <input
-            #search
+            appInput
             class="search"
             type="search"
             inputmode="search"
@@ -57,12 +48,14 @@ export interface SelectOption {
             [attr.aria-label]="'select.search' | t"
             [placeholder]="'select.search' | t"
             [value]="query()"
-            (input)="query.set($any($event.target).value)"
+            (input)="readQuery($event)"
           />
         }
-        <div class="list" role="listbox" [attr.aria-label]="title()" tabindex="-1">
+        <div class="list" cdkListbox [cdkListboxValue]="visibleSelection()" [attr.aria-label]="title()"
+          (cdkListboxValueChange)="pick($event.value[0])">
           @for (o of filtered(); track o.value) {
-            <button type="button" role="option" class="opt" [attr.aria-selected]="o.value === value()" (click)="pick(o)">
+            <button type="button" class="opt" [cdkOption]="o.value"
+              (click)="pickCurrent(o.value)" (keydown.enter)="pickCurrent(o.value)" (keydown.space)="pickCurrent(o.value)">
               <span>{{ o.label }}</span>
               @if (o.value === value()) {
                 <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -74,8 +67,8 @@ export interface SelectOption {
             <p class="none" role="status">{{ 'select.none' | t }}</p>
           }
         </div>
-      </div>
-    </dialog>
+      </ng-template>
+    </app-dialog>
   `,
   styles: [
     `
@@ -96,24 +89,7 @@ export interface SelectOption {
       .value.placeholder { color: var(--ink-muted); }
       .chev { flex: none; color: var(--ink-soft); }
 
-      .sheet {
-        width: min(480px, 100vw); max-width: 100vw; max-height: 82dvh; margin: auto auto 0; padding: 0; border: 0;
-        border-radius: var(--radius-lg) var(--radius-lg) 0 0; color: var(--ink); box-shadow: var(--shadow-4);
-      }
-      @media (min-width: 560px) { .sheet { margin: auto; max-width: 480px; border-radius: var(--radius-lg); } }
-      .sheet::backdrop { background: var(--overlay); }
-      .panel { display: flex; flex-direction: column; max-height: 82dvh; padding: var(--space-4) var(--space-4) var(--space-3); gap: var(--space-3); }
-      .bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
-      .sheet-title { margin: 0; font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 600; letter-spacing: -0.01em; }
-      .x {
-        flex: none; width: 44px; height: 44px; display: grid; place-items: center;
-        border: 0; border-radius: 50%; background: transparent; color: var(--ink); cursor: pointer;
-      }
-      .x:hover { background: var(--hover-tint); }
-      .search {
-        width: 100%; min-height: 48px; padding: 0 var(--space-4); border: 1px solid var(--input-border);
-        border-radius: var(--input-radius); background: var(--input-bg); font: inherit; font-size: var(--fs-base); color: var(--ink);
-      }
+      .search { margin-bottom: var(--space-3); }
       .list { overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; }
       .opt {
         display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
@@ -122,7 +98,7 @@ export interface SelectOption {
       }
       .opt[aria-selected='true'] { font-weight: 600; color: var(--text-accent); }
       .opt:hover { background: var(--hover-tint); }
-      .x:focus-visible, .opt:focus-visible, .search:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
+      .opt:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
       .none { margin: 0; padding: var(--space-5) var(--space-2); color: var(--ink-soft); }
     `,
   ],
@@ -135,14 +111,15 @@ export class SelectFieldComponent implements ControlValueAccessor {
   readonly searchable = input<boolean>(false);
   readonly invalid = input<boolean | null>(null);
 
-  readonly value = model<string>('');
-  protected readonly disabled = signal(false);
+  readonly value = model('');
+  readonly isDisabled = input(false);
+  private readonly formDisabled = signal(false);
+  protected readonly disabled = computed(() => this.isDisabled() || this.formDisabled());
   protected readonly open = signal(false);
   protected readonly query = signal('');
 
-  private readonly dlg = viewChild.required<ElementRef<HTMLDialogElement>>('dlg');
-  private readonly trigger = viewChild.required<ElementRef<HTMLButtonElement>>('trigger');
-  private readonly search = viewChild<ElementRef<HTMLInputElement>>('search');
+  private readonly dialog = viewChild.required<DialogComponent>('dialog');
+  protected readonly initialFocus = signal('first-heading');
 
   protected readonly selected = computed(() => this.options().find((o) => o.value === this.value()) ?? null);
   protected readonly filtered = computed(() => {
@@ -150,41 +127,49 @@ export class SelectFieldComponent implements ControlValueAccessor {
     return q ? this.options().filter((o) => o.label.toLowerCase().includes(q)) : this.options();
   });
 
-  private onChange: (v: string) => void = () => undefined;
+  protected readonly visibleSelection = computed(() =>
+    this.filtered().some((option) => option.value === this.value()) ? [this.value()] : [],
+  );
+
+  private onChange: (value: string) => void = () => undefined;
   private onTouched: () => void = () => undefined;
 
-  writeValue(v: string | null): void { this.value.set(v ?? ''); }
-  registerOnChange(fn: (v: string) => void): void { this.onChange = fn; }
+  writeValue(value: string | null): void { this.value.set(value ?? ''); }
+  registerOnChange(fn: (value: string) => void): void { this.onChange = fn; }
   registerOnTouched(fn: () => void): void { this.onTouched = fn; }
-  setDisabledState(d: boolean): void { this.disabled.set(d); }
+  setDisabledState(disabled: boolean): void {
+    this.formDisabled.set(disabled);
+    if (disabled) this.open.set(false);
+  }
 
   protected show(): void {
     this.query.set('');
+    const focusSearch = this.searchable() && matchMedia('(min-width: 560px)').matches;
+    this.initialFocus.set(focusSearch ? '.search' : 'first-heading');
     this.open.set(true);
-    this.dlg().nativeElement.showModal();
-    setTimeout(() => {
-      const sel = this.dlg().nativeElement.querySelector<HTMLElement>('[aria-selected="true"]');
-      sel?.scrollIntoView({ block: 'center' });
-      // Searching is for desktop; on phones an auto-opened keyboard would hide the list.
-      if (this.search() && window.matchMedia('(min-width: 560px)').matches) this.search()!.nativeElement.focus();
-    });
   }
 
-  protected hide(): void { this.dlg().nativeElement.close(); }
+  protected readQuery(event: Event): void {
+    this.query.set((event.target as HTMLInputElement).value);
+  }
+
+  protected markTouched(): void {
+    if (!this.disabled()) this.onTouched();
+  }
 
   protected onClosed(): void {
     this.open.set(false);
-    this.onTouched();
-    this.trigger().nativeElement.focus();
+    this.markTouched();
   }
 
-  protected onBackdrop(e: MouseEvent): void {
-    if (e.target === this.dlg().nativeElement) this.hide();
+  protected pickCurrent(value: string): void {
+    if (value === this.value()) this.dialog().close();
   }
 
-  protected pick(o: SelectOption): void {
-    this.value.set(o.value);
-    this.onChange(o.value);
-    this.hide();
+  protected pick(value: string): void {
+    if (this.disabled()) return;
+    this.value.set(value);
+    this.onChange(value);
+    this.dialog().close();
   }
 }

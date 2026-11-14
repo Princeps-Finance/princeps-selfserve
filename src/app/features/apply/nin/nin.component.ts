@@ -1,3 +1,5 @@
+import { InputDirective } from '../../../shared/components/input/input.directive';
+import { ButtonDirective } from '../../../shared/components/button/button.directive';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -14,7 +16,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 @Component({
   selector: 'app-nin',
-  imports: [TPipe, WizardProgressComponent, ReactiveFormsModule],
+  imports: [InputDirective, ButtonDirective, TPipe, WizardProgressComponent, ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './nin.component.html',
   styleUrl: './nin.component.css',

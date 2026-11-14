@@ -28,16 +28,16 @@
       <div class="fact"><dt>{{ 'loans.mandate' | t }}</dt><dd>{{ (l.mandateActive ? 'loans.mandate.on' : 'loans.mandate.off') | t }}</dd></div>
     </dl>
 
-    <button type="button" class="cta" (click)="newLoan()">
+    <button type="button" class="cta" appButton variant="primary" (click)="newLoan()">
       <span>{{ 'loans.new' | t }}</span>
       <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
         <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
     </button>
-    <button type="button" class="alt" (click)="back()">{{ 'loans.back' | t }}</button>
+    <button type="button" class="alt" appButton variant="secondary" (click)="back()">{{ 'loans.back' | t }}</button>
   } @else if (book.status() === 'error') {
     <p class="state" role="alert">{{ 'loans.error' | t }}</p>
-    <button type="button" class="alt" (click)="back()">{{ 'loans.back' | t }}</button>
+    <button type="button" class="alt" appButton variant="secondary" (click)="back()">{{ 'loans.back' | t }}</button>
   } @else {
     <p class="state" role="status">{{ 'loans.loading' | t }}</p>
   }

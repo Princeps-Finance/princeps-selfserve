@@ -1,6 +1,10 @@
 @import '@fontsource-variable/inter/wght.css';
 
 @import './styles/tokens.css';
+@import '@angular/cdk/overlay-prebuilt.css';
+@import './app/shared/components/button/button.css';
+@import './app/shared/components/input/input.css';
+@import './app/shared/components/dialog/dialog-overlay.css';
 
 /* Google Sans (variable, subset to Latin + Yoruba/Igbo/Hausa glyphs). No U+20A6 (₦): falls back to Inter. */
 @font-face {
@@ -81,10 +85,6 @@ button {
 
 /* Inline form messages shared by every step (component CSS may override). */
 .msg--error { color: var(--danger-text); font-size: var(--fs-sm); line-height: 1.4; margin: 0; }
-
-/* Invalid fields: border colour as well as aria-invalid for sighted users. */
-input.input[aria-invalid='true'],
-select.input[aria-invalid='true'] { border-color: var(--danger-text); }
 
 /* Wizard step entry — bridges the router-outlet teleport between /apply/* steps.
    Every .step fades + lifts on mount. No scale (text must not resample). */
@@ -175,27 +175,9 @@ input[type='checkbox'][aria-invalid='true'] {
 .step { flex: 1 1 auto; }
 .step > .form { flex: 1 1 auto; }
 .step .cta { margin-top: auto !important; }
+.step :is(.cta, .alt) { align-self: stretch; }
 
 /* ===== Shared UI: buttons and step layout (single source; components keep only real differences) ===== */
-.cta {
-  align-self: stretch; min-height: var(--btn-height); padding: 0 var(--space-6);
-  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-4);
-  background: var(--action-primary); color: var(--action-on-primary);
-  border: none; border-radius: var(--btn-radius);
-  font-family: var(--font-sans); font-size: var(--fs-base); font-weight: var(--btn-weight); cursor: pointer;
-  transition: transform 120ms ease-out, background 160ms ease, opacity 160ms ease;
-}
-.cta:disabled { opacity: 0.5; cursor: not-allowed; }
-.cta:hover:not(:disabled) { background: var(--action-primary-hover); }
-.cta:active:not(:disabled) { transform: scale(0.99); background: var(--action-primary-active); }
-.cta:focus-visible, .alt:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
-.alt {
-  align-self: stretch; min-height: var(--btn-height); padding: 0 var(--space-6);
-  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3);
-  background: var(--grey-100); color: var(--ink); border: 0; border-radius: var(--btn-radius);
-  font-family: var(--font-sans); font-size: var(--fs-base); font-weight: var(--btn-weight); cursor: pointer;
-}
-.alt:hover { background: var(--grey-200); }
 .step { display: flex; flex-direction: column; gap: var(--space-8); }
 .step .head { display: flex; flex-direction: column; gap: var(--space-3); }
 .step .title {
@@ -223,17 +205,6 @@ label:has(> .sr-only:focus-visible) { box-shadow: var(--focus-ring); }
 /* Form fields in the apply steps: one definition, tokens only. Steps keep just what differs (for example digit spacing). */
 .step .field { display: flex; flex-direction: column; gap: var(--space-2); }
 .step .label { font-family: var(--font-sans); font-size: var(--fs-sm); font-weight: 500; color: var(--ink); }
-.step .input {
-  width: 100%; min-height: var(--input-height); padding: 0 var(--space-4);
-  background: var(--input-bg); border: 1px solid var(--input-border); border-radius: var(--input-radius);
-  font-family: var(--font-sans); font-size: var(--fs-base); color: var(--ink);
-  transition: border-color 140ms ease, box-shadow 140ms ease;
-}
-.step .input:focus, .step .input:focus-visible {
-  outline: 2px solid transparent; outline-offset: 2px;
-  border-color: var(--input-border-focus); box-shadow: var(--input-shadow-focus);
-}
-.step .field.is-invalid .input { border-color: var(--danger-text); }
 .step .server-error {
   margin: 0; padding: var(--space-3) var(--space-4); background: var(--danger-soft); border-radius: var(--radius-md);
   color: var(--danger-text); font-size: var(--fs-md); line-height: 1.4;
@@ -257,30 +228,7 @@ h1[tabindex='-1']:focus { outline: none; }
   }
 }
 
-/* Buttons that are links look like buttons, not underlined text. */
-a.cta, a.alt { text-decoration: none; }
-
-/* ===== Liquid glass controls (round icon buttons and pills) =====
-   A frosted disc: bright top edge, soft inner shade, thin outline and a gentle drop shadow. Solid where the
-   browser cannot blur or the person asked for less transparency. */
-.glass-btn, .glass-pill {
-  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
-  color: var(--ink); cursor: pointer; font-family: var(--font-sans);
-  background: var(--glass-solid); border: 1px solid var(--glass-edge);
-  box-shadow: inset 0 1px 0 var(--glass-shine), inset 0 -10px 14px var(--glass-depth), var(--glass-drop);
-  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-base) ease;
-}
-.glass-btn { width: var(--tap-min); height: var(--tap-min); padding: 0; border-radius: 50%; }
-.glass-pill { min-height: var(--tap-min); padding: 0 var(--space-4); border-radius: var(--radius-pill); }
-.glass-btn:hover:not(:disabled), .glass-pill:hover:not(:disabled) { transform: scale(1.04); }
-.glass-btn:active:not(:disabled), .glass-pill:active:not(:disabled) { transform: scale(0.95); }
-.glass-btn:focus-visible, .glass-pill:focus-visible { outline: 2px solid var(--focus-color); outline-offset: 3px; }
-@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  @media (prefers-reduced-transparency: no-preference) {
-    .glass-btn, .glass-pill {
-      background: var(--glass-btn-bg);
-      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%); backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-    }
-  }
-}
-@media (prefers-reduced-motion: reduce) { .glass-btn, .glass-pill { transition: none; } }
+/* The full-viewport toast pane lets pointer events through outside the stack.
+   Raise its wrapper over ordinary CDK overlays when native popovers are unavailable. */
+.cdk-overlay-pane.princeps-toast-overlay { pointer-events: none; }
+.cdk-global-overlay-wrapper.princeps-toast-layer { z-index: calc(var(--z-toast) + 1); }

@@ -1,0 +1,46 @@
+:host { display: block; }
+
+.otp {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--space-2);
+  max-width: 360px;
+}
+
+.otp-cell {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  padding: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(22px, 5vw, 28px);
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 100ms ease-out;
+  caret-color: var(--action-primary);
+}
+
+.otp-cell::-webkit-inner-spin-button,
+.otp-cell::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.otp-cell:hover { border-color: var(--input-border-hover); }
+
+.otp-cell:focus,
+.otp-cell:focus-visible {
+  outline: 2px solid transparent; outline-offset: 2px;
+  border-color: var(--input-border-focus);
+  box-shadow: var(--input-shadow-focus);
+}
+
+.otp.is-invalid .otp-cell {
+  border-color: var(--danger);
+}
+.otp.is-invalid .otp-cell:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 18%, transparent);
+}

@@ -45,12 +45,13 @@ interface Countdown {
 @Injectable({ providedIn: 'root' })
 export class ToastService {
   private nextId = 1;
+  private stackPaused = false;
   private readonly countdowns = new Map<number, Countdown>();
   readonly toasts = signal<Toast[]>([]);
 
   show(tone: ToastTone, message: string, options: ToastOptions | number = {}): number {
     const opts: ToastOptions = typeof options === 'number' ? { durationMs: options } : options;
-    const existing = this.toasts().find((t) => t.tone === tone && t.message === message);
+    const existing = this.toasts().find((t) => !t.leaving && t.tone === tone && t.message === message);
     if (existing) {
       this.start(existing.id, opts.durationMs ?? this.durationFor(tone, message));
       return existing.id;
@@ -65,6 +66,15 @@ export class ToastService {
   success(message: string, options?: ToastOptions | number): number { return this.show('success', message, options); }
   error(message: string, options?: ToastOptions | number): number { return this.show('error', message, options); }
   info(message: string, options?: ToastOptions | number): number { return this.show('info', message, options); }
+
+  setStackPaused(paused: boolean): void {
+    if (this.stackPaused === paused) return;
+    this.stackPaused = paused;
+    for (const id of this.countdowns.keys()) {
+      if (paused) this.pause(id);
+      else this.resume(id);
+    }
+  }
 
   /** Stops the countdown while the toast is being read (hover or keyboard focus). */
   pause(id: number): void {
@@ -109,7 +119,11 @@ export class ToastService {
   private start(id: number, ms: number): void {
     const previous = this.countdowns.get(id);
     if (previous?.timer) clearTimeout(previous.timer);
-    this.countdowns.set(id, { timer: setTimeout(() => this.dismiss(id), ms), remainingMs: ms, startedAt: Date.now() });
+    this.countdowns.set(id, {
+      timer: this.stackPaused ? null : setTimeout(() => this.dismiss(id), ms),
+      remainingMs: ms,
+      startedAt: Date.now(),
+    });
   }
 
   /** Toasts pushed out by the visible limit no longer need a timer. */

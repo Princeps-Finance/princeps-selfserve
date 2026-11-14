@@ -11,7 +11,7 @@
     @case ('error') {
       <div class="state" role="alert">
         <p>{{ 'loans.error' | t }}</p>
-        <button type="button" class="alt" (click)="retry()">{{ 'common.retry' | t }}</button>
+        <button type="button" class="alt" appButton variant="secondary" (click)="retry()">{{ 'common.retry' | t }}</button>
       </div>
     }
     @default {
@@ -66,7 +66,7 @@
     }
   }
 
-  <button type="button" class="cta" (click)="newLoan()">
+  <button type="button" class="cta" appButton variant="primary" (click)="newLoan()">
     <span>{{ 'loans.new' | t }}</span>
     <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />

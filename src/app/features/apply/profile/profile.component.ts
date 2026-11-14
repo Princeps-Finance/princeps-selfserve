@@ -1,3 +1,5 @@
+import { InputDirective } from '../../../shared/components/input/input.directive';
+import { ButtonDirective } from '../../../shared/components/button/button.directive';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -7,15 +9,16 @@ import { WizardProgressComponent } from '../wizard-progress.component';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { NIGERIAN_STATES } from '../../../core/nigeria/states';
 import { API_CLIENT } from '../../../core/api/api-client';
-import { DobFieldComponent } from '../../../core/ui/dob-field.component';
-import { SelectFieldComponent, SelectOption } from '../../../core/ui/select-field.component';
+import { DobFieldComponent } from '../../../shared/components/dob-input/dob-field.component';
+import { SelectFieldComponent } from '../../../shared/components/select/select-field.component';
+import type { SelectOption } from '../../../shared/components/select/select-option';
 import { LangService } from '../../../core/i18n/lang.service';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 @Component({
   selector: 'app-profile',
-  imports: [TPipe, WizardProgressComponent, ReactiveFormsModule, DobFieldComponent, SelectFieldComponent],
+  imports: [InputDirective, ButtonDirective, TPipe, WizardProgressComponent, ReactiveFormsModule, DobFieldComponent, SelectFieldComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css',

@@ -1,8 +1,10 @@
+import { InputDirective } from '../input/input.directive';
 import { ChangeDetectionStrategy, Component, computed, forwardRef, inject, input, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { LangService } from '../i18n/lang.service';
-import { TPipe } from '../i18n/t.pipe';
-import { SelectFieldComponent, SelectOption } from './select-field.component';
+import { LangService } from '../../../core/i18n/lang.service';
+import { TPipe } from '../../../core/i18n/t.pipe';
+import { SelectFieldComponent } from '../select/select-field.component';
+import type { SelectOption } from '../select/select-option';
 
 /** Returns an ISO date (YYYY-MM-DD) for a real calendar date, otherwise ''. */
 export function toIsoDate(day: string, month: string, year: string): string {
@@ -20,17 +22,17 @@ export function toIsoDate(day: string, month: string, year: string): string {
  */
 @Component({
   selector: 'app-dob-field',
-  imports: [TPipe, SelectFieldComponent],
+  imports: [InputDirective, TPipe, SelectFieldComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => DobFieldComponent), multi: true }],
   template: `
     <div class="row" role="group" [attr.aria-labelledby]="labelId()">
       <div class="cell day">
         <label class="sub" [for]="inputId() + '-d'">{{ 'date.day' | t }}</label>
-        <input
+        <input appInput
           [id]="inputId() + '-d'" class="input" type="text" inputmode="numeric" maxlength="2"
           autocomplete="bday-day" placeholder="DD"
-          [attr.aria-invalid]="invalid() ? true : null"
+          [disabled]="disabled()" [attr.aria-invalid]="invalid() ? true : null"
           [value]="day()" (input)="setDay($any($event.target).value)" (blur)="touch()"
         />
       </div>
@@ -38,15 +40,15 @@ export function toIsoDate(day: string, month: string, year: string): string {
         <label class="sub" [for]="inputId() + '-m'">{{ 'date.month' | t }}</label>
         <app-select-field
           [inputId]="inputId() + '-m'" [options]="months()" [title]="'date.month' | t" [placeholder]="'date.month' | t"
-          [invalid]="invalid()" [value]="month()" (valueChange)="setMonth($event)"
+          [invalid]="invalid()" [isDisabled]="disabled()" [value]="month()" (valueChange)="setMonth($event)"
         />
       </div>
       <div class="cell year">
         <label class="sub" [for]="inputId() + '-y'">{{ 'date.year' | t }}</label>
-        <input
+        <input appInput
           [id]="inputId() + '-y'" class="input" type="text" inputmode="numeric" maxlength="4"
           autocomplete="bday-year" placeholder="YYYY"
-          [attr.aria-invalid]="invalid() ? true : null"
+          [disabled]="disabled()" [attr.aria-invalid]="invalid() ? true : null"
           [value]="year()" (input)="setYear($any($event.target).value)" (blur)="touch()"
         />
       </div>
@@ -58,15 +60,6 @@ export function toIsoDate(day: string, month: string, year: string): string {
       .row { display: grid; grid-template-columns: 0.8fr 1.6fr 1fr; gap: var(--space-3); align-items: end; }
       .cell { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
       .sub { font-size: var(--fs-xs); color: var(--ink-soft); }
-      .input {
-        width: 100%; min-height: var(--input-height); padding: 0 var(--space-4);
-        background: var(--input-bg); border: 1px solid var(--input-border); border-radius: var(--input-radius);
-        font-family: var(--font-sans); font-size: var(--fs-base); color: var(--ink);
-        transition: border-color 140ms ease, box-shadow 140ms ease;
-      }
-      .input:hover { border-color: var(--input-border-hover); }
-      .input:focus-visible { outline: 2px solid transparent; border-color: var(--input-border-focus); box-shadow: var(--input-shadow-focus); }
-      .input[aria-invalid='true'] { border-color: var(--danger-text); }
     `,
   ],
 })
@@ -77,6 +70,7 @@ export class DobFieldComponent implements ControlValueAccessor {
   readonly labelId = input<string>('');
   readonly invalid = input<boolean | null>(null);
 
+  protected readonly disabled = signal(false);
   protected readonly day = signal('');
   protected readonly month = signal('');
   protected readonly year = signal('');
@@ -100,6 +94,8 @@ export class DobFieldComponent implements ControlValueAccessor {
   }
   registerOnChange(fn: (v: string) => void): void { this.onChange = fn; }
   registerOnTouched(fn: () => void): void { this.onTouched = fn; }
+
+  setDisabledState(disabled: boolean): void { this.disabled.set(disabled); }
 
   protected touch(): void { this.onTouched(); }
 

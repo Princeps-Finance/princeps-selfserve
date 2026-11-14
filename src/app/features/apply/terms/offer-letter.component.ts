@@ -1,7 +1,8 @@
+import { ButtonDirective } from '../../../shared/components/button/button.directive';
 import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import { API_CLIENT, OfferLetterRequest } from '../../../core/api/api-client';
 import { TPipe } from '../../../core/i18n/t.pipe';
-import { ModalComponent } from '../../../shared/modal.component';
+import { DialogComponent } from '../../../shared/components/dialog/dialog.component';
 import { PdfViewerComponent } from '../../../shared/pdf-viewer.component';
 
 /**
@@ -10,7 +11,7 @@ import { PdfViewerComponent } from '../../../shared/pdf-viewer.component';
  */
 @Component({
   selector: 'app-offer-letter',
-  imports: [TPipe, ModalComponent, PdfViewerComponent],
+  imports: [ButtonDirective, TPipe, DialogComponent, PdfViewerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="letter" aria-labelledby="letter-title">
@@ -21,19 +22,21 @@ import { PdfViewerComponent } from '../../../shared/pdf-viewer.component';
         <h2 id="letter-title" class="letter-title">{{ 'pdf.letter.title' | t }}</h2>
         <p class="note">{{ 'pdf.letter.hint' | t }}</p>
       </div>
-      <button type="button" class="alt read" (click)="show()">{{ 'pdf.letter.read' | t }}</button>
+      <button type="button" class="alt read" appButton variant="secondary" (click)="show()">{{ 'pdf.letter.read' | t }}</button>
     </section>
 
-    <app-modal [open]="open()" [title]="'pdf.letter.title' | t" (closed)="open.set(false)">
-      @if (bytes(); as data) {
-        <app-pdf-viewer [data]="data" [title]="'pdf.letter.title' | t" />
-      } @else if (failed()) {
-        <p class="note" role="alert">{{ 'pdf.letter.error' | t }}</p>
-        <button type="button" class="alt" (click)="load()">{{ 'common.retry' | t }}</button>
-      } @else {
-        <p class="note" role="status">{{ 'pdf.loading' | t }}</p>
-      }
-    </app-modal>
+    <app-dialog layout="wide-sheet" [open]="open()" [title]="'pdf.letter.title' | t" (closed)="open.set(false)">
+      <ng-template>
+        @if (bytes(); as data) {
+          <app-pdf-viewer [data]="data" [title]="'pdf.letter.title' | t" />
+        } @else if (failed()) {
+          <p class="note" role="alert">{{ 'pdf.letter.error' | t }}</p>
+          <button type="button" class="alt" appButton variant="secondary" (click)="load()">{{ 'common.retry' | t }}</button>
+        } @else {
+          <p class="note" role="status">{{ 'pdf.loading' | t }}</p>
+        }
+      </ng-template>
+    </app-dialog>
   `,
   styles: [
     `

@@ -44,35 +44,6 @@
 .msg--error { color: var(--danger-text); }
 
 
-.combo { position: relative; }
-
-.listbox {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0; right: 0;
-  z-index: 10;
-  max-height: 240px;
-  overflow-y: auto;
-  background: var(--surface-0);
-  border: 1px solid var(--input-border);
-  border-radius: var(--input-radius);
-  box-shadow: var(--shadow-3);
-  list-style: none; padding: var(--space-1); margin: 0;
-}
-
-.listbox-item {
-  padding: 10px var(--space-3);
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: var(--fs-md);
-}
-
-.listbox-item:hover,
-.listbox-item.is-active,
-.listbox-item[aria-selected="true"] {
-  background: var(--info-soft);
-  color: var(--text-accent);
-}
 .cta { margin-top: var(--space-3); }
 
 

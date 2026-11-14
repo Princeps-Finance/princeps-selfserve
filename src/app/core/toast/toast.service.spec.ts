@@ -42,6 +42,22 @@ describe('ToastService', () => {
     expect(toast.toasts()).toHaveLength(0);
   });
 
+  it('pauses both visible toasts and arrivals while the stack is open', () => {
+    toast.info('First', 4_000);
+    vi.advanceTimersByTime(2_000);
+    toast.setStackPaused(true);
+    toast.info('Second', 4_000);
+    vi.advanceTimersByTime(10_000);
+    expect(toast.toasts()).toHaveLength(2);
+
+    toast.setStackPaused(false);
+    vi.advanceTimersByTime(2_000 + TOAST_EXIT_MS);
+    expect(toast.toasts().map((item) => item.message)).toEqual(['Second']);
+
+    vi.advanceTimersByTime(2_000);
+    expect(toast.toasts()).toHaveLength(0);
+  });
+
   it('carries one follow-up action', () => {
     const run = vi.fn();
     toast.error('Failed', { action: { label: 'Try again', run } });

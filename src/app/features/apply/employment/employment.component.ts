@@ -1,3 +1,5 @@
+import { InputDirective } from '../../../shared/components/input/input.directive';
+import { ButtonDirective } from '../../../shared/components/button/button.directive';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormControl, Validators } from '@angular/forms';
 import { TPipe } from '../../../core/i18n/t.pipe';
@@ -29,7 +31,7 @@ const OPTIONS: Option[] = [
 
 @Component({
   selector: 'app-employment',
-  imports: [TPipe, WizardProgressComponent, ReactiveFormsModule],
+  imports: [InputDirective, ButtonDirective, TPipe, WizardProgressComponent, ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './employment.component.html',
   styleUrl: './employment.component.css',

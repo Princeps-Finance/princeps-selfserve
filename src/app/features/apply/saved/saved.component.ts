@@ -1,3 +1,4 @@
+import { ButtonDirective } from '../../../shared/components/button/button.directive';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { APPLY } from '../../../core/flow/apply-routes';
@@ -7,14 +8,14 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 /** For customers who only wanted to see what they could get. */
 @Component({
   selector: 'app-saved',
-  imports: [TPipe],
+  imports: [ButtonDirective, TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="step">
       <h1 class="title">{{ 'saved.title' | t }}</h1>
       <p class="body">{{ 'saved.body' | t }}</p>
-      <button type="button" class="cta" (click)="apply()">{{ 'saved.apply' | t }}</button>
-      <button type="button" class="alt" (click)="done()">{{ 'status.done' | t }}</button>
+      <button type="button" class="cta" appButton variant="primary" (click)="apply()">{{ 'saved.apply' | t }}</button>
+      <button type="button" class="alt" appButton variant="secondary" (click)="done()">{{ 'status.done' | t }}</button>
     </section>
   `,
   styles: [

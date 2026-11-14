@@ -1,3 +1,4 @@
+import { ButtonDirective } from './components/button/button.directive';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { ToastService } from '../core/toast/toast.service';
 import { LangService } from '../core/i18n/lang.service';
@@ -11,9 +12,10 @@ const ORDER: readonly ThemeMode[] = ['system', 'light', 'dark'];
  */
 @Component({
   selector: 'app-theme-toggle',
+  imports: [ButtonDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <button type="button" class="toggle glass-btn" [attr.aria-label]="label()" [attr.title]="label()" (click)="next()">
+    <button type="button" class="toggle" appButton variant="glass" [attr.aria-label]="label()" [attr.title]="label()" (click)="next()">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         @switch (mode()) {
           @case ('light') {

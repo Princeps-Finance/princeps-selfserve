@@ -1,0 +1,17 @@
+<ng-template #panel>
+  <section class="panel" [class.glass]="layout() !== 'center'">
+    <header class="bar">
+      <h2 class="title" tabindex="-1">{{ title() }}</h2>
+      @if (showClose()) {
+        <button appButton variant="glass" type="button" [attr.aria-label]="'common.close' | t" (click)="close()">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+        </button>
+      }
+    </header>
+    <div class="body">
+      <ng-container [ngTemplateOutlet]="content()" />
+    </div>
+  </section>
+</ng-template>

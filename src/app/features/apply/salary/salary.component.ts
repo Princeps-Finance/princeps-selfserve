@@ -1,11 +1,15 @@
+import { InputDirective } from '../../../shared/components/input/input.directive';
+import { ButtonDirective } from '../../../shared/components/button/button.directive';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { SelectFieldComponent, SelectOption } from '../../../core/ui/select-field.component';
+import { SelectFieldComponent } from '../../../shared/components/select/select-field.component';
+import { ComboboxComponent } from '../../../shared/components/combobox/combobox.component';
+import type { SelectOption } from '../../../shared/components/select/select-option';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { focusFirstInvalid } from '../../../core/a11y/focus';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
-import { API_CLIENT, Bank } from '../../../core/api/api-client';
+import { API_CLIENT } from '../../../core/api/api-client';
 import {
   ApplicationStateService,
   SalaryChannel,
@@ -23,7 +27,7 @@ const PARAMILITARY_EMPLOYERS = [
 
 @Component({
   selector: 'app-salary',
-  imports: [TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent],
+  imports: [InputDirective, ButtonDirective, TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent, ComboboxComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './salary.component.html',
   styleUrl: './salary.component.css',
@@ -43,21 +47,10 @@ export class SalaryComponent {
     this.serverError.set(null);
   }
 
-  readonly banks = signal<Bank[]>([]);
-  readonly bankQuery = signal('');
-  readonly bankOpen = signal(false);
-  readonly activeBank = signal(-1);
-
-  readonly filteredBanks = computed(() => {
-    const q = this.bankQuery().trim().toLowerCase();
-    const list = this.banks();
-    if (!q) return list;
-    return list.filter((b) => b.name.toLowerCase().includes(q));
-  });
+  readonly bankOptions = signal<readonly SelectOption[]>([]);
 
   readonly form = new FormGroup({
     bankCode: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    bankName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     accountNumber: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.pattern(/^\d{10}$/)],
@@ -93,19 +86,18 @@ export class SalaryComponent {
   });
 
   constructor() {
-    void this.api.listBanks().then((b) => this.banks.set(b));
+    const saved = this.state.salary();
+    if (saved?.bankCode) this.bankOptions.set([{ value: saved.bankCode, label: saved.bankName }]);
+    void this.loadBanks();
 
     // Rehydrate.
-    const saved = this.state.salary();
     if (saved) {
       this.form.patchValue({
         bankCode: saved.bankCode,
-        bankName: saved.bankName,
         accountNumber: saved.accountNumber,
         ippisNumber: saved.ippisNumber ?? '',
         employer: saved.paramilitaryEmployer ?? '',
       });
-      this.bankQuery.set(saved.bankName);
     }
   }
 
@@ -121,47 +113,14 @@ export class SalaryComponent {
     return `step.salary.${this.channel()}.subtitle`;
   }
 
-  onBankFocus(): void {
-    this.bankOpen.set(true);
-  }
-
-  onBankKeydown(evt: KeyboardEvent): void {
-    const list = this.filteredBanks();
-    if (evt.key === 'ArrowDown' || evt.key === 'ArrowUp') {
-      evt.preventDefault();
-      if (!list.length) return;
-      this.bankOpen.set(true);
-      const step = evt.key === 'ArrowDown' ? 1 : -1;
-      this.activeBank.update((i) => (i + step + list.length) % list.length);
-    } else if (evt.key === 'Enter' && this.bankOpen() && this.activeBank() >= 0) {
-      evt.preventDefault();
-      this.pickBank(list[this.activeBank()]);
-    } else if (evt.key === 'Escape' && this.bankOpen()) {
-      evt.preventDefault();
-      this.bankOpen.set(false);
+  private async loadBanks(): Promise<void> {
+    const banks = await this.api.listBanks();
+    const options = banks.map(({ code, name }) => ({ value: code, label: name }));
+    const restored = this.bankOptions()[0];
+    if (restored && !options.some((option) => option.value === restored.value)) {
+      options.unshift(restored);
     }
-  }
-
-  onBankInput(evt: Event): void {
-    this.activeBank.set(-1);
-    const v = (evt.target as HTMLInputElement).value;
-    this.bankQuery.set(v);
-    this.bankOpen.set(true);
-    this.form.controls.bankCode.setValue('');
-    this.form.controls.bankName.setValue('');
-  }
-
-  onBankBlur(): void {
-    // Delay so option click registers.
-    setTimeout(() => this.bankOpen.set(false), 150);
-  }
-
-  pickBank(bank: Bank): void {
-    this.form.controls.bankCode.setValue(bank.code);
-    this.form.controls.bankName.setValue(bank.name);
-    this.bankQuery.set(bank.name);
-    this.bankOpen.set(false);
-    this.activeBank.set(-1);
+    this.bankOptions.set(options);
   }
 
   errorKey(): string | null {
@@ -174,7 +133,9 @@ export class SalaryComponent {
 
   async submit(): Promise<void> {
     if (this.submitting()) return;
-    if (!this.canSubmit()) {
+    const v = this.form.getRawValue();
+    const bank = this.bankOptions().find((option) => option.value === v.bankCode);
+    if (!this.canSubmit() || !bank) {
       this.attempted.set(true);
       this.form.markAllAsTouched();
       setTimeout(() => focusFirstInvalid());
@@ -182,7 +143,6 @@ export class SalaryComponent {
     }
     this.submitting.set(true);
     this.serverError.set(null);
-    const v = this.form.getRawValue();
     try {
       const res = await this.api.verifySalary({
         channel: this.channel(),
@@ -199,7 +159,7 @@ export class SalaryComponent {
       this.state.setSalary({
         channel: this.channel(),
         bankCode: v.bankCode,
-        bankName: v.bankName,
+        bankName: bank.label,
         accountNumber: v.accountNumber,
         ippisNumber: v.ippisNumber || undefined,
         paramilitaryEmployer: v.employer || undefined,

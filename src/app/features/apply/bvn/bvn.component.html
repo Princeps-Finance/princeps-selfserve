@@ -12,7 +12,7 @@
   <form class="form" (submit)="$event.preventDefault(); submit()" novalidate>
     <div class="field" [class.is-invalid]="bvn.touched && bvn.invalid">
       <label class="label" for="bvn">{{ 'step.bvn.label' | t }}</label>
-      <input
+      <input appInput
         id="bvn"
         class="input"
         type="text"
@@ -48,7 +48,7 @@
       </p>
     }
 
-    <button type="button" class="cta" [disabled]="submitting()" (click)="submit()">
+    <button #submitButton type="button" class="cta" appButton variant="primary" [disabled]="submitting()" (click)="submit()">
       <span>{{ 'step.bvn.verify' | t }}</span>
       <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
         <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />

@@ -1,3 +1,4 @@
+import { ButtonDirective } from '../../../shared/components/button/button.directive';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TrustFooterComponent } from '../../../shared/trust-footer.component';
@@ -9,7 +10,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 /** First choice: apply now, or just find out how much they could get. Both use the same journey. */
 @Component({
   selector: 'app-welcome-intent',
-  imports: [TPipe, IllustrationComponent, TrustFooterComponent],
+  imports: [ButtonDirective, TPipe, IllustrationComponent, TrustFooterComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="step">
@@ -18,7 +19,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
       <div class="actions">
         <div class="choice">
-          <button type="button" class="cta" (click)="choose('apply')">
+          <button type="button" class="cta" appButton variant="primary" (click)="choose('apply')">
             <span>{{ 'welcome.intent.apply' | t }}</span>
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
               <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
@@ -27,7 +28,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
           <p class="hint">{{ 'welcome.intent.apply.hint' | t }}</p>
         </div>
         <div class="choice">
-          <button type="button" class="alt" (click)="choose('check')">{{ 'welcome.intent.check' | t }}</button>
+          <button type="button" class="alt" appButton variant="secondary" (click)="choose('check')">{{ 'welcome.intent.check' | t }}</button>
           <p class="hint">{{ 'welcome.intent.check.hint' | t }}</p>
         </div>
       </div>

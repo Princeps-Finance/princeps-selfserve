@@ -39,7 +39,7 @@
 
       <p class="privacy">{{ 'step.verify.privacy' | t }}</p>
 
-      <button type="button" class="cta" (click)="begin()">
+      <button type="button" class="cta" appButton variant="primary" (click)="begin()">
         <span>{{ 'step.verify.begin' | t }}</span>
         <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
           <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
@@ -60,13 +60,13 @@
       </div>
 
       @if (!facePhoto()) {
-        <button type="button" class="cta" (click)="capturePhoto()">
+        <button type="button" class="cta" appButton variant="primary" (click)="capturePhoto()">
           <span>{{ 'step.verify.capture' | t }}</span>
         </button>
       } @else {
         <div class="row-actions">
           <button type="button" class="ghost" (click)="retakePhoto()">{{ 'step.verify.retake' | t }}</button>
-          <button type="button" class="cta" (click)="proceedToVideo()">
+          <button type="button" class="cta" appButton variant="primary" (click)="proceedToVideo()">
             <span>{{ 'step.verify.next' | t }}</span>
             <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
               <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
@@ -111,17 +111,17 @@
       } @else if (videoDataUrl()) {
         <div class="row-actions">
           <button type="button" class="ghost" (click)="retakeVideo()">{{ 'step.verify.retake' | t }}</button>
-          <button type="button" class="cta" (click)="goReview()">
+          <button type="button" class="cta" appButton variant="primary" (click)="goReview()">
             <span>{{ 'step.verify.next' | t }}</span>
           </button>
         </div>
       } @else if (isRecording()) {
-        <button type="button" class="cta danger" (click)="stopRecording()">
+        <button type="button" class="cta danger" appButton variant="danger" (click)="stopRecording()">
           <span>{{ 'step.verify.stop' | t }}</span>
         </button>
       } @else {
         @if (canRecord()) {
-          <button type="button" class="cta" (click)="startRecording()">
+          <button type="button" class="cta" appButton variant="primary" (click)="startRecording()">
             <span>{{ 'step.verify.record' | t }}</span>
           </button>
         }
@@ -155,7 +155,7 @@
         <p class="msg--error" id="identity-error" tabindex="-1" role="alert">{{ 'form.identity.required' | t }}</p>
       }
 
-      <button type="button" class="cta" (click)="confirm()">
+      <button type="button" class="cta" appButton variant="primary" (click)="confirm()">
         <span>{{ 'step.verify.confirm' | t }}</span>
         <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
           <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />

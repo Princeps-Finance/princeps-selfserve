@@ -3,7 +3,9 @@
 <router-outlet />
 <app-toast-host />
 <app-help-launcher />
-<app-privacy-dialog />
+@defer (when privacy.isOpen()) {
+  <app-privacy-dialog />
+}
 @if (install.offer()) {
   <div class="promo">
     <app-promo-card

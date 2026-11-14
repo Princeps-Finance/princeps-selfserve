@@ -18,9 +18,9 @@
       <h2 class="none-title">{{ 'step.offers.none.title' | t }}</h2>
       <p class="none-body">{{ 'step.offers.none.body' | t }}</p>
       <div class="none-actions">
-        <button type="button" class="alt alt--primary" (click)="editDetails()">{{ 'step.eligibility.declined.edit' | t }}</button>
-        <a class="alt" [attr.href]="whatsapp" target="_blank" rel="noopener">{{ 'step.eligibility.declined.whatsapp' | t }}</a>
-        <a class="alt" [attr.href]="tel">{{ 'step.eligibility.declined.call' | t }}</a>
+        <button type="button" class="alt alt--primary" appButton variant="primary" (click)="editDetails()">{{ 'step.eligibility.declined.edit' | t }}</button>
+        <a class="alt" appButton variant="secondary" [attr.href]="whatsapp" target="_blank" rel="noopener">{{ 'step.eligibility.declined.whatsapp' | t }}</a>
+        <a class="alt" appButton variant="secondary" [attr.href]="tel">{{ 'step.eligibility.declined.call' | t }}</a>
       </div>
     </div>
   } @else {
@@ -89,8 +89,8 @@
                 <strong>{{ 'offers.more.title' | t: { amount: formatNaira(more) } }}</strong>
                 {{ 'offers.more.body' | t: { max: formatNaira(o.limits.maxAmount) } }}
               </p>
-              <a class="cta" [attr.href]="agentLink(o)" target="_blank" rel="noopener">{{ 'offers.more.agent' | t }}</a>
-              <a class="alt" [attr.href]="tel">{{ 'offers.more.call' | t }}</a>
+              <a class="cta" appButton variant="primary" [attr.href]="agentLink(o)" target="_blank" rel="noopener">{{ 'offers.more.agent' | t }}</a>
+              <a class="alt" appButton variant="secondary" [attr.href]="tel">{{ 'offers.more.call' | t }}</a>
             </div>
           }
           <p class="hint" id="amt-hint">
@@ -157,7 +157,7 @@
     }
 
     @if (justChecking() && offers().length > 0) {
-      <button type="button" class="alt later" (click)="finishLater()">{{ 'offers.check.cta' | t }}</button>
+      <button type="button" class="alt later" appButton variant="secondary" (click)="finishLater()">{{ 'offers.check.cta' | t }}</button>
     }
   }
 </section>

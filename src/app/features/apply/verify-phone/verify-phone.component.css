@@ -9,51 +9,6 @@
   gap: var(--space-5);
 }
 
-.otp {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: var(--space-2);
-  max-width: 360px;
-}
-
-.otp-cell {
-  aspect-ratio: 1 / 1;
-  width: 100%;
-  padding: 0;
-  text-align: center;
-  font-family: var(--font-display);
-  font-size: clamp(22px, 5vw, 28px);
-  font-weight: 600;
-  color: var(--ink);
-  background: var(--input-bg);
-  border: 1px solid var(--input-border);
-  border-radius: var(--input-radius);
-  transition: border-color 140ms ease, box-shadow 140ms ease, transform 100ms ease-out;
-  caret-color: var(--action-primary);
-}
-
-.otp-cell::-webkit-inner-spin-button,
-.otp-cell::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.otp-cell:hover { border-color: var(--input-border-hover); }
-
-.otp-cell:focus,
-.otp-cell:focus-visible {
-  outline: 2px solid transparent; outline-offset: 2px;
-  border-color: var(--input-border-focus);
-  box-shadow: var(--input-shadow-focus);
-}
-
-.otp.is-invalid .otp-cell {
-  border-color: var(--danger);
-}
-.otp.is-invalid .otp-cell:focus {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 18%, transparent);
-}
-
 .msg {
   margin: 0;
   font-size: var(--fs-sm);
@@ -111,7 +66,7 @@
 .cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); }
 
 @media (prefers-reduced-motion: reduce) {
-  .cta, .cta-arrow, .otp-cell, .link-btn { transition: none; }
+  .cta, .cta-arrow, .link-btn { transition: none; }
 }
 
 .demo-hint { margin: 0; align-self: flex-start; padding: 2px 10px; border-radius: 999px; background: var(--info-soft); font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }

@@ -13,6 +13,7 @@
   "private": true,
   "packageManager": "npm@10.8.2",
   "dependencies": {
+    "@angular/cdk": "^21.2.14",
     "@angular/common": "^21.2.26",
     "@angular/compiler": "^21.2.26",
     "@angular/core": "^21.2.26",

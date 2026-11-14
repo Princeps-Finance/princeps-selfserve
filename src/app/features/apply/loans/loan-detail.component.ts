@@ -1,3 +1,4 @@
+import { ButtonDirective } from '../../../shared/components/button/button.directive';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { APPLY } from '../../../core/flow/apply-routes';
@@ -10,7 +11,7 @@ import { LoanStatusBadgeComponent } from './loan-status-badge.component';
 /** One existing loan in full, with the way to take a new one. */
 @Component({
   selector: 'app-loan-detail',
-  imports: [TPipe, LoanStatusBadgeComponent],
+  imports: [ButtonDirective, TPipe, LoanStatusBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './loan-detail.component.html',
   styleUrl: './loans.component.css',
