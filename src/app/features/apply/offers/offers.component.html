@@ -5,11 +5,12 @@
     <header class="head">
       <h1 class="title">{{ 'offers.choose.title' | t }}</h1>
       <p class="subtitle">{{ 'offers.choose.sub' | t }}</p>
+      <app-result-timer />
     </header>
   }
 
   @if (reviewRequired()) {
-    <p class="review-note" role="note">{{ 'step.eligibility.review.note' | t }}</p>
+    <app-card tone="accent" role="note"><p class="card-text">{{ 'step.eligibility.review.note' | t }}</p></app-card>
   }
 
   @if (ready() && offers().length === 0) {
@@ -18,17 +19,16 @@
       <h2 class="none-title">{{ 'step.offers.none.title' | t }}</h2>
       <p class="none-body">{{ 'step.offers.none.body' | t }}</p>
       <div class="none-actions">
-        <button type="button" class="alt alt--primary" appButton variant="primary" (click)="editDetails()">{{ 'step.eligibility.declined.edit' | t }}</button>
-        <a class="alt" appButton variant="secondary" [attr.href]="whatsapp" target="_blank" rel="noopener">{{ 'step.eligibility.declined.whatsapp' | t }}</a>
-        <a class="alt" appButton variant="secondary" [attr.href]="tel">{{ 'step.eligibility.declined.call' | t }}</a>
+        <button appButton variant="secondary" type="button" class="alt alt--primary" (click)="editDetails()">{{ 'step.eligibility.declined.edit' | t }}</button>
+        <a appButton variant="secondary" class="alt" [attr.href]="whatsapp" target="_blank" rel="noopener">{{ 'step.eligibility.declined.whatsapp' | t }}</a>
+        <a appButton variant="secondary" class="alt" [attr.href]="tel">{{ 'step.eligibility.declined.call' | t }}</a>
       </div>
     </div>
   } @else {
-    <!-- 1. Which loan -->
-    <section class="block" aria-labelledby="pick-title">
-      <h2 class="block-title" id="pick-title"><span class="num" aria-hidden="true">1</span>{{ 'offers.step.pick' | t }}</h2>
-      <div class="products" appRadioGroup role="radiogroup" aria-labelledby="pick-title">
-        @for (o of offers(); track o.product.id) {
+    <!-- Each loan is a card led by the amount available. Picking one opens its amount and period right inside it. -->
+    <div class="products" appRadioGroup role="radiogroup" [attr.aria-label]="'offers.choose.title' | t">
+      @for (o of offers(); track o.product.id) {
+        <div class="product-card" [class.is-open]="selectedId() === o.product.id">
           <button
             type="button"
             role="radio"
@@ -37,127 +37,116 @@
             [attr.tabindex]="productTab(o.product.id)"
             (click)="select(o.product.id)"
           >
-            <span class="product-top">
+            <app-product-mark [product]="o.product" />
+            <span class="product-body">
               <span class="product-name">{{ o.product.name }}</span>
-              <span class="product-rate">{{ o.product.ratePercent }}% <small>{{ modelKey(o.product.interestModel) | t }}</small></span>
-            </span>
-            <span class="product-meta">
-              {{ 'step.offers.upto' | t: { amount: formatNaira(o.limits.maxAmount), months: o.limits.maxTenor } }}
-              · {{ frequencyKey(o.product.repaymentFrequency) | t }}
+              <span class="product-label">{{ 'offers.card.available' | t }}</span>
+              <span class="product-amount">{{ formatNaira(o.limits.maxAmount) }}</span>
+              <span class="product-meta">
+                {{ 'offers.card.tenor' | t: { months: o.limits.maxTenor } }} · {{ frequencyKey(o.product.repaymentFrequency) | t }}
+                · {{ o.product.ratePercent }}% {{ modelKey(o.product.interestModel) | t }}
+              </span>
             </span>
           </button>
-        }
-      </div>
-    </section>
 
-    @if (selected(); as o) {
-      <!-- 2. How much and for how long -->
-      <section class="block" aria-labelledby="set-title">
-        <h2 class="block-title" id="set-title"><span class="num" aria-hidden="true">2</span>{{ 'offers.step.set' | t }}</h2>
+          @if (selectedId() === o.product.id) {
+            <div class="panel">
+              <div class="control">
+                <label class="control-label" for="amt">{{ 'step.offers.amount.edit' | t }}</label>
+                <div class="amount-field">
+                  <span class="currency" aria-hidden="true">₦</span>
+                  <input appInput
+                    class="amount-input"
+                    id="amt"
+                    type="text"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    enterkeyhint="done"
+                    [attr.aria-describedby]="'amt-hint'"
+                    [value]="o.amount.toLocaleString('en-NG')"
+                    (input)="onAmountInput(o, $event)"
+                    (blur)="commitAmount(o, $event)"
+                    (keydown.enter)="commitAmount(o, $event)"
+                  />
+                </div>
+                <app-amount-slider
+                  [min]="o.limits.minAmount"
+                  [max]="o.limits.maxAmount"
+                  [step]="o.product.amountStep"
+                  [value]="o.amount"
+                  [format]="formatNaira"
+                  [ariaLabel]="'step.offers.slider' | t"
+                  [quickLabel]="'offers.quick' | t"
+                  (valueChange)="setAmount(o, $event)"
+                />
+                @if (askedMore()[o.product.id]; as more) {
+                  <div class="agent" role="status">
+                    <p class="agent-text">
+                      <app-icon name="bold-info" [size]="18" class="agent-icon" />
+                      <span>{{ 'offers.more.body' | t: { amount: formatNaira(more), max: formatNaira(o.limits.maxAmount) } }}</span>
+                    </p>
+                    <div class="agent-actions">
+                      <a appButton variant="secondary" class="alt agent-btn" [attr.href]="agentLink(o)" target="_blank" rel="noopener">{{ 'offers.more.agent' | t }}</a>
+                      <a appButton variant="secondary" class="alt agent-btn" [attr.href]="tel">{{ 'offers.more.call' | t }}</a>
+                    </div>
+                  </div>
+                }
+                <p class="hint" id="amt-hint">
+                  @if (adjusted()[o.product.id]; as a) {
+                    <span role="status">{{ 'step.offers.amount.adjusted' | t: { amount: formatNaira(a) } }}</span>
+                  }
+                </p>
+              </div>
 
-        <div class="control">
-          <label class="control-label" for="amt">{{ 'step.offers.amount.edit' | t }}</label>
-          <div class="amount-field">
-            <span class="currency" aria-hidden="true">₦</span>
-            <input
-              class="amount-input"
-              id="amt"
-              type="text"
-              inputmode="numeric"
-              autocomplete="off"
-              enterkeyhint="done"
-              [attr.aria-describedby]="'amt-hint'"
-              [value]="o.amount.toLocaleString('en-NG')"
-              (input)="onAmountInput(o, $event)"
-              (blur)="commitAmount(o, $event)"
-              (keydown.enter)="commitAmount(o, $event)"
-            />
-          </div>
-          <app-amount-slider
-            [min]="o.limits.minAmount"
-            [max]="o.limits.maxAmount"
-            [step]="o.product.amountStep"
-            [value]="o.amount"
-            [format]="formatNaira"
-            [ariaLabel]="'step.offers.slider' | t"
-            [quickLabel]="'offers.quick' | t"
-            (valueChange)="setAmount(o, $event)"
-          />
-          @if (askedMore()[o.product.id]; as more) {
-            <div class="agent" role="status">
-              <p class="agent-text">
-                <strong>{{ 'offers.more.title' | t: { amount: formatNaira(more) } }}</strong>
-                {{ 'offers.more.body' | t: { max: formatNaira(o.limits.maxAmount) } }}
-              </p>
-              <a class="cta" appButton variant="primary" [attr.href]="agentLink(o)" target="_blank" rel="noopener">{{ 'offers.more.agent' | t }}</a>
-              <a class="alt" appButton variant="secondary" [attr.href]="tel">{{ 'offers.more.call' | t }}</a>
+              <div class="control">
+                <span class="control-label" id="ten-label">{{ 'step.offers.tenor.edit' | t }}</span>
+                <div class="tenors" appRadioGroup role="radiogroup" aria-labelledby="ten-label">
+                  @for (t of o.tenors; track t) {
+                    <button type="button" role="radio" class="tenor" [attr.aria-checked]="o.tenor === t" [attr.tabindex]="tenorTab(o, t)" (click)="setTenor(o, t)">
+                      <span class="tenor-num">{{ t }}</span>
+                      <span class="tenor-unit">{{ 'step.offers.months' | t }}</span>
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- The monthly figure: an estimate while the server works it out, then the server's exact figure. -->
+              <div class="quote" aria-live="polite">
+                @switch (quoteView()?.status) {
+                  @case ('ready') {
+                    <p class="quote-line"><span>{{ 'offers.monthly.exact' | t }}</span> <strong>{{ formatNaira(quoteView()?.quote?.monthlyRepayment ?? o.quote.monthly) }}</strong></p>
+                  }
+                  @case ('error') {
+                    <p class="quote-line quote-line--est"><span>{{ 'offers.monthly.estimate' | t }}</span> <strong>{{ formatNaira(o.quote.monthly) }}</strong></p>
+                    <p class="quote-error" role="alert">{{ 'offers.quote.error' | t }}</p>
+                    <button appButton variant="secondary" type="button" class="alt" (click)="retryQuote()">{{ 'common.retry' | t }}</button>
+                  }
+                  @case ('invalid') {
+                    <p class="quote-error" role="alert">{{ 'offers.quote.invalid' | t }}</p>
+                  }
+                  @default {
+                    <!-- Same line as the confirmed one, just dimmed while the server answers; the button waits. -->
+                    <p class="quote-line quote-line--pending" aria-busy="true"><span>{{ 'offers.monthly.exact' | t }}</span> <strong>{{ formatNaira(o.quote.monthly) }}</strong></p>
+                  }
+                }
+              </div>
+
+              <app-referral-box />
             </div>
           }
-          <p class="hint" id="amt-hint">
-            @if (adjusted()[o.product.id]; as a) {
-              <span role="status">{{ 'step.offers.amount.adjusted' | t: { amount: formatNaira(a) } }}</span>
-            }
-          </p>
         </div>
+      }
+    </div>
 
-        <div class="control">
-          <span class="control-label" id="ten-label">{{ 'step.offers.tenor.edit' | t }}</span>
-          <div class="tenors" appRadioGroup role="radiogroup" aria-labelledby="ten-label">
-            @for (t of o.tenors; track t) {
-              <button type="button" role="radio" class="tenor" [attr.aria-checked]="o.tenor === t" [attr.tabindex]="tenorTab(o, t)" (click)="setTenor(o, t)">
-                <span class="tenor-num">{{ t }}</span>
-                <span class="tenor-unit">{{ 'step.offers.months' | t }}</span>
-              </button>
-            }
-          </div>
-        </div>
-      </section>
-
-      <app-referral-box />
-
-      <!-- 3. What it costs -->
-      <section class="block" aria-labelledby="cost-title" aria-live="polite">
-        <h2 class="block-title" id="cost-title"><span class="num" aria-hidden="true">3</span>{{ 'offers.step.cost' | t }}</h2>
-        <div class="summary">
-          <div class="summary-main">
-            <span class="summary-label">{{ 'step.offers.monthly' | t }}</span>
-            <span class="summary-big">{{ formatNaira(o.quote.monthly) }}</span>
-          </div>
-          <dl class="summary-rows">
-            <div class="row"><dt>{{ 'offers.cost.borrow' | t }}</dt><dd>{{ formatNaira(o.amount) }}</dd></div>
-            <div class="row"><dt>{{ 'offers.cost.interest' | t }}</dt><dd>{{ formatNaira(o.quote.interest) }}</dd></div>
-            @if (o.quote.totalFees > 0) {
-              <div class="row row--fees">
-                <dt>
-                  <details class="fees">
-                    <summary>{{ 'step.offers.fees' | t }}</summary>
-                    <ul>
-                      @for (f of o.quote.fees; track f.name) {
-                        <li><span>{{ f.name }}</span><span>{{ formatNaira(f.amount) }}</span></li>
-                      }
-                    </ul>
-                  </details>
-                </dt>
-                <dd>{{ formatNaira(o.quote.totalFees) }}</dd>
-              </div>
-            }
-            <div class="row row--total"><dt>{{ 'step.offers.total.repayment' | t }}</dt><dd>{{ formatNaira(o.quote.totalRepayment) }}</dd></div>
-            <div class="row"><dt>{{ 'offers.cost.apr' | t }}</dt><dd>≈ {{ o.apr | number: '1.0-0' }}%</dd></div>
-          </dl>
-        </div>
-        <p class="note">{{ 'offers.note' | t }}</p>
-      </section>
-
-      <button type="button" class="pick" (click)="pick(o)">
+    @if (selected(); as o) {
+      <button appButton variant="primary" type="button" class="cta" [disabled]="!quoteReady()" [attr.aria-busy]="quoteView()?.status === 'loading' ? 'true' : null" (click)="pick(o)">
         <span>{{ 'offers.continue' | t }}</span>
-        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
       </button>
     }
 
     @if (justChecking() && offers().length > 0) {
-      <button type="button" class="alt later" appButton variant="secondary" (click)="finishLater()">{{ 'offers.check.cta' | t }}</button>
+      <button appButton variant="secondary" type="button" class="alt later" (click)="finishLater()">{{ 'offers.check.cta' | t }}</button>
     }
   }
 </section>

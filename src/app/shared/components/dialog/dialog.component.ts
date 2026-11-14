@@ -1,19 +1,19 @@
-import { Dialog, DialogRef } from '@angular/cdk/dialog';
+import type { DialogRef } from '@angular/cdk/dialog';
 import { NgTemplateOutlet } from '@angular/common';
 import {
-  ChangeDetectionStrategy, Component, DestroyRef, TemplateRef, ViewContainerRef,
+  ChangeDetectionStrategy, Component, DestroyRef, Injector, TemplateRef, ViewContainerRef,
   contentChild, effect, inject, input, output, untracked, viewChild,
 } from '@angular/core';
 import { filter, takeUntil } from 'rxjs';
 import { TPipe } from '../../../core/i18n/t.pipe';
-import { ButtonDirective } from '../button/button.directive';
+import { IconComponent } from '../../icon.component';
 
 type DialogLayout = 'center' | 'sheet' | 'wide-sheet';
 type DialogDismissal = 'all' | 'escape' | 'explicit';
 
 @Component({
   selector: 'app-dialog',
-  imports: [NgTemplateOutlet, ButtonDirective, TPipe],
+  imports: [NgTemplateOutlet, IconComponent, TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dialog.component.html',
   styleUrl: './dialog.component.css',
@@ -21,7 +21,7 @@ type DialogDismissal = 'all' | 'escape' | 'explicit';
 export class DialogComponent {
   readonly open = input(false);
   readonly title = input.required<string>();
-  readonly layout = input<DialogLayout>('center');
+  readonly layout = input<DialogLayout>('wide-sheet');
   readonly dismissal = input<DialogDismissal>('all');
   readonly showClose = input(true);
   readonly autoFocus = input('first-heading');
@@ -29,7 +29,9 @@ export class DialogComponent {
 
   protected readonly content = contentChild.required(TemplateRef);
   private readonly panel = viewChild.required<TemplateRef<unknown>>('panel');
-  private readonly dialogs = inject(Dialog);
+  private readonly injector = inject(Injector);
+  private loading = false;
+  private destroyed = false;
   private readonly viewContainerRef = inject(ViewContainerRef);
   private ref?: DialogRef;
 
@@ -37,11 +39,12 @@ export class DialogComponent {
     effect(() => {
       const open = this.open();
       untracked(() => {
-        if (open && !this.ref) this.show();
+        if (open && !this.ref && !this.loading) void this.show();
         if (!open) this.ref?.close();
       });
     });
     inject(DestroyRef).onDestroy(() => {
+      this.destroyed = true;
       const ref = this.ref;
       this.ref = undefined;
       ref?.close();
@@ -52,8 +55,19 @@ export class DialogComponent {
     this.ref?.close();
   }
 
-  private show(): void {
-    const ref = this.dialogs.open(this.panel(), {
+  private async show(): Promise<void> {
+    this.loading = true;
+    try {
+      const { Dialog } = await import('@angular/cdk/dialog');
+      if (this.destroyed || !this.open()) return;
+      this.attach(this.injector.get(Dialog));
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  private attach(dialogs: import('@angular/cdk/dialog').Dialog): void {
+    const ref = dialogs.open(this.panel(), {
       viewContainerRef: this.viewContainerRef,
       panelClass: ['princeps-dialog', 'princeps-dialog--' + this.layout()],
       backdropClass: 'princeps-dialog-backdrop',

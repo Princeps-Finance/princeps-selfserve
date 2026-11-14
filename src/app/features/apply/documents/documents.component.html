@@ -4,8 +4,15 @@
   <header class="head">
     <h1 class="title">{{ 'step.docs.title' | t }}</h1>
     <p class="subtitle">{{ 'step.docs.subtitle' | t }}</p>
-    <p class="reason">{{ 'reason.docs' | t }}</p>
+    <app-why-ask [text]="'reason.docs' | t" />
   </header>
+
+  @if (loadState() === 'loading') {
+    <p class="msg" role="status">{{ 'step.docs.loading' | t }}</p>
+  } @else if (loadState() === 'error') {
+    <p class="msg msg--error" role="alert">{{ 'step.docs.load.error' | t }}</p>
+    <button appButton variant="secondary" type="button" class="alt" (click)="loadList()">{{ 'common.retry' | t }}</button>
+  }
 
   <ul class="docs">
     @for (spec of specs(); track spec.id) {
@@ -15,7 +22,10 @@
           <h2 class="doc-label">{{ spec.labelKey | t }}</h2>
           <p class="doc-hint">{{ spec.hintKey | t }}</p>
           @if (d?.status === 'uploading') {
-            <span class="badge badge--pending">{{ 'step.docs.uploading' | t }}</span>
+            <span class="badge badge--pending">{{ 'step.docs.uploading' | t }}@if (progress()[spec.id] > 0) { · {{ (progress()[spec.id] * 100) | number: '1.0-0' }}% }</span>
+            <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="(progress()[spec.id] || 0) * 100" [attr.aria-label]="'step.docs.uploading' | t">
+              <span class="bar-fill" [style.width.%]="(progress()[spec.id] || 0) * 100"></span>
+            </div>
           } @else if (d?.status === 'uploaded') {
             <span class="badge badge--ok">{{ 'step.docs.uploaded' | t }}</span>
           }
@@ -24,6 +34,10 @@
           }
           @if (errors()[spec.id] === 'too-large') {
             <p class="doc-error">{{ 'step.docs.too.large' | t }}</p>
+          } @else if (errors()[spec.id] === 'bad-type') {
+            <p class="doc-error">{{ 'step.docs.bad.type' | t }}</p>
+          } @else if (errors()[spec.id] === 'too-small') {
+            <p class="doc-error">{{ 'step.docs.too.small' | t }}</p>
           } @else if (d?.status === 'failed') {
             <p class="doc-error">{{ 'step.docs.failed' | t }}</p>
           }
@@ -33,14 +47,20 @@
           @if (d?.status === 'uploading') {
             <!-- status shown under the title -->
           } @else if (d?.status === 'uploaded') {
+            @if (canView(spec.id)) {
+              <button type="button" class="ghost-btn" (click)="view(spec.id)">{{ 'step.docs.view' | t }}</button>
+            }
             <label class="ghost-btn">
               <input type="file" class="sr-only" (change)="onFile(spec.id, $event)" accept="image/*,application/pdf" />
               {{ 'step.docs.replace' | t }}
             </label>
           } @else if (d?.status === 'failed') {
+            @if (canRetry(spec.id)) {
+              <button type="button" class="pill-btn" (click)="retry(spec.id)">{{ 'step.docs.retry' | t }}</button>
+            }
             <label class="ghost-btn">
               <input type="file" class="sr-only" (change)="onFile(spec.id, $event)" accept="image/*,application/pdf" />
-              {{ 'step.docs.retry' | t }}
+              {{ (canRetry(spec.id) ? 'step.docs.replace' : 'step.docs.retry') | t }}
             </label>
           } @else {
             <label class="pill-btn">
@@ -59,8 +79,13 @@
 
   <button type="button" class="cta" appButton variant="primary" (click)="continue()">
     <span>{{ 'step.docs.continue' | t }}</span>
-    <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-    </svg>
+    <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
   </button>
 </section>
+
+<app-dialog [open]="previewing() !== null" [title]="'step.docs.view' | t" (closed)="previewing.set(null)"><ng-template>
+  @if (previewing(); as p) {
+    <img class="preview" [src]="p.url" [alt]="p.name" />
+    <p class="preview-name">{{ p.name }}</p>
+  }
+</ng-template></app-dialog>

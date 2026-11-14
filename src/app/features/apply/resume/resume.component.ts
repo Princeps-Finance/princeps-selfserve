@@ -1,4 +1,5 @@
 import { ButtonDirective } from '../../../shared/components/button/button.directive';
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
@@ -11,7 +12,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 /** Shown right after the OTP when this phone number has an application in progress. */
 @Component({
   selector: 'app-resume',
-  imports: [ButtonDirective, TPipe, IllustrationComponent],
+  imports: [ButtonDirective, AnimatedIconComponent, TPipe, IllustrationComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (draft(); as d) {
@@ -32,19 +33,17 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
         @if (!confirming()) {
           <div class="actions">
-            <button type="button" class="cta" appButton variant="primary" (click)="continueDraft(d)">
+            <button appButton variant="primary" type="button" class="cta" (click)="continueDraft(d)">
               <span>{{ 'resume.continue' | t }}</span>
-              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
+              <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
             </button>
-            <button type="button" class="alt" appButton variant="secondary" (click)="confirming.set(true)">{{ 'resume.start_over' | t }}</button>
+            <button appButton variant="secondary" type="button" class="alt" (click)="confirming.set(true)">{{ 'resume.start_over' | t }}</button>
           </div>
         } @else {
           <div class="actions">
             <p class="confirm" role="alert">{{ 'resume.confirm' | t }}</p>
-            <button type="button" class="cta" appButton variant="primary" (click)="confirming.set(false)">{{ 'resume.confirm.no' | t }}</button>
-            <button type="button" class="alt alt--danger" appButton variant="danger" (click)="startOver()">{{ 'resume.confirm.yes' | t }}</button>
+            <button appButton variant="primary" type="button" class="cta" (click)="confirming.set(false)">{{ 'resume.confirm.no' | t }}</button>
+            <button appButton variant="danger" type="button" class="alt alt--danger" (click)="startOver()">{{ 'resume.confirm.yes' | t }}</button>
           </div>
         }
       </section>

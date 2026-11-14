@@ -1,27 +1,28 @@
 import { Routes } from '@angular/router';
 import {
   languageChosenGuard,
+  languageNotChosenGuard,
   requiresApprovedGuard,
   requiresBvnEnteredGuard,
   requiresBvnGuard,
   requiresContactGuard,
-  requiresDocumentsGuard,
+  requiresCheckResultGuard,
   requiresEmploymentGuard,
-  requiresIdentityVerificationGuard,
-  requiresMandateGuard,
+  requiresIdentityOrCheckGuard,
   requiresNotSubmittedGuard,
-  requiresNinIfNeededGuard,
   requiresOfferGuard,
   requiresPhoneVerifiedGuard,
   requiresProfileGuard,
   requiresReceivedGuard,
+  journeyGuard,
   requiresSalaryGuard,
-  requiresTermsGuard,
 } from './core/flow/guards';
 
 export const routes: Routes = [
   {
     path: '',
+    pathMatch: 'full',
+    canMatch: [languageNotChosenGuard],
     loadComponent: () =>
       import('./features/language-select/language-select.component').then(
         (m) => m.LanguageSelectComponent,
@@ -75,7 +76,7 @@ export const routes: Routes = [
       },
       {
         path: 'employment',
-        canMatch: [requiresContactGuard, requiresPhoneVerifiedGuard, requiresProfileGuard],
+        canMatch: [requiresIdentityOrCheckGuard],
         loadComponent: () =>
           import('./features/apply/employment/employment.component').then(
             (m) => m.EmploymentComponent,
@@ -95,7 +96,7 @@ export const routes: Routes = [
       },
       {
         path: 'statement',
-        canMatch: [requiresContactGuard, requiresPhoneVerifiedGuard, requiresEmploymentGuard],
+        canMatch: [requiresIdentityOrCheckGuard, requiresEmploymentGuard],
         loadComponent: () =>
           import('./features/apply/statement/statement.component').then((m) => m.StatementComponent),
       },
@@ -106,7 +107,7 @@ export const routes: Routes = [
       },
       {
         path: 'nin',
-        canMatch: [requiresTermsGuard, requiresBvnGuard],
+        canMatch: [requiresOfferGuard, requiresBvnGuard, journeyGuard('nin')],
         loadComponent: () =>
           import('./features/apply/nin/nin.component').then((m) => m.NinComponent),
       },
@@ -125,6 +126,12 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'check-result',
+        canMatch: [requiresCheckResultGuard],
+        loadComponent: () =>
+          import('./features/apply/check-result/check-result.component').then((m) => m.CheckResultComponent),
+      },
+      {
         path: 'offers',
         canMatch: [requiresEmploymentGuard, requiresSalaryGuard, requiresApprovedGuard],
         loadComponent: () =>
@@ -137,14 +144,20 @@ export const routes: Routes = [
           import('./features/apply/terms/terms.component').then((m) => m.TermsComponent),
       },
       {
+        path: 'offer-letter',
+        canMatch: [requiresOfferGuard, requiresBvnGuard, journeyGuard('offer-letter')],
+        loadComponent: () =>
+          import('./features/apply/offer-letter-step/offer-letter-step.component').then((m) => m.OfferLetterStepComponent),
+      },
+      {
         path: 'mandate',
-        canMatch: [requiresOfferGuard, requiresDocumentsGuard, requiresIdentityVerificationGuard],
+        canMatch: [requiresOfferGuard, requiresBvnGuard, journeyGuard('mandate')],
         loadComponent: () =>
           import('./features/apply/mandate/mandate.component').then((m) => m.MandateComponent),
       },
       {
         path: 'documents',
-        canMatch: [requiresTermsGuard, requiresNinIfNeededGuard],
+        canMatch: [requiresApprovedGuard, requiresOfferGuard, requiresBvnGuard, journeyGuard('documents')],
         loadComponent: () =>
           import('./features/apply/documents/documents.component').then(
             (m) => m.DocumentsComponent,
@@ -152,7 +165,7 @@ export const routes: Routes = [
       },
       {
         path: 'verify-identity',
-        canMatch: [requiresNinIfNeededGuard, requiresDocumentsGuard],
+        canMatch: [requiresOfferGuard, requiresBvnGuard, journeyGuard('identity')],
         loadComponent: () =>
           import('./features/apply/verify-identity/verify-identity.component').then(
             (m) => m.VerifyIdentityComponent,
@@ -160,7 +173,7 @@ export const routes: Routes = [
       },
       {
         path: 'submit',
-        canMatch: [requiresNotSubmittedGuard, requiresBvnGuard, requiresOfferGuard, requiresMandateGuard],
+        canMatch: [requiresNotSubmittedGuard, requiresBvnGuard, requiresOfferGuard, journeyGuard('submit')],
         loadComponent: () =>
           import('./features/apply/submit/submit.component').then((m) => m.SubmitComponent),
       },

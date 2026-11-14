@@ -1,6 +1,9 @@
 import { InputDirective } from '../../../shared/components/input/input.directive';
 import { ButtonDirective } from '../../../shared/components/button/button.directive';
-import { ChangeDetectionStrategy, Component, ElementRef, afterNextRender, computed, inject, Injector, signal, viewChild } from '@angular/core';
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
+import { WhyAskComponent } from '../../../shared/why-ask.component';
+import { CheckboxComponent } from '../../../shared/checkbox.component';
+import { ChangeDetectionStrategy, Component, ElementRef, Injector, afterNextRender, computed, inject, signal, viewChild } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { ActivatedRoute } from '@angular/router';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -24,7 +27,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
  */
 @Component({
   selector: 'app-bvn',
-  imports: [InputDirective, ButtonDirective, IllustrationComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, OtpChannelDialogComponent],
+  imports: [InputDirective, ButtonDirective, AnimatedIconComponent, WhyAskComponent, CheckboxComponent, IllustrationComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, OtpChannelDialogComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './bvn.component.html',
   styleUrl: './bvn.component.css',
@@ -57,8 +60,10 @@ export class BvnComponent {
   readonly canSubmit = computed(() => this.status() === 'VALID' && !this.submitting());
 
   constructor() {
+    // Only a BVN typed a moment ago and not yet verified comes back (the customer went back from the code screen to fix
+    // it). A verified one, from an earlier visit, is never shown again: another person may be using this phone.
     const saved = this.state.bvn();
-    if (saved && !this.notFound()) this.bvn.setValue(saved.value);
+    if (saved && !saved.verified && !this.notFound()) this.bvn.setValue(saved.value);
   }
 
   onInput(event: Event): void {
@@ -78,7 +83,7 @@ export class BvnComponent {
     }
     if (!this.consent.value) {
       this.showConsentError.set(true);
-      document.getElementById('consent')?.focus();
+      document.querySelector<HTMLElement>('#consent input')?.focus();
       return;
     }
     this.state.setConsent({

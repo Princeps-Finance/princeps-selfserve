@@ -2,6 +2,7 @@ import { MAX_UPLOAD_BYTES, REQUEST_TIMEOUT_MS } from '../limits';
 import { logWarn } from '../log';
 import { Injectable, inject } from '@angular/core';
 import { IdempotencyService } from './idempotency.service';
+import { NetworkActivityService } from '../network/network-activity.service';
 import {
   ApiClient,
   Bank,
@@ -19,14 +20,28 @@ import {
   MandateLink,
   MandateStatus,
   SalaryVerifyInput,
+  AccountLookupResult,
+  QuoteInput,
+  QuoteResult,
   SalaryVerifyResult,
   StatementReviewInput,
+  EligibilityCheckInput,
+  EligibilityCheckResult,
+  ReturningOtpSendResult,
+  ReturningOtpVerifyResult,
+  StatementCheckInput,
+  RequiredDocument,
+  RequiredDocumentsInput,
+  RequiredProfileField,
   SubmitPayload,
   SubmitResult,
   WaitlistInput,
   WaitlistResult,
 } from './api-client';
+import type { Quote } from '../../../shared/quote';
 import { NG_BANKS } from './ng-banks';
+import type { EmploymentAvailability } from './employment-availability';
+import type { ReferralDraft } from '../application/application-state.service';
 
 /** The service could not be reached or returned something unusable. */
 export class ApiUnavailableError extends Error {
@@ -57,29 +72,57 @@ interface Reply<T> {
 /** About 5 MB of PDF once decoded; anything larger is refused. */
 const MAX_LETTER_BASE64 = 7_000_000;
 
+/** Reads: asking twice changes nothing, so a dropped connection is simply tried again. */
+const SAFE_TO_REPEAT = new Set(['banks', 'lgas', 'list-loans', 'mandate-status', 'offer-letter', 'journey', 'profile-fields', 'required-documents', 'resolve-account', 'bvn-contacts']);
+
 @Injectable({ providedIn: 'root' })
 export class HttpApiClient implements ApiClient {
   private token: string | null = null;
   private readonly idempotency = inject(IdempotencyService);
 
-  private async post<T>(path: string, body: unknown, idempotencyKey?: string): Promise<Reply<T>> {
+  private readonly net = inject(NetworkActivityService);
+
+  /**
+   * One request. Calls that are safe to repeat (reads, and anything sent with an idempotency key) are tried up to three
+   * times when the connection fails or the server is busy, with a growing pause; the rest are tried once. A phone that
+   * says it is offline fails at once instead of waiting for the time-out.
+   */
+  private async post<T>(path: string, body: unknown, idempotencyKey?: string, retry = false): Promise<Reply<T>> {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (this.token) headers['X-Application-Token'] = this.token;
     if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
-    try {
-      const res = await fetch(path, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(body),
-        credentials: 'same-origin',
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-      });
-      const data = (await res.json().catch(() => null)) as T | null;
-      return { ok: res.ok, status: res.status, data };
-    } catch (err) {
-      logWarn(`request failed: ${path}`, err);
-      return { ok: false, status: 0, data: null };
+    const attempts = retry ? 3 : 1;
+    let last: Reply<T> = { ok: false, status: 0, data: null };
+    for (let attempt = 0; attempt < attempts; attempt++) {
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) return { ok: false, status: 0, data: null };
+      const activity = this.net.begin();
+      try {
+        const res = await fetch(path, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body),
+          credentials: 'same-origin',
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        });
+        this.net.noteServerDate(res.headers.get('date'));
+        const data = (await res.json().catch(() => null)) as T | null;
+        last = { ok: res.ok, status: res.status, data };
+        // The server no longer accepts this visit's session: say so once, and stop using the old token.
+        if ((res.status === 401 || res.status === 419) && this.token) {
+          this.token = null;
+          this.net.sessionExpired.set(true);
+          return last;
+        }
+        if (res.ok || !(res.status === 429 || res.status >= 500)) return last;
+      } catch (err) {
+        logWarn(`request failed: ${path}`, err);
+        last = { ok: false, status: 0, data: null };
+      } finally {
+        this.net.end(activity);
+      }
+      if (attempt < attempts - 1) await new Promise((r) => setTimeout(r, 600 * 2 ** attempt + Math.random() * 300));
     }
+    return last;
   }
 
   /** Runs an API call; when the service cannot be reached, answers with `fallback` instead of throwing. */
@@ -93,7 +136,7 @@ export class HttpApiClient implements ApiClient {
   }
 
   private async op<T>(name: string, body: unknown, idempotencyKey?: string): Promise<T> {
-    const r = await this.post<T>(`/api/selfserve/${name}`, withoutEmptyEmail(body), idempotencyKey);
+    const r = await this.post<T>(`/api/selfserve/${name}`, withoutEmptyEmail(body), idempotencyKey, !!idempotencyKey || SAFE_TO_REPEAT.has(name));
     if (!r.ok || r.data === null) throw new ApiUnavailableError(name, r.status);
     return r.data;
   }
@@ -128,7 +171,7 @@ export class HttpApiClient implements ApiClient {
   }
 
   async verifyBvnOtp(bvn: string, code: string): Promise<BvnOtpVerifyResult> {
-    const r = await this.post<{ status: string; retryAfterSeconds?: number; token?: string; identity?: BvnIdentity }>(
+    const r = await this.post<{ status: string; retryAfterSeconds?: number; token?: string; identity?: BvnIdentity; customerRef?: string }>(
       '/api/selfserve/verify-bvn-otp',
       { bvn, code },
     );
@@ -141,7 +184,42 @@ export class HttpApiClient implements ApiClient {
           throw new ApiUnavailableError('verify-bvn-otp', 502);
         }
         this.token = r.data.token;
-        return { status: 'ok', identity: r.data.identity };
+        return { status: 'ok', identity: r.data.identity, ...(typeof r.data.customerRef === 'string' ? { customerRef: r.data.customerRef } : {}) };
+      }
+      case 'expired':
+        return { status: 'expired' };
+      case 'locked':
+        return { status: 'locked', retryAfterSeconds: r.data.retryAfterSeconds ?? 60 };
+      default:
+        return { status: 'wrong' };
+    }
+  }
+
+  async sendReturningOtp(customerRef: string, captchaToken?: string): Promise<ReturningOtpSendResult> {
+    const r = await this.op<{ status?: string; target?: string; expiresInSeconds?: number }>('send-returning-otp', {
+      customerRef,
+      ...(captchaToken ? { captchaToken } : {}),
+    });
+    if (r.status === 'not-found') return { status: 'not-found' };
+    if (typeof r.target !== 'string') throw new ApiUnavailableError('send-returning-otp', 502);
+    return { status: 'sent', target: r.target, expiresInSeconds: r.expiresInSeconds ?? 300 };
+  }
+
+  async verifyReturningOtp(customerRef: string, code: string): Promise<ReturningOtpVerifyResult> {
+    const r = await this.post<{ status: string; retryAfterSeconds?: number; token?: string; identity?: BvnIdentity; bvn?: string; customerRef?: string }>(
+      '/api/selfserve/verify-returning-otp',
+      { customerRef, code },
+    );
+    if (r.status === 429) return { status: 'locked', retryAfterSeconds: 60 };
+    if (!r.ok || !r.data) throw new ApiUnavailableError('verify-returning-otp', r.status);
+    switch (r.data.status) {
+      case 'ok': {
+        // Fail closed: ownership is only confirmed with a token, an identity and a BVN.
+        if (typeof r.data.token !== 'string' || !r.data.identity || typeof r.data.identity.fullName !== 'string' || !/^\d{11}$/.test(r.data.bvn ?? '')) {
+          throw new ApiUnavailableError('verify-returning-otp', 502);
+        }
+        this.token = r.data.token;
+        return { status: 'ok', identity: r.data.identity, bvn: r.data.bvn as string, ...(typeof r.data.customerRef === 'string' ? { customerRef: r.data.customerRef } : {}) };
       }
       case 'expired':
         return { status: 'expired' };
@@ -188,6 +266,13 @@ return []; // The user can type it.
     }
   }
 
+  async getQuote(input: QuoteInput): Promise<QuoteResult> {
+    const r = await this.post<{ quote?: unknown }>('/api/quote', input, undefined, true);
+    if (r.status >= 400 && r.status < 500 && r.status !== 429) return { status: 'invalid' };
+    const quote = r.ok ? sanitizeQuote(r.data?.quote) : null;
+    return quote ? { status: 'ok', quote } : { status: 'unavailable' };
+  }
+
   async listBanks(): Promise<Bank[]> {
     try {
       const r = await this.op<{ banks: Bank[] }>('banks', {});
@@ -197,6 +282,10 @@ return []; // The user can type it.
 // The bank list is public reference data, so a static fallback is safe.
       return NG_BANKS;
     }
+  }
+
+  resolveAccount(bankCode: string, accountNumber: string): Promise<AccountLookupResult> {
+    return this.opOr<AccountLookupResult>('resolve-account', { bankCode, accountNumber }, { status: 'service-down' });
   }
 
   verifySalary(input: SalaryVerifyInput): Promise<SalaryVerifyResult> {
@@ -213,7 +302,10 @@ return []; // The user can type it.
 
   async uploadDocument(input: DocUploadInput): Promise<DocUploadResult> {
     if (input.sizeBytes > MAX_UPLOAD_BYTES) return { status: 'too-large' };
-    return this.opOr<DocUploadResult>('upload-document', input, { status: 'network' });
+    const r = await this.opOr<DocUploadResult>('upload-document', input, { status: 'network' });
+    // The address must be a secure web address; anything else is ignored rather than trusted.
+    if (r.status === 'ok' && r.uploadUrl && !/^https:\/\//i.test(r.uploadUrl)) return { status: 'ok' };
+    return r;
   }
 
   async createMandateLink(input: {
@@ -244,6 +336,8 @@ return []; // The user can type it.
     const r = await this.post<{ id?: unknown; error?: { code?: string } }>(
       '/api/submit-loan',
       payload.loan,
+      payload.loan.idempotencyKey,
+      true,
     );
     if (!r.ok || typeof r.data?.id !== 'string') {
       throw new ApiUnavailableError(r.data?.error?.code ?? 'submit', r.status);
@@ -262,6 +356,7 @@ return []; // The user can type it.
       productId: request.productId,
       amountKobo: Math.round(request.amount * 100),
       tenorMonths: request.tenorMonths,
+      ...(request.quoteId ? { quoteId: request.quoteId } : {}),
     });
     if (typeof r.pdfBase64 !== 'string' || r.pdfBase64.length > MAX_LETTER_BASE64) throw new ApiUnavailableError('offer-letter', 502);
     const bytes = Uint8Array.from(atob(r.pdfBase64), (c) => c.charCodeAt(0));
@@ -270,8 +365,70 @@ return []; // The user can type it.
     return bytes;
   }
 
+  async checkEligibility(input: EligibilityCheckInput): Promise<EligibilityCheckResult> {
+    const r = await this.post<EligibilityCheckResult>('/api/selfserve/eligibility-check', input);
+    // 429 is the limit on checks (per account and per address): the screen explains it in a window.
+    if (r.status === 429) return { status: 'rate-limited' };
+    if (!r.ok || !r.data) return { status: 'service-down' };
+    return r.data;
+  }
+
+  async checkStatement(input: StatementCheckInput): Promise<EligibilityCheckResult> {
+    const r = await this.post<EligibilityCheckResult>('/api/selfserve/statement-check', input);
+    if (r.status === 429) return { status: 'rate-limited' };
+    if (!r.ok || !r.data) return { status: 'service-down' };
+    return r.data;
+  }
+
+  async getRequiredDocuments(input: RequiredDocumentsInput): Promise<RequiredDocument[]> {
+    const r = await this.op<{ documents?: unknown }>('required-documents', input);
+    if (!Array.isArray(r.documents)) throw new ApiUnavailableError('required-documents', 502);
+    return r.documents
+      .filter((d): d is { key: string; optional?: boolean } => !!d && typeof (d as { key?: unknown }).key === 'string')
+      .map((d) => ({ key: d.key.slice(0, 40), optional: d.optional === true }));
+  }
+
+  async getJourney(productId: string): Promise<string[] | null> {
+    const r = await this.opOr<{ steps?: unknown }>('journey', { productId }, {});
+    return Array.isArray(r.steps) ? r.steps.filter((x): x is string => typeof x === 'string').slice(0, 12) : null;
+  }
+
+  async getRequiredProfileFields(): Promise<RequiredProfileField[]> {
+    const r = await this.opOr<{ fields?: unknown }>('profile-fields', {}, {});
+    if (!Array.isArray(r.fields)) return [];
+    return r.fields
+      .filter((f): f is { key: string; optional?: boolean } => !!f && typeof (f as { key?: unknown }).key === 'string')
+      .map((f) => ({ key: f.key.slice(0, 40), optional: f.optional !== false }));
+  }
+
+  async registerPush(subscription: PushSubscriptionJSON): Promise<void> {
+    const keys = subscription.keys ?? {};
+    await this.op<{ status?: string }>('push-subscribe', {
+      endpoint: subscription.endpoint,
+      keys: { p256dh: keys['p256dh'], auth: keys['auth'] },
+    });
+  }
+
+  async getEmploymentTypes(): Promise<EmploymentAvailability[] | null> {
+    try {
+      const res = await fetch('/api/employment-types', { credentials: 'same-origin', signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+      const data = (await res.json().catch(() => null)) as { types?: EmploymentAvailability[] } | null;
+      return res.ok && Array.isArray(data?.types) ? data.types : null;
+    } catch (err) {
+      logWarn('employment types unavailable', err);
+      return null;
+    }
+  }
+
   joinWaitlist(input: WaitlistInput): Promise<WaitlistResult> {
     return this.op<WaitlistResult>('waitlist', input, this.idempotency.keyFor(`waitlist:${input.type}`));
+  }
+
+  async checkReferral(code: string): Promise<ReferralDraft | null> {
+    const r = await this.post<{ valid?: boolean; code?: string; rateDiscountPct?: number; label?: string }>('/api/referral', { code });
+    const d = r.data;
+    if (!r.ok || !d?.valid || typeof d.code !== 'string' || typeof d.rateDiscountPct !== 'number' || typeof d.label !== 'string') return null;
+    return { code: d.code, rateDiscountPct: d.rateDiscountPct, label: d.label };
   }
 }
 
@@ -284,4 +441,20 @@ function withoutEmptyEmail<B>(body: B): B {
     out[k] = v && typeof v === 'object' && !Array.isArray(v) ? withoutEmptyEmail(v) : v;
   }
   return out as B;
+}
+
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Accepts a quote only if every figure is a real number and the schedule is complete; anything else is treated as no answer. */
+export function sanitizeQuote(raw: unknown): Quote | null {
+  const q = raw as Partial<Quote> | null;
+  if (!q || typeof q !== 'object') return null;
+  const nums = [q.amount, q.tenorMonths, q.ratePercent, q.monthlyRepayment, q.totalFees, q.totalInterest, q.totalRepayable];
+  if (!nums.every((n) => typeof n === 'number' && Number.isFinite(n) && n >= 0)) return null;
+  if (typeof q.quoteId !== 'string' || q.quoteId.length > 600 || typeof q.productId !== 'string' || typeof q.firstDueDate !== 'string' || !DAY.test(q.firstDueDate)) return null;
+  if (typeof q.expiresAt !== 'string' || Number.isNaN(Date.parse(q.expiresAt))) return null;
+  if (!Array.isArray(q.schedule) || q.schedule.length !== q.tenorMonths || q.schedule.length > 60) return null;
+  if (!q.schedule.every((l) => l && Number.isFinite(l.month) && Number.isFinite(l.payment) && Number.isFinite(l.balance) && typeof l.dueDate === 'string' && DAY.test(l.dueDate))) return null;
+  if (!Array.isArray(q.fees) || !q.fees.every((f) => f && typeof f.name === 'string' && Number.isFinite(f.amount))) return null;
+  return q as Quote;
 }

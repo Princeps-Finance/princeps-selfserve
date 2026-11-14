@@ -1,22 +1,21 @@
+import { IconComponent } from './icon.component';
 import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 @Component({
   selector: 'app-promo-banner',
-  imports: [NgOptimizedImage],
+  imports: [IconComponent, NgOptimizedImage],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="banner" aria-labelledby="banner-title">
-      <img class="thumb" [ngSrc]="imageSrc()" width="664" height="420" alt="" />
+      <img class="thumb" [ngSrc]="imageSrc()" [width]="imageWidth()" [height]="imageHeight()" alt="" />
       <div class="text">
         <h2 id="banner-title" class="title">{{ title() }}</h2>
         <p class="desc">{{ description() }}</p>
       </div>
       <button type="button" class="promo-cta" (click)="action.emit()">{{ ctaLabel() }}</button>
       <button type="button" class="close" [attr.aria-label]="dismissLabel()" (click)="dismissed.emit()">
-        <svg width="12" height="12" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-        </svg>
+        <app-icon name="bold-close" [size]="14" />
       </button>
     </section>
   `,
@@ -37,12 +36,12 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         background: var(--action-primary); color: var(--action-on-primary);
         font: var(--btn-weight) 15px/1 var(--font-sans); cursor: pointer;
       }
-      .promo-cta:hover { background: var(--action-primary-hover); }
+      @media (hover: hover) and (pointer: fine) { .promo-cta:hover { background: var(--action-primary-hover); } }
       .close {
         flex: none; width: 28px; height: 28px; margin-right: calc(var(--space-1) * -1); border: 0; border-radius: 50%;
         display: grid; place-items: center; background: transparent; color: var(--grey-500); cursor: pointer;
       }
-      .close:hover { background: var(--grey-200); }
+      @media (hover: hover) and (pointer: fine) { .close:hover { background: var(--grey-200); } }
       .promo-cta:focus-visible, .close:focus-visible { outline: 2px solid var(--grey-900); outline-offset: 2px; }
       @media (max-width: 359px) {
         .thumb { display: none; }
@@ -56,6 +55,9 @@ export class PromoBannerComponent {
   readonly ctaLabel = input.required<string>();
   readonly dismissLabel = input('Dismiss');
   readonly imageSrc = input('brand/promo-illustration.svg');
+  /** The picture's own size, so a square app icon is not squeezed into the illustration's shape. */
+  readonly imageWidth = input(664);
+  readonly imageHeight = input(420);
   readonly action = output<void>();
   readonly dismissed = output<void>();
 }

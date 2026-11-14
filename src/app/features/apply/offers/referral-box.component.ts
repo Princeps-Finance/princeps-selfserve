@@ -1,13 +1,16 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { InputDirective } from '../../../shared/components/input/input.directive';
+import { IconComponent } from '../../../shared/icon.component';
+import { ChangeDetectionStrategy, Component, inject, signal, type OnInit } from '@angular/core';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { LangService } from '../../../core/i18n/lang.service';
 import { TPipe } from '../../../core/i18n/t.pipe';
-import { validateReferralCode } from '../../../core/referral/referral-codes';
+import { ReferralLinkService } from '../../../core/referral/referral-link.service';
+import { API_CLIENT } from '../../../core/api/api-client';
 
 /** "Have a referral code?" on the offers step. The server re-checks the code; this only previews the discount. */
 @Component({
   selector: 'app-referral-box',
-  imports: [TPipe],
+  imports: [InputDirective, IconComponent, TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
   <div class="referral">
@@ -15,9 +18,7 @@ import { validateReferralCode } from '../../../core/referral/referral-codes';
       <div class="referral-applied" role="status">
         <div class="referral-applied-main">
           <span class="referral-check" aria-hidden="true">
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
-              <path d="M5 10.5L8.5 14L15 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <app-icon name="bold-success" [size]="14" />
           </span>
           <div>
             <div class="referral-code">{{ r.code }}</div>
@@ -29,16 +30,14 @@ import { validateReferralCode } from '../../../core/referral/referral-codes';
     } @else {
       @if (!open()) {
         <button type="button" class="referral-toggle" (click)="toggle()">
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-            <path d="M4 8h12M8 4v12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-          </svg>
           <span>{{ 'referral.toggle' | t }}</span>
+          <app-icon name="bold-chevron-down" [size]="14" />
         </button>
       } @else {
         <div class="referral-form">
           <label class="referral-input-wrap">
             <span class="referral-input-label">{{ 'referral.label' | t }}</span>
-            <input
+            <input appInput
               class="referral-input"
               type="text"
               autocomplete="off"
@@ -52,7 +51,7 @@ import { validateReferralCode } from '../../../core/referral/referral-codes';
           </label>
           <div class="referral-actions">
             <button type="button" class="referral-cancel" (click)="toggle()">{{ 'common.cancel' | t }}</button>
-            <button type="button" class="referral-apply" (click)="apply()" [disabled]="!input().trim()">{{ 'common.apply' | t }}</button>
+            <button type="button" class="referral-apply" (click)="apply()" [disabled]="!input().trim() || checking()">{{ 'common.apply' | t }}</button>
           </div>
           @if (error(); as err) {
             <p class="referral-error" role="alert">{{ err }}</p>
@@ -66,11 +65,13 @@ import { validateReferralCode } from '../../../core/referral/referral-codes';
   styles: [
     `
 .referral { display: flex; flex-direction: column; margin-bottom: var(--space-4); }
+/* A plain text link with a small arrow showing it opens: not a box with a plus, which looked like an "add" button. */
 .referral-toggle {
-  align-self: flex-start; display: inline-flex; align-items: center; gap: var(--space-2);
-  padding: 10px 14px; border: 1px dashed var(--hairline-strong); border-radius: var(--radius-md);
-  background: transparent; color: var(--ink-soft); font-size: var(--fs-md); cursor: pointer;
+  align-self: flex-start; display: inline-flex; align-items: center; gap: var(--space-1);
+  min-height: var(--tap-min); padding: 0; border: 0; background: none;
+  color: var(--ink-soft); font: inherit; font-size: var(--fs-md); text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
 }
+.referral-toggle:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); border-radius: 4px; }
 .referral-form, .referral-applied {
   display: flex; gap: var(--space-2); padding: 14px; border-radius: var(--radius-md);
   background: var(--surface-0); border: 1px solid var(--hairline);
@@ -99,14 +100,22 @@ import { validateReferralCode } from '../../../core/referral/referral-codes';
     `,
   ],
 })
-export class ReferralBoxComponent {
+export class ReferralBoxComponent implements OnInit {
   private readonly state = inject(ApplicationStateService);
   private readonly lang = inject(LangService);
+  private readonly api = inject(API_CLIENT);
+  private readonly link = inject(ReferralLinkService);
 
   protected readonly referral = this.state.referral;
   protected readonly open = signal(false);
   protected readonly input = signal('');
   protected readonly error = signal<string | null>(null);
+  protected readonly checking = signal(false);
+
+  /** A code that came in with the link is applied here, so the customer is never asked for it. */
+  ngOnInit(): void {
+    void this.link.applyPending();
+  }
 
   protected toggle(): void {
     this.open.update((v) => !v);
@@ -118,8 +127,11 @@ export class ReferralBoxComponent {
     if (this.error()) this.error.set(null);
   }
 
-  protected apply(): void {
-    const parsed = validateReferralCode(this.input());
+  protected async apply(): Promise<void> {
+    if (this.checking() || !this.input().trim()) return;
+    this.checking.set(true);
+    const parsed = await this.api.checkReferral(this.input().trim());
+    this.checking.set(false);
     if (!parsed) {
       this.error.set(this.lang.t('referral.invalid'));
       return;

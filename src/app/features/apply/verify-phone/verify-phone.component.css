@@ -63,10 +63,10 @@
 
 
 .cta-arrow { transition: transform 200ms cubic-bezier(0.2, 0.7, 0.1, 1); }
-.cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); }
+@media (hover: hover) and (pointer: fine) { .cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .cta, .cta-arrow, .link-btn { transition: none; }
+  .cta, .cta-arrow, .otp-cell, .link-btn { transition: none; }
 }
 
 .demo-hint { margin: 0; align-self: flex-start; padding: 2px 10px; border-radius: 999px; background: var(--info-soft); font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }

@@ -15,8 +15,8 @@ Language → Welcome (apply | just checking)
   → BVN → code sent to the BVN-linked phone → Profile
   → Employment → Salary (or Statement review for private sector; Waitlist for unsupported types)
   → Eligibility → Offers (optional referral code) → Terms
-  → NIN (only if the product needs it) → Documents → Identity check (photo + video) → Mandate
-  → Submit → Status
+  → NIN (only if the product needs it) → Documents → Identity check (photo + video)
+  → Offer letter (accepted in a window) → Mandate (the last thing set up) → Submit → Status
 ```
 
 Changes from the original steps 1 to 9:

@@ -1,25 +1,10 @@
-<div
-  class="otp"
-  role="group"
-  [attr.aria-label]="label()"
-  [class.is-invalid]="invalid() || incomplete()"
-  (focusout)="onFocusOut($event)"
->
+<div class="otp" [class.is-invalid]="invalid() || incomplete()">
+  <input #field class="otp-field" type="text" name="otp" inputmode="numeric" pattern="[0-9]*"
+    autocomplete="one-time-code" enterkeyhint="done" autocapitalize="off" spellcheck="false"
+    [attr.aria-label]="label()" [attr.aria-invalid]="invalid() || incomplete() ? true : null"
+    [disabled]="disabled()" [readOnly]="readOnly()" [value]="value()"
+    (input)="onInput($event)" (focus)="focused.set(true)" (blur)="blur()" />
   @for (digit of cells(); track $index) {
-    <input
-      #cell
-      class="otp-cell"
-      type="text"
-      inputmode="numeric"
-      [attr.autocomplete]="$first ? 'one-time-code' : 'off'"
-      [attr.aria-label]="'otp.digit' | t: { n: $index + 1 }"
-      [attr.aria-invalid]="invalid() || (incomplete() && !digit) ? true : null"
-      [disabled]="disabled()"
-      [readOnly]="readOnly()"
-      [value]="digit"
-      (input)="onInput($index, $event)"
-      (keydown)="onKeydown($index, $event)"
-      (paste)="onPaste($event)"
-    />
+    <span class="otp-cell" aria-hidden="true" [class.is-active]="focused() && $index === activeIndex()">{{ digit }}</span>
   }
 </div>

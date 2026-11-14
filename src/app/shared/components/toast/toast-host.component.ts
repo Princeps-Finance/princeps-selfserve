@@ -1,3 +1,4 @@
+import { IconComponent } from '../../icon.component';
 import {
   ChangeDetectionStrategy, Component, DestroyRef, ElementRef, Injector, TemplateRef,
   ViewContainerRef, afterRenderEffect, computed, effect, inject, input, signal,
@@ -12,7 +13,7 @@ type ToastPosition =
 
 @Component({
   selector: 'app-toast-host',
-  imports: [TPipe],
+  imports: [IconComponent, TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './toast-host.component.html',
   styleUrl: './toast-host.component.css',

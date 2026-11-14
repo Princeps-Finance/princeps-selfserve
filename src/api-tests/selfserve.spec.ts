@@ -69,6 +69,104 @@ describe('POST /api/selfserve/[op]', () => {
     expect(perPhone.filter((s) => s === 429).length).toBeGreaterThan(0);
   });
 
+  it('caps guesses at a code per number from any address, so rotating addresses does not help', async () => {
+    fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ status: 'wrong' }))));
+    const phone = '+2348055550001';
+    const codes: number[] = [];
+    for (let i = 0; i < 7; i++) codes.push((await handler(req('verify-otp', { phone, code: '000000' }))).status);
+    expect(codes).toEqual([200, 200, 200, 200, 200, 429, 429]);
+  });
+
+  it('limits identity checks per BVN and per token, not only per address', async () => {
+    fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ status: 'name-mismatch' }))));
+    const body = { bvn: '22222222221', fullName: 'Ada Obi', dateOfBirth: '1990-01-01' };
+    const perBvn: number[] = [];
+    for (let i = 0; i < 12; i++) perBvn.push((await handler(req('verify-bvn', body, { 'x-application-token': `tok-a${i}` }))).status);
+    expect(perBvn.filter((s) => s === 429).length).toBeGreaterThan(0);
+
+    const perToken: number[] = [];
+    for (let i = 0; i < 20; i++) {
+      const b = { ...body, bvn: `3333333${String(1000 + i)}` };
+      perToken.push((await handler(req('verify-bvn', b, { 'x-application-token': 'tok-same' }))).status);
+    }
+    expect(perToken.filter((s) => s === 429).length).toBeGreaterThan(0);
+  });
+
+  describe('shared limit store', () => {
+    afterEach(() => {
+      delete process.env['APP_ENV'];
+      delete process.env['UPSTASH_REDIS_REST_URL'];
+      delete process.env['UPSTASH_REDIS_REST_TOKEN'];
+    });
+
+    it('refuses every limited call in production when the store is not configured', async () => {
+      process.env['APP_ENV'] = 'production';
+      const res = await handler(req('banks', {}));
+      expect(res.status).toBe(429);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('counts in Redis when it is configured, with hashed keys, and refuses when the store is down', async () => {
+      process.env['UPSTASH_REDIS_REST_URL'] = 'https://redis.test';
+      process.env['UPSTASH_REDIS_REST_TOKEN'] = 'rt';
+      fetchMock.mockImplementation((url: string) =>
+        Promise.resolve(
+          String(url).startsWith('https://redis.test')
+            ? new Response(JSON.stringify([{ result: 1 }, { result: 1 }]))
+            : new Response(JSON.stringify({ lgas: [] })),
+        ),
+      );
+      const ok = await handler(req('lgas', { state: 'Lagos' }));
+      expect(ok.status).toBe(200);
+      const redisCall = fetchMock.mock.calls.find((c) => String(c[0]).startsWith('https://redis.test'));
+      expect(String(redisCall?.[1].body)).not.toContain('Lagos');
+
+      fetchMock.mockImplementation(() => Promise.reject(new Error('down')));
+      const down = await handler(req('lgas', { state: 'Lagos' }));
+      expect(down.status).toBe(429);
+    });
+  });
+
+  it('runs the eligibility check without a token, passes on the maximum and verified pay but not the account name, and limits it per account', async () => {
+    fetchMock.mockImplementation(() =>
+      Promise.resolve(new Response(JSON.stringify({ status: 'ok', decision: 'approved', maxAmount: 300000, tenorMonths: 12, monthlyIncome: 250000, accountName: 'Ada Obi' }))),
+    );
+    const body = { employmentType: 'government', governmentLevel: 'federal', channel: 'ippis', bankCode: '058', accountNumber: '0123456789', ippisNumber: '445566' };
+    const res = await handler(req('eligibility-check', body));
+    expect(await res.json()).toEqual({ status: 'ok', decision: 'approved', maxAmount: 300000, tenorMonths: 12, monthlyIncome: 250000 });
+    const codes: number[] = [];
+    for (let i = 0; i < 5; i++) codes.push((await handler(req('eligibility-check', body))).status);
+    expect(codes).toContain(429);
+  });
+
+  it('accepts a push subscription only with a token and an https endpoint', async () => {
+    fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ status: 'ok', extra: 1 }))));
+    const body = { endpoint: 'https://push.example.com/abc', keys: { p256dh: 'k', auth: 'a' } };
+    expect((await handler(req('push-subscribe', body))).status).toBe(401);
+    expect((await handler(req('push-subscribe', { ...body, endpoint: 'http://push.example.com/abc' }, { 'x-application-token': 't-push-1' }))).status).toBe(400);
+    const ok = await handler(req('push-subscribe', body, { 'x-application-token': 't-push-2' }));
+    expect(await ok.json()).toEqual({ status: 'ok' });
+  });
+
+  it('reviews a private-sector statement without a token and passes on only the answer', async () => {
+    fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ status: 'ok', decision: 'approved', maxAmount: 250000, tenorMonths: 6, monthlyIncome: 200000, accountName: 'Ada Obi' }))));
+    const body = { employer: 'Acme Ltd', bankCode: '058', fileName: 'statement.pdf', sizeBytes: 120000 };
+    const res = await handler(req('statement-check', body));
+    expect(await res.json()).toEqual({ status: 'ok', decision: 'approved', maxAmount: 250000, tenorMonths: 6, monthlyIncome: 200000 });
+    expect((await handler(req('statement-check', { ...body, sizeBytes: 50 * 1024 * 1024 }))).status).toBe(400);
+  });
+
+  it('lets a returning customer start with an opaque handle, never a BVN, and limits guesses per handle', async () => {
+    fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ status: 'wrong', secret: 1 }))));
+    const ref = 'demo-customer-ref-0001';
+    expect((await handler(req('verify-returning-otp', { customerRef: 'short', code: '123456' }))).status).toBe(400);
+    expect((await handler(req('verify-returning-otp', { customerRef: ref, bvn: '12345678901', code: '123456' }))).status).toBe(400);
+    const codes: number[] = [];
+    for (let i = 0; i < 7; i++) codes.push((await handler(req('verify-returning-otp', { customerRef: ref, code: '000001' }))).status);
+    expect(codes.slice(0, 5)).toEqual([200, 200, 200, 200, 200]);
+    expect(codes.slice(5)).toEqual([429, 429]);
+  });
+
   it('returns a generic 502 when the backoffice errors', async () => {
     fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ stack: 'at db.ts:1' }), { status: 500 }));
     const res = await handler(req('banks', {}));

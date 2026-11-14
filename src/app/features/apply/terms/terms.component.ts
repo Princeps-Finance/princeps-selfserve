@@ -1,39 +1,28 @@
 import { ButtonDirective } from '../../../shared/components/button/button.directive';
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
+import { ResultTimerComponent } from '../../../core/eligibility/result-timer.component';
+import { IconComponent } from '../../../shared/icon.component';
+import { dayToDate } from '../../../../shared/quote';
+import { QuoteService } from '../../../core/pricing/quote.service';
+import { CardComponent } from '../../../shared/card.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { productById } from '../../../core/products/products';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { formatNaira } from '../../../core/money.util';
 import { APPLY } from '../../../core/flow/apply-routes';
-import { OfferLetterComponent } from './offer-letter.component';
-import { buildRepaymentSchedule } from '../../../../shared/pricing';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 interface ScheduleRow {
   month: number;
   dueDate: Date;
-  principal: number;
-  interest: number;
   payment: number;
   balance: number;
 }
 
-const PAYDAY_DAY = 25;
-
-function firstPaydayAfter(from: Date): Date {
-  const y = from.getFullYear();
-  const m = from.getMonth();
-  const d = from.getDate();
-  // If disbursed on or before the 15th of the month, first repayment is this month's 25th.
-  // Otherwise, roll to next month's 25th so the borrower doesn't owe within 10 days.
-  const monthOffset = d <= 15 ? 0 : 1;
-  return new Date(y, m + monthOffset, PAYDAY_DAY);
-}
-
 @Component({
   selector: 'app-terms',
-  imports: [ButtonDirective, TPipe, WizardProgressComponent, OfferLetterComponent],
+  imports: [ButtonDirective, AnimatedIconComponent, IconComponent, ResultTimerComponent, CardComponent, TPipe, WizardProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './terms.component.html',
   styleUrl: './terms.component.css',
@@ -41,11 +30,13 @@ function firstPaydayAfter(from: Date): Date {
 export class TermsComponent {
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
+  private readonly quotes = inject(QuoteService);
+  readonly checking = signal(false);
 
   readonly offer = this.state.offer;
-  readonly agreed = signal(false);
-  readonly attempted = signal(false);
   readonly formatNaira = formatNaira;
+  /** The schedule can be long, so it starts folded; the first payday above it stays in view. */
+  readonly scheduleOpen = signal(false);
 
   modelKey(m: string): string {
     if (m === 'Flat Rate') return 'step.offers.model.flat';
@@ -53,15 +44,10 @@ export class TermsComponent {
     return 'step.offers.model.percent';
   }
 
-  readonly schedule = computed<ScheduleRow[]>(() => {
-    const o = this.offer();
-    if (!o) return [];
-    const firstDue = firstPaydayAfter(new Date());
-    return buildRepaymentSchedule(o.amount, o.tenorMonths, o.ratePercent, o.interestModel).map((line) => ({
-      ...line,
-      dueDate: new Date(firstDue.getFullYear(), firstDue.getMonth() + (line.month - 1), PAYDAY_DAY),
-    }));
-  });
+  /** The server's schedule, dates and all. Nothing here is worked out on the phone. */
+  readonly schedule = computed<ScheduleRow[]>(() =>
+    (this.offer()?.quote?.schedule ?? []).map((l) => ({ month: l.month, dueDate: dayToDate(l.dueDate), payment: l.payment, balance: l.balance })),
+  );
 
   readonly firstDueDate = computed(() => this.schedule()[0]?.dueDate ?? null);
   readonly lastDueDate = computed(() => this.schedule().at(-1)?.dueDate ?? null);
@@ -71,44 +57,27 @@ export class TermsComponent {
     return d.toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
-  readonly totalRepayable = computed(() =>
-    this.schedule().reduce((acc, r) => acc + r.payment, 0),
-  );
+  readonly totalRepayable = computed(() => this.offer()?.quote?.totalRepayable ?? 0);
+  readonly totalInterest = computed(() => this.offer()?.quote?.totalInterest ?? 0);
+  readonly totalFees = computed(() => this.offer()?.quote?.totalFees ?? 0);
 
-  /** What the offer letter is generated for. */
-  readonly letterRequest = computed(() => {
-    const o = this.offer();
-    return {
-      productId: o?.productId ?? '',
-      productName: o?.productName ?? '',
-      amount: o?.amount ?? 0,
-      tenorMonths: o?.tenorMonths ?? 0,
-      monthlyRepayment: o?.monthlyRepayment ?? 0,
-      ratePercent: o?.ratePercent ?? 0,
-    };
-  });
-
-  readonly totalFees = computed(() =>
-    (this.offer()?.fees ?? []).reduce((acc, f) => acc + f.amount, 0),
-  );
-
-  toggleAgree(v: boolean): void {
-    this.agreed.set(v);
-    if (v) this.attempted.set(false);
+  constructor() {
+    // An offer with no server quote cannot be accepted: send the customer back to get one.
+    if (this.state.offer() && !this.state.offer()?.quote) void this.flow.go(APPLY.offers);
   }
 
   back(): void {
     void this.flow.go(APPLY.offers);
   }
 
-  take(): void {
-    if (!this.agreed()) {
-      this.attempted.set(true);
-      document.querySelector<HTMLElement>('.agree input')?.focus();
-      return;
+  /** On to the documents, once the quote is confirmed as still valid. The offer letter comes after them. */
+  async take(): Promise<void> {
+    if (this.checking()) return;
+    this.checking.set(true);
+    try {
+      if (await this.quotes.confirm()) await this.flow.afterTerms();
+    } finally {
+      this.checking.set(false);
     }
-    this.state.setTermsAccepted(new Date().toISOString());
-    const needsNin = productById(this.offer()?.productId ?? '')?.settings.requiresNin ?? false;
-    void this.flow.afterTerms(needsNin);
   }
 }

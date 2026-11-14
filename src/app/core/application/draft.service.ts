@@ -24,7 +24,9 @@ function redactSalary(salary: SalaryDraft): SalaryDraft {
 
 /** Date of birth and street address are not kept either; name and status are enough to pick up where they left. */
 function redactProfile(profile: ProfileDraft): ProfileDraft {
-  return { ...profile, dateOfBirth: '', address: { ...profile.address, street: '' } };
+  // Religion is a sensitive detail: it is never kept on the device.
+  const { religion: _religion, ...rest } = profile;
+  return { ...rest, dateOfBirth: '', address: { ...profile.address, street: '' } };
 }
 
 /** Steps whose answers we save. Resume re-runs eligibility, so nothing after this is stored. */

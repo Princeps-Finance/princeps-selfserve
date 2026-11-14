@@ -4,7 +4,13 @@ export interface Recording {
   mime: string;
 }
 
+import { isLowMemoryDevice } from '../../../core/ui/device';
+
 export const MAX_RECORDING_SECONDS = 30;
+/** A small phone records smaller pictures and a thinner video, so the page is not killed for running out of memory. */
+const LOW = isLowMemoryDevice();
+const SIDE = LOW ? 480 : 720;
+const VIDEO_BITS = LOW ? 700_000 : 2_000_000;
 
 /**
  * The camera for one screen: opens it, takes a still, records a clip, and always lets go of the camera. It holds
@@ -24,16 +30,16 @@ export class CameraSession {
   async open(withAudio: boolean): Promise<MediaStream> {
     this.close();
     this.stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 720 } },
+      video: { facingMode: 'user', width: { ideal: SIDE }, height: { ideal: SIDE } },
       audio: withAudio,
     });
     return this.stream;
   }
 
   /** A JPEG of the current video frame, or null when the frame cannot be drawn. */
-  snapshot(video: HTMLVideoElement, quality = 0.85): string | null {
-    const width = video.videoWidth || 720;
-    const height = video.videoHeight || 720;
+  snapshot(video: HTMLVideoElement, quality = LOW ? 0.75 : 0.85): string | null {
+    const width = video.videoWidth || SIDE;
+    const height = video.videoHeight || SIDE;
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
@@ -53,9 +59,13 @@ export class CameraSession {
     const chunks: Blob[] = [];
     let recorder: MediaRecorder;
     try {
-      recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+      recorder = new MediaRecorder(stream, { mimeType: 'video/webm', videoBitsPerSecond: VIDEO_BITS });
     } catch {
-      recorder = new MediaRecorder(stream);
+      try {
+        recorder = new MediaRecorder(stream, { videoBitsPerSecond: VIDEO_BITS });
+      } catch {
+        recorder = new MediaRecorder(stream);
+      }
     }
     return new Promise<Recording>((resolve, reject) => {
       recorder.ondataavailable = (e) => {

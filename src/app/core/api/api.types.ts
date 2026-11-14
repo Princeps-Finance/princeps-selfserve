@@ -24,6 +24,60 @@ export interface SalaryVerifyInput {
   employer?: string;
 }
 
+/**
+ * The "how much can I get" check, before any identity. The back end does the real employment and salary check
+ * from the account details and answers with a decision, the maximum and the verified monthly pay.
+ */
+export interface EligibilityCheckInput {
+  employmentType: 'government' | 'paramilitary' | 'corper';
+  governmentLevel?: 'federal' | 'state';
+  nyscMonthsRemaining?: number;
+  channel: 'remita' | 'ippis' | 'dedukt';
+  bankCode: string;
+  accountNumber: string;
+  ippisNumber?: string;
+  employer?: string;
+  captchaToken?: string;
+}
+
+/** The same check for private-sector workers: the bank statement is reviewed automatically, with no identity. */
+export interface StatementCheckInput {
+  employer: string;
+  bankCode: string;
+  fileName: string;
+  sizeBytes: number;
+  captchaToken?: string;
+}
+
+/** One document the back end wants for this product and customer. Optional ones do not block the customer. */
+export interface RequiredDocument {
+  key: string;
+  optional: boolean;
+}
+
+export interface RequiredDocumentsInput {
+  productId: string;
+  employmentType: 'government' | 'paramilitary' | 'corper' | 'private-sector';
+}
+
+/** One extra detail the back end wants on the details screen, for example `religion`. */
+export interface RequiredProfileField {
+  key: string;
+  optional: boolean;
+}
+
+export type EligibilityCheckResult =
+  | { status: 'ok'; decision: 'approved' | 'review' | 'declined'; maxAmount: number; tenorMonths: number; monthlyIncome: number }
+  | { status: 'not-found' }
+  | { status: 'rate-limited' }
+  | { status: 'service-down' };
+
+/** The name the bank holds for an account number, shown so a person can see they typed the right one. */
+export type AccountLookupResult =
+  | { status: 'ok'; accountName: string }
+  | { status: 'not-found' }
+  | { status: 'service-down' };
+
 export type SalaryVerifyResult =
   | { status: 'ok'; monthlyIncome: number; accountName: string }
   | { status: 'name-mismatch' }
@@ -41,14 +95,32 @@ export type BvnVerifyResult =
   | { status: 'not-found' }
   | { status: 'service-down' };
 
+export type { Quote, QuoteLine } from '../../../shared/quote';
+
+export interface QuoteInput {
+  productId: string;
+  amount: number;
+  tenorMonths: number;
+  referralCode?: string;
+}
+
+export type QuoteResult =
+  | { status: 'ok'; quote: import('../../../shared/quote').Quote }
+  /** The server refused these terms (outside the limits, unknown code). Asking again will not help. */
+  | { status: 'invalid' }
+  /** No answer: offline, slow, or the service is down. Asking again may work. */
+  | { status: 'unavailable' };
+
 export interface DocUploadInput {
   docId: string;
   fileName: string;
   sizeBytes: number;
+  contentType?: string;
 }
 
 export type DocUploadResult =
-  | { status: 'ok' }
+  /** `uploadUrl`: where to send the file itself, when the server wants it sent straight to storage. */
+  | { status: 'ok'; uploadUrl?: string }
   | { status: 'too-large' }
   | { status: 'bad-type' }
   | { status: 'network' };
@@ -71,6 +143,8 @@ export interface SubmitPayload {
     mandateReference: string | null;
     /** Same value on every retry of one application, so the server can refuse a duplicate. */
     idempotencyKey: string;
+    /** The server's quote the customer accepted. The server checks its figures and that it has not expired. */
+    quoteId?: string | null;
     referralCode: string | null;
     borrowerBvn: string;
     borrowerName: string;
@@ -86,6 +160,8 @@ export interface SubmitPayload {
     ippisNumber: string | null;
     employmentType: 'government' | 'paramilitary' | 'corper';
     employer: string | null;
+    /** Only when the customer chose to give it. A sensitive detail: never stored on the device. */
+    religion?: string | null;
   };
 }
 
@@ -141,6 +217,8 @@ export interface BvnIdentity {
   /** The phone number registered with the BVN. This becomes the contact number. */
   phone: string;
   gender?: 'male' | 'female';
+  /** The address on the BVN record, if the back end sends one. It may be old, so the customer can change it. */
+  address?: { street?: string; state?: string; lga?: string };
 }
 
 /** A contact point tied to a BVN, shown only in part. `id` is an opaque reference the server understands. */
@@ -164,7 +242,20 @@ export type BvnOtpSendResult =
   | { status: 'not-found' };
 
 export type BvnOtpVerifyResult =
-  | { status: 'ok'; identity: BvnIdentity }
+  /** `customerRef` is an opaque handle the app may keep on the device to bring the customer back with one tap. */
+  | { status: 'ok'; identity: BvnIdentity; customerRef?: string }
+  | { status: 'wrong' }
+  | { status: 'expired' }
+  | { status: 'locked'; retryAfterSeconds: number };
+
+/** Coming back on a device the customer used before: a code to the BVN-linked phone, with no BVN typed. */
+export type ReturningOtpSendResult =
+  | { status: 'sent'; target: string; expiresInSeconds: number }
+  | { status: 'not-found' };
+
+export type ReturningOtpVerifyResult =
+  /** `bvn` is the customer's own BVN, returned after the code is verified and kept in memory only. */
+  | { status: 'ok'; identity: BvnIdentity; bvn: string; customerRef?: string }
   | { status: 'wrong' }
   | { status: 'expired' }
   | { status: 'locked'; retryAfterSeconds: number };
@@ -177,6 +268,8 @@ export interface OfferLetterRequest {
   tenorMonths: number;
   monthlyRepayment: number;
   ratePercent: number;
+  /** The quote the letter is written from, so its figures are the ones the customer was shown. */
+  quoteId?: string;
 }
 
 export interface StatementReviewInput {

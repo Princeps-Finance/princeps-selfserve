@@ -1,4 +1,4 @@
-// Vercel Function: validated, rate-limited proxy for the identity and
+// API handler (runs in the Cloudflare Worker): validated, rate-limited proxy for the identity and
 // verification calls (OTP, BVN, NIN, salary, waitlist...) that the browser
 // may not make directly. The backoffice implements POST /api/selfserve/<op>
 // and returns the JSON shapes documented in API.md. Responses are filtered to
@@ -18,11 +18,11 @@ import {
   readJson,
 } from '../_lib/http';
 
-export const config = { runtime: 'nodejs' };
 
 const phone = z.string().regex(/^\+234[789]\d{9}$/);
 const digits = (n: number) => z.string().regex(new RegExp(`^\\d{${n}}$`));
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const CUSTOMER_REF = z.string().regex(/^[\w-]{16,128}$/);
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 interface OpDef {
@@ -33,9 +33,18 @@ interface OpDef {
   allow: string[];
   /** Needs the application token issued after a verified OTP. Stops anonymous probing. */
   needsToken?: boolean;
+  /** Allowance per window for one phone number, BVN, NIN or account number, from any address. Defaults to twice `limit` per 10 minutes. */
+  subjectLimit?: { count: number; windowMs: number };
   /** Creates something, so the caller must send an Idempotency-Key and the back office must honour it. */
   idempotent?: boolean;
 }
+
+/** A code can be sent to one number 3 times in 15 minutes, however many addresses the caller uses. */
+const SEND_LIMIT = { count: 3, windowMs: 15 * 60_000 };
+/** A 6-digit code allows 5 guesses in 15 minutes per number or BVN, from any address. */
+const GUESS_LIMIT = { count: 5, windowMs: 15 * 60_000 };
+/** Texts across all customers per hour. Caps the SMS bill if every other defence is beaten. Set SMS_HOURLY_CAP to change it. */
+const SMS_HOURLY_CAP = () => Number(process.env['SMS_HOURLY_CAP']) || 1000;
 
 const OPS: Record<string, OpDef> = {
   'lookup-contact': {
@@ -53,12 +62,14 @@ const OPS: Record<string, OpDef> = {
     schema: z.object({ phone, code: digits(6) }).strict(),
     limit: 6,
     allow: ['status', 'retryAfterSeconds', 'token'],
+    subjectLimit: GUESS_LIMIT,
   },
   // Masked phones and emails tied to a BVN, so the customer can choose where the code goes. Only masked values ever leave the server.
   'bvn-contacts': {
     schema: z.object({ bvn: digits(11), captchaToken: z.string().max(2048).optional() }).strict(),
     limit: 3,
     allow: ['status', 'phones', 'emails'],
+    subjectLimit: SEND_LIMIT,
   },
   'send-bvn-otp': {
     schema: z
@@ -75,12 +86,28 @@ const OPS: Record<string, OpDef> = {
       .strict(),
     limit: 3,
     allow: ['status', 'target', 'expiresInSeconds'],
+    subjectLimit: SEND_LIMIT,
   },
   'verify-bvn-otp': {
     schema: z.object({ bvn: digits(11), code: digits(6) }).strict(),
     limit: 6,
     // identity carries name, date of birth and address. The BVN photo is never passed through.
-    allow: ['status', 'retryAfterSeconds', 'token', 'identity'],
+    allow: ['status', 'retryAfterSeconds', 'token', 'identity', 'customerRef'],
+    subjectLimit: GUESS_LIMIT,
+  },
+  // Coming back on a device used before: the opaque handle the back end gave after the first full verification.
+  'send-returning-otp': {
+    schema: z.object({ customerRef: CUSTOMER_REF, captchaToken: z.string().max(2048).optional() }).strict(),
+    limit: 3,
+    allow: ['status', 'target', 'expiresInSeconds'],
+    subjectLimit: SEND_LIMIT,
+  },
+  'verify-returning-otp': {
+    schema: z.object({ customerRef: CUSTOMER_REF, code: digits(6) }).strict(),
+    limit: 6,
+    // bvn is the customer's own, released only after a correct code, for this visit.
+    allow: ['status', 'retryAfterSeconds', 'token', 'identity', 'bvn', 'customerRef'],
+    subjectLimit: GUESS_LIMIT,
   },
   'statement-review': {
     schema: z
@@ -182,6 +209,71 @@ const OPS: Record<string, OpDef> = {
     allow: ['status'],
     needsToken: true,
   },
+  // The "how much can I get" check: no identity, so it is bot-checked and limited per account. The back end does the real
+  // employment and salary check and answers a decision, the maximum and the verified monthly pay (never the account name).
+  'eligibility-check': {
+    schema: z
+      .object({
+        employmentType: z.enum(['government', 'paramilitary', 'corper']),
+        governmentLevel: z.enum(['federal', 'state']).optional(),
+        nyscMonthsRemaining: z.number().int().min(0).max(12).optional(),
+        channel: z.enum(['ippis', 'remita', 'dedukt']),
+        bankCode: digits(3),
+        accountNumber: digits(10),
+        ippisNumber: z.string().regex(/^\d{4,20}$/).optional(),
+        employer: z.string().max(120).optional(),
+        captchaToken: z.string().max(2048).optional(),
+      })
+      .strict(),
+    limit: 6,
+    allow: ['status', 'decision', 'maxAmount', 'tenorMonths', 'monthlyIncome'],
+    subjectLimit: { count: 4, windowMs: 30 * 60_000 },
+  },
+  // The browser's push subscription, so the back end can send updates about the application.
+  'push-subscribe': {
+    schema: z
+      .object({
+        endpoint: z.string().url().startsWith('https://').max(600),
+        keys: z.object({ p256dh: z.string().max(200), auth: z.string().max(100) }).strict(),
+      })
+      .strict(),
+    limit: 5,
+    allow: ['status'],
+    needsToken: true,
+  },
+  // Private-sector check: the statement is reviewed automatically, with no identity. Bot-checked and limited like the salary check.
+  'statement-check': {
+    schema: z
+      .object({
+        employer: z.string().min(2).max(120),
+        bankCode: digits(3),
+        fileName: z.string().min(1).max(200),
+        sizeBytes: z.number().int().positive().max(10 * 1024 * 1024),
+        captchaToken: z.string().max(2048).optional(),
+      })
+      .strict(),
+    limit: 4,
+    allow: ['status', 'decision', 'maxAmount', 'tenorMonths', 'monthlyIncome'],
+  },
+  // The documents to ask for. In production the app asks for exactly what the back end returns here.
+  'required-documents': {
+    schema: z
+      .object({
+        productId: z.string().max(64),
+        employmentType: z.enum(['government', 'paramilitary', 'corper', 'private-sector']),
+      })
+      .strict(),
+    limit: 20,
+    allow: ['documents'],
+    needsToken: true,
+  },
+  // Extra details for the details screen, for example religion. In production the app asks only for what comes back.
+  'profile-fields': {
+    schema: z.object({}).strict(),
+    limit: 20,
+    allow: ['fields'],
+    needsToken: true,
+  },
   waitlist: {
     schema: z
       .object({
@@ -209,7 +301,7 @@ export default async function handler(req: Request): Promise<Response> {
   if (!def) return fail('NOT_FOUND', 'Unknown operation.', 404);
 
   const ip = clientIp(req);
-  if (rateLimited(`${op}:${ip}`, def.limit)) {
+  if (await rateLimited(`${op}:${ip}`, def.limit)) {
     return fail('RATE_LIMITED', 'Too many attempts. Try again shortly.', 429);
   }
 
@@ -242,7 +334,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   // Bot check before sending an SMS (costs money and can harass a victim).
   let payload = parsed.data as Record<string, unknown>;
-  if (op === 'send-otp' || op === 'send-bvn-otp' || op === 'bvn-contacts') {
+  if (op === 'send-otp' || op === 'send-bvn-otp' || op === 'bvn-contacts' || op === 'eligibility-check' || op === 'statement-check' || op === 'send-returning-otp') {
     const { captchaToken, ...rest } = payload as { captchaToken?: string };
     if (!(await verifyCaptcha(captchaToken, ip))) {
       return fail('CAPTCHA', 'Please confirm you are not a robot and try again.', 400);
@@ -250,10 +342,21 @@ export default async function handler(req: Request): Promise<Response> {
     payload = rest;
   }
 
-  // Per-phone limits stop one number being hammered from many IPs.
-  const target = (parsed.data as { phone?: string; bvn?: string }).phone ?? (parsed.data as { bvn?: string }).bvn;
-  if (target && (op === 'send-otp' || op === 'verify-otp' || op === 'send-bvn-otp' || op === 'verify-bvn-otp' || op === 'bvn-contacts') && rateLimited(`${op}:${target}`, def.limit * 2, 10 * 60_000)) {
+  // Limits that do not depend on the caller's address, so rotating addresses does not help:
+  // per phone number, BVN, NIN or account number, and per application token.
+  const subject = ['phone', 'bvn', 'nin', 'accountNumber', 'customerRef']
+    .map((k) => (parsed.data as Record<string, unknown>)[k])
+    .find((v): v is string => typeof v === 'string');
+  const per = def.subjectLimit ?? { count: def.limit * 2, windowMs: 10 * 60_000 };
+  if (subject && (await rateLimited(`${op}:s:${subject}`, per.count, per.windowMs))) {
     return fail('RATE_LIMITED', 'Too many attempts. Try again shortly.', 429);
+  }
+  if (def.needsToken && token && (await rateLimited(`${op}:t:${token}`, def.limit * 3, 10 * 60_000))) {
+    return fail('RATE_LIMITED', 'Too many attempts. Try again shortly.', 429);
+  }
+  if (def.subjectLimit === SEND_LIMIT && (await rateLimited('sms:global', SMS_HOURLY_CAP(), 60 * 60_000))) {
+    console.error('selfserve: hourly SMS cap reached');
+    return fail('RATE_LIMITED', 'We are very busy. Please try again later.', 429);
   }
 
   const upstream = await callBackoffice(

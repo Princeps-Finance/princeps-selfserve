@@ -1,11 +1,16 @@
 import { ButtonDirective } from '../../../shared/components/button/button.directive';
+import { IconComponent } from '../../../shared/icon.component';
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
+import { HapticsService } from '../../../core/ui/haptics.service';
+import { CardComponent } from '../../../shared/card.component';
+import { PushService } from '../../../core/pwa/push.service';
 import { logWarn } from '../../../core/log';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
+import { environment } from '../../../../environments/environment';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { AGENTS, OFFICES } from '../../../core/directory/contacts';
-import { environment } from '../../../../environments/environment';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
@@ -16,7 +21,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
  */
 @Component({
   selector: 'app-status',
-  imports: [ButtonDirective, IllustrationComponent, TPipe],
+  imports: [ButtonDirective, IconComponent, AnimatedIconComponent, CardComponent, IllustrationComponent, TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './status.component.html',
   styleUrl: './status.component.css',
@@ -24,11 +29,19 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 export class StatusComponent {
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
+  protected readonly push = inject(PushService);
+  private readonly haptics = inject(HapticsService);
+
+  constructor() {
+    // The application went through: a little double tick.
+    this.haptics.success();
+  }
 
   readonly submission = this.state.submission;
   readonly agents = AGENTS;
   readonly offices = OFFICES;
-  readonly trackUrl = environment.customerModuleUrl;
+  /** Your loans live in Princeps Accounts, a separate app. */
+  readonly accountsUrl = environment.accountsUrl;
   readonly copied = signal(false);
   /** Private-sector applicants get a person-led bank statement review, not the scored loan path. */
   readonly isReview = this.state.employment()?.type === 'private-sector';

@@ -3,7 +3,7 @@
 ## Branches
 - `self-service-development`: where work lands. It uses the mock API and shows the "Demo" strip.
 - `self-service-production`: the live site. It uses the real API and shows no demo strip. Release by pull request from development.
-- `main`: left over from before. It is still the GitHub default and the Vercel production branch, so keep it until both settings point at the branches above.
+- `main`: left over from before. It is still the GitHub default, so keep it until that setting points at the branches above.
 
 Branch from `self-service-development` and name the branch for the change: `fix/…`, `feat/…`, `refactor/…`, `docs/…`.
 
@@ -24,3 +24,14 @@ Branch from `self-service-development` and name the branch for the change: `fix/
 npx ng test --watch=false
 npx ng build
 ```
+
+## Deployments
+- **Development** runs as a Cloudflare Worker (`wrangler.jsonc`, `worker/index.ts`) on the Princeps Cloudflare account
+  (product@princepsfinance.com). A push to `self-service-development` deploys it (`.github/workflows/deploy.yml`, after the
+  tests; pushes that only change docs, `design/` or `.claude/` are skipped). Manual deploy: `npx wrangler whoami`, then
+  `npm run deploy`.
+- **Production** runs on AWS Amplify (the app) and a Lambda (the API). See `docs/amplify.md`. It builds from
+  `self-service-production`, and the go-live gate (`npm run check:live`) runs on every pull request into that branch.
+
+Settings the development API needs are set with `npx wrangler secret put <NAME>` (never in the repo). Production secrets
+live in AWS Secrets Manager.

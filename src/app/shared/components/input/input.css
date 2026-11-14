@@ -11,7 +11,7 @@
   transition: border-color 140ms ease, box-shadow 140ms ease;
 }
 
-:where(input[appInput]:hover:not(:disabled)) { border-color: var(--input-border-hover); }
+@media (hover: hover) and (pointer: fine) { :where(input[appInput]:hover:not(:disabled)) { border-color: var(--input-border-hover); } }
 
 input[appInput]:focus {
   outline: 2px solid transparent;

@@ -1,9 +1,9 @@
 import { InputDirective } from '../../../shared/components/input/input.directive';
 import { ButtonDirective } from '../../../shared/components/button/button.directive';
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
 import { logWarn } from '../../../core/log';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { SelectFieldComponent } from '../../../shared/components/select/select-field.component';
-import type { SelectOption } from '../../../shared/components/select/select-option';
+import { SelectFieldComponent, SelectOption } from '../../../shared/components/select/select-field.component';
 import { LangService } from '../../../core/i18n/lang.service';
 import { ActivatedRoute } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -22,7 +22,7 @@ import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 @Component({
   selector: 'app-waitlist',
-  imports: [InputDirective, ButtonDirective, TPipe, ReactiveFormsModule, SelectFieldComponent],
+  imports: [InputDirective, ButtonDirective, AnimatedIconComponent, TPipe, ReactiveFormsModule, SelectFieldComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './waitlist.component.html',
   styleUrl: './waitlist.component.css',

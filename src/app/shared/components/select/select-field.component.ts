@@ -1,3 +1,4 @@
+import { IconComponent } from '../../icon.component';
 import {
   ChangeDetectionStrategy, Component, computed, forwardRef, input, model, signal, viewChild,
 } from '@angular/core';
@@ -15,7 +16,7 @@ import type { SelectOption } from './select-option';
  */
 @Component({
   selector: 'app-select-field',
-  imports: [TPipe, DialogComponent, InputDirective, CdkListbox, CdkOption],
+  imports: [IconComponent, TPipe, DialogComponent, InputDirective, CdkListbox, CdkOption],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => SelectFieldComponent), multi: true }],
   template: `
@@ -31,13 +32,12 @@ import type { SelectOption } from './select-option';
       (blur)="!open() && markTouched()"
     >
       <span class="value" [class.placeholder]="!selected()">{{ selected()?.label ?? placeholder() }}</span>
-      <svg class="chev" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-        <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
+      <app-icon name="bold-chevron-down" [size]="18" class="chev" />
     </button>
 
     <app-dialog #dialog [open]="open()" [title]="title()" layout="sheet" [autoFocus]="initialFocus()" (closed)="onClosed()">
       <ng-template>
+        <h2 class="sheet-title">{{ title() }}</h2>
         @if (searchable()) {
           <input
             appInput
@@ -58,9 +58,7 @@ import type { SelectOption } from './select-option';
               (click)="pickCurrent(o.value)" (keydown.enter)="pickCurrent(o.value)" (keydown.space)="pickCurrent(o.value)">
               <span>{{ o.label }}</span>
               @if (o.value === value()) {
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                  <path d="M4.5 10.5L8.5 14.5L15.5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
+                <app-icon name="bold-success" [size]="18" />
               }
             </button>
           } @empty {
@@ -89,6 +87,7 @@ import type { SelectOption } from './select-option';
       .value.placeholder { color: var(--ink-muted); }
       .chev { flex: none; color: var(--ink-soft); }
 
+      .sheet-title { margin: 0 0 var(--space-3); font-size: var(--fs-lg); }
       .search { margin-bottom: var(--space-3); }
       .list { overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; }
       .opt {
@@ -173,3 +172,5 @@ export class SelectFieldComponent implements ControlValueAccessor {
     this.dialog().close();
   }
 }
+
+export type { SelectOption } from './select-option';

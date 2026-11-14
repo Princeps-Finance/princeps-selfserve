@@ -25,6 +25,8 @@ export interface ProductSettings {
   identityVideo: IdentityVideoMode;
   /** NIN is not required for every product. */
   requiresNin: boolean;
+  /** The order of the steps after the offer is taken. Leave out for the standard order; the back end can override it. */
+  journey?: readonly string[];
 }
 
 export interface PricingProduct {

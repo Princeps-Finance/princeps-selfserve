@@ -4,6 +4,9 @@ import type {
   OfferLetterRequest,
   LookupResult,
   SalaryVerifyInput,
+  AccountLookupResult,
+  QuoteInput,
+  QuoteResult,
   SalaryVerifyResult,
   BvnVerifyResult,
   DocUploadInput,
@@ -21,11 +24,25 @@ import type {
   StatementReviewInput,
   WaitlistInput,
   WaitlistResult,
+  EligibilityCheckInput,
+  EligibilityCheckResult,
+  ReturningOtpSendResult,
+  ReturningOtpVerifyResult,
+  StatementCheckInput,
+  RequiredDocument,
+  RequiredDocumentsInput,
+  RequiredProfileField,
 } from './api.types';
 import type { ApiClient } from './api-client';
+import { buildQuote } from '../../../shared/quote';
+import { pricingProductById } from '../../../shared/pricing';
+import { discountedRate } from '../../../shared/referral';
 import { buildSimplePdf } from '../pdf/simple-pdf';
 import { maskPhoneNg } from './contact.util';
+import { scoreEligibility, type EligibilityInput } from '../eligibility/eligibility-scoring';
 import { NG_BANKS } from './ng-banks';
+import type { EmploymentAvailability } from './employment-availability';
+import type { ReferralDraft } from '../application/application-state.service';
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -149,7 +166,26 @@ export class MockApiClient implements ApiClient {
         dateOfBirth: '1988-04-12',
         phone: bvn === '33333333333' ? '08099999999' : '08012345678',
         gender: 'female',
+        address: { street: '12 Allen Avenue', state: 'Lagos', lga: 'Ikeja' },
       },
+      customerRef: 'demo-customer-ref-0001',
+    };
+  }
+
+  async sendReturningOtp(_customerRef: string, _captchaToken?: string): Promise<ReturningOtpSendResult> {
+    await delay(600);
+    return { status: 'sent', target: '+234 •••• ••78', expiresInSeconds: 300 };
+  }
+
+  async verifyReturningOtp(customerRef: string, code: string): Promise<ReturningOtpVerifyResult> {
+    await delay(600);
+    if (code === '000000') return { status: 'expired' };
+    if (code !== '123456') return { status: 'wrong' };
+    return {
+      status: 'ok',
+      identity: { firstName: 'Ada', fullName: 'Ada Okafor', dateOfBirth: '1988-04-12', phone: '08012345678', gender: 'female' },
+      bvn: '12345678901',
+      customerRef,
     };
   }
 
@@ -175,9 +211,26 @@ export class MockApiClient implements ApiClient {
     return { status: 'wrong' } as const;
   }
 
+  /** Demo: priced here with the same code the server uses, so the figures match what production would return. */
+  async getQuote(input: QuoteInput): Promise<QuoteResult> {
+    await delay(350);
+    const product = pricingProductById(input.productId);
+    if (!product || input.amount < product.minAmount || input.amount > product.maxAmount || input.tenorMonths < product.minTenorMonths || input.tenorMonths > product.maxTenorMonths) return { status: 'invalid' };
+    const discount = input.referralCode?.trim().toUpperCase() === 'DEMO10' ? { code: 'DEMO10', rateDiscountPct: 1, label: '' } : null;
+    const quote = buildQuote(product, input.amount, input.tenorMonths, discountedRate(product.ratePercent, discount), 'demo-' + randomRef());
+    return { status: 'ok', quote };
+  }
+
   async listBanks(): Promise<Bank[]> {
     await delay(150);
     return NG_BANKS;
+  }
+
+  async resolveAccount(_bankCode: string, accountNumber: string): Promise<AccountLookupResult> {
+    await delay(600);
+    if (accountNumber === '9999999999') return { status: 'service-down' };
+    if (accountNumber === '0000000000') return { status: 'not-found' };
+    return { status: 'ok', accountName: 'ADEYEMI ADEBAYO ADEWALE' };
   }
 
   async verifySalary(input: SalaryVerifyInput): Promise<SalaryVerifyResult> {
@@ -187,6 +240,54 @@ export class MockApiClient implements ApiClient {
     if (input.accountNumber === '1111111111') return { status: 'name-mismatch' };
     if (input.accountNumber === '4444444444') return { status: 'ok', monthlyIncome: 1_000, accountName: 'A. Adeyemi' };
     return { status: 'ok', monthlyIncome: 180_000, accountName: 'A. Adeyemi' };
+  }
+
+  /** Demo of the limit: 4 checks per account in 30 minutes, like the real server. */
+  private readonly checkTimes = new Map<string, number[]>();
+
+  async checkEligibility(input: EligibilityCheckInput): Promise<EligibilityCheckResult> {
+    await delay(900);
+    const now = Date.now();
+    const recent = (this.checkTimes.get(input.accountNumber) ?? []).filter((t) => now - t < 30 * 60_000);
+    if (recent.length >= 4) return { status: 'rate-limited' };
+    this.checkTimes.set(input.accountNumber, [...recent, now]);
+    if (input.accountNumber === '9999999999') return { status: 'service-down' };
+    if (input.accountNumber === '0000000000') return { status: 'not-found' };
+    // Demo: a made-up pay by channel, scored the same way the app scores a verified one.
+    const monthlyAmount = input.accountNumber === '4444444444' ? 1_000 : input.channel === 'dedukt' ? 150_000 : 180_000;
+    const stability: EligibilityInput['stability'] =
+      input.employmentType === 'corper'
+        ? { type: 'nysc-corper', monthsRemaining: input.nyscMonthsRemaining ?? 0 }
+        : { type: 'mda', category: input.employmentType === 'paramilitary' ? 'paramilitary' : input.governmentLevel === 'state' ? 'state' : 'federal' };
+    const r = scoreEligibility({
+      income: { source: input.channel === 'remita' ? 'remita' : input.channel === 'dedukt' ? 'deduct' : 'wacs', monthlyAmount },
+      stability,
+      repaymentHistory: { isRepeatBorrower: false },
+      exposure: { hasActiveLoanElsewhere: false },
+    });
+    return { status: 'ok', decision: r.decision, maxAmount: r.maxEligibleAmount, tenorMonths: r.tenorMonths, monthlyIncome: monthlyAmount };
+  }
+
+  async checkStatement(input: StatementCheckInput): Promise<EligibilityCheckResult> {
+    await delay(1200);
+    if (input.fileName.toLowerCase().startsWith('fail')) return { status: 'service-down' };
+    return { status: 'ok', decision: 'approved', maxAmount: 250_000, tenorMonths: 6, monthlyIncome: 200_000 };
+  }
+
+  /** Demo: the full set, so every document screen can be tried. Production asks the back end. */
+  async getRequiredDocuments(input: RequiredDocumentsInput): Promise<RequiredDocument[]> {
+    await delay(300);
+    return [{ key: 'id', optional: false }, { key: input.employmentType === 'corper' ? 'callup' : 'payslip', optional: false }];
+  }
+
+  /** Demo: the standard order. */
+  async getJourney(_productId: string): Promise<string[] | null> {
+    return null;
+  }
+
+  /** Demo: ask for religion so the field can be tried. Production asks only what the back end lists. */
+  async getRequiredProfileFields(): Promise<RequiredProfileField[]> {
+    return [{ key: 'religion', optional: true }];
   }
 
   async verifyBvn(bvn: string, _fullName: string, _dateOfBirth: string): Promise<BvnVerifyResult> {
@@ -237,8 +338,23 @@ export class MockApiClient implements ApiClient {
     return { status: 'received', referenceId: 'PR-' + randomRef() };
   }
 
+  async registerPush(_subscription: PushSubscriptionJSON): Promise<void> {
+    await delay(300);
+  }
+
+  /** Demo: no back end, so the app keeps its own defaults. */
+  async getEmploymentTypes(): Promise<EmploymentAvailability[] | null> {
+    return null;
+  }
+
   async joinWaitlist(_input: WaitlistInput): Promise<WaitlistResult> {
     await delay(600);
     return { status: 'ok', referenceId: 'WL-' + randomRef() };
+  }
+
+  /** Demo only: one made-up code. The real codes live on the server and are never in the app bundle. */
+  async checkReferral(code: string): Promise<ReferralDraft | null> {
+    await delay(300);
+    return code.trim().toUpperCase() === 'DEMO10' ? { code: 'DEMO10', rateDiscountPct: 1, label: '1.0% rate discount' } : null;
   }
 }

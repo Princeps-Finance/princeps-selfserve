@@ -1,7 +1,9 @@
 import { InjectionToken } from '@angular/core';
+import type { EmploymentAvailability } from './employment-availability';
+import type { ReferralDraft } from '../application/application-state.service';
 import type {
-  Bank, BvnContactsResult, BvnOtpSendResult, BvnOtpVerifyResult, BvnVerifyResult, DocUploadInput, DocUploadResult,
-  LoanSummary, LookupResult, MandateLink, OfferLetterRequest, MandateStatus, OtpDestination, SalaryVerifyInput, SalaryVerifyResult,
+  Bank, BvnContactsResult, EligibilityCheckInput, EligibilityCheckResult, RequiredDocument, RequiredDocumentsInput, RequiredProfileField, ReturningOtpSendResult, ReturningOtpVerifyResult, StatementCheckInput, BvnOtpSendResult, BvnOtpVerifyResult, BvnVerifyResult, DocUploadInput, DocUploadResult,
+  AccountLookupResult, QuoteInput, QuoteResult, LoanSummary, LookupResult, MandateLink, OfferLetterRequest, MandateStatus, OtpDestination, SalaryVerifyInput, SalaryVerifyResult,
   StatementReviewInput, SubmitPayload, SubmitResult, WaitlistInput, WaitlistResult,
 } from './api.types';
 
@@ -18,6 +20,10 @@ export interface ApiClient {
   lookupBvnContacts(bvn: string, captchaToken?: string): Promise<BvnContactsResult>;
   /** Sends a one-time code to the chosen contact. With no destination it goes to the BVN's main phone. */
   sendBvnOtp(bvn: string, captchaToken?: string, destination?: OtpDestination): Promise<BvnOtpSendResult>;
+  /** Sends the code to the BVN-linked phone of a returning customer, from the handle kept on this device. */
+  sendReturningOtp(customerRef: string, captchaToken?: string): Promise<ReturningOtpSendResult>;
+  /** Verifies that code. A correct one proves ownership and releases the identity and BVN for this visit only. */
+  verifyReturningOtp(customerRef: string, code: string): Promise<ReturningOtpVerifyResult>;
   /** A correct code proves the customer owns the BVN, and releases the details for it. */
   verifyBvnOtp(bvn: string, code: string): Promise<BvnOtpVerifyResult>;
   /** Local government areas for a state. An empty list means the user types it instead. */
@@ -33,7 +39,11 @@ export interface ApiClient {
     | { status: 'expired' }
     | { status: 'locked'; retryAfterSeconds: number }
   >;
+  /** Prices a loan on the server: the repayment, fees, totals and dated schedule the customer will see and sign. */
+  getQuote(input: QuoteInput): Promise<QuoteResult>;
   listBanks(): Promise<Bank[]>;
+  /** The name on a bank account, so the customer can confirm it before the salary check. */
+  resolveAccount(bankCode: string, accountNumber: string): Promise<AccountLookupResult>;
   verifySalary(input: SalaryVerifyInput): Promise<SalaryVerifyResult>;
   verifyBvn(bvn: string, fullName: string, dateOfBirth: string): Promise<BvnVerifyResult>;
   verifyNin(nin: string, fullName: string, dateOfBirth: string): Promise<BvnVerifyResult>;
@@ -51,6 +61,26 @@ export interface ApiClient {
   getOfferLetter(request: OfferLetterRequest): Promise<Uint8Array>;
   submitApplication(payload: SubmitPayload): Promise<SubmitResult>;
   joinWaitlist(input: WaitlistInput): Promise<WaitlistResult>;
+  /** Which employment types the back end can serve now. Null when it cannot be reached: the app then keeps its own defaults. */
+  /** Checks employment and salary from the account details, with no identity. Answers a decision and a maximum only. */
+  checkEligibility(input: EligibilityCheckInput): Promise<EligibilityCheckResult>;
+  /** Gives the back end this device's push subscription, so it can send updates about the application. */
+  registerPush(subscription: PushSubscriptionJSON): Promise<void>;
+  /** Reviews a private-sector worker's bank statement automatically, with no identity. Same answer as the salary check. */
+  checkStatement(input: StatementCheckInput): Promise<EligibilityCheckResult>;
+  /**
+   * The documents to ask for. In production this is only what the back end says (the product's configuration and what could
+   * not be verified automatically); the demo build returns the full set so every screen can be tried. Rejects when the
+   * service cannot be reached: the app must not guess, so it shows the error and lets the customer retry.
+   */
+  getRequiredDocuments(input: RequiredDocumentsInput): Promise<RequiredDocument[]>;
+  /** Extra details to ask on the details screen. Production asks only for what is returned; unreachable means none. */
+  getRequiredProfileFields(): Promise<RequiredProfileField[]>;
+  /** The order of the steps after the offer, for this product. Null: use the standard order. */
+  getJourney(productId: string): Promise<string[] | null>;
+  getEmploymentTypes(): Promise<EmploymentAvailability[] | null>;
+  /** Checks a referral code with the server. Null when the code is not valid or the check could not be made. */
+  checkReferral(code: string): Promise<ReferralDraft | null>;
 }
 
 export const API_CLIENT = new InjectionToken<ApiClient>('ApiClient');

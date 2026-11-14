@@ -1,5 +1,7 @@
 .promo {
   position: fixed;
+  /* Slides in, then gives a small bounce every few seconds (five times) to draw the eye. It rests while hovered or focused. */
+  animation: promo-in 500ms cubic-bezier(0.2, 0.9, 0.3, 1.2) 2s both, promo-nudge 9s ease-in-out 4s 5;
   left: calc(var(--space-6) + env(safe-area-inset-left));
   bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
   z-index: 50;
@@ -8,3 +10,14 @@
 @media (max-width: 1023px), (max-height: 640px) {
   .promo { display: none; }
 }
+
+@keyframes promo-in { from { opacity: 0; transform: translateY(24px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes promo-nudge {
+  0%, 12%, 100% { transform: none; }
+  3% { transform: translateY(-10px); }
+  6% { transform: translateY(0); }
+  8% { transform: translateY(-5px); }
+  10% { transform: translateY(0); }
+}
+.promo:hover, .promo:focus-within { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .promo { animation: none; } }
