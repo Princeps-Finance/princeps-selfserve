@@ -81,7 +81,7 @@
       <p class="msg--error" role="alert">{{ 'step.otp.error.incomplete' | t }}</p>
     }
 
-    <button type="submit" class="cta" [disabled]="submitting()">
+    <button type="submit" class="cta" [disabled]="!canSubmit()">
       <span>{{ submitting() ? ('step.otp.verifying' | t) : ('step.otp.verify' | t) }}</span>
       @if (!submitting()) {
         <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />

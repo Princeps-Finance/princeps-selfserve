@@ -106,6 +106,8 @@ export const yo: Dictionary = {
   'mandate.link.check': 'Mo ti parí. Ṣàyẹ̀wò báyìí',
   'mandate.link.preparing': 'Ń ṣètò ìjápọ̀ rẹ…',
   'mandate.link.error': 'A kò lè ṣẹ̀dá ìjápọ̀. Gbìyànjú lẹ́ẹ̀kan sí i.',
+  'mandate.check.error': 'A kò lè ṣàyẹ̀wò báyìí. Gbìyànjú lẹ́ẹ̀kan sí i láìpẹ́.',
+  'status.copy.error': 'A kò lè dà á kọ. Yan nọ́mbà ìtọ́kasí náà, kí o sì dà á kọ pẹ̀lú ọwọ́.',
   'mandate.link.retry': 'Gbìyànjú lẹ́ẹ̀kansi',
   'mandate.status.pending': 'Ń dúró dè ọ́ láti parí',
   'mandate.status.completed': 'Ìṣètò ìsanwó ti parí',

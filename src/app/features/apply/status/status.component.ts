@@ -42,6 +42,7 @@ export class StatusComponent {
   /** Your loans live in Princeps Accounts, a separate app. */
   readonly accountsUrl = environment.accountsUrl;
   readonly copied = signal(false);
+  readonly copyFailed = signal(false);
   /** Private-sector applicants get a person-led bank statement review, not the scored loan path. */
   readonly isReview = this.state.employment()?.type === 'private-sector';
   readonly telHref = (phone: string): string => `tel:${phone.replace(/\s+/g, '')}`;
@@ -50,11 +51,13 @@ export class StatusComponent {
   async copyReference(): Promise<void> {
     try {
       await navigator.clipboard.writeText(this.reference());
+      this.copyFailed.set(false);
       this.copied.set(true);
       setTimeout(() => this.copied.set(false), 2500);
     } catch (err) {
-        logWarn('status step 1 failed', err);
-// The reference is on screen and can be read out.
+      logWarn('status step 1 failed', err);
+      // The reference is on screen and can be read out, so say so.
+      this.copyFailed.set(true);
     }
   }
 

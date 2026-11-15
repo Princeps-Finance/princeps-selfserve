@@ -68,6 +68,7 @@ export class MandateComponent {
   readonly linkRef = signal<string | null>(null);
   readonly linkStatus = signal<MandateStatus | null>(null);
   readonly linkError = signal(false);
+  readonly checkFailed = signal(false);
   readonly linkBusy = signal(false);
   readonly copied = signal(false);
   readonly help = whatsappLink('Hello Princeps, I need help setting up my repayment mandate.');
@@ -133,11 +134,13 @@ this.linkError.set(true);
     if (!ref || this.linkStatus() === 'completed') return;
     try {
       const status = await this.api.getMandateStatus(ref);
+      this.checkFailed.set(false);
       this.linkStatus.set(status);
       if (status === 'completed') this.stopPolling();
     } catch (err) {
-        logWarn('mandate step 2 failed', err);
-// Keep the last known state; the next check will try again.
+      logWarn('mandate step 2 failed', err);
+      // Keep the last known state; the next check will try again, and the customer is told meanwhile.
+      this.checkFailed.set(true);
     }
   }
 

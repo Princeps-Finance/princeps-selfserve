@@ -106,6 +106,8 @@ export const ig: Dictionary = {
   'mandate.link.check': 'Emechala m. Lelee ugbu a',
   'mandate.link.preparing': 'Na-eme njikọ gị…',
   'mandate.link.error': 'Enweghị ike ịmepụta njikọ. Nwaa ọzọ.',
+  'mandate.check.error': 'Anyị enweghị ike ịlele ugbu a. Nwaa ọzọ n\'oge na-adịghị anya.',
+  'status.copy.error': 'Enweghị ike ikwe. Họrọ nọmba ntụaka ahụ ma kpoo ya aka.',
   'mandate.link.retry': 'Nwaa ọzọ',
   'mandate.status.pending': 'Na-echere ka ị mechaa',
   'mandate.status.completed': 'Isetịpụ ịkwụghachi emechaala',

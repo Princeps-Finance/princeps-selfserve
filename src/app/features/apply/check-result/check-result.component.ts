@@ -26,6 +26,13 @@ import { ProductMarkComponent } from '../../../shared/product-mark.component';
           <h1 class="title">{{ 'check.result.declined.title' | t }}</h1>
           <p class="subtitle">{{ 'check.result.declined.body' | t }}</p>
         </header>
+        @if (reasons().length) {
+          <ul class="reasons">
+            @for (r of reasons(); track r.code) {
+              <li>{{ 'reason.' + r.code | t: r.params }}</li>
+            }
+          </ul>
+        }
         <div class="actions">
           <button type="button" class="cta" (click)="checkAgain()">{{ 'check.result.again' | t }}</button>
           <a class="alt" [attr.href]="whatsapp" target="_blank" rel="noopener">{{ 'step.eligibility.declined.whatsapp' | t }}</a>
@@ -38,6 +45,9 @@ import { ProductMarkComponent } from '../../../shared/product-mark.component';
           <p class="subtitle">{{ 'check.result.sub' | t: { months: months() } }}</p>
           @if (income() > 0) {
             <p class="income">{{ 'check.result.income' | t: { amount: money(income()) } }}</p>
+          }
+          @if (inReview()) {
+            <p class="review-note" role="note">{{ 'step.eligibility.review.note' | t }}</p>
           }
         </header>
 
@@ -76,6 +86,8 @@ import { ProductMarkComponent } from '../../../shared/product-mark.component';
       .title { font-size: clamp(26px, 7vw, 34px); line-height: 1.1; letter-spacing: -0.02em; }
       .subtitle { margin: 0; color: var(--ink-soft); line-height: 1.5; }
       .income { margin: 0; font-weight: 600; }
+      .review-note { margin: 0; padding: var(--space-3); border-radius: var(--radius-md); background: var(--grey-100); color: var(--ink-soft); line-height: 1.5; }
+      .reasons { margin: 0; padding-left: var(--space-5); color: var(--ink-soft); line-height: 1.5; display: flex; flex-direction: column; gap: var(--space-1); }
       .products-title { margin: 0 0 var(--space-2); font-size: var(--fs-lg); }
       .list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
       .item { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); border-radius: var(--radius-md); background: var(--grey-100); }
@@ -101,6 +113,8 @@ export class CheckResultComponent {
 
   protected readonly money = formatNaira;
   protected readonly declined = computed(() => this.state.eligibility()?.decision === 'declined');
+  protected readonly inReview = computed(() => this.state.eligibility()?.decision === 'review');
+  protected readonly reasons = computed(() => this.state.eligibility()?.reasonCodes ?? []);
   protected readonly whatsapp = whatsappLink('Hello Princeps, I checked how much I can get and I would like help.');
   protected readonly tel = telLink();
   protected readonly max = computed(() => this.state.eligibility()?.maxEligibleAmount ?? 0);

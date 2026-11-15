@@ -106,6 +106,8 @@ export const ha: Dictionary = {
   'mandate.link.check': 'Na gama. Duba yanzu',
   'mandate.link.preparing': 'Ana shirya hanyar haɗin ka…',
   'mandate.link.error': 'Ba a iya ƙirƙirar hanyar haɗin ba. Sake gwadawa.',
+  'mandate.check.error': 'Ba mu iya dubawa yanzu ba. Sake gwadawa nan da ɗan lokaci.',
+  'status.copy.error': 'Ba a iya kwafi ba. Zaɓi lambar kuma ka kwafa da hannu.',
   'mandate.link.retry': 'Sake gwadawa',
   'mandate.status.pending': 'Muna jiran ka ka gama',
   'mandate.status.completed': 'An kammala saita biyan',

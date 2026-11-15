@@ -10,6 +10,7 @@ import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { API_CLIENT, Bank } from '../../../core/api/api-client';
 import { NG_BANKS } from '../../../core/api/ng-banks';
+import { bankOption } from '../../../core/api/bank-logos';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { SelectFieldComponent, SelectOption } from '../../../core/ui/select-field.component';
 import { APPLY } from '../../../core/flow/apply-routes';
@@ -46,7 +47,7 @@ export class StatementComponent implements OnInit {
   readonly tel = telLink();
 
   readonly banks = signal<Bank[]>(NG_BANKS);
-  readonly bankOptions = computed<SelectOption[]>(() => this.banks().map((b) => ({ value: b.code, label: b.name })));
+  readonly bankOptions = computed<SelectOption[]>(() => this.banks().map(bankOption));
 
   readonly form = new FormGroup({
     employer: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(2)] }),
@@ -58,6 +59,10 @@ export class StatementComponent implements OnInit {
   readonly submitting = signal(false);
   readonly failed = signal(false);
   readonly statusChanges = toSignal(this.form.statusChanges, { initialValue: this.form.status });
+  readonly canSubmit = computed(() => {
+    this.statusChanges();
+    return this.form.valid && !!this.file() && !this.submitting();
+  });
 
   async ngOnInit(): Promise<void> {
     try { this.banks.set(await this.api.listBanks()); } catch { /* static list is already set */ }

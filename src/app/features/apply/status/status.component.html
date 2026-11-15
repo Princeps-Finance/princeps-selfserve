@@ -12,6 +12,9 @@
         {{ copied() ? ('received.copied' | t) : ('received.copy' | t) }}
       </button>
     </p>
+    @if (copyFailed()) {
+      <p class="copy-error" role="alert">{{ 'status.copy.error' | t }}</p>
+    }
   }
 
   @if (s.manualReview) {

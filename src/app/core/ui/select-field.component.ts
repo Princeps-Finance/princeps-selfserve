@@ -3,12 +3,17 @@ import { ModalComponent } from '../../shared/modal.component';
 import {
   ChangeDetectionStrategy, Component, ElementRef, computed, forwardRef, inject, input, model, signal, viewChild,
 } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { TPipe } from '../i18n/t.pipe';
 
 export interface SelectOption {
   readonly value: string;
   readonly label: string;
+  /** A small picture shown beside the label, such as a bank's logo. */
+  readonly logo?: string;
+  /** Shown in a badge when there is no logo. Set it to show a mark for every option. */
+  readonly initials?: string;
 }
 
 /**
@@ -18,7 +23,7 @@ export interface SelectOption {
  */
 @Component({
   selector: 'app-select-field',
-  imports: [IconComponent, ModalComponent, TPipe],
+  imports: [IconComponent, ModalComponent, NgOptimizedImage, TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => SelectFieldComponent), multi: true }],
   template: `
@@ -33,6 +38,13 @@ export interface SelectOption {
       [attr.aria-expanded]="open()"
       (click)="show()"
     >
+      @if (selected(); as s) {
+        @if (s.logo || s.initials) {
+          <span class="mark" aria-hidden="true">
+            @if (s.logo) { <img [ngSrc]="s.logo" width="24" height="24" alt="" /> } @else { {{ s.initials }} }
+          </span>
+        }
+      }
       <span class="value" [class.placeholder]="!selected()">{{ selected()?.label ?? placeholder() }}</span>
       <app-icon name="bold-chevron-down" [size]="18" class="chev" />
     </button>
@@ -56,7 +68,12 @@ export interface SelectOption {
         <div class="list" role="listbox" [attr.aria-label]="title()" tabindex="-1">
           @for (o of filtered(); track o.value) {
             <button type="button" role="option" class="opt" [attr.aria-selected]="o.value === value()" (click)="pick(o)">
-              <span>{{ o.label }}</span>
+              @if (o.logo || o.initials) {
+                <span class="mark" aria-hidden="true">
+                  @if (o.logo) { <img [ngSrc]="o.logo" width="24" height="24" alt="" loading="lazy" /> } @else { {{ o.initials }} }
+                </span>
+              }
+              <span class="label">{{ o.label }}</span>
               @if (o.value === value()) {
                 <app-icon name="bold-success" [size]="18" />
               }
@@ -86,6 +103,14 @@ export interface SelectOption {
       .value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .value.placeholder { color: var(--ink-muted); }
       .chev { flex: none; color: var(--ink-soft); }
+      /* A white tile so a coloured logo reads the same in light and dark mode. */
+      .mark {
+        flex: none; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
+        border-radius: var(--radius-sm, 8px); border: 1px solid var(--hairline); background: #fff; overflow: hidden;
+        font-size: 12px; font-weight: 600; color: #3a3f47;
+      }
+      .mark img { width: 24px; height: 24px; object-fit: contain; }
+      .label { flex: 1; min-width: 0; }
 
       .panel { display: flex; flex-direction: column; gap: var(--space-3); }
       .sheet-title { margin: 0; font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 600; letter-spacing: -0.01em; }

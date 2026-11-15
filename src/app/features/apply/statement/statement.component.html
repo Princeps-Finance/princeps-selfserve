@@ -37,7 +37,7 @@
       <p class="msg msg--error" role="alert">{{ 'step.statement.error.send' | t }}</p>
     }
 
-    <button type="submit" class="cta" [disabled]="submitting()">
+    <button type="submit" class="cta" [disabled]="!canSubmit()">
       <span>{{ submitting() ? (checking ? ('step.statement.checking' | t) : ('step.statement.sending' | t)) : (checking ? ('step.salary.check.continue' | t) : ('step.statement.send' | t)) }}</span>
     </button>
   </form>

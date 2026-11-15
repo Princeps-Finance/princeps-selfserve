@@ -48,7 +48,7 @@
       </p>
     }
 
-    <button type="button" class="cta" [disabled]="submitting()" (click)="submit()">
+    <button type="button" class="cta" [disabled]="!canSubmit()" (click)="submit()">
       <span>{{ 'step.bvn.verify' | t }}</span>
       <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
     </button>

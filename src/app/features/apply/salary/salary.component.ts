@@ -8,6 +8,7 @@ import { focusFirstInvalid } from '../../../core/a11y/focus';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { API_CLIENT, Bank } from '../../../core/api/api-client';
+import { bankOption } from '../../../core/api/bank-logos';
 import {
   ApplicationStateService,
   SalaryChannel,
@@ -63,7 +64,7 @@ export class SalaryComponent {
   }
 
   readonly banks = signal<Bank[]>([]);
-  readonly bankOptions = computed<SelectOption[]>(() => this.banks().map((b) => ({ value: b.code, label: b.name })));
+  readonly bankOptions = computed<SelectOption[]>(() => this.banks().map(bankOption));
   /** What the bank says about the typed account: nothing yet, looking, a name, no such account, or the lookup is down. */
   readonly lookup = signal<{ state: 'idle' | 'loading' | 'ok' | 'not-found' | 'unavailable'; name?: string }>({ state: 'idle' });
   /** The check button waits for the account name. If the lookup itself is down the customer can still go on. */

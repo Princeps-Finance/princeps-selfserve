@@ -106,6 +106,8 @@ export const en: Dictionary = {
   'mandate.link.check': 'I have finished. Check now',
   'mandate.link.preparing': 'Preparing your link…',
   'mandate.link.error': 'Could not create the link. Try again.',
+  'mandate.check.error': 'We could not check just now. Try again in a moment.',
+  'status.copy.error': 'Could not copy. Select the reference and copy it by hand.',
   'mandate.link.retry': 'Try again',
   'mandate.status.pending': 'Waiting for you to finish',
   'mandate.status.completed': 'Repayment set-up complete',

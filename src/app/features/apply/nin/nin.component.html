@@ -40,7 +40,7 @@
       </p>
     }
 
-    <button type="button" class="cta" [disabled]="submitting()" (click)="submit()">
+    <button type="button" class="cta" [disabled]="!canSubmit()" (click)="submit()">
       <span>{{ submitting() ? ('step.nin.verifying' | t) : ('step.nin.verify' | t) }}</span>
       @if (!submitting()) {
         <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />

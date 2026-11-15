@@ -34,7 +34,7 @@
         <p class="msg--error" role="alert">{{ 'step.contact.error.generic' | t }}</p>
       }
 
-      <button type="submit" class="cta" [disabled]="submitting()">
+      <button type="submit" class="cta" [disabled]="!canSubmit()">
         <span>{{ submitting() ? ('waitlist.joining' | t) : ('waitlist.join' | t) }}</span>
         @if (!submitting()) {
           <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />

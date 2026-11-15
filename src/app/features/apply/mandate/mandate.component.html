@@ -15,6 +15,9 @@
   @if (linkError()) {
     <p class="msg--error" role="alert">{{ 'mandate.link.error' | t }}</p>
   }
+  @if (checkFailed() && linkStatus() !== 'completed') {
+    <p class="msg--error" role="alert">{{ 'mandate.check.error' | t }}</p>
+  }
   @if (linkUrl() && linkStatus() !== 'completed') {
     <p class="link-status" role="status" [attr.data-status]="linkStatus()">
       {{ (linkStatus() === 'failed' ? 'mandate.status.failed' : 'mandate.status.pending') | t }}
