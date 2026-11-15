@@ -42,7 +42,7 @@ type ViewerState = 'loading' | 'ready' | 'error';
       <div #pages class="pages" [hidden]="state() !== 'ready'"></div>
     </div>
     @if (downloadUrl(); as url) {
-      <a class="download" [href]="url" download="princeps-offer-letter.pdf">{{ 'pdf.download' | t }}</a>
+      <a class="alt download" [href]="url" download="princeps-offer-letter.pdf">{{ 'pdf.download' | t }}</a>
     }
   `,
   styles: [
@@ -53,7 +53,8 @@ type ViewerState = 'loading' | 'ready' | 'error';
       .pages { display: flex; flex-direction: column; gap: var(--space-2); }
       .pages :is(canvas) { width: 100%; height: auto; background: #ffffff; border-radius: var(--radius-xs); box-shadow: var(--shadow-1); }
       .state { margin: 0; padding: var(--space-6) var(--space-4); text-align: center; color: var(--ink-soft); font-size: var(--fs-md); }
-      .download { display: inline-flex; align-items: center; min-height: var(--tap-min); margin-top: var(--space-2); color: var(--text-accent); font-weight: var(--fw-medium); text-underline-offset: 3px; }
+      /* A secondary button (the shared .alt look), full width, so it reads as a choice and sits apart from the page above. */
+      .download { margin-top: var(--space-3); text-decoration: none; }
     `,
   ],
 })

@@ -61,6 +61,8 @@ export function buildSubmitPayload(state: ApplicationStateService, idempotencyKe
         employmentType: employment.type,
         employer: salary.paramilitaryEmployer ?? null,
         religion: state.profile()?.religion || null,
+        // Only when the customer chose to share it on the last screen.
+        location: state.locationFix(),
       },
     },
   };

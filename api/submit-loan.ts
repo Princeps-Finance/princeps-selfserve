@@ -57,6 +57,17 @@ const Body = z
     ippisNumber: z.string().regex(/^\d{4,20}$/).nullable(),
     employer: z.string().trim().max(120).nullable(),
     religion: z.enum(['christianity', 'islam', 'traditional', 'other', 'prefer-not-to-say']).nullable().optional(),
+    // A place the customer chose to share from their phone. Optional: its absence never changes the decision to accept.
+    location: z
+      .object({
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
+        accuracyM: z.number().min(0).max(100_000),
+        capturedAt: z.string().datetime(),
+      })
+      .strict()
+      .nullable()
+      .optional(),
     // Figures the client computed. Accepted only so we can reject tampering.
     monthlyRepaymentKobo: z.number().int().positive(),
     ratePercent: z.number(),
@@ -157,6 +168,8 @@ export default async function handler(req: Request): Promise<Response> {
     employer: b.employer,
     // Only when the customer chose to give it.
     ...(b.religion ? { religion: b.religion } : {}),
+    // Reported by the customer's phone, so the back office weighs it against the place the connection comes from (X-Visitor-Info).
+    ...(b.location ? { location: b.location } : {}),
     appVersion: b.appVersion,
     consentVersion: b.consentVersion,
     consentAt: b.consentAt,

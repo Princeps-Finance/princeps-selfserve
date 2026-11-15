@@ -41,6 +41,7 @@ import { OfferLetterComponent } from '../terms/offer-letter.component';
       <!-- The letter, the agreement and the accept button live in the window: the box unlocks once the letter is read to the end. -->
       <app-modal [open]="letterOpen()" [title]="'pdf.letter.title' | t" (closed)="letterOpen.set(false)">
         @if (letterOpen()) {
+          <div class="sheet">
           <app-offer-letter [request]="letterRequest()" (readToEnd)="letterRead.set(true)" />
           <label class="agree" [class.is-locked]="!letterRead()">
             <app-checkbox [invalid]="attempted() && !agreed()" describedBy="agree-error" [disabled]="!letterRead()" [checked]="agreed()" (checkedChange)="toggleAgree($event)" />
@@ -56,6 +57,7 @@ import { OfferLetterComponent } from '../terms/offer-letter.component';
             <span>{{ 'step.offerletter.accept' | t }}</span>
             <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
           </button>
+          </div>
         }
       </app-modal>
     </section>
@@ -73,7 +75,10 @@ import { OfferLetterComponent } from '../terms/offer-letter.component';
       .facts > div { display: flex; justify-content: space-between; gap: var(--space-4); padding: var(--space-4) 0; border-bottom: 1px solid var(--hairline); }
       .facts dt { color: var(--ink-soft); }
       .facts dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
-      .accept { margin-top: var(--space-3); }
+      /* Inside the window: even spacing between the letter, its download, the agreement and the button, and full-width buttons. */
+      .sheet { display: flex; flex-direction: column; gap: var(--space-4); }
+      .sheet .cta { width: 100%; margin-top: var(--space-2); }
+      .accept { margin-top: var(--space-2); }
       .note { margin: var(--space-2) 0 0; font-size: var(--fs-sm); color: var(--ink-muted); }
     `,
   ],

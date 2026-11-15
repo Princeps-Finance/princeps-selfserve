@@ -47,6 +47,20 @@ describe('PwaBannerComponent', () => {
     expect(apply).not.toHaveBeenCalled();
   });
 
+  it('keeps an "Update available" chip after Later, and the chip opens the update window again', async () => {
+    updateReady.set(true);
+    const f = await at('/apply/profile');
+    const el: HTMLElement = f.nativeElement;
+    expect(el.querySelector('.chip')).toBeNull();
+    (f.componentInstance as unknown as { dismissed: { set(v: boolean): void } }).dismissed.set(true);
+    f.detectChanges();
+    const chip = el.querySelector<HTMLButtonElement>('.chip');
+    expect(chip).not.toBeNull();
+    chip!.click();
+    f.detectChanges();
+    expect(el.querySelector('.chip')).toBeNull();
+  });
+
   it('updates and reloads when the customer taps Update', async () => {
     updateReady.set(true);
     const f = await at('/apply/status');

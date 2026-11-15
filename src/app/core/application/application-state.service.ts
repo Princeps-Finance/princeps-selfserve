@@ -2,6 +2,7 @@ import type { OtpDestination } from '../api/api-client';
 import type { Quote } from '../../../shared/quote';
 import { Injectable, computed, signal } from '@angular/core';
 import type { BvnIdentity } from "../api/api-client";
+import type { LocationFix } from '../location/location-fix';
 
 export interface ContactDraft {
   phone: string;
@@ -259,6 +260,9 @@ export class ApplicationStateService {
   private readonly _bvnIdentity = signal<BvnIdentity | null>(null);
   readonly bvnIdentity = this._bvnIdentity.asReadonly();
   /** Where the customer asked for the one-time code. Kept in memory only, never saved to the device. */
+  /** A place the customer chose to share on the last screen. Held in memory only: never saved on the device. */
+  private readonly _locationFix = signal<LocationFix | null>(null);
+  readonly locationFix = this._locationFix.asReadonly();
   private readonly _otpDestination = signal<OtpDestination | null>(null);
   readonly otpDestination = this._otpDestination.asReadonly();
   readonly nin = computed(() => this.state().nin);
@@ -433,6 +437,10 @@ export class ApplicationStateService {
     this._returningRef.set(ref);
   }
 
+  setLocationFix(fix: LocationFix | null): void {
+    this._locationFix.set(fix);
+  }
+
   reset(): void {
     try {
       localStorage.removeItem(RECEIPT_KEY);
@@ -442,6 +450,7 @@ export class ApplicationStateService {
     this._returningRef.set(null);
     this._bvnIdentity.set(null);
     this._otpDestination.set(null);
+    this._locationFix.set(null);
     this.state.set(empty);
   }
 }

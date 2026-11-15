@@ -27,6 +27,31 @@
     }
   </dl>
 
+  <section class="where" aria-labelledby="where-title">
+    <h2 class="where-title" id="where-title">{{ 'step.submit.where.title' | t }}</h2>
+    <p class="where-body">{{ 'step.submit.where.body' | t }}</p>
+    @switch (place()) {
+      @case ('asking') {
+        <p class="where-status" role="status">{{ 'step.submit.where.asking' | t }}</p>
+      }
+      @case ('shared') {
+        <p class="where-status where-status--ok" role="status">{{ 'step.submit.where.shared' | t }}@if (accuracy() !== null) { · {{ 'step.submit.where.accuracy' | t: { metres: accuracy() ?? 0 } }}}</p>
+        <button type="button" class="where-link" (click)="stopSharing()">{{ 'step.submit.where.stop' | t }}</button>
+      }
+      @case ('denied') {
+        <p class="where-status" role="status">{{ 'step.submit.where.denied' | t }}</p>
+        <button type="button" class="where-btn" (click)="shareLocation()">{{ 'common.retry' | t }}</button>
+      }
+      @case ('failed') {
+        <p class="where-status" role="status">{{ 'step.submit.where.failed' | t }}</p>
+        <button type="button" class="where-btn" (click)="shareLocation()">{{ 'common.retry' | t }}</button>
+      }
+      @default {
+        <button type="button" class="where-btn" (click)="shareLocation()">{{ 'step.submit.where.share' | t }}</button>
+      }
+    }
+  </section>
+
   <label class="agree">
     <app-checkbox [invalid]="attempted() && !agreed()" describedBy="agree-error" [checked]="agreed()" (checkedChange)="toggleAgree($event)" />
     <span>{{ 'step.submit.confirm' | t }}</span>

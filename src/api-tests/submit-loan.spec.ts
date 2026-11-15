@@ -100,6 +100,22 @@ describe('POST /api/submit-loan', () => {
     expect((await handler(req(valid({ religion: 'anything else' })))).status).toBe(400);
   });
 
+  it('forwards a shared location only when the customer gave one, and refuses one that is not a place', async () => {
+    const without = await handler(req(valid()));
+    expect(without.status).toBe(200);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).location).toBeUndefined();
+    // A refusal arrives as null and changes nothing.
+    expect((await handler(req(valid({ location: null })))).status).toBe(200);
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body).location).toBeUndefined();
+
+    const place = { latitude: 6.5244, longitude: 3.3792, accuracyM: 18, capturedAt: '2026-11-15T10:00:00.000Z' };
+    expect((await handler(req(valid({ location: place })))).status).toBe(200);
+    expect(JSON.parse(fetchMock.mock.calls[2][1].body).location).toEqual(place);
+
+    expect((await handler(req(valid({ location: { ...place, latitude: 91 } })))).status).toBe(400);
+    expect((await handler(req(valid({ location: { ...place, extra: 'x' } })))).status).toBe(400);
+  });
+
   it('rejects wrong method, foreign origin and missing application token', async () => {
     expect((await handler(req(null, { method: 'GET' }))).status).toBe(405);
     expect((await handler(req(valid(), { headers: { origin: 'https://evil.example' } }))).status).toBe(403);

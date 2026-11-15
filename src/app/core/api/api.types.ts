@@ -180,6 +180,8 @@ export interface SubmitPayload {
     employer: string | null;
     /** Only when the customer chose to give it. A sensitive detail: never stored on the device. */
     religion?: string | null;
+    /** A place the customer chose to share from their phone. Optional, and never stored on the device. */
+    location?: { latitude: number; longitude: number; accuracyM: number; capturedAt: string } | null;
   };
 }
 

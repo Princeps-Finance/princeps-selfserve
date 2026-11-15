@@ -116,7 +116,9 @@ The app's server layer now sends an `X-Visitor-Info` header on every call that c
 - **It is the connection's place, not a GPS fix.** The city comes from the network's address, so a mobile network or a VPN can put it elsewhere. Latitude and longitude are rounded to about a kilometre. Treat it as a signal for review, not proof of address.
 - **Production needs the CloudFront location headers turned on** (`CloudFront-Viewer-Country`, `-City`, `-Country-Region-Name`, `-Latitude`, `-Longitude`, `-Time-Zone`) in the origin request policy. Without them production shows device and IP only. The Cloudflare worker used in development supplies them already.
 - The IP and place are personal data. Add them to the privacy notice and set a retention rule. Say who in the admin can see them.
-- Exact location would need the customer to allow the browser's location prompt. It is not built. Ask if risk needs it.
+- **Exact location (optional, built).** On the last screen the customer can tap "Share my location". The browser asks permission, and a "no" never blocks the application. When shared, the application's `loan` object carries `location: { latitude, longitude, accuracyM, capturedAt }` (about a metre of detail; `accuracyM` is how close the phone says it is, so a large number means a rough place). It is absent when not shared. It is held in memory only and never saved on the device.
+  - It is reported by the customer's phone, so it can be faked. Compare it with the place the connection comes from (`X-Visitor-Info`) and flag a big gap for review rather than trusting either alone.
+  - It is sensitive personal data. The privacy notice must say it is optional, what it is used for, who in the admin can see it, and how long it is kept. I did not write that wording.
 
 ### 9. Application status for the customer
 A status read that returns the reference, state (received, under review, approved, declined, disbursed) and a human-readable reason, so the status screen can show more than "received".

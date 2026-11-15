@@ -9,7 +9,7 @@ import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { environment } from '../../../../environments/environment';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
-import { AGENTS, OFFICES } from '../../../core/directory/contacts';
+import { SUPPORT_EMAIL, SUPPORT_PHONE, whatsappLink } from '../../../core/support';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
@@ -37,8 +37,10 @@ export class StatusComponent {
   }
 
   readonly submission = this.state.submission;
-  readonly agents = AGENTS;
-  readonly offices = OFFICES;
+  /** The business's own support channels. Nothing here is made up: the same ones the Support button offers. */
+  readonly whatsapp = whatsappLink('Hello Princeps, I have a question about my application.');
+  readonly phone = SUPPORT_PHONE;
+  readonly email = SUPPORT_EMAIL;
   /** Your loans live in Princeps Accounts, a separate app. */
   readonly accountsUrl = environment.accountsUrl;
   readonly copied = signal(false);

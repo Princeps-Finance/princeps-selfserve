@@ -6,15 +6,21 @@
   <p class="body">{{ 'received.body' | t }}</p>
 
   @if (reference()) {
-    <p class="ref">
-      {{ 'status.reference' | t }} · <span>{{ reference() }}</span>
-      <button type="button" class="copy" (click)="copyReference()">
-        {{ copied() ? ('received.copied' | t) : ('received.copy' | t) }}
-      </button>
-    </p>
-    @if (copyFailed()) {
-      <p class="copy-error" role="alert">{{ 'status.copy.error' | t }}</p>
-    }
+    <app-card>
+      <div class="ref">
+        <div class="ref-text">
+          <span class="ref-label">{{ 'status.reference' | t }}</span>
+          <strong class="ref-code">{{ reference() }}</strong>
+        </div>
+        <button type="button" class="ref-copy" (click)="copyReference()" [attr.aria-label]="(copied() ? 'received.copied' : 'received.copy') | t">
+          <app-icon [name]="copied() ? 'bold-success' : 'bold-copy'" [size]="22" />
+        </button>
+      </div>
+      <span class="vh" role="status">{{ copied() ? ('received.copied' | t) : '' }}</span>
+      @if (copyFailed()) {
+        <p class="copy-error" role="alert">{{ 'status.copy.error' | t }}</p>
+      }
+    </app-card>
   }
 
   @if (s.manualReview) {
@@ -64,41 +70,11 @@
   <details class="directory">
     <summary class="directory-sum">{{ 'status.contact.title' | t }}</summary>
     <p class="directory-sub">{{ 'status.contact.subtitle' | t }}</p>
-
-    <section class="dir-block">
-      <h3>{{ 'status.contact.agents' | t }}</h3>
-      <ul class="agents">
-        @for (a of agents; track a.phone) {
-          <li class="agent">
-            <div class="agent-info">
-              <span class="agent-name">{{ a.name }}</span>
-              <span class="agent-region">{{ a.regionKey | t }}</span>
-            </div>
-            <a class="tel" [attr.href]="telHref(a.phone)" [attr.aria-label]="('status.contact.call' | t) + ' ' + a.name">
-              <app-icon name="bold-call" [size]="14" />
-              <span>{{ a.phone }}</span>
-            </a>
-          </li>
-        }
-      </ul>
-    </section>
-
-    <section class="dir-block">
-      <h3>{{ 'status.contact.offices' | t }}</h3>
-      <ul class="offices">
-        @for (o of offices; track o.city) {
-          <li class="office">
-            <span class="office-city">{{ o.city }}</span>
-            <span class="office-address">{{ o.address }}</span>
-            <span class="office-meta">{{ 'office.hours' | t: { from: o.hoursFrom, to: o.hoursTo } }}</span>
-            <a class="tel" [attr.href]="telHref(o.phone)">
-              <app-icon name="bold-call" [size]="14" />
-              <span>{{ o.phone }}</span>
-            </a>
-          </li>
-        }
-      </ul>
-    </section>
+    <ul class="channels">
+      <li><a class="tel" [attr.href]="whatsapp" target="_blank" rel="noopener"><app-icon name="bold-chat" [size]="16" /><span>WhatsApp</span></a></li>
+      <li><a class="tel" [attr.href]="telHref(phone)"><app-icon name="bold-call" [size]="16" /><span>{{ phone }}</span></a></li>
+      <li><a class="tel" [attr.href]="'mailto:' + email"><app-icon name="bold-message" [size]="16" /><span>{{ email }}</span></a></li>
+    </ul>
   </details>
 </section>
 }

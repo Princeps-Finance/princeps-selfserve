@@ -20,6 +20,10 @@ const AUTO_APPLY_ROUTES = new Set(['/', '/apply', '/apply/welcome']);
     @if (updater.offline()) {
       <p class="banner banner--offline" role="status">{{ 'pwa.offline' | t }}</p>
     }
+    @if (showUpdate() && dismissed()) {
+      <!-- "Later" must not hide the update for the rest of the visit: this chip opens the window again. -->
+      <button type="button" class="chip" (click)="dismissed.set(false)">{{ 'pwa.update.available' | t }}</button>
+    }
     <app-modal [open]="showUpdate() && !dismissed()" [title]="'pwa.update.title' | t" (closed)="dismissed.set(true)">
       <div class="update">
         <h2 class="update-title">{{ 'pwa.update.title' | t }}</h2>
@@ -49,6 +53,12 @@ const AUTO_APPLY_ROUTES = new Set(['/', '/apply', '/apply/welcome']);
         box-shadow: var(--shadow-3);
       }
       .banner--offline { background: var(--navy-950); }
+      .chip {
+        display: block; margin: var(--space-2) 0 0 auto; min-height: 36px; padding: 0 var(--space-4);
+        border: 0; border-radius: var(--radius-pill); background: var(--info-soft); color: var(--text-accent);
+        font: inherit; font-size: var(--fs-sm); font-weight: 600; cursor: pointer;
+      }
+      .chip:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
       .update { display: flex; flex-direction: column; gap: var(--space-3); }
       .update-title { margin: 0; font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 600; }
       .update-warn { margin: 0; padding: var(--space-3); border-radius: var(--radius-sm); background: var(--warning-soft); font-size: var(--fs-sm); line-height: 1.45; }

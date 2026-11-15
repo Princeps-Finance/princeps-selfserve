@@ -12,6 +12,7 @@ import { formatNaira } from '../../../core/money.util';
 import { buildSubmitPayload } from '../../../core/application/submission-payload';
 import { LangService } from '../../../core/i18n/lang.service';
 import { DraftService } from '../../../core/application/draft.service';
+import { LocationService } from '../../../core/location/location.service';
 import { ToastService } from '../../../core/toast/toast.service';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
@@ -31,6 +32,29 @@ export class SubmitComponent {
   private readonly drafts = inject(DraftService);
   private readonly lang = inject(LangService);
   private readonly quotes = inject(QuoteService);
+  private readonly location = inject(LocationService);
+
+  /** The optional "share where you are" step: not asked, waiting for the phone, shared, or not shared (and why). */
+  readonly place = signal<'idle' | 'asking' | 'shared' | 'denied' | 'failed'>(this.state.locationFix() ? 'shared' : 'idle');
+  readonly accuracy = computed(() => this.state.locationFix()?.accuracyM ?? null);
+
+  async shareLocation(): Promise<void> {
+    if (this.place() === 'asking') return;
+    this.place.set('asking');
+    const r = await this.location.request();
+    if (r.status === 'ok') {
+      this.state.setLocationFix(r.fix);
+      this.place.set('shared');
+    } else {
+      this.state.setLocationFix(null);
+      this.place.set(r.status === 'denied' ? 'denied' : 'failed');
+    }
+  }
+
+  stopSharing(): void {
+    this.state.setLocationFix(null);
+    this.place.set('idle');
+  }
 
   readonly contact = this.state.contact;
   readonly employment = this.state.employment;
@@ -85,6 +109,8 @@ export class SubmitComponent {
         manualReview: this.state.eligibility()?.decision === 'review',
       });
       this.drafts.clear();
+      // It was sent with the application, so it is not kept.
+      this.state.setLocationFix(null);
       // Success screen first; the photo and video were only needed for review and are dropped once it is open.
       const arrived = await this.flow.go(APPLY.status);
       // The application is in and its receipt is saved: if the router could not open the screen, load it fresh.
