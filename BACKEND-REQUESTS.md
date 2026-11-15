@@ -58,6 +58,9 @@ Scoring runs in the browser today, so it can be bypassed.
 - Suggested: `POST /api/applications/{id}/eligibility` returning `decision` (`approved` | `review` | `declined`), `maxAmount`, `maxTenorMonths` and machine-readable reason codes (the app translates them).
 - Submit should refuse an amount above that maximum.
 
+### 4a. Eligibility without a BVN (the "See how much I can get" flow)
+**v2: not covered, and it conflicts with our flow.** Our app lets a customer check what they could get **before** giving a BVN: work, salary account, then a result. In v2 every call after the start needs an application and a resume token, and eligibility needs a verified code, so there is nothing to call without a BVN. Still requested, because we are not dropping this flow: an anonymous eligibility check, for example `POST /api/v2/eligibility-check` with the employment (`type`, `mdaCode` or `employerId` or `monthsLeftInService`), the salary account (`bankCode`, `accountNumber`, `ippisNumber` or `serviceNumber`) and a bot-check token, answering `{ outcome, monthlyIncome, maxAmount, tenorMonths }` and creating no application. It needs the same rate limits per address and per account as the other open calls. Until it exists the check flow stays on the old routes.
+
 ### 5. Repayment mandate
 **v2: covered.** `POST /mandates` sets up two per customer: Mono direct debit (approved at the returned `actionUrl`) plus the employment type's payroll provider (Federal WACS, State Remita, Paramilitary Dedukt; NYSC has Mono only). `GET /mandates` re-reads the providers and `complete` is true when every required mandate is `ACTIVE`; a mandate is `PENDING`, `REQUIRES_ACTION`, `ACTIVE`, `FAILED` or `STOPPED`. The app's link mode maps to the Mono `actionUrl`; the tick-box "authorize" mode has no counterpart, so confirm whether v2 still allows it.
 The app has a mandate step (link or authorize, then status). Nothing in the spec covers it.
@@ -311,6 +314,19 @@ The app works without these (it falls back to safe defaults), but each one remov
 - **Session ended:** the spec lists 401 on protected calls. Please confirm it is also returned when the resume token has expired, and say how long a token lives.
 - **Step order after the offer:** v2 has `suggestedNext` on the application but no per-product order. Still requested.
 - **Why a submit failed, safe retries, clock check, SMS autofill, face and document checks, document upload address, holidays:** unchanged. Document uploads already use a presigned `uploadUrl` in v2.
+
+## Wired to v2 on the production branch
+
+Our server reads v2's open lists and hands the app the shapes it already used, so the flow is unchanged. `SELF_SERVICE_API_URL` is now the v2 host (`https://self-service-apply.princeps.cloud`; a trailing slash or `/api/v2` is tolerated).
+
+| App call | v2 | What the server does |
+|---|---|---|
+| `GET /api/employment-types` | `GET /employment-types` | Maps `federal` and `state` to the app's `government` (open when either is), `nysc` to `nysc-corper`, and `status` to `isAvailable` |
+| `selfserve/banks` | `GET /banks` | Passes `{ code, name }`, dropping rows without both. Falls back to the old route when v2 is unreachable |
+| `selfserve/lgas` | `GET /states` then `GET /states/{code}/lgas` | Turns the state name into v2's state code, then returns the LGA names |
+| `GET /api/state-employers` | `GET /mdas` | One entry per MDA, named by its state, with the MDA code (what `PUT /employment` takes later) |
+
+Not wired yet: everything that needs an application and a resume token (start, code, profile, employment, salary, eligibility, quote, offer, documents, identity, offer letter, mandates, submit, status), because those calls depend on one another and on decisions listed above (the check flow without a BVN, the HTML offer letter, DigiSign, NIN, location and device).
 
 ## Repayments come from the server (quote)
 

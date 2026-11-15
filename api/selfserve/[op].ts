@@ -18,6 +18,7 @@ import {
   readJson,
 } from '../_lib/http';
 import { visitorHeader, visitorInfo } from '../_lib/visitor';
+import { toBanks, toLgas, v2Base, v2Get } from '../_lib/v2';
 
 
 const phone = z.string().regex(/^\+234[789]\d{9}$/);
@@ -293,6 +294,34 @@ const OPS: Record<string, OpDef> = {
   },
 };
 
+/**
+ * The bank list and a state's local governments come straight from the v2 API's open lists. Nothing about the
+ * customer is sent, so no back-office key is needed. Null means "not served here": the caller carries on as before.
+ */
+async function v2Reference(op: 'banks' | 'lgas', req: Request): Promise<Response | null> {
+  if (!v2Base()) return null;
+  if (op === 'banks') {
+    const banks = toBanks(await v2Get('/banks'));
+    return banks.length ? json({ banks }) : null;
+  }
+  let raw: unknown;
+  try {
+    raw = await readJson(req);
+  } catch (err) {
+    if (err instanceof HttpError) return fail(err.code, err.message, err.status);
+    return fail('BAD_REQUEST', 'Invalid request.', 400);
+  }
+  const parsed = OPS['lgas'].schema.safeParse(raw);
+  if (!parsed.success) return fail('VALIDATION_ERROR', 'Some details are invalid.', 400);
+  // The app asks by state name; v2 asks by state code.
+  const states = await v2Get('/states');
+  const wanted = (parsed.data as { state: string }).state.trim().toLowerCase();
+  const found = Array.isArray(states) ? states.find((s) => typeof s?.name === 'string' && s.name.trim().toLowerCase() === wanted) : undefined;
+  if (!found || typeof found.code !== 'string') return json({ lgas: [] });
+  const lgas = toLgas(await v2Get(`/states/${encodeURIComponent(found.code)}/lgas`));
+  return lgas.length ? json({ lgas }) : fail('UPSTREAM_DOWN', 'Service unavailable. Try again shortly.', 502);
+}
+
 export default async function handler(req: Request): Promise<Response> {
   if (req.method !== 'POST') return fail('METHOD_NOT_ALLOWED', 'POST only.', 405);
   if (!isSameOrigin(req)) return fail('FORBIDDEN', 'Request not allowed.', 403);
@@ -304,6 +333,11 @@ export default async function handler(req: Request): Promise<Response> {
   const ip = clientIp(req);
   if (await rateLimited(`${op}:${ip}`, def.limit)) {
     return fail('RATE_LIMITED', 'Too many attempts. Try again shortly.', 429);
+  }
+
+  if (op === 'banks' || op === 'lgas') {
+    const served = await v2Reference(op, req);
+    if (served) return served;
   }
 
   const cfg = backofficeConfig();

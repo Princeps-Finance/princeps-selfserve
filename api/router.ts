@@ -3,6 +3,7 @@
 import employmentTypes from './employment-types';
 import quote from './quote';
 import referral from './referral';
+import stateEmployers from './state-employers';
 import submitLoan from './submit-loan';
 import selfserve from './selfserve/[op]';
 import { fail } from './_lib/http';
@@ -12,6 +13,7 @@ type Handler = (req: Request) => Promise<Response>;
 const ROUTES: Record<string, Handler> = {
   '/api/employment-types': employmentTypes,
   '/api/quote': quote,
+  '/api/state-employers': stateEmployers,
   '/api/referral': referral,
   '/api/submit-loan': submitLoan,
 };

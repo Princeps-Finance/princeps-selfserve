@@ -18,13 +18,42 @@ describe('GET /api/employment-types', () => {
     delete process.env['SELF_SERVICE_API_URL'];
   });
 
-  it('passes on only code and availability', async () => {
+  const envelope = (data: unknown) => new Response(JSON.stringify({ statusCode: 200, code: 'SUCCESS', message: 'Success', data, status: 'success', timestamp: '2026-11-15T12:00:00Z' }));
+
+  it('reads the v2 list and gives the app only code and availability, in the app\'s own names', async () => {
     fetchMock.mockResolvedValueOnce(
-      new Response(JSON.stringify([{ code: 'government', name: 'Government', description: 'x', isAvailable: true, sortOrder: 10 }, { nope: 1 }])),
+      envelope([
+        { code: 'federal', name: 'Federal government', description: 'x', status: 'AVAILABLE' },
+        { code: 'state', name: 'State government', description: 'x', status: 'AVAILABLE' },
+        { code: 'paramilitary', name: 'Paramilitary', description: 'x', status: 'AVAILABLE' },
+        { code: 'nysc', name: 'NYSC Corper', description: 'x', status: 'AVAILABLE' },
+        { code: 'private-sector', name: 'Private sector', description: 'x', status: 'COMING_SOON' },
+        { code: 'unknown-new-type', status: 'AVAILABLE' },
+        { nope: 1 },
+      ]),
     );
     const res = await handler(get());
-    expect(await res.json()).toEqual({ types: [{ code: 'government', isAvailable: true }] });
-    expect(fetchMock.mock.calls[0][0]).toBe('https://api.test/api/employment-types');
+    expect(await res.json()).toEqual({
+      types: [
+        { code: 'government', isAvailable: true },
+        { code: 'paramilitary', isAvailable: true },
+        { code: 'nysc-corper', isAvailable: true },
+        { code: 'private-sector', isAvailable: false },
+      ],
+    });
+    expect(fetchMock.mock.calls[0][0]).toBe('https://api.test/api/v2/employment-types');
+  });
+
+  it('keeps government open when only one of federal and state is', async () => {
+    fetchMock.mockResolvedValueOnce(envelope([{ code: 'federal', status: 'AVAILABLE' }, { code: 'state', status: 'COMING_SOON' }]));
+    expect(await (await handler(get())).json()).toEqual({ types: [{ code: 'government', isAvailable: true }] });
+  });
+
+  it('tolerates the address ending in a slash or in /api/v2', async () => {
+    process.env['SELF_SERVICE_API_URL'] = 'https://api.test/api/v2/';
+    fetchMock.mockResolvedValueOnce(envelope([{ code: 'nysc', status: 'AVAILABLE' }]));
+    await handler(get());
+    expect(fetchMock.mock.calls[0][0]).toBe('https://api.test/api/v2/employment-types');
   });
 
   it('answers 503 when the API address is not set and 502 when it fails', async () => {
