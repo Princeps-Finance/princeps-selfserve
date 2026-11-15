@@ -1,5 +1,7 @@
 import { InjectionToken } from '@angular/core';
 import type { EmploymentAvailability } from './employment-availability';
+import type { StateGovernment } from './state-employers';
+import type { PayslipResult } from './payslip';
 import type { ReferralDraft } from '../application/application-state.service';
 import type {
   Bank, BvnContactsResult, EligibilityCheckInput, EligibilityCheckResult, RequiredDocument, RequiredDocumentsInput, RequiredProfileField, ReturningOtpSendResult, ReturningOtpVerifyResult, StatementCheckInput, BvnOtpSendResult, BvnOtpVerifyResult, BvnVerifyResult, DocUploadInput, DocUploadResult,
@@ -79,6 +81,10 @@ export interface ApiClient {
   /** The order of the steps after the offer, for this product. Null: use the standard order. */
   getJourney(productId: string): Promise<string[] | null>;
   getEmploymentTypes(): Promise<EmploymentAvailability[] | null>;
+  /** The states (and employers inside them) served for state government staff. Null: use the app's own list. */
+  getStateEmployers(): Promise<StateGovernment[] | null>;
+  /** Reads a photo or PDF of a payslip and returns the figures on it. The customer confirms them before they are used. */
+  extractPayslip(file: File, captchaToken?: string): Promise<PayslipResult>;
   /** Checks a referral code with the server. Null when the code is not valid or the check could not be made. */
   checkReferral(code: string): Promise<ReferralDraft | null>;
 }

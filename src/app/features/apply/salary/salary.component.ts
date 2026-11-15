@@ -9,6 +9,8 @@ import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { API_CLIENT, Bank } from '../../../core/api/api-client';
 import { bankOption } from '../../../core/api/bank-logos';
+import type { PayslipFigures } from '../../../core/api/payslip';
+import { PayslipScanComponent } from './payslip-scan.component';
 import {
   ApplicationStateService,
   SalaryChannel,
@@ -31,7 +33,7 @@ const PARAMILITARY_EMPLOYERS = [
 
 @Component({
   selector: 'app-salary',
-  imports: [AnimatedIconComponent, WhyAskComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent, ModalComponent, IconComponent, HelpLinksComponent],
+  imports: [AnimatedIconComponent, WhyAskComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent, ModalComponent, IconComponent, HelpLinksComponent, PayslipScanComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './salary.component.html',
   styleUrl: './salary.component.css',
@@ -52,6 +54,10 @@ export class SalaryComponent {
   readonly mode: 'check' | 'verify' | 'full' =
     this.state.intent() === 'check' ? 'check' : this.state.salary()?.fromCheck ? 'verify' : 'full';
 
+  /** A state government employer picked on the state screen, such as Adamawa PHCDA. Its name is the employer, so it is not asked again. */
+  /** Pay the customer confirmed from a scanned payslip. It goes to the server as evidence; the verified pay still comes from the salary check. */
+  readonly payslip = signal<PayslipFigures | null>(null);
+  readonly stateEmployer = this.state.employment()?.state?.employer?.name ?? null;
   readonly channel = signal<SalaryChannel>(this.deriveChannel());
   /** Federal government is paid through IPPIS and state government through Remita, so the choice is only asked when the level is unknown. */
   readonly showChannelChoice = computed(() => this.state.employment()?.type === 'government' && !this.state.employment()?.governmentLevel);
@@ -127,6 +133,8 @@ export class SalaryComponent {
         employer: saved.paramilitaryEmployer ?? '',
       });
     }
+    // The employer was picked on the state screen, so it fills itself and the form never asks for it.
+    if (this.stateEmployer) this.form.controls.employer.setValue(this.stateEmployer);
     this.watchAccount();
     // The account came from the check: verify it now without asking again. If it fails, the form below shows why.
     if (this.mode === 'verify' && saved && saved.accountNumber) queueMicrotask(() => void this.submit());
@@ -137,10 +145,12 @@ export class SalaryComponent {
   }
 
   titleKey(): string {
+    if (this.stateEmployer && this.channel() === 'dedukt') return 'step.salary.dedukt.state.title';
     return `step.salary.${this.channel()}.title`;
   }
 
   subtitleKey(): string {
+    if (this.stateEmployer && this.channel() === 'dedukt') return 'step.salary.dedukt.state.subtitle';
     return `step.salary.${this.channel()}.subtitle`;
   }
 
@@ -205,6 +215,7 @@ export class SalaryComponent {
           accountNumber: v.accountNumber,
           ippisNumber: v.ippisNumber || undefined,
           employer: v.employer || undefined,
+          declaredNetPay: this.payslip()?.netMonthly,
           captchaToken: await this.captcha.token(),
         });
         if (res.status === 'rate-limited') {
@@ -241,6 +252,7 @@ export class SalaryComponent {
         fullName: this.state.profile()?.fullName ?? '',
         ippisNumber: v.ippisNumber || undefined,
         employer: v.employer || undefined,
+        declaredNetPay: this.payslip()?.netMonthly,
       });
       if (res.status !== 'ok') {
         this.serverError.set(res.status);
@@ -262,9 +274,11 @@ export class SalaryComponent {
   }
 
   private deriveChannel(): SalaryChannel {
+    const e = this.state.employment();
+    // The state (and employer) picked earlier decides how pay is collected, even over an older saved answer.
+    if (e?.state) return e.state.channel;
     const saved = this.state.salary();
     if (saved) return saved.channel;
-    const e = this.state.employment();
     const t = e?.type;
     if (t === 'government' && e?.governmentLevel === 'state') return 'remita';
     if (t === 'paramilitary') return 'dedukt';

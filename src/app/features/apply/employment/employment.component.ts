@@ -141,13 +141,17 @@ export class EmploymentComponent implements OnInit {
 
     this.submitting.set(true);
     try {
+      // A state is only kept when the customer is still state government: another pick clears it.
+      const keepState = opt.type === 'government' && opt.level === 'state' ? this.state.employment()?.state : undefined;
       this.state.setEmployment({
         type: opt.type,
         governmentLevel: opt.level,
         nyscMonthsRemaining:
           opt.type === 'corper' ? (this.nyscMonths.value ?? undefined) : undefined,
+        state: keepState,
       });
-      await this.flow.go(APPLY.salary);
+      // State government says which state first: it decides how pay is collected.
+      await this.flow.go(opt.type === 'government' && opt.level === 'state' ? APPLY.state : APPLY.salary);
     } finally {
       this.submitting.set(false);
     }

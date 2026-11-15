@@ -33,7 +33,9 @@
       </div>
     }
 
-    @if (channel() === 'dedukt') {
+    <app-payslip-scan (figures)="payslip.set($event)" />
+
+    @if (channel() === 'dedukt' && !stateEmployer) {
       <div class="field">
         <label class="label" for="employer">{{ 'step.salary.employer.label' | t }}</label>
         <app-select-field inputId="employer" [options]="employerOptions" [title]="'step.salary.employer.label' | t" [placeholder]="'step.salary.employer.placeholder' | t" [invalid]="invalid('employer')" formControlName="employer" />

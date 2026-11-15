@@ -41,6 +41,9 @@ import {
 import type { Quote } from '../../../shared/quote';
 import { NG_BANKS } from './ng-banks';
 import type { EmploymentAvailability } from './employment-availability';
+import { sanitizeStateGovernments, type StateGovernment } from './state-employers';
+import { sanitizeBanks } from './bank-logos';
+import { sanitizePayslipFigures, type PayslipResult } from './payslip';
 import type { ReferralDraft } from '../application/application-state.service';
 
 /** The service could not be reached or returned something unusable. */
@@ -276,7 +279,8 @@ return []; // The user can type it.
   async listBanks(): Promise<Bank[]> {
     try {
       const r = await this.op<{ banks: Bank[] }>('banks', {});
-      return Array.isArray(r.banks) && r.banks.length ? r.banks : NG_BANKS;
+      const banks = Array.isArray(r.banks) ? sanitizeBanks(r.banks) : [];
+      return banks.length ? banks : NG_BANKS;
     } catch (err) {
         logWarn('api step 2 failed', err);
 // The bank list is public reference data, so a static fallback is safe.
@@ -416,6 +420,46 @@ return []; // The user can type it.
       return res.ok && Array.isArray(data?.types) ? data.types : null;
     } catch (err) {
       logWarn('employment types unavailable', err);
+      return null;
+    }
+  }
+
+  async extractPayslip(file: File, captchaToken?: string): Promise<PayslipResult> {
+    if (file.size > MAX_UPLOAD_BYTES) return { status: 'too-large' };
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return { status: 'service-down' };
+    const body = new FormData();
+    body.append('file', file, file.name);
+    if (captchaToken) body.append('captchaToken', captchaToken);
+    const headers: Record<string, string> = {};
+    if (this.token) headers['X-Application-Token'] = this.token;
+    const activity = this.net.begin();
+    try {
+      // Reading a photo takes longer than a normal call, so this waits longer. No retry: a second scan is the customer's choice.
+      const res = await fetch('/api/selfserve/payslip-extract', {
+        method: 'POST', headers, body, credentials: 'same-origin', signal: AbortSignal.timeout(30_000),
+      });
+      if (res.status === 429) return { status: 'rate-limited' };
+      if (res.status === 413) return { status: 'too-large' };
+      if (res.status === 415) return { status: 'bad-type' };
+      const data = (await res.json().catch(() => null)) as { status?: string; figures?: unknown } | null;
+      if (!res.ok || !data) return { status: 'service-down' };
+      const figures = data.status === 'ok' ? sanitizePayslipFigures(data.figures) : null;
+      return figures ? { status: 'ok', figures } : { status: 'unreadable' };
+    } catch (err) {
+      logWarn('payslip scan unavailable', err);
+      return { status: 'service-down' };
+    } finally {
+      this.net.end(activity);
+    }
+  }
+
+  async getStateEmployers(): Promise<StateGovernment[] | null> {
+    try {
+      const res = await fetch('/api/state-employers', { credentials: 'same-origin', signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+      const data = (await res.json().catch(() => null)) as { states?: unknown } | null;
+      return res.ok ? sanitizeStateGovernments(data?.states) : null;
+    } catch (err) {
+      logWarn('state employers unavailable', err);
       return null;
     }
   }

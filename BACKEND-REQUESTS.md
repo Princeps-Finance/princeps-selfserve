@@ -62,6 +62,22 @@ After the customer enters a BVN, the app shows the phones and emails tied to it,
 ### 8. Salary and employment checks
 IPPIS, Remita and Dedukt checks exist. Document the exact request and response, including the verified monthly income, the error cases the app must show (not found, mismatch, service down), and the mapping from our employment types and channels.
 
+### 8a. State government: states and employers (new screen)
+State government staff now pick their state, and for some states an employer, before the salary details. The app already ships a default list, so this is configuration, not a blocker.
+- `GET /api/state-employers` returns `{ states: [{ code, name, channel, employers: [{ code, name, channel }] }] }`. `channel` is `remita`, `ippis` or `dedukt` and says how repayments are collected. An employer without a `channel` inherits its state's.
+- Today's default: Adamawa (SUBEB, LGA, PHCDA), Cross River, Delta, Gombe, Katsina, Ondo, Plateau. **PHCDA is `dedukt`. SUBEB and LGA are assumed `remita`: please confirm.**
+- Add or remove a state or employer here and the app follows without a release. The app falls back to its own list when this cannot be reached.
+- For an employer on `dedukt`, the app sends the employer's name in `employer` on the salary check, in place of the paramilitary employer list. Please confirm the names the salary check expects.
+
+### 8b. Payslip scan
+The salary screen offers an optional "scan your payslip".
+- `POST /api/selfserve/payslip-extract`, multipart with `file` (JPEG, PNG, WebP, HEIC or PDF, up to 10 MB) and `captchaToken`. Answers `{ status: 'ok', figures: { netMonthly, grossMonthly?, month?, employer? } }` (naira, `month` as `YYYY-MM`). Use `413` for too large, `415` for a type not accepted, `429` for the limit, and `{ status: 'unreadable' }` when nothing usable was read.
+- Run the reader on the server, so the payslip is not handled by a browser library. Say how long the file is kept. A payslip holds salary and employer details, so it needs the same care as the other documents.
+- The customer confirms or corrects the figures, then the app sends them as `declaredNetPay` on `eligibility-check` and `verify-salary`. **Treat it as evidence, never as the verified pay**: eligibility stays decided on the server.
+
+### 8c. Bank list and logos
+`banks` should return the current licensed list (including OPay, Kuda, PalmPay and the other digital banks) with each bank's real NIBSS code, and an optional `logo`: a path on our own site such as `/banks/044.svg`. Our security policy only allows images from our own site, so serve the logo files from there. A bank with no logo shows its initials.
+
 ### 9. Application status for the customer
 A status read that returns the reference, state (received, under review, approved, declined, disbursed) and a human-readable reason, so the status screen can show more than "received".
 

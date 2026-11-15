@@ -21,6 +21,8 @@ export interface EmploymentDraft {
   nyscMonthsRemaining?: number;
   /** Only for government: federal or state. Decides the default salary channel and how stability is scored. */
   governmentLevel?: 'federal' | 'state';
+  /** Only for state government: the state, and the employer inside it when the state has several. Decides the salary channel. */
+  state?: { code: string; name: string; employer?: { code: string; name: string }; channel: SalaryChannel };
 }
 
 export type SalaryChannel = 'remita' | 'ippis' | 'dedukt';

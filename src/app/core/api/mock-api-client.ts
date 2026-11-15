@@ -42,6 +42,8 @@ import { maskPhoneNg } from './contact.util';
 import { scoreEligibility, type EligibilityInput } from '../eligibility/eligibility-scoring';
 import { NG_BANKS } from './ng-banks';
 import type { EmploymentAvailability } from './employment-availability';
+import type { StateGovernment } from './state-employers';
+import type { PayslipResult } from './payslip';
 import type { ReferralDraft } from '../application/application-state.service';
 
 function delay(ms: number): Promise<void> {
@@ -344,6 +346,18 @@ export class MockApiClient implements ApiClient {
 
   /** Demo: no back end, so the app keeps its own defaults. */
   async getEmploymentTypes(): Promise<EmploymentAvailability[] | null> {
+    return null;
+  }
+
+  /** Demo: a made-up reading, so the scan screen can be tried without a back end. */
+  async extractPayslip(file: File): Promise<PayslipResult> {
+    if (file.size > MAX_UPLOAD_BYTES) return { status: 'too-large' };
+    await delay(1600);
+    return { status: 'ok', figures: { netMonthly: 185_000, grossMonthly: 232_500, month: '2026-10', employer: 'State Ministry of Education' } };
+  }
+
+  /** Demo: no back end, so the app keeps its own list of states. */
+  async getStateEmployers(): Promise<StateGovernment[] | null> {
     return null;
   }
 

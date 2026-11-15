@@ -8,6 +8,8 @@ import {
   requiresContactGuard,
   requiresCheckResultGuard,
   requiresEmploymentGuard,
+  requiresStateChosenGuard,
+  requiresStateGovernmentGuard,
   requiresIdentityOrCheckGuard,
   requiresNotSubmittedGuard,
   requiresOfferGuard,
@@ -89,8 +91,13 @@ export const routes: Routes = [
           import('./features/apply/waitlist/waitlist.component').then((m) => m.WaitlistComponent),
       },
       {
+        path: 'state',
+        canMatch: [requiresIdentityOrCheckGuard, requiresEmploymentGuard, requiresStateGovernmentGuard],
+        loadComponent: () => import('./features/apply/state/state.component').then((m) => m.StateComponent),
+      },
+      {
         path: 'salary',
-        canMatch: [requiresEmploymentGuard],
+        canMatch: [requiresEmploymentGuard, requiresStateChosenGuard],
         loadComponent: () =>
           import('./features/apply/salary/salary.component').then((m) => m.SalaryComponent),
       },

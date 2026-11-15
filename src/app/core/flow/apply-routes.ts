@@ -13,6 +13,7 @@ export const APPLY = {
   loans: '/apply/loans',
   profile: '/apply/profile',
   employment: '/apply/employment',
+  state: '/apply/state',
   waitlist: '/apply/waitlist',
   statement: '/apply/statement',
   salary: '/apply/salary',

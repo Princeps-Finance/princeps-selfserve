@@ -41,6 +41,15 @@ export const requiresIdentityOrCheckGuard = requires(
 );
 export const requiresCheckResultGuard = requires((s) => s.intent() === 'check' && !!s.eligibility(), APPLY.welcome);
 export const requiresEmploymentGuard = requires((s) => !!s.employment(), APPLY.employment);
+/** State government staff pick their state before the salary details, because the state decides how they are paid. */
+export const requiresStateChosenGuard = requires((s) => {
+  const e = s.employment();
+  return !e || e.type !== 'government' || e.governmentLevel !== 'state' || !!e.state;
+}, APPLY.state);
+export const requiresStateGovernmentGuard = requires(
+  (s) => s.employment()?.type === 'government' && s.employment()?.governmentLevel === 'state',
+  APPLY.employment,
+);
 export const requiresSalaryGuard = requires((s) => !!s.salary(), APPLY.salary);
 export const requiresApprovedGuard = requires(
   (s) => s.eligibility()?.decision === 'approved' || s.eligibility()?.decision === 'review',

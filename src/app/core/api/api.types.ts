@@ -22,6 +22,8 @@ export interface SalaryVerifyInput {
   fullName: string;
   ippisNumber?: string;
   employer?: string;
+  /** Take-home pay the customer confirmed from a scanned payslip. Evidence for the server to weigh, never the verified pay. */
+  declaredNetPay?: number;
 }
 
 /**
@@ -37,6 +39,8 @@ export interface EligibilityCheckInput {
   accountNumber: string;
   ippisNumber?: string;
   employer?: string;
+  /** Take-home pay the customer confirmed from a scanned payslip. Evidence for the server to weigh, never the verified pay. */
+  declaredNetPay?: number;
   captchaToken?: string;
 }
 
@@ -203,6 +207,8 @@ export type MandateStatus = 'pending' | 'completed' | 'failed';
 export interface Bank {
   code: string;
   name: string;
+  /** A logo on our own site, such as `/banks/044.svg`. Optional: a bank without one shows its initials. */
+  logo?: string;
 }
 
 /**

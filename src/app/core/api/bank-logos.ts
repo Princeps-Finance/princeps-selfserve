@@ -28,7 +28,29 @@ export function bankInitials(name: string): string {
   return letters.slice(0, 2) || '?';
 }
 
-/** A bank as a choice in the select sheet, with its logo or initials. */
+/** A logo address from the back end is only trusted when it is a path on our own site, which the page's security policy allows. */
+function ownSitePath(v: unknown): string | undefined {
+  return typeof v === 'string' && /^\/(?!\/)[\w./-]+$/.test(v) && !v.includes('..') ? v : undefined;
+}
+
+/** Keeps the banks the back end sent that have a code and a name, and a logo only when it is a safe path. */
+export function sanitizeBanks(raw: readonly unknown[]): Bank[] {
+  const out: Bank[] = [];
+  const seen = new Set<string>();
+  for (const row of raw) {
+    if (!row || typeof row !== 'object') continue;
+    const r = row as Record<string, unknown>;
+    const code = typeof r['code'] === 'string' ? r['code'].trim() : '';
+    const name = typeof r['name'] === 'string' ? r['name'].trim() : '';
+    if (!code || !name || seen.has(code)) continue;
+    seen.add(code);
+    const logo = ownSitePath(r['logo']);
+    out.push(logo ? { code, name, logo } : { code, name });
+  }
+  return out;
+}
+
+/** A bank as a choice in the select sheet. Its own logo wins, then one we ship, then its initials. */
 export function bankOption(b: Bank): SelectOption {
-  return { value: b.code, label: b.name, logo: bankLogo(b.code), initials: bankInitials(b.name) };
+  return { value: b.code, label: b.name, logo: ownSitePath(b.logo) ?? bankLogo(b.code), initials: bankInitials(b.name) };
 }
