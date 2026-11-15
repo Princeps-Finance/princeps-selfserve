@@ -17,6 +17,7 @@ import {
   rateLimited,
   readJson,
 } from '../_lib/http';
+import { visitorHeader, visitorInfo } from '../_lib/visitor';
 
 
 const phone = z.string().regex(/^\+234[789]\d{9}$/);
@@ -366,6 +367,8 @@ export default async function handler(req: Request): Promise<Response> {
     {
       ...(token && token.length <= 512 ? { 'X-Application-Token': token } : {}),
       ...(def.idempotent && idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
+      // Only the calls that create something (the application, a review, the waitlist) carry who sent it, for the admin.
+      ...(def.idempotent ? { 'X-Visitor-Info': visitorHeader(visitorInfo(req)) } : {}),
     },
   );
   if (!upstream) return fail('UPSTREAM_DOWN', 'Service unavailable. Try again shortly.', 502);

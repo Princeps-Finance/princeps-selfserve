@@ -47,6 +47,18 @@ describe('POST /api/selfserve/[op]', () => {
     expect(fetchMock.mock.calls[0][1].headers['X-Application-Token']).toBe('tok-1');
   });
 
+  it('tells the back office the device and place on calls that create something, and not on lookups', async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ status: 'ok', referenceId: 'WL-1' })));
+    await handler(
+      req('waitlist', { phone: '+2348031112233', type: 'own-business', channel: 'sms' }, { 'x-application-token': 'tok-1', 'user-agent': 'Mozilla/5.0 (Linux; Android 14; SM-A546B) Chrome/124.0 Mobile Safari/537.36', 'x-forwarded-for': '102.89.9.9' }),
+    );
+    const sent = JSON.parse(decodeURIComponent(fetchMock.mock.calls[0][1].headers['X-Visitor-Info']));
+    expect(sent).toMatchObject({ deviceType: 'mobile', os: 'Android', browser: 'Chrome', ip: '102.89.9.9' });
+    fetchMock.mockClear();
+    await handler(req('verify-nin', { nin: '12345678901', fullName: 'Ada Obi', dateOfBirth: '1990-01-01' }, { 'x-application-token': 'tok-1' }));
+    expect(fetchMock.mock.calls[0][1].headers['X-Visitor-Info']).toBeUndefined();
+  });
+
   it('rejects unknown operations (including prototype keys), bad input and foreign origins', async () => {
     expect((await handler(req('drop-tables', {}))).status).toBe(404);
     expect((await handler(req('constructor', {}))).status).toBe(404);

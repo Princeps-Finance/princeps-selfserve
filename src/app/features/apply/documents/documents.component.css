@@ -15,7 +15,7 @@
 
 .doc-label { margin: 0; font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 500; letter-spacing: -0.01em; color: var(--ink); }
 .doc-hint { margin: 0; font-size: var(--fs-sm); color: var(--ink-muted); }
-.doc-file { margin: var(--space-1) 0 0; font-size: var(--fs-xs); color: var(--ink-soft); font-family: var(--font-mono); }
+.doc-file { margin: var(--space-1) 0 0; font-size: var(--fs-xs); color: var(--ink-soft); font-family: var(--font-sans); overflow-wrap: anywhere; }
 .doc-anyway { min-height: 44px; padding: 0 var(--space-2); border: 0; background: none; color: var(--text-accent); font: inherit; font-size: var(--fs-sm); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .doc-anyway:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
 .doc-error { margin: var(--space-1) 0 0; font-size: var(--fs-sm); color: var(--danger-text); }

@@ -1,6 +1,7 @@
 // AWS Lambda entry for the API (production). API Gateway HTTP API (payload format 2.0) calls this; it turns the event
 // into a standard Request, runs the shared router and turns the Response back. See aws/template.yaml.
 import { route } from '../api/router';
+import { stripGeoHeaders } from '../api/_lib/visitor';
 
 export interface ApiEvent {
   rawPath: string;
@@ -23,6 +24,8 @@ export function toRequest(event: ApiEvent): Request {
   const url = `https://${host}${event.rawPath}${event.rawQueryString ? `?${event.rawQueryString}` : ''}`;
   const headers = new Headers();
   for (const [name, value] of Object.entries(event.headers)) if (value !== undefined) headers.set(name, value);
+  // The place headers are ours alone: anything a caller sent under those names is dropped.
+  stripGeoHeaders(headers);
   const hasBody = method !== 'GET' && method !== 'HEAD' && event.body !== undefined;
   const body = hasBody ? (event.isBase64Encoded ? Buffer.from(event.body!, 'base64') : event.body) : undefined;
   return new Request(url, { method, headers, body });

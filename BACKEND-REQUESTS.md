@@ -109,6 +109,15 @@ The app does the **photo quality check** itself (blurry, too dark, too small), s
 - Thresholds for face match, name match and the review band, and who can change them.
 - How long each kind of file is kept.
 
+### 8e. Where and on what device the application was made (for the admin)
+The app's server layer now sends an `X-Visitor-Info` header on every call that creates something (the application on `/api/loans`, a statement review, a mandate link, the waitlist). It is percent-encoded JSON, read from the request itself, so the customer cannot change it:
+`{ ip?, country?, region?, city?, latitude?, longitude?, timezone?, deviceType: 'mobile' | 'tablet' | 'desktop' | 'unknown', os?, browser? }`
+- Store it with the application so the admin can show it. Unknown parts are left out.
+- **It is the connection's place, not a GPS fix.** The city comes from the network's address, so a mobile network or a VPN can put it elsewhere. Latitude and longitude are rounded to about a kilometre. Treat it as a signal for review, not proof of address.
+- **Production needs the CloudFront location headers turned on** (`CloudFront-Viewer-Country`, `-City`, `-Country-Region-Name`, `-Latitude`, `-Longitude`, `-Time-Zone`) in the origin request policy. Without them production shows device and IP only. The Cloudflare worker used in development supplies them already.
+- The IP and place are personal data. Add them to the privacy notice and set a retention rule. Say who in the admin can see them.
+- Exact location would need the customer to allow the browser's location prompt. It is not built. Ask if risk needs it.
+
 ### 9. Application status for the customer
 A status read that returns the reference, state (received, under review, approved, declined, disbursed) and a human-readable reason, so the status screen can show more than "received".
 

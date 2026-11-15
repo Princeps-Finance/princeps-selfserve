@@ -29,6 +29,7 @@ import {
   rateLimited,
   readJson,
 } from './_lib/http';
+import { visitorHeader, visitorInfo } from './_lib/visitor';
 
 
 const digits = (n: number) => z.string().regex(new RegExp(`^\\d{${n}}$`));
@@ -167,6 +168,8 @@ export default async function handler(req: Request): Promise<Response> {
   const upstream = await callBackoffice(cfg, '/api/loans', payload, {
     'X-Application-Token': appToken,
     'Idempotency-Key': b.idempotencyKey,
+    // Who sent it: the device and the place the connection comes from, read from the request, for the admin.
+    'X-Visitor-Info': visitorHeader(visitorInfo(req)),
   });
   if (!upstream) return fail('UPSTREAM_DOWN', 'Service unavailable. Try again shortly.', 502);
 
