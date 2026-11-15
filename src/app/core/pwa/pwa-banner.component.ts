@@ -1,38 +1,47 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
 import { TPipe } from '../i18n/t.pipe';
+import { ModalComponent } from '../../shared/modal.component';
 import { AppUpdateService } from './app-update.service';
+
+/** Screens where a reload would lose work in flight (a recording, a payment set-up, the final send): the update waits. */
+const BUSY_ROUTES = new Set(['/apply/verify-identity', '/apply/mandate', '/apply/submit']);
 
 /** Nothing has been typed yet: a ready update is applied automatically. */
 const AUTO_APPLY_ROUTES = new Set(['/', '/apply', '/apply/welcome']);
-/** Little or nothing to lose: offer the update, the customer decides. */
-const OFFER_ROUTES = new Set([...AUTO_APPLY_ROUTES, '/apply/bvn', '/apply/status']);
 
 @Component({
   selector: 'app-pwa-banner',
-  imports: [TPipe],
+  imports: [TPipe, ModalComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (updater.offline()) {
       <p class="banner banner--offline" role="status">{{ 'pwa.offline' | t }}</p>
     }
-    @if (showUpdate()) {
-      <div class="banner banner--update" role="status">
-        <span>{{ 'pwa.update.ready' | t }}</span>
-        <button type="button" class="action" (click)="updater.apply()">
-          {{ 'pwa.update.action' | t }}
-        </button>
-      </div>
+    @if (showUpdate() && dismissed()) {
+      <!-- "Later" must not hide the update for the rest of the visit: this chip opens the window again. -->
+      <button type="button" class="chip" (click)="dismissed.set(false)">{{ 'pwa.update.available' | t }}</button>
     }
+    <app-modal [open]="showUpdate() && !dismissed()" [title]="'pwa.update.title' | t" (closed)="dismissed.set(true)">
+      <div class="update">
+        <h2 class="update-title">{{ 'pwa.update.title' | t }}</h2>
+        <p class="update-body">{{ 'pwa.update.ready' | t }}</p>
+        @if (midFlow()) {
+          <p class="update-warn">{{ 'pwa.update.warn' | t }}</p>
+        }
+        <button type="button" class="cta" (click)="updater.apply()"><span>{{ 'pwa.update.action' | t }}</span></button>
+        <button type="button" class="alt" (click)="dismissed.set(true)">{{ 'pwa.update.later' | t }}</button>
+      </div>
+    </app-modal>
   `,
   styles: [
     `
       /* In flow (sticky), so the notice pushes content down instead of covering controls. */
       :host {
-        display: block; position: sticky; top: 0; z-index: 70;
-        padding: env(safe-area-inset-top) var(--space-4) 0;
+        display: block; position: sticky; top: env(safe-area-inset-top); z-index: 70;
+        padding: 0 var(--space-4);
       }
       .banner {
         margin: var(--space-2) auto 0; max-width: 520px; width: 100%;
@@ -44,18 +53,23 @@ const OFFER_ROUTES = new Set([...AUTO_APPLY_ROUTES, '/apply/bvn', '/apply/status
         box-shadow: var(--shadow-3);
       }
       .banner--offline { background: var(--navy-950); }
-      .action {
-        min-height: 44px; padding: 0 var(--space-4);
-        border: 1px solid currentColor; border-radius: var(--btn-radius);
-        background: transparent; color: inherit;
-        font: inherit; font-weight: var(--btn-weight); cursor: pointer;
+      .chip {
+        display: block; margin: var(--space-2) 0 0 auto; min-height: 36px; padding: 0 var(--space-4);
+        border: 0; border-radius: var(--radius-pill); background: var(--info-soft); color: var(--text-accent);
+        font: inherit; font-size: var(--fs-sm); font-weight: 600; cursor: pointer;
       }
-      .action:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+      .chip:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
+      .update { display: flex; flex-direction: column; gap: var(--space-3); }
+      .update-title { margin: 0; font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 600; }
+      .update-warn { margin: 0; padding: var(--space-3); border-radius: var(--radius-sm); background: var(--warning-soft); font-size: var(--fs-sm); line-height: 1.45; }
+      .update-body { margin: 0; color: var(--ink-soft); line-height: 1.5; }
     `,
   ],
 })
 export class PwaBannerComponent {
   protected readonly updater = inject(AppUpdateService);
+  /** The customer can put the update off; the banner stays away for the rest of the visit. */
+  protected readonly dismissed = signal(false);
   private readonly router = inject(Router);
 
   private readonly path = toSignal(
@@ -67,8 +81,10 @@ export class PwaBannerComponent {
     { initialValue: '/' },
   );
 
-  private readonly atSafePoint = computed(() => OFFER_ROUTES.has(this.path()));
-  readonly showUpdate = computed(() => this.updater.updateReady() && this.atSafePoint());
+  /** On every screen: the customer is told, and chooses Update (reloads at once) or Later (this visit only). */
+  /** Past the first screens, where a reload would make the customer start the step again. */
+  readonly midFlow = computed(() => !['/apply/bvn', '/apply/status'].includes(this.path()));
+  readonly showUpdate = computed(() => this.updater.updateReady() && !AUTO_APPLY_ROUTES.has(this.path()) && !BUSY_ROUTES.has(this.path()));
 
   constructor() {
     // On the first screens nothing can be lost, so a ready update is applied automatically.

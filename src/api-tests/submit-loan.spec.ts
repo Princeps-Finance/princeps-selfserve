@@ -1,4 +1,5 @@
 import handler from '../../api/submit-loan';
+import { signQuote } from '../../api/_lib/quote-token';
 import { estimateMonthlyRepayment } from '../shared/pricing';
 
 const ORIGIN = 'https://selfserve.example.com';
@@ -85,6 +86,34 @@ describe('POST /api/submit-loan', () => {
     expect(sent.manualReview).toBe(false);
     expect(sent.ratePercent).toBe(5);
     expect(sent.feesKobo).toBe(4_000 * 100);
+  });
+
+  it('forwards religion only when the customer gave it, and only a known value', async () => {
+    const without = await handler(req(valid()));
+    expect(without.status).toBe(200);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).religion).toBeUndefined();
+
+    const given = await handler(req(valid({ religion: 'islam' })));
+    expect(given.status).toBe(200);
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body).religion).toBe('islam');
+
+    expect((await handler(req(valid({ religion: 'anything else' })))).status).toBe(400);
+  });
+
+  it('forwards a shared location only when the customer gave one, and refuses one that is not a place', async () => {
+    const without = await handler(req(valid()));
+    expect(without.status).toBe(200);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).location).toBeUndefined();
+    // A refusal arrives as null and changes nothing.
+    expect((await handler(req(valid({ location: null })))).status).toBe(200);
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body).location).toBeUndefined();
+
+    const place = { latitude: 6.5244, longitude: 3.3792, accuracyM: 18, capturedAt: '2026-11-15T10:00:00.000Z' };
+    expect((await handler(req(valid({ location: place })))).status).toBe(200);
+    expect(JSON.parse(fetchMock.mock.calls[2][1].body).location).toEqual(place);
+
+    expect((await handler(req(valid({ location: { ...place, latitude: 91 } })))).status).toBe(400);
+    expect((await handler(req(valid({ location: { ...place, extra: 'x' } })))).status).toBe(400);
   });
 
   it('rejects wrong method, foreign origin and missing application token', async () => {
@@ -177,5 +206,39 @@ describe('POST /api/submit-loan', () => {
   it('enforces the product tenor and amount step, not just the global range', async () => {
     const offStep = await handler(req(valid({ amountKobo: 200_100 * 100 })));
     expect(offStep.status).toBe(400);
+  });
+
+  describe('the quote the customer accepted', () => {
+    const monthly = estimateMonthlyRepayment(200_000, 6, 5, 'Flat Rate');
+    const claims = (over: Record<string, number | string> = {}) => ({ p: 'ippis-standard', a: 200_000 * 100, t: 6, m: monthly * 100, r: 5, x: Date.now() + 600_000, ...over });
+
+    it('goes through when the id is the server\'s own and matches the figures sent', async () => {
+      const quoteId = await signQuote(claims());
+      expect((await handler(req(valid({ quoteId })))).status).toBe(200);
+    });
+
+    it('is refused when the id was made for other figures', async () => {
+      const quoteId = await signQuote(claims({ a: 100_000 * 100 }));
+      const res = await handler(req(valid({ quoteId })));
+      expect(res.status).toBe(409);
+      expect(((await res.json()) as { error: { code: string } }).error.code).toBe('QUOTE_MISMATCH');
+    });
+
+    it('is refused once it has expired, so the customer reviews the offer again', async () => {
+      const quoteId = await signQuote(claims({ x: Date.now() - 1000 }));
+      const res = await handler(req(valid({ quoteId })));
+      expect(res.status).toBe(409);
+      expect(((await res.json()) as { error: { code: string } }).error.code).toBe('QUOTE_EXPIRED');
+    });
+
+    it('is refused when the id is forged', async () => {
+      const res = await handler(req(valid({ quoteId: 'eyJwIjoieCJ9.AAAA' })));
+      expect(res.status).toBe(409);
+      expect(((await res.json()) as { error: { code: string } }).error.code).toBe('QUOTE_INVALID');
+    });
+
+    it('still accepts a submission with no quote id (older app versions)', async () => {
+      expect((await handler(req(valid({ quoteId: null })))).status).toBe(200);
+    });
   });
 });

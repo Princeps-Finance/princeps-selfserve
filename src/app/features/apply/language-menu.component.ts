@@ -1,3 +1,4 @@
+import { IconComponent } from '../../shared/icon.component';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -13,7 +14,7 @@ import { TPipe } from '../../core/i18n/t.pipe';
 
 @Component({
   selector: 'app-language-menu',
-  imports: [TPipe],
+  imports: [IconComponent, TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '(document:click)': 'onDocClick($event)',
@@ -24,16 +25,14 @@ import { TPipe } from '../../core/i18n/t.pipe';
       <button
         #trigger
         type="button"
-        class="trigger"
+        class="trigger glass-pill"
         [attr.aria-haspopup]="'listbox'"
         [attr.aria-expanded]="open()"
         [attr.aria-label]="'apply.language' | t"
         (click)="toggle($event)"
       >
         <span class="current" aria-hidden="true">{{ currentLang().toUpperCase() }}</span><span class="vh">{{ currentEndonym() }}</span>
-        <svg class="caret" [class.is-open]="open()" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-          <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <app-icon name="bold-chevron-down" [size]="12" class="caret" [class.is-open]="open()" />
       </button>
 
       @if (open()) {
@@ -51,9 +50,7 @@ import { TPipe } from '../../core/i18n/t.pipe';
                 <span class="option-endonym">{{ l.endonym }}</span>
                 <span class="option-english">{{ l.english }}</span>
                 @if (l.code === currentLang()) {
-                  <svg class="check" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                    <path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                  </svg>
+                  <app-icon name="bold-success" [size]="14" class="check" />
                 }
               </button>
             </li>
@@ -68,15 +65,12 @@ import { TPipe } from '../../core/i18n/t.pipe';
       .trigger {
         display: inline-flex; align-items: center; gap: var(--space-2);
         min-height: 44px; min-width: 44px; padding: 0 var(--space-2);
-        background: transparent; border: 0;
-        border-radius: var(--radius-pill);
         letter-spacing: 0.04em;
         font-family: var(--font-sans);
         font-size: var(--fs-sm); font-weight: 500; color: var(--ink);
         cursor: pointer;
         transition: background 160ms ease, border-color 160ms ease;
       }
-      .trigger:hover { background: var(--hover-tint); border-color: var(--ink); }
       .trigger:focus-visible {
         outline: 2px solid transparent; outline-offset: 2px;
         box-shadow: var(--focus-ring);
@@ -109,9 +103,8 @@ import { TPipe } from '../../core/i18n/t.pipe';
         cursor: pointer; text-align: left; color: var(--ink);
         font-family: var(--font-sans);
       }
-      .option:hover, .option:focus-visible {
-        background: var(--canvas); outline: 2px solid transparent; outline-offset: 2px;
-      }
+      .option:focus-visible { background: var(--canvas); outline: 2px solid transparent; outline-offset: 2px; }
+      @media (hover: hover) and (pointer: fine) { .option:hover { background: var(--canvas); } }
       .option-endonym {
         font-family: var(--font-display); font-size: var(--fs-body); font-weight: 500;
         letter-spacing: -0.01em;

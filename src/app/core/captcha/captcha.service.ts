@@ -11,6 +11,9 @@ declare global {
   }
 }
 
+/** How long to wait for the bot check before moving on without a token (the server then decides). */
+const CHECK_TIMEOUT_MS = 8_000;
+
 /**
  * Cloudflare Turnstile bot check, used before an SMS is sent (SMS costs money and can be used
  * to harass someone). With no site key configured it does nothing and returns undefined, so
@@ -48,7 +51,10 @@ export class CaptchaService {
       host.style.bottom = '8px';
       host.style.left = '8px';
       document.body.appendChild(host);
+      // A network that lets the script load but blocks the check itself would otherwise leave the button spinning for good.
+      const giveUp = setTimeout(() => done(undefined), CHECK_TIMEOUT_MS);
       const done = (value: string | undefined) => {
+        clearTimeout(giveUp);
         host.remove();
         resolve(value);
       };

@@ -1,9 +1,10 @@
+import { IconComponent } from './icon.component';
 import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 @Component({
   selector: 'app-promo-card',
-  imports: [NgOptimizedImage],
+  imports: [IconComponent, NgOptimizedImage],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="card glass" [attr.aria-labelledby]="'promo-title'">
@@ -11,9 +12,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         <img [ngSrc]="imageSrc()" [width]="664" [height]="420" [alt]="imageAlt()" />
         @if (dismissible()) {
           <button type="button" class="close" [attr.aria-label]="dismissLabel()" (click)="dismissed.emit()">
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-            </svg>
+            <app-icon name="bold-close" [size]="14" />
           </button>
         }
       </div>
@@ -43,12 +42,12 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         position: absolute; top: 8px; right: 8px;
         width: 28px; height: 28px; border: 0; border-radius: 50%;
         display: grid; place-items: center; cursor: pointer;
-        background: rgba(17, 18, 20, 0.5); color: #fff;
+        background: var(--scrim); color: var(--on-dark);
         transition: background 120ms ease;
       }
-      .close:hover { background: rgba(17, 18, 20, 0.7); }
+      @media (hover: hover) and (pointer: fine) { .close:hover { background: var(--scrim-strong); } }
       .close:focus-visible, .promo-cta:focus-visible { outline: 2px solid var(--focus-color); outline-offset: 2px; }
-      .close:focus-visible { outline-color: #fff; }
+      .close:focus-visible { outline-color: var(--on-dark); }
       .body { padding: var(--space-4); }
       .title {
         display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: var(--space-2);
@@ -67,7 +66,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
         font: var(--btn-weight) 14px/1 var(--font-sans); cursor: pointer;
         transition: background 120ms ease;
       }
-      .promo-cta:hover { background: var(--action-primary-hover); }
+      @media (hover: hover) and (pointer: fine) { .promo-cta:hover { background: var(--action-primary-hover); } }
       .promo-cta:active { background: var(--action-primary-active); }
       @media (prefers-reduced-motion: reduce) { .close, .promo-cta { transition: none; } }
     `,

@@ -1,3 +1,4 @@
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { SelectFieldComponent, SelectOption } from '../../../core/ui/select-field.component';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -6,12 +7,21 @@ import { focusFirstInvalid } from '../../../core/a11y/focus';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
 import { API_CLIENT, Bank } from '../../../core/api/api-client';
+import { bankOption } from '../../../core/api/bank-logos';
+import type { PayslipFigures } from '../../../core/api/payslip';
+import { logWarn } from '../../../core/log';
+import { PayslipScanComponent } from './payslip-scan.component';
 import {
   ApplicationStateService,
   SalaryChannel,
 } from '../../../core/application/application-state.service';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
+import { IconComponent } from '../../../shared/icon.component';
+import { HelpLinksComponent } from '../../../shared/help-links.component';
+import { ModalComponent } from '../../../shared/modal.component';
+import { telLink, whatsappLink } from '../../../core/support';
+import { CaptchaService } from '../../../core/captcha/captcha.service';
 
 const PARAMILITARY_EMPLOYERS = [
   'NSCDC',
@@ -23,7 +33,7 @@ const PARAMILITARY_EMPLOYERS = [
 
 @Component({
   selector: 'app-salary',
-  imports: [TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent],
+  imports: [AnimatedIconComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent, ModalComponent, IconComponent, HelpLinksComponent, PayslipScanComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './salary.component.html',
   styleUrl: './salary.component.css',
@@ -32,28 +42,73 @@ export class SalaryComponent {
   private readonly api = inject(API_CLIENT);
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
+  private readonly captcha = inject(CaptchaService);
 
+  /**
+   * check: the no-identity "how much can I get" check. The salary account is asked and the back end does the real
+   *        employment and salary check; nothing is verified against a name yet.
+   * verify: after identity, when the account was already given in the check. It is checked again, silently, against
+   *         the name from the BVN, and the real pay replaces the estimate.
+   * full: the normal application.
+   */
+  readonly mode: 'check' | 'verify' | 'full' =
+    this.state.intent() === 'check' ? 'check' : this.state.salary()?.fromCheck ? 'verify' : 'full';
+
+  /** A state government employer picked on the state screen, such as Adamawa PHCDA. Its name is the employer, so it is not asked again. */
+  /** Pay the customer confirmed from a scanned payslip. It goes to the server as evidence; the verified pay still comes from the salary check. */
+  readonly payslip = signal<PayslipFigures | null>(null);
+  /** Whether the back end wants a payslip from this customer. Asked again whenever the work, channel or state changes; unreachable means no. */
+  readonly asksForPayslip = signal(false);
+  private requirementsSeq = 0;
+  readonly stateEmployer = this.state.employment()?.state?.employer?.name ?? null;
   readonly channel = signal<SalaryChannel>(this.deriveChannel());
-  readonly showChannelChoice = computed(() => this.state.employment()?.type === 'government');
+  /**
+   * Federal staff are usually paid through IPPIS but some through Remita, so they choose (IPPIS is picked to start).
+   * State government staff do not choose: the state, and employer, picked on the state screen decide it.
+   */
+  readonly showChannelChoice = computed(() => this.state.employment()?.type === 'government' && this.state.employment()?.governmentLevel !== 'state');
   readonly paramilitaryEmployers = PARAMILITARY_EMPLOYERS;
   readonly employerOptions: SelectOption[] = PARAMILITARY_EMPLOYERS.map((e) => ({ value: e, label: e }));
 
   setChannel(c: SalaryChannel): void {
     this.channel.set(c);
     this.serverError.set(null);
+    void this.loadRequirements();
+  }
+
+  /** Asks the back end whether to offer the payslip upload for this customer's work, channel, state and employer. */
+  private async loadRequirements(): Promise<void> {
+    const seq = ++this.requirementsSeq;
+    const e = this.state.employment();
+    const type = e?.type;
+    if (type !== 'government' && type !== 'paramilitary' && type !== 'corper') {
+      this.asksForPayslip.set(false);
+      return;
+    }
+    let wanted = false;
+    try {
+      wanted = (await this.api.getSalaryRequirements({
+        employmentType: type,
+        channel: this.channel(),
+        governmentLevel: e?.governmentLevel,
+        stateCode: e?.state?.code,
+        employerCode: e?.state?.employer?.code,
+      })).payslip === true;
+    } catch (err) {
+      logWarn('salary requirements unavailable', err);
+    }
+    if (seq !== this.requirementsSeq) return;
+    this.asksForPayslip.set(wanted);
+    if (!wanted) this.payslip.set(null);
   }
 
   readonly banks = signal<Bank[]>([]);
-  readonly bankQuery = signal('');
-  readonly bankOpen = signal(false);
-  readonly activeBank = signal(-1);
-
-  readonly filteredBanks = computed(() => {
-    const q = this.bankQuery().trim().toLowerCase();
-    const list = this.banks();
-    if (!q) return list;
-    return list.filter((b) => b.name.toLowerCase().includes(q));
-  });
+  readonly bankOptions = computed<SelectOption[]>(() => this.banks().map(bankOption));
+  /** What the bank says about the typed account: nothing yet, looking, a name, no such account, or the lookup is down. */
+  readonly lookup = signal<{ state: 'idle' | 'loading' | 'ok' | 'not-found' | 'unavailable'; name?: string }>({ state: 'idle' });
+  /** The check button waits for the account name. If the lookup itself is down the customer can still go on. */
+  readonly lookupReady = computed(() => this.lookup().state === 'ok' || this.lookup().state === 'unavailable');
+  private lookupSeq = 0;
 
   readonly form = new FormGroup({
     bankCode: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -67,6 +122,10 @@ export class SalaryComponent {
   });
 
   readonly submitting = signal(false);
+  /** True when the limit on checks was reached: a window explains it. */
+  readonly limited = signal(false);
+  readonly whatsapp = whatsappLink('Hello Princeps, I reached the limit on checking how much I can get and I would like help.');
+  readonly tel = telLink();
   readonly serverError = signal<'not-found' | 'name-mismatch' | 'service-down' | null>(null);
 
   readonly statusChanges = toSignal(this.form.statusChanges, { initialValue: this.form.status });
@@ -87,6 +146,7 @@ export class SalaryComponent {
     this.statusChanges();
     this.valueChanges();
     if (this.form.invalid) return false;
+    if (!this.lookupReady()) return false;
     if (this.needsIppis() && !/^\d+$/.test(this.form.controls.ippisNumber.value)) return false;
     if (this.channel() === 'dedukt' && !this.form.controls.employer.value) return false;
     return true;
@@ -105,8 +165,13 @@ export class SalaryComponent {
         ippisNumber: saved.ippisNumber ?? '',
         employer: saved.paramilitaryEmployer ?? '',
       });
-      this.bankQuery.set(saved.bankName);
     }
+    // The employer was picked on the state screen, so it fills itself and the form never asks for it.
+    if (this.stateEmployer) this.form.controls.employer.setValue(this.stateEmployer);
+    this.watchAccount();
+    void this.loadRequirements();
+    // The account came from the check: verify it now without asking again. If it fails, the form below shows why.
+    if (this.mode === 'verify' && saved && saved.accountNumber) queueMicrotask(() => void this.submit());
   }
 
   needsIppis(): boolean {
@@ -114,54 +179,51 @@ export class SalaryComponent {
   }
 
   titleKey(): string {
+    if (this.stateEmployer && this.channel() === 'dedukt') return 'step.salary.dedukt.state.title';
     return `step.salary.${this.channel()}.title`;
   }
 
   subtitleKey(): string {
+    if (this.stateEmployer && this.channel() === 'dedukt') return 'step.salary.dedukt.state.subtitle';
     return `step.salary.${this.channel()}.subtitle`;
   }
 
-  onBankFocus(): void {
-    this.bankOpen.set(true);
+  clearAccount(): void {
+    this.form.controls.accountNumber.setValue('');
+    document.getElementById('account')?.focus();
   }
 
-  onBankKeydown(evt: KeyboardEvent): void {
-    const list = this.filteredBanks();
-    if (evt.key === 'ArrowDown' || evt.key === 'ArrowUp') {
-      evt.preventDefault();
-      if (!list.length) return;
-      this.bankOpen.set(true);
-      const step = evt.key === 'ArrowDown' ? 1 : -1;
-      this.activeBank.update((i) => (i + step + list.length) % list.length);
-    } else if (evt.key === 'Enter' && this.bankOpen() && this.activeBank() >= 0) {
-      evt.preventDefault();
-      this.pickBank(list[this.activeBank()]);
-    } else if (evt.key === 'Escape' && this.bankOpen()) {
-      evt.preventDefault();
-      this.bankOpen.set(false);
-    }
-  }
-
-  onBankInput(evt: Event): void {
-    this.activeBank.set(-1);
-    const v = (evt.target as HTMLInputElement).value;
-    this.bankQuery.set(v);
-    this.bankOpen.set(true);
-    this.form.controls.bankCode.setValue('');
-    this.form.controls.bankName.setValue('');
-  }
-
-  onBankBlur(): void {
-    // Delay so option click registers.
-    setTimeout(() => this.bankOpen.set(false), 150);
-  }
-
-  pickBank(bank: Bank): void {
-    this.form.controls.bankCode.setValue(bank.code);
-    this.form.controls.bankName.setValue(bank.name);
-    this.bankQuery.set(bank.name);
-    this.bankOpen.set(false);
-    this.activeBank.set(-1);
+  /** Looks the name up once a bank and all 10 digits are in; any change starts over. */
+  private watchAccount(): void {
+    const bank = this.form.controls.bankCode;
+    const acct = this.form.controls.accountNumber;
+    const run = async (): Promise<void> => {
+      const seq = ++this.lookupSeq;
+      const code = bank.value;
+      const num = acct.value;
+      if (!code || !/^\d{10}$/.test(num)) {
+        this.lookup.set({ state: 'idle' });
+        return;
+      }
+      this.lookup.set({ state: 'loading' });
+      const res = await this.api.resolveAccount(code, num);
+      if (seq !== this.lookupSeq) return;
+      this.lookup.set(res.status === 'ok' ? { state: 'ok', name: res.accountName } : res.status === 'not-found' ? { state: 'not-found' } : { state: 'unavailable' });
+    };
+    let lastBank = bank.value;
+    bank.valueChanges.subscribe((code) => {
+      this.form.controls.bankName.setValue(this.banks().find((b) => b.code === code)?.name ?? '');
+      // A different bank means the account number typed is for another bank. Only a pick by the customer clears it,
+      // not a saved answer being put back.
+      if (bank.dirty && code !== lastBank && acct.value) {
+        acct.setValue('');
+        this.serverError.set(null);
+      }
+      lastBank = code;
+      void run();
+    });
+    acct.valueChanges.subscribe(() => void run());
+    void run();
   }
 
   errorKey(): string | null {
@@ -183,6 +245,47 @@ export class SalaryComponent {
     this.submitting.set(true);
     this.serverError.set(null);
     const v = this.form.getRawValue();
+    if (this.mode === 'check') {
+      try {
+        const employment = this.state.employment();
+        const res = await this.api.checkEligibility({
+          employmentType: employment?.type === 'paramilitary' || employment?.type === 'corper' ? employment.type : 'government',
+          governmentLevel: employment?.governmentLevel,
+          nyscMonthsRemaining: employment?.nyscMonthsRemaining,
+          channel: this.channel(),
+          bankCode: v.bankCode,
+          accountNumber: v.accountNumber,
+          ippisNumber: v.ippisNumber || undefined,
+          employer: v.employer || undefined,
+          declaredNetPay: this.asksForPayslip() ? this.payslip()?.netMonthly : undefined,
+          captchaToken: await this.captcha.token(),
+        });
+        if (res.status === 'rate-limited') {
+          this.limited.set(true);
+          return;
+        }
+        if (res.status !== 'ok') {
+          this.serverError.set(res.status);
+          return;
+        }
+        // The account is kept, so it is not asked again after identity. Pay is not known yet: it is verified then.
+        this.state.setSalary({
+          channel: this.channel(),
+          bankCode: v.bankCode,
+          bankName: v.bankName,
+          accountNumber: v.accountNumber,
+          ippisNumber: v.ippisNumber || undefined,
+          paramilitaryEmployer: v.employer || undefined,
+          monthlyIncome: res.monthlyIncome,
+          fromCheck: true,
+        });
+        this.state.setEligibility({ score: 0, decision: res.decision, maxEligibleAmount: res.maxAmount, tenorMonths: res.tenorMonths, reasons: [] });
+        await this.flow.go(APPLY.checkResult);
+      } finally {
+        this.submitting.set(false);
+      }
+      return;
+    }
     try {
       const res = await this.api.verifySalary({
         channel: this.channel(),
@@ -191,6 +294,7 @@ export class SalaryComponent {
         fullName: this.state.profile()?.fullName ?? '',
         ippisNumber: v.ippisNumber || undefined,
         employer: v.employer || undefined,
+        declaredNetPay: this.asksForPayslip() ? this.payslip()?.netMonthly : undefined,
       });
       if (res.status !== 'ok') {
         this.serverError.set(res.status);
@@ -212,7 +316,13 @@ export class SalaryComponent {
   }
 
   private deriveChannel(): SalaryChannel {
-    const t = this.state.employment()?.type;
+    const e = this.state.employment();
+    // The state (and employer) picked earlier decides how pay is collected, even over an older saved answer.
+    if (e?.state) return e.state.channel;
+    const saved = this.state.salary();
+    if (saved) return saved.channel;
+    const t = e?.type;
+    if (t === 'government' && e?.governmentLevel === 'state') return 'remita';
     if (t === 'paramilitary') return 'dedukt';
     if (t === 'corper') return 'remita';
     return 'ippis'; // government default

@@ -1,3 +1,5 @@
+import { IconComponent } from '../../../shared/icon.component';
+import { logWarn } from '../../../core/log';
 import { MAX_UPLOAD_BYTES } from '../../../core/limits';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
@@ -6,11 +8,16 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { focusFirstInvalid } from '../../../core/a11y/focus';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { WizardProgressComponent } from '../wizard-progress.component';
-import { API_CLIENT, Bank, NG_BANKS } from '../../../core/api/api-client';
+import { API_CLIENT, Bank } from '../../../core/api/api-client';
+import { NG_BANKS } from '../../../core/api/ng-banks';
+import { bankOption } from '../../../core/api/bank-logos';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { SelectFieldComponent, SelectOption } from '../../../core/ui/select-field.component';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { DraftService } from '../../../core/application/draft.service';
+import { ModalComponent } from '../../../shared/modal.component';
+import { telLink, whatsappLink } from '../../../core/support';
+import { CaptchaService } from '../../../core/captcha/captcha.service';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 
 const MAX_BYTES = MAX_UPLOAD_BYTES;
@@ -21,7 +28,7 @@ const MAX_BYTES = MAX_UPLOAD_BYTES;
  */
 @Component({
   selector: 'app-statement',
-  imports: [IllustrationComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent],
+  imports: [IconComponent, IllustrationComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent, ModalComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './statement.component.html',
   styleUrl: './statement.component.css',
@@ -31,9 +38,16 @@ export class StatementComponent implements OnInit {
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
   private readonly drafts = inject(DraftService);
+  private readonly captcha = inject(CaptchaService);
+
+  /** The no-identity "how much can I get" check: the statement is reviewed automatically and no BVN or code is asked. */
+  readonly checking = this.state.intent() === 'check';
+  readonly limited = signal(false);
+  readonly whatsapp = whatsappLink('Hello Princeps, I reached the limit on checking how much I can get and I would like help.');
+  readonly tel = telLink();
 
   readonly banks = signal<Bank[]>(NG_BANKS);
-  readonly bankOptions = computed<SelectOption[]>(() => this.banks().map((b) => ({ value: b.code, label: b.name })));
+  readonly bankOptions = computed<SelectOption[]>(() => this.banks().map(bankOption));
 
   readonly form = new FormGroup({
     employer: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(2)] }),
@@ -45,6 +59,10 @@ export class StatementComponent implements OnInit {
   readonly submitting = signal(false);
   readonly failed = signal(false);
   readonly statusChanges = toSignal(this.form.statusChanges, { initialValue: this.form.status });
+  readonly canSubmit = computed(() => {
+    this.statusChanges();
+    return this.form.valid && !!this.file() && !this.submitting();
+  });
 
   async ngOnInit(): Promise<void> {
     try { this.banks.set(await this.api.listBanks()); } catch { /* static list is already set */ }
@@ -70,7 +88,7 @@ export class StatementComponent implements OnInit {
     if (!f) this.fileError.set('missing');
     const contact = this.state.contact();
     const bvn = this.state.bvn();
-    if (this.form.invalid || !f || !contact || !bvn) {
+    if (this.form.invalid || !f || (!this.checking && (!contact || !bvn))) {
       setTimeout(() => (this.form.invalid ? focusFirstInvalid() : document.getElementById('statement-file')?.focus()));
       return;
     }
@@ -78,14 +96,33 @@ export class StatementComponent implements OnInit {
     this.failed.set(false);
     try {
       const v = this.form.getRawValue();
+      if (this.checking) {
+        const res = await this.api.checkStatement({
+          employer: v.employer.trim(), bankCode: v.bankCode, fileName: f.name, sizeBytes: f.size, captchaToken: await this.captcha.token(),
+        });
+        if (res.status === 'rate-limited') {
+          this.limited.set(true);
+          return;
+        }
+        if (res.status !== 'ok') {
+          this.failed.set(true);
+          return;
+        }
+        // No salary account for a private-sector worker: the statement gave the pay.
+        this.state.setSalary({ channel: 'ippis', bankCode: v.bankCode, bankName: '', accountNumber: '', monthlyIncome: res.monthlyIncome, fromCheck: true });
+        this.state.setEligibility({ score: 0, decision: res.decision, maxEligibleAmount: res.maxAmount, tenorMonths: res.tenorMonths, reasons: [] });
+        await this.flow.go(APPLY.checkResult);
+        return;
+      }
       const res = await this.api.submitStatementReview({
-        contact, bvn: bvn.value, employer: v.employer.trim(), bankCode: v.bankCode, fileName: f.name, sizeBytes: f.size,
+        contact: contact!, bvn: bvn!.value, employer: v.employer.trim(), bankCode: v.bankCode, fileName: f.name, sizeBytes: f.size,
       });
       this.state.setSubmission({ status: 'received', referenceId: res.referenceId });
       this.drafts.clear();
       await this.flow.go(APPLY.status);
-    } catch {
-      this.failed.set(true);
+    } catch (err) {
+        logWarn('statement step 1 failed', err);
+this.failed.set(true);
     } finally {
       this.submitting.set(false);
     }

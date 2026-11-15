@@ -6,22 +6,31 @@ import { NavigationEnd } from '@angular/router';
 import { LanguageMenuComponent } from './language-menu.component';
 import { APPLY } from '../../core/flow/apply-routes';
 import { BackButtonComponent } from './back-button.component';
+import { ResultTimerComponent } from '../../core/eligibility/result-timer.component';
 import { ReadAloudComponent } from './read-aloud.component';
 import { BrandLogoComponent } from '../../shared/brand-logo.component';
+import { LoanSummaryComponent } from '../../shared/loan-summary.component';
 import { ThemeToggleComponent } from '../../shared/theme-toggle.component';
+
+/** The steps after the review, where the chosen amount and period stay one tap away. */
+const SUMMARY_ROUTES = new Set<string>([APPLY.nin, APPLY.documents, APPLY.offerLetter, APPLY.verifyIdentity, APPLY.mandate, APPLY.submit]);
 
 const NO_BACK_ROUTES = new Set<string>([APPLY.root, `${APPLY.root}/`, APPLY.status, APPLY.loans]);
 
 @Component({
   selector: 'app-apply-shell',
-  imports: [RouterOutlet, LanguageMenuComponent, BackButtonComponent, ReadAloudComponent, ThemeToggleComponent, BrandLogoComponent],
+  imports: [LoanSummaryComponent, RouterOutlet, LanguageMenuComponent, BackButtonComponent, ReadAloudComponent, ThemeToggleComponent, BrandLogoComponent, ResultTimerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
       <!-- Top bar: on a phone the back arrow comes first, and the logo sits under it on the same row as the controls. On wide screens the arrow moves into the card. -->
       <header class="topbar">
         @if (showBack()) {
-          <app-back-button class="back-phone" />
+          <!-- The countdown is for the whole application, not one page, so it lives here beside the back arrow. -->
+          <div class="back-row back-phone">
+            <app-back-button />
+            <app-result-timer />
+          </div>
         }
         <div class="topbar-row">
           <app-brand-logo class="brand-logo" />
@@ -35,10 +44,16 @@ const NO_BACK_ROUTES = new Set<string>([APPLY.root, `${APPLY.root}/`, APPLY.stat
 
       <div class="shell">
         @if (showBack()) {
-          <div class="card-top"><app-back-button /></div>
+          <div class="card-top back-row">
+            <app-back-button />
+            <app-result-timer />
+          </div>
         }
 
         <main class="body">
+          @if (showSummary()) {
+            <app-loan-summary class="summary" />
+          }
           <router-outlet />
         </main>
 
@@ -49,15 +64,17 @@ const NO_BACK_ROUTES = new Set<string>([APPLY.root, `${APPLY.root}/`, APPLY.stat
     `
       :host { display: block; min-height: 100dvh; background: var(--canvas); color: var(--ink); }
       /* Room at the bottom so the floating Support button never sits on top of a step's main button. */
-      .page { min-height: 100dvh; display: flex; flex-direction: column; padding-bottom: calc(var(--tap-min) + var(--space-8)); box-sizing: border-box; }
+      .page { overflow-x: clip; min-height: 100dvh; display: flex; flex-direction: column; padding-bottom: calc(var(--tap-min) + var(--space-8)); box-sizing: border-box; }
       .topbar { display: flex; flex-direction: column; align-items: stretch; width: 100%; box-sizing: border-box; padding: var(--space-2) var(--space-4) 0; }
       .topbar-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 56px; }
-      .topbar-right { display: inline-flex; align-items: center; gap: var(--space-1); }
+      .topbar-right { display: inline-flex; align-items: center; gap: var(--space-2); }
       .brand-logo { height: 30px; width: auto; display: block; }
+      .back-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
       .card-top { display: none; }
       .shell { flex: 1; width: 100%; max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; }
       .body { flex: 1; display: flex; flex-direction: column; padding: var(--space-2) var(--space-6) var(--space-6); }
-      .body > :not(router-outlet) { flex: 1 1 auto; display: flex; flex-direction: column; }
+      .body > :not(router-outlet):not(.summary) { flex: 1 1 auto; display: flex; flex-direction: column; }
+      .summary { margin-bottom: var(--space-3); }
 
       /* Desktop: a page header (logo left, controls right) over a centred card. */
       @media (min-width: 720px) {
@@ -69,7 +86,7 @@ const NO_BACK_ROUTES = new Set<string>([APPLY.root, `${APPLY.root}/`, APPLY.stat
         .shell {
           flex: 0 0 auto; max-width: 480px; margin-top: var(--space-2);
         }
-        .card-top { display: block; padding: var(--space-4) var(--space-6) 0; }
+        .card-top { display: flex; padding: var(--space-4) var(--space-6) 0; }
         .body { padding: var(--space-2) var(--space-6) var(--space-8); }
         .foot { padding: 0 var(--space-6) var(--space-6); }
       }
@@ -88,5 +105,6 @@ export class ApplyShellComponent {
     { initialValue: this.router.url },
   );
 
+  readonly showSummary = computed(() => SUMMARY_ROUTES.has(this.currentUrl().split('?')[0]));
   readonly showBack = computed(() => !NO_BACK_ROUTES.has(this.currentUrl().split('?')[0]));
 }

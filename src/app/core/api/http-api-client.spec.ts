@@ -1,4 +1,5 @@
-import { ApiUnavailableError, HttpApiClient } from './http-api-client';
+import { TestBed } from '@angular/core/testing';
+import { ApiUnavailableError, HttpApiClient, sanitizeQuote } from './http-api-client';
 
 function reply(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status });
@@ -11,9 +12,12 @@ describe('HttpApiClient', () => {
   beforeEach(() => {
     fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
-    client = new HttpApiClient();
+    client = TestBed.inject(HttpApiClient);
   });
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
 
   it('stores the application token from a verified OTP and sends it afterwards', async () => {
     fetchMock.mockResolvedValueOnce(reply({ status: 'ok', token: 'tok-123' }));
@@ -100,5 +104,83 @@ describe('HttpApiClient', () => {
     const r = await client.uploadDocument({ docId: 'id', fileName: 'a.pdf', sizeBytes: 11 * 1024 * 1024 });
     expect(r).toEqual({ status: 'too-large' });
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('sends the same Idempotency-Key when the same mandate is requested again, and a new one for a different amount', async () => {
+    const link = { url: 'https://pay.test/x', reference: 'MND-1' };
+    const ask = (monthlyAmount: number) => client.createMandateLink({ productId: 'p', channel: 'ippis', monthlyAmount, tenorMonths: 12 });
+    fetchMock.mockImplementation(() => Promise.resolve(reply(link)));
+    await ask(31_966);
+    await ask(31_966);
+    await ask(40_000);
+    const keys = fetchMock.mock.calls.map((c) => (c[1].headers as Record<string, string>)['Idempotency-Key']);
+    expect(keys[0]).toBeTruthy();
+    expect(keys[1]).toBe(keys[0]);
+    expect(keys[2]).not.toBe(keys[0]);
+  });
+
+  describe('when the network misbehaves', () => {
+    it('tries a read again after the connection drops, and then succeeds', async () => {
+      vi.useFakeTimers();
+      fetchMock.mockRejectedValueOnce(new TypeError('network')).mockResolvedValueOnce(reply({ banks: [{ code: '058', name: 'GTBank' }] }));
+      const pending = client.listBanks();
+      await vi.advanceTimersByTimeAsync(2000);
+      expect((await pending)[0].code).toBe('058');
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      vi.useRealTimers();
+    });
+
+    it('never repeats an action that is not safe to repeat', async () => {
+      fetchMock.mockRejectedValue(new TypeError('network'));
+      await expect(client.sendBvnOtp('12345678901')).rejects.toBeInstanceOf(ApiUnavailableError);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('fails at once, without a request, when the phone is offline', async () => {
+      vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+      await expect(client.listLoans()).rejects.toBeInstanceOf(ApiUnavailableError);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('tells the customer their session ended when the server stops accepting it', async () => {
+      fetchMock.mockResolvedValueOnce(reply({ status: 'ok', token: 'tok-1' }));
+      await client.verifyPhoneOtp('+2348031112233', '123456');
+      fetchMock.mockResolvedValueOnce(reply({ error: 'expired' }, 401));
+      const net = TestBed.inject((await import('../network/network-activity.service')).NetworkActivityService);
+      await client.verifySalary({ channel: 'ippis', bankCode: '058', accountNumber: '0123456789', fullName: 'Ada Obi' }).catch(() => undefined);
+      expect(net.sessionExpired()).toBe(true);
+    });
+  });
+
+  describe('getQuote', () => {
+    const good = {
+      quoteId: 'a.b', expiresAt: '2026-11-11T15:00:00.000Z', productId: 'ippis-standard', amount: 200_000, tenorMonths: 2, ratePercent: 5, interestModel: 'Flat Rate',
+      monthlyRepayment: 105_000, fees: [{ name: 'Fee', amount: 100 }], totalFees: 100, totalInterest: 10_000, totalRepayable: 210_000, firstDueDate: '2026-11-25',
+      schedule: [{ month: 1, dueDate: '2026-11-25', payment: 105_000, balance: 100_000 }, { month: 2, dueDate: '2026-12-24', payment: 105_000, balance: 0 }],
+    };
+
+    it('returns the server\'s quote', async () => {
+      fetchMock.mockResolvedValueOnce(reply({ quote: good }));
+      expect(await client.getQuote({ productId: 'ippis-standard', amount: 200_000, tenorMonths: 2 })).toEqual({ status: 'ok', quote: good });
+    });
+
+    it('tells a refusal from an outage', async () => {
+      fetchMock.mockResolvedValueOnce(reply({ error: { code: 'VALIDATION_ERROR' } }, 400));
+      expect((await client.getQuote({ productId: 'x', amount: 1, tenorMonths: 2 })).status).toBe('invalid');
+      vi.useFakeTimers();
+      fetchMock.mockResolvedValue(reply({}, 503));
+      const pending = client.getQuote({ productId: 'ippis-standard', amount: 200_000, tenorMonths: 2 });
+      await vi.advanceTimersByTimeAsync(5000);
+      expect((await pending).status).toBe('unavailable');
+      vi.useRealTimers();
+    });
+
+    it('treats a damaged quote as no answer', () => {
+      expect(sanitizeQuote(good)).not.toBeNull();
+      expect(sanitizeQuote({ ...good, monthlyRepayment: 'lots' })).toBeNull();
+      expect(sanitizeQuote({ ...good, schedule: good.schedule.slice(0, 1) })).toBeNull();
+      expect(sanitizeQuote({ ...good, firstDueDate: 'tomorrow' })).toBeNull();
+      expect(sanitizeQuote(null)).toBeNull();
+    });
   });
 });

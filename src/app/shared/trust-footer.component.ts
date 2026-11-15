@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TPipe } from '../core/i18n/t.pipe';
 import { PrivacyService } from '../core/privacy/privacy.service';
+import { LICENCE_NUMBER } from '../core/support';
 
 /** The short regulatory and safety text shown at the foot of the first screens. */
 @Component({
@@ -9,7 +10,7 @@ import { PrivacyService } from '../core/privacy/privacy.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <footer class="trust">
-      <p>{{ 'trust.cbn' | t }}</p>
+      <p>{{ 'trust.cbn' | t }}@if (licence) { · {{ 'trust.licence' | t }} {{ licence }} }</p>
       <p>{{ 'trust.official' | t }}</p>
       <button type="button" class="link" (click)="privacy.open()">{{ 'privacy.link' | t }}</button>
     </footer>
@@ -29,4 +30,5 @@ import { PrivacyService } from '../core/privacy/privacy.service';
 })
 export class TrustFooterComponent {
   protected readonly privacy = inject(PrivacyService);
+  protected readonly licence = LICENCE_NUMBER;
 }

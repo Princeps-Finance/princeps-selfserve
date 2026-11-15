@@ -46,3 +46,7 @@ Thumbs.db
 .env
 .env.local
 .playwright-mcp/
+
+# Cloudflare
+.wrangler/
+.dev.vars

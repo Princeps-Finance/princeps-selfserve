@@ -1,4 +1,4 @@
-// Vercel Function: validates a loan submission, recomputes every money figure
+// API handler (runs in the Cloudflare Worker): validates a loan submission, recomputes every money figure
 // from the shared pricing catalogue, and forwards it to princeps-backoffice
 // with the ingest token (which never reaches the browser).
 //
@@ -15,7 +15,9 @@ import {
   estimateMonthlyRepayment,
   pricingProductById,
 } from '../src/shared/pricing';
-import { discountedRate, findReferral } from '../src/shared/referral';
+import { discountedRate } from '../src/shared/referral';
+import { findReferral } from './_lib/referral-codes';
+import { verifyQuote } from './_lib/quote-token';
 import {
   HttpError,
   backofficeConfig,
@@ -27,8 +29,8 @@ import {
   rateLimited,
   readJson,
 } from './_lib/http';
+import { visitorHeader, visitorInfo } from './_lib/visitor';
 
-export const config = { runtime: 'nodejs' };
 
 const digits = (n: number) => z.string().regex(new RegExp(`^\\d{${n}}$`));
 
@@ -54,10 +56,23 @@ const Body = z
     accountNumber: digits(10).nullable(),
     ippisNumber: z.string().regex(/^\d{4,20}$/).nullable(),
     employer: z.string().trim().max(120).nullable(),
+    religion: z.enum(['christianity', 'islam', 'traditional', 'other', 'prefer-not-to-say']).nullable().optional(),
+    // A place the customer chose to share from their phone. Optional: its absence never changes the decision to accept.
+    location: z
+      .object({
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
+        accuracyM: z.number().min(0).max(100_000),
+        capturedAt: z.string().datetime(),
+      })
+      .strict()
+      .nullable()
+      .optional(),
     // Figures the client computed. Accepted only so we can reject tampering.
     monthlyRepaymentKobo: z.number().int().positive(),
     ratePercent: z.number(),
     interestModel: z.string().max(40),
+    quoteId: z.string().max(600).nullish(),
   })
   .strict();
 
@@ -66,7 +81,7 @@ export default async function handler(req: Request): Promise<Response> {
   if (!isSameOrigin(req)) return fail('FORBIDDEN', 'Request not allowed.', 403);
 
   const ip = clientIp(req);
-  if (rateLimited(`submit:${ip}`, 5, 10 * 60_000)) {
+  if (await rateLimited(`submit:${ip}`, 5, 10 * 60_000)) {
     return fail('RATE_LIMITED', 'Too many attempts. Try again later.', 429);
   }
 
@@ -124,6 +139,16 @@ export default async function handler(req: Request): Promise<Response> {
     return fail('VALIDATION_ERROR', 'Offer is out of date. Please restart your application.', 409);
   }
 
+  // When the app names the quote it accepted, the figures must be the ones this server signed, and still valid.
+  if (b.quoteId) {
+    const claims = await verifyQuote(b.quoteId);
+    if (!claims) return fail('QUOTE_INVALID', 'Offer is not valid. Please restart your application.', 409);
+    if (claims.x < Date.now()) return fail('QUOTE_EXPIRED', 'Offer has expired. Please review it again.', 409);
+    if (claims.p !== product.id || claims.a !== b.amountKobo || claims.t !== b.tenorMonths || claims.m !== monthly * 100 || claims.r !== ratePercent) {
+      return fail('QUOTE_MISMATCH', 'Offer is out of date. Please restart your application.', 409);
+    }
+  }
+
   const payload = {
     borrowerBvn: b.borrowerBvn,
     borrowerName: b.borrowerName,
@@ -141,6 +166,10 @@ export default async function handler(req: Request): Promise<Response> {
     ippisNumber: b.ippisNumber,
     employmentType: b.employmentType,
     employer: b.employer,
+    // Only when the customer chose to give it.
+    ...(b.religion ? { religion: b.religion } : {}),
+    // Reported by the customer's phone, so the back office weighs it against the place the connection comes from (X-Visitor-Info).
+    ...(b.location ? { location: b.location } : {}),
     appVersion: b.appVersion,
     consentVersion: b.consentVersion,
     consentAt: b.consentAt,
@@ -152,6 +181,8 @@ export default async function handler(req: Request): Promise<Response> {
   const upstream = await callBackoffice(cfg, '/api/loans', payload, {
     'X-Application-Token': appToken,
     'Idempotency-Key': b.idempotencyKey,
+    // Who sent it: the device and the place the connection comes from, read from the request, for the admin.
+    'X-Visitor-Info': visitorHeader(visitorInfo(req)),
   });
   if (!upstream) return fail('UPSTREAM_DOWN', 'Service unavailable. Try again shortly.', 502);
 

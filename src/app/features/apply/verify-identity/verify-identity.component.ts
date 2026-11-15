@@ -1,6 +1,8 @@
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
+import { ModalComponent } from '../../../shared/modal.component';
+import { WhyAskComponent } from '../../../shared/why-ask.component';
 import {
   ChangeDetectionStrategy,
-  ChangeDetectorRef,
   Component,
   ElementRef,
   OnDestroy,
@@ -15,16 +17,22 @@ import { ApplicationStateService } from '../../../core/application/application-s
 import { LangService } from '../../../core/i18n/lang.service';
 import { productById } from '../../../core/products/products';
 import { whatsappLink } from '../../../core/support';
-import { ToastService } from '../../../core/toast/toast.service';
-import { formatNaira } from '../../../core/money.util';
+import { formatNaira, spokenNaira } from '../../../core/money.util';
 import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
+import { logWarn } from '../../../core/log';
+import { readAsDataUrl } from '../../../core/ui/file-data-url';
+import { CameraSession } from './camera-session';
+
+/** Fewer seconds than this cannot cover the lines; more bytes than this will not upload. */
+const MIN_RECORD_SECONDS = 4;
+const MAX_CLIP_BYTES = 25 * 1024 * 1024;
 
 type Stage = 'intro' | 'face' | 'video' | 'review';
 
 @Component({
   selector: 'app-verify-identity',
-  imports: [TPipe, WizardProgressComponent],
+  imports: [AnimatedIconComponent, ModalComponent, WhyAskComponent, TPipe, WizardProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './verify-identity.component.html',
   styleUrl: './verify-identity.component.css',
@@ -32,8 +40,6 @@ type Stage = 'intro' | 'face' | 'video' | 'review';
 export class VerifyIdentityComponent implements OnDestroy {
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
-  private readonly toast = inject(ToastService);
-  private readonly cdr = inject(ChangeDetectorRef);
   private readonly lang = inject(LangService);
   readonly helpLink = whatsappLink('Hello Princeps, I cannot complete the identity check and need help.');
 
@@ -49,17 +55,29 @@ export class VerifyIdentityComponent implements OnDestroy {
   readonly videoPreviewUrl = signal<string | null>(null);
   readonly recordSeconds = signal(0);
 
-  private stream: MediaStream | null = null;
-  private mediaRecorder: MediaRecorder | null = null;
-  private recordedChunks: Blob[] = [];
-  /** What the browser really recorded: webm on Chrome/Android, mp4 on iPhone. */
-  private recordedMime = 'video/webm';
-  private recordTimer: ReturnType<typeof setInterval> | null = null;
+  private readonly camera = new CameraSession();
 
   @ViewChild('preview') previewRef?: ElementRef<HTMLVideoElement>;
 
   readonly loanAmount = computed(() => this.offer()?.amount ?? 0);
   readonly monthlyRepayment = computed(() => this.offer()?.monthlyRepayment ?? 0);
+
+  /**
+   * What the customer reads aloud on the video: three short sentences with the amount and the monthly repayment,
+   * built from the same offer the customer accepted.
+   */
+  readonly scriptLines = computed<string[]>(() => {
+    const o = this.offer();
+    if (!o) return [];
+    const p = {
+      name: this.state.bvnIdentity()?.fullName ?? this.state.profile()?.fullName ?? '',
+      product: o.productName,
+      amount: spokenNaira(o.amount),
+      months: String(o.tenorMonths),
+      monthly: spokenNaira(o.monthlyRepayment),
+    };
+    return [1, 2, 3].map((n) => this.lang.t(`step.verify.script.l${n}`).replace(/\{(\w+)\}/g, (_, k: string) => (p as Record<string, string>)[k] ?? ''));
+  });
 
   readonly attempted = signal(false);
 
@@ -68,7 +86,39 @@ export class VerifyIdentityComponent implements OnDestroy {
     () => productById(this.offer()?.productId ?? '')?.settings.identityVideo ?? 'record',
   );
   readonly canRecord = computed(() => this.videoMode() === 'record' || this.videoMode() === 'either');
-  readonly canUpload = computed(() => this.videoMode() === 'upload' || this.videoMode() === 'either');
+  /** Set once recording has failed, so a customer whose phone cannot record can still send a video file. */
+  private readonly uploadFallback = signal(false);
+  readonly canUpload = computed(() => this.videoMode() === 'upload' || this.videoMode() === 'either' || this.uploadFallback());
+
+  /** Why the help window is open (null: closed). It opens after any camera or video problem, so nobody is left stuck. */
+  readonly trouble = signal<string | null>(null);
+  /** The camera was refused: the help window then explains how to allow it again in the phone's settings. */
+  readonly denied = signal(false);
+  private watchdog: ReturnType<typeof setTimeout> | null = null;
+
+  private fail(messageKey: string): void {
+    this.isRecording.set(false);
+    this.checkingVideo.set(false);
+    this.clearWatchdog();
+    this.uploadFallback.set(true);
+    this.trouble.set(this.lang.t(messageKey));
+  }
+
+  private clearWatchdog(): void {
+    if (this.watchdog) clearTimeout(this.watchdog);
+    this.watchdog = null;
+  }
+
+  /** "Try again" in the help window: start over from the camera for the step the customer is on. */
+  retryAfterTrouble(): void {
+    this.trouble.set(null);
+    this.denied.set(false);
+    this.cameraError.set(null);
+    this.videoDataUrl.set(null);
+    this.revokePreview();
+    this.videoPreviewUrl.set(null);
+    if (this.stage() === 'face' || this.stage() === 'video') void this.startCamera(this.stage() === 'video');
+  }
 
   private offerKey(): string {
     const o = this.offer();
@@ -82,25 +132,10 @@ export class VerifyIdentityComponent implements OnDestroy {
     input.value = '';
     if (!file) return;
     if (file.size > 25 * 1024 * 1024) {
-      this.toast.error(this.lang.t('step.verify.upload.toolarge'));
+      this.fail('step.verify.upload.toolarge');
       return;
     }
-    this.checkingVideo.set(true);
-    const prev = this.videoPreviewUrl();
-    if (prev) URL.revokeObjectURL(prev);
-    this.videoPreviewUrl.set(URL.createObjectURL(file));
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.checkingVideo.set(false);
-      this.videoDataUrl.set(reader.result as string);
-      this.cdr.markForCheck();
-    };
-    reader.onerror = () => {
-      this.checkingVideo.set(false);
-      this.toast.error(this.lang.t('toast.video.error'));
-      this.cdr.markForCheck();
-    };
-    reader.readAsDataURL(file);
+    this.showClip(file);
   }
 
   readonly canContinue = computed(() =>
@@ -126,38 +161,25 @@ export class VerifyIdentityComponent implements OnDestroy {
   async startCamera(withAudio: boolean): Promise<void> {
     this.cameraError.set(null);
     try {
-      this.stopStream();
-      const constraints: MediaStreamConstraints = {
-        video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 720 } },
-        audio: withAudio,
-      };
-      this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+      const stream = await this.camera.open(withAudio);
       queueMicrotask(() => {
-        if (this.previewRef && this.stream) {
-          this.previewRef.nativeElement.srcObject = this.stream;
-        }
+        if (this.previewRef) this.previewRef.nativeElement.srcObject = stream;
       });
-    } catch {
-      this.cameraError.set(
-        this.lang.t(withAudio ? 'camera.error.av' : 'camera.error.v'),
-      );
+    } catch (err) {
+      logWarn('identity camera could not open', err);
+      this.cameraError.set(this.lang.t(withAudio ? 'camera.error.av' : 'camera.error.v'));
+      this.denied.set((err as { name?: string })?.name === 'NotAllowedError' || (err as { name?: string })?.name === 'SecurityError');
+      this.fail(withAudio ? 'camera.error.av' : 'camera.error.v');
     }
   }
 
   capturePhoto(): void {
     const video = this.previewRef?.nativeElement;
-    if (!video || !this.stream) return;
-    const w = video.videoWidth || 720;
-    const h = video.videoHeight || 720;
-    const canvas = document.createElement('canvas');
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    ctx.drawImage(video, 0, 0, w, h);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-    this.facePhoto.set(dataUrl);
-    this.stopStream();
+    if (!video || !this.camera.active) return;
+    const photo = this.camera.snapshot(video);
+    if (!photo) return;
+    this.facePhoto.set(photo);
+    this.camera.close();
   }
 
   retakePhoto(): void {
@@ -165,78 +187,114 @@ export class VerifyIdentityComponent implements OnDestroy {
     void this.startCamera(false);
   }
 
+  /** Set when a picture or video is retaken from the review page: after it, the customer goes straight back to the review. */
+  private fromReview = false;
+
+  retakeFromReview(what: 'photo' | 'video'): void {
+    this.fromReview = true;
+    this.cameraError.set(null);
+    if (what === 'photo') {
+      this.facePhoto.set(null);
+      this.stage.set('face');
+      void this.startCamera(false);
+    } else {
+      this.stage.set('video');
+      this.retakeVideo();
+    }
+  }
+
   proceedToVideo(): void {
     if (!this.facePhoto()) return;
+    if (this.fromReview && this.videoDataUrl()) {
+      this.fromReview = false;
+      this.stage.set('review');
+      return;
+    }
     this.stage.set('video');
     void this.startCamera(true);
   }
 
   startRecording(): void {
-    if (!this.stream) return;
-    this.recordedChunks = [];
-    let recorder: MediaRecorder;
-    try {
-      recorder = new MediaRecorder(this.stream, { mimeType: 'video/webm' });
-    } catch {
-      recorder = new MediaRecorder(this.stream);
-    }
-    recorder.ondataavailable = (e) => { if (e.data.size > 0) this.recordedChunks.push(e.data); };
-    recorder.onstop = () => this.onRecordingStopped();
-    try {
-      recorder.start();
-    } catch {
-      // Some browsers cannot record: say so instead of failing silently.
-      this.toast.error(this.lang.t('toast.video.error'));
+    if (typeof MediaRecorder === 'undefined') {
+      this.fail('troubleshoot.norecord');
       return;
     }
-    this.recordedMime = recorder.mimeType || 'video/webm';
-    this.mediaRecorder = recorder;
+    if (!this.camera.active) {
+      this.fail('camera.error.av');
+      return;
+    }
     this.isRecording.set(true);
     this.recordSeconds.set(0);
-    this.recordTimer = setInterval(() => {
-      const next = this.recordSeconds() + 1;
-      this.recordSeconds.set(next);
-      if (next >= 30) this.stopRecording();
-    }, 1000);
+    this.camera
+      .startRecording((seconds) => this.recordSeconds.set(seconds))
+      .then((clip) => {
+        this.isRecording.set(false);
+        this.camera.close();
+        if (clip.blob.size === 0) {
+          this.fail('toast.video.error');
+          return;
+        }
+        if (this.recordSeconds() < MIN_RECORD_SECONDS) {
+          this.fail('troubleshoot.short');
+          return;
+        }
+        if (clip.blob.size > MAX_CLIP_BYTES) {
+          this.fail('step.verify.upload.toolarge');
+          return;
+        }
+        this.showClip(clip.blob);
+      })
+      .catch((err) => {
+        // Some browsers cannot record: say so instead of failing silently.
+        logWarn('identity recording failed', err);
+        this.fail('toast.video.error');
+      });
   }
 
   stopRecording(): void {
-    if (!this.mediaRecorder || !this.isRecording()) return;
-    this.mediaRecorder.stop();
-    this.isRecording.set(false);
+    if (!this.isRecording()) return;
     this.checkingVideo.set(true);
-    if (this.recordTimer) { clearInterval(this.recordTimer); this.recordTimer = null; }
+    this.camera.stopRecording();
+    // Some phones never finish saving the clip. Do not leave the customer on "Processing" for ever.
+    this.clearWatchdog();
+    this.watchdog = setTimeout(() => {
+      if (this.checkingVideo() && !this.videoDataUrl()) {
+        this.camera.close();
+        this.fail('troubleshoot.stuck');
+      }
+    }, 12_000);
   }
 
-  private onRecordingStopped(): void {
-    const blob = new Blob(this.recordedChunks, { type: this.recordedMime });
-    const prev = this.videoPreviewUrl();
-    if (prev) URL.revokeObjectURL(prev);
-    this.videoPreviewUrl.set(URL.createObjectURL(blob));
-    this.stopStream();
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.checkingVideo.set(false);
-      this.videoDataUrl.set(reader.result as string);
-      this.cdr.markForCheck();
-    };
-    reader.onerror = () => {
-      this.checkingVideo.set(false);
-      this.toast.error(this.lang.t('toast.video.error'));
-      this.cdr.markForCheck();
-    };
-    reader.readAsDataURL(blob);
+  /** Shows a clip (recorded or uploaded) in the preview and keeps its data for the submit step. */
+  private showClip(clip: Blob): void {
+    this.checkingVideo.set(true);
+    this.revokePreview();
+    this.videoPreviewUrl.set(URL.createObjectURL(clip));
+    readAsDataUrl(clip)
+      .then((dataUrl) => this.videoDataUrl.set(dataUrl))
+      .catch(() => this.fail('toast.video.error'))
+      .finally(() => {
+        this.clearWatchdog();
+        this.checkingVideo.set(false);
+      });
   }
 
   retakeVideo(): void {
     this.videoDataUrl.set(null);
-    const prev = this.videoPreviewUrl();
-    if (prev) URL.revokeObjectURL(prev);
+    this.revokePreview();
     this.videoPreviewUrl.set(null);
     void this.startCamera(true);
   }
 
-  goReview(): void { this.stage.set('review'); }
+  private revokePreview(): void {
+    const url = this.videoPreviewUrl();
+    if (url) URL.revokeObjectURL(url);
+  }
+
+  goReview(): void {
+    this.fromReview = false;
+    this.stage.set('review');
+  }
 
   confirm(): void {
     if (!this.canContinue()) {
@@ -250,18 +308,12 @@ export class VerifyIdentityComponent implements OnDestroy {
       capturedAt: new Date().toISOString(),
       offerKey: this.offerKey(),
     });
-    void this.flow.go(APPLY.mandate);
-  }
-
-  private stopStream(): void {
-    this.stream?.getTracks().forEach((t) => t.stop());
-    this.stream = null;
+    void this.flow.next(APPLY.verifyIdentity);
   }
 
   ngOnDestroy(): void {
-    this.stopStream();
-    if (this.recordTimer) clearInterval(this.recordTimer);
-    const prev = this.videoPreviewUrl();
-    if (prev) URL.revokeObjectURL(prev);
+    this.camera.close();
+    this.clearWatchdog();
+    this.revokePreview();
   }
 }
