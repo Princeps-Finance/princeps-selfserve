@@ -51,6 +51,7 @@ export function buildSubmitPayload(state: ApplicationStateService, idempotencyKe
         amountKobo: toKobo(offer.amount),
         tenorMonths: offer.tenorMonths,
         monthlyRepaymentKobo: toKobo(offer.monthlyRepayment),
+        quoteId: offer.quote?.quoteId ?? null,
         interestModel: offer.interestModel,
         ratePercent: offer.ratePercent,
         channel: salary.channel,
@@ -59,6 +60,9 @@ export function buildSubmitPayload(state: ApplicationStateService, idempotencyKe
         ippisNumber: salary.ippisNumber || null,
         employmentType: employment.type,
         employer: salary.paramilitaryEmployer ?? null,
+        religion: state.profile()?.religion || null,
+        // Only when the customer chose to share it on the last screen.
+        location: state.locationFix(),
       },
     },
   };

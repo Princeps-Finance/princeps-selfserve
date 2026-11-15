@@ -1,12 +1,19 @@
+import { IconComponent } from '../../shared/icon.component';
+import { ModalComponent } from '../../shared/modal.component';
 import {
-  ChangeDetectionStrategy, Component, ElementRef, computed, forwardRef, input, model, signal, viewChild,
+  ChangeDetectionStrategy, Component, ElementRef, computed, forwardRef, inject, input, model, signal, viewChild,
 } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { TPipe } from '../i18n/t.pipe';
 
 export interface SelectOption {
   readonly value: string;
   readonly label: string;
+  /** A small picture shown beside the label, such as a bank's logo. */
+  readonly logo?: string;
+  /** Shown in a badge when there is no logo. Set it to show a mark for every option. */
+  readonly initials?: string;
 }
 
 /**
@@ -16,7 +23,7 @@ export interface SelectOption {
  */
 @Component({
   selector: 'app-select-field',
-  imports: [TPipe],
+  imports: [IconComponent, ModalComponent, NgOptimizedImage, TPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => SelectFieldComponent), multi: true }],
   template: `
@@ -31,22 +38,20 @@ export interface SelectOption {
       [attr.aria-expanded]="open()"
       (click)="show()"
     >
+      @if (selected(); as s) {
+        @if (s.logo || s.initials) {
+          <span class="mark" aria-hidden="true">
+            @if (s.logo) { <img [ngSrc]="s.logo" width="24" height="24" alt="" /> } @else { {{ s.initials }} }
+          </span>
+        }
+      }
       <span class="value" [class.placeholder]="!selected()">{{ selected()?.label ?? placeholder() }}</span>
-      <svg class="chev" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-        <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
+      <app-icon name="bold-chevron-down" [size]="18" class="chev" />
     </button>
 
-    <dialog #dlg class="sheet glass" [attr.aria-label]="title()" (close)="onClosed()" (click)="onBackdrop($event)">
+    <app-modal [open]="open()" [title]="title()" (closed)="onClosed()">
       <div class="panel">
-        <div class="bar">
-          <h2 class="sheet-title">{{ title() }}</h2>
-          <button type="button" class="x" [attr.aria-label]="'select.close' | t" (click)="hide()">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-            </svg>
-          </button>
-        </div>
+        <h2 class="sheet-title">{{ title() }}</h2>
         @if (searchable()) {
           <input
             #search
@@ -63,11 +68,14 @@ export interface SelectOption {
         <div class="list" role="listbox" [attr.aria-label]="title()" tabindex="-1">
           @for (o of filtered(); track o.value) {
             <button type="button" role="option" class="opt" [attr.aria-selected]="o.value === value()" (click)="pick(o)">
-              <span>{{ o.label }}</span>
+              @if (o.logo || o.initials) {
+                <span class="mark" aria-hidden="true">
+                  @if (o.logo) { <img [ngSrc]="o.logo" width="24" height="24" alt="" loading="lazy" /> } @else { {{ o.initials }} }
+                </span>
+              }
+              <span class="label">{{ o.label }}</span>
               @if (o.value === value()) {
-                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                  <path d="M4.5 10.5L8.5 14.5L15.5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
+                <app-icon name="bold-success" [size]="18" />
               }
             </button>
           } @empty {
@@ -75,7 +83,7 @@ export interface SelectOption {
           }
         </div>
       </div>
-    </dialog>
+    </app-modal>
   `,
   styles: [
     `
@@ -88,41 +96,37 @@ export interface SelectOption {
         font-family: var(--font-sans); font-size: var(--fs-base); color: var(--ink); text-align: start; cursor: pointer;
         transition: border-color 140ms ease, box-shadow 140ms ease;
       }
-      .trigger:hover:not(:disabled) { border-color: var(--input-border-hover); }
+      @media (hover: hover) and (pointer: fine) { .trigger:hover:not(:disabled) { border-color: var(--input-border-hover); } }
       .trigger:focus-visible { outline: 2px solid transparent; border-color: var(--input-border-focus); box-shadow: var(--input-shadow-focus); }
       .trigger[aria-invalid='true'] { border-color: var(--danger-text); }
       .trigger:disabled { opacity: 0.55; cursor: not-allowed; }
       .value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .value.placeholder { color: var(--ink-muted); }
       .chev { flex: none; color: var(--ink-soft); }
+      /* A white tile so a coloured logo reads the same in light and dark mode. */
+      .mark {
+        flex: none; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
+        border-radius: var(--radius-sm, 8px); border: 1px solid var(--hairline); background: #fff; overflow: hidden;
+        font-size: 12px; font-weight: 600; color: #3a3f47;
+      }
+      .mark img { width: 24px; height: 24px; object-fit: contain; }
+      .label { flex: 1; min-width: 0; }
 
-      .sheet {
-        width: min(480px, 100vw); max-width: 100vw; max-height: 82dvh; margin: auto auto 0; padding: 0; border: 0;
-        border-radius: var(--radius-lg) var(--radius-lg) 0 0; color: var(--ink); box-shadow: var(--shadow-4);
-      }
-      @media (min-width: 560px) { .sheet { margin: auto; max-width: 480px; border-radius: var(--radius-lg); } }
-      .sheet::backdrop { background: var(--overlay); }
-      .panel { display: flex; flex-direction: column; max-height: 82dvh; padding: var(--space-4) var(--space-4) var(--space-3); gap: var(--space-3); }
-      .bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+      .panel { display: flex; flex-direction: column; gap: var(--space-3); }
       .sheet-title { margin: 0; font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 600; letter-spacing: -0.01em; }
-      .x {
-        flex: none; width: 44px; height: 44px; display: grid; place-items: center;
-        border: 0; border-radius: 50%; background: transparent; color: var(--ink); cursor: pointer;
-      }
-      .x:hover { background: var(--hover-tint); }
       .search {
         width: 100%; min-height: 48px; padding: 0 var(--space-4); border: 1px solid var(--input-border);
         border-radius: var(--input-radius); background: var(--input-bg); font: inherit; font-size: var(--fs-base); color: var(--ink);
       }
-      .list { overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; }
+      .list { overscroll-behavior: contain; display: flex; flex-direction: column; }
       .opt {
         display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
         min-height: 52px; padding: 0 var(--space-2); border: 0; border-bottom: 1px solid var(--hairline);
         background: transparent; font: inherit; font-size: var(--fs-base); color: var(--ink); text-align: start; cursor: pointer;
       }
       .opt[aria-selected='true'] { font-weight: 600; color: var(--text-accent); }
-      .opt:hover { background: var(--hover-tint); }
-      .x:focus-visible, .opt:focus-visible, .search:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
+      @media (hover: hover) and (pointer: fine) { .opt:hover { background: var(--hover-tint); } }
+      .opt:focus-visible, .search:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
       .none { margin: 0; padding: var(--space-5) var(--space-2); color: var(--ink-soft); }
     `,
   ],
@@ -140,7 +144,7 @@ export class SelectFieldComponent implements ControlValueAccessor {
   protected readonly open = signal(false);
   protected readonly query = signal('');
 
-  private readonly dlg = viewChild.required<ElementRef<HTMLDialogElement>>('dlg');
+  private readonly host = inject(ElementRef<HTMLElement>);
   private readonly trigger = viewChild.required<ElementRef<HTMLButtonElement>>('trigger');
   private readonly search = viewChild<ElementRef<HTMLInputElement>>('search');
 
@@ -161,25 +165,20 @@ export class SelectFieldComponent implements ControlValueAccessor {
   protected show(): void {
     this.query.set('');
     this.open.set(true);
-    this.dlg().nativeElement.showModal();
     setTimeout(() => {
-      const sel = this.dlg().nativeElement.querySelector<HTMLElement>('[aria-selected="true"]');
+      const sel = (this.host.nativeElement as HTMLElement).querySelector<HTMLElement>('[aria-selected="true"]');
       sel?.scrollIntoView({ block: 'center' });
       // Searching is for desktop; on phones an auto-opened keyboard would hide the list.
       if (this.search() && window.matchMedia('(min-width: 560px)').matches) this.search()!.nativeElement.focus();
     });
   }
 
-  protected hide(): void { this.dlg().nativeElement.close(); }
+  protected hide(): void { this.open.set(false); }
 
   protected onClosed(): void {
     this.open.set(false);
     this.onTouched();
     this.trigger().nativeElement.focus();
-  }
-
-  protected onBackdrop(e: MouseEvent): void {
-    if (e.target === this.dlg().nativeElement) this.hide();
   }
 
   protected pick(o: SelectOption): void {

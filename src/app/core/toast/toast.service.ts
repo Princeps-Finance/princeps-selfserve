@@ -19,6 +19,8 @@ export interface Toast {
   tone: ToastTone;
   message: string;
   action?: ToastAction;
+  /** True during the short exit animation, just before it is removed. */
+  leaving?: boolean;
 }
 
 const MAX_VISIBLE = 3;
@@ -26,6 +28,8 @@ const MIN_MS = 4_000;
 const MIN_ERROR_MS = 7_000;
 const MS_PER_CHAR = 60;
 const MAX_MS = 12_000;
+/** How long the exit animation runs before the toast is removed. */
+export const TOAST_EXIT_MS = 180;
 
 interface Countdown {
   timer: ReturnType<typeof setTimeout> | null;
@@ -76,11 +80,25 @@ export class ToastService {
     if (c && !c.timer) this.start(id, c.remainingMs);
   }
 
+  /** Animates the toast out, then removes it (at once when the person prefers reduced motion). */
   dismiss(id: number): void {
     const c = this.countdowns.get(id);
     if (c?.timer) clearTimeout(c.timer);
     this.countdowns.delete(id);
+    if (this.reducedMotion()) {
+      this.remove(id);
+      return;
+    }
+    this.toasts.update((list) => list.map((t) => (t.id === id ? { ...t, leaving: true } : t)));
+    setTimeout(() => this.remove(id), TOAST_EXIT_MS);
+  }
+
+  private remove(id: number): void {
     this.toasts.update((list) => list.filter((t) => t.id !== id));
+  }
+
+  private reducedMotion(): boolean {
+    return typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
   private durationFor(tone: ToastTone, message: string): number {

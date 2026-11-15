@@ -1,5 +1,7 @@
-import { DecimalPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
+import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, signal, untracked } from '@angular/core';
+import { CardComponent } from '../../../shared/card.component';
+import { ProductMarkComponent } from '../../../shared/product-mark.component';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { RadioGroupDirective } from '../../../core/a11y/radio-group.directive';
@@ -9,8 +11,12 @@ import { Product, RepaymentFrequency, productsFor } from '../../../core/products
 import { LoanQuote, clampAmount, estimateApr, offerLimits, quoteLoan } from '../../../../shared/pricing';
 import { formatNaira } from '../../../core/money.util';
 import { telLink, whatsappLink } from '../../../core/support';
+import { IconComponent } from '../../../shared/icon.component';
+import { QuoteService, offerFromQuote } from '../../../core/pricing/quote.service';
+import { ToastService } from '../../../core/toast/toast.service';
 import { LangService } from '../../../core/i18n/lang.service';
 import { discountedRate } from '../../../../shared/referral';
+import { resolveAmount } from './amount-request';
 import { AmountSliderComponent } from '../../../shared/amount-slider.component';
 import { ReferralBoxComponent } from './referral-box.component';
 import { APPLY } from '../../../core/flow/apply-routes';
@@ -46,6 +52,14 @@ function tenorChoices(limits: Limits, current: number): number[] {
   return [...set].sort((a, b) => a - b);
 }
 
+/** A copy of the map with one product's entry set, or removed when the value is null. */
+function withEntry(map: Record<string, number>, id: string, value: number | null): Record<string, number> {
+  const copy = { ...map };
+  if (value === null) delete copy[id];
+  else copy[id] = value;
+  return copy;
+}
+
 interface Choice {
   amount: number;
   tenor: number;
@@ -53,7 +67,7 @@ interface Choice {
 
 @Component({
   selector: 'app-offers',
-  imports: [IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective, ReferralBoxComponent, AmountSliderComponent, DecimalPipe],
+  imports: [AnimatedIconComponent, CardComponent, ProductMarkComponent, IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective, ReferralBoxComponent, AmountSliderComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './offers.component.html',
   styleUrl: './offers.component.css',
@@ -62,12 +76,45 @@ export class OffersComponent implements OnInit {
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
   private readonly lang = inject(LangService);
+  private readonly toast = inject(ToastService);
+  private readonly quotes = inject(QuoteService);
+
+  constructor() {
+    // Whenever the customer settles on an amount and period, the server prices it. Until it answers, the screen
+    // shows a local estimate and the button waits.
+    effect(() => {
+      const input = this.quoteInput();
+      if (input) untracked(() => this.quotes.request(input));
+    });
+  }
+
+  /** The terms of the open product, as the server is asked about them. */
+  readonly quoteInput = computed(() => {
+    const o = this.selected();
+    if (!o) return null;
+    const code = this.referral()?.code;
+    return { productId: o.product.id, amount: o.amount, tenorMonths: o.tenor, ...(code ? { referralCode: code } : {}) };
+  });
+
+  /** The server's answer for exactly those terms, or null while none has been asked for. */
+  readonly quoteView = computed(() => {
+    const input = this.quoteInput();
+    return input ? this.quotes.viewFor(input.productId, input) : null;
+  });
+  readonly quoteReady = computed(() => this.quoteView()?.status === 'ready');
+
+  retryQuote(): void {
+    const input = this.quoteInput();
+    if (input) this.quotes.request(input, { immediately: true });
+  }
 
   private readonly catalogue = signal<{ product: Product; limits: Limits }[]>([]);
   /** What the customer has chosen per product. Starts at the most they are eligible for. */
   private readonly choices = signal<Record<string, Choice>>({});
   /** Set when an amount typed by the customer had to be adjusted to fit. */
   readonly adjusted = signal<Record<string, number>>({});
+  /** Amounts typed above the limit, by product: the customer is offered an agent for these. */
+  readonly askedMore = signal<Record<string, number>>({});
 
   readonly referral = this.state.referral;
 
@@ -128,7 +175,8 @@ export class OffersComponent implements OnInit {
     }
     this.catalogue.set(catalogue);
     this.choices.set(choices);
-    this.selectedId.set((pref && catalogue.find((c) => c.product.id === pref.productId)?.product.id) || catalogue[0]?.product.id || null);
+    // Several loans: none is open until the customer taps one (a returning choice stays open). Only one: it is open.
+    this.selectedId.set((pref && catalogue.find((c) => c.product.id === pref.productId)?.product.id) || (catalogue.length === 1 ? catalogue[0].product.id : null));
     this.ready.set(true);
   }
 
@@ -138,14 +186,22 @@ export class OffersComponent implements OnInit {
 
   /** Applies a typed or stepped amount, rounding to the product step and range. */
   setAmount(o: OfferView, raw: number, announce = false): void {
-    const next = clampAmount(o.product, Number.isFinite(raw) ? raw : o.amount, o.limits);
-    this.setChoice(o.product.id, { amount: next });
-    this.adjusted.update((a) => {
-      const copy = { ...a };
-      if (announce && next !== raw) copy[o.product.id] = next;
-      else delete copy[o.product.id];
-      return copy;
-    });
+    const out = resolveAmount(o.product, Number.isFinite(raw) ? raw : o.amount, o.limits);
+    this.setChoice(o.product.id, { amount: out.amount });
+    this.adjusted.update((a) => withEntry(a, o.product.id, announce ? out.adjustedTo : null));
+    // Asking for more than the limit is only kept while it is typed; moving the slider or a chip clears it.
+    this.askedMore.update((a) => withEntry(a, o.product.id, announce ? out.askedMore : null));
+    if (announce && out.askedMore) {
+      this.toast.show('info', this.lang.t('offers.more.toast').replace('{max}', formatNaira(o.limits.maxAmount)), 5000);
+    }
+  }
+
+  /** A WhatsApp message to an agent that already says what the customer wants and what their limit is. */
+  agentLink(o: OfferView): string {
+    const wanted = this.askedMore()[o.product.id] ?? o.amount;
+    return whatsappLink(
+      `Hello Princeps, I would like ${formatNaira(wanted)} on ${o.product.name} over ${o.tenor} months. My limit is ${formatNaira(o.limits.maxAmount)}. Please help me.`,
+    );
   }
 
   onAmountInput(o: OfferView, event: Event): void {
@@ -197,17 +253,10 @@ export class OffersComponent implements OnInit {
   }
 
   pick(o: OfferView): void {
-    this.state.setOffer({
-      productId: o.product.id,
-      productName: o.product.name,
-      amount: o.amount,
-      tenorMonths: o.tenor,
-      ratePercent: o.product.ratePercent,
-      interestModel: o.product.interestModel,
-      monthlyRepayment: o.quote.monthly,
-      fees: o.quote.fees,
-      ...(this.referral() ? { referralCode: this.referral()?.code } : {}),
-    });
+    // Only the server's figures go forward; with no answer yet there is nothing to accept.
+    const quote = this.quoteView();
+    if (quote?.status !== 'ready' || !quote.quote) return;
+    this.state.setOffer(offerFromQuote(quote.quote, o.product.name, this.referral()?.code));
     this.state.setOfferPreference({ productId: o.product.id, amount: o.amount, tenorMonths: o.tenor });
     void this.flow.go(APPLY.terms);
   }

@@ -1,3 +1,4 @@
+import { IconComponent } from '../../shared/icon.component';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { LangService } from '../../core/i18n/lang.service';
 import { LANGUAGES, Lang } from '../../core/i18n/translations';
@@ -13,7 +14,7 @@ import { FlowNavigator } from '../../core/flow/flow-navigator.service';
 
 @Component({
   selector: 'app-language-select',
-  imports: [TPipe, ReadAloudComponent, ThemeToggleComponent, BrandLogoComponent, TrustFooterComponent, PromoBannerComponent],
+  imports: [IconComponent, TPipe, ReadAloudComponent, ThemeToggleComponent, BrandLogoComponent, TrustFooterComponent, PromoBannerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './language-select.component.html',
   styleUrl: './language-select.component.css',

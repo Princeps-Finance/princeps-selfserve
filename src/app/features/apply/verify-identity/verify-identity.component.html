@@ -1,15 +1,13 @@
 <section class="step">
   <app-wizard-progress [current]="12" [total]="14" [label]="'step.verify.eyebrow' | t" />
 
-  <header class="head">
-    <h1 class="title">{{ 'step.verify.title' | t }}</h1>
-    <p class="subtitle">{{ 'step.verify.subtitle' | t }}</p>
-    <p class="reason">{{ 'reason.selfie' | t }}</p>
-  </header>
-
-  @if (cameraError()) {
-    <p class="error" role="alert">{{ cameraError() }}</p>
-    <a class="help-link" [attr.href]="helpLink" target="_blank" rel="noopener">{{ 'step.verify.help' | t }}</a>
+  <!-- While the camera is on, the picture comes first: the long introduction would push it below the fold. -->
+  @if (stage() === 'intro' || stage() === 'review') {
+    <header class="head">
+      <h1 class="title">{{ 'step.verify.title' | t }}</h1>
+      <p class="subtitle">{{ 'step.verify.subtitle' | t }}</p>
+      <app-why-ask [text]="'reason.selfie' | t" />
+    </header>
   }
 
   @switch (stage()) {
@@ -41,15 +39,11 @@
 
       <button type="button" class="cta" (click)="begin()">
         <span>{{ 'step.verify.begin' | t }}</span>
-        <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
       </button>
     }
 
     @case ('face') {
-      <p class="stage-label">{{ 'step.verify.stage.face2' | t }}</p>
-
       <div class="frame frame--face">
         @if (facePhoto(); as p) {
           <img [attr.src]="p" alt="" class="captured" />
@@ -58,6 +52,8 @@
           <div class="oval-guide" aria-hidden="true"></div>
         }
       </div>
+
+      <p class="stage-label">{{ 'step.verify.stage.face2' | t }}</p>
 
       @if (!facePhoto()) {
         <button type="button" class="cta" (click)="capturePhoto()">
@@ -68,25 +64,16 @@
           <button type="button" class="ghost" (click)="retakePhoto()">{{ 'step.verify.retake' | t }}</button>
           <button type="button" class="cta" (click)="proceedToVideo()">
             <span>{{ 'step.verify.next' | t }}</span>
-            <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
+            <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
           </button>
         </div>
       }
     }
 
     @case ('video') {
-      <p class="stage-label">{{ 'step.verify.stage.video' | t }}</p>
-
       <div class="script">
         <p class="script-label">{{ 'step.verify.script.label' | t }}</p>
-        <p class="script-body">
-          {{ 'step.verify.script.body' | t: {
-            amount: formatNaira(loanAmount()),
-            monthly: formatNaira(monthlyRepayment())
-          } }}
-        </p>
+        <p class="script-body">{{ scriptLines().join(' ') }}</p>
       </div>
 
       @if (canRecord() || videoPreviewUrl()) {
@@ -105,6 +92,8 @@
       </div>
 
       }
+
+      <p class="stage-label">{{ 'step.verify.stage.video' | t }}</p>
 
       @if (checkingVideo()) {
         <p class="processing">{{ 'step.verify.processing' | t }}</p>
@@ -141,12 +130,14 @@
           <figure class="review-photo">
             <img [attr.src]="p" alt="" />
             <figcaption>{{ 'step.verify.review.face' | t }}</figcaption>
+            <button type="button" class="ghost" (click)="retakeFromReview('photo')">{{ 'step.verify.retake.photo' | t }}</button>
           </figure>
         }
         @if (videoDataUrl(); as v) {
           <figure class="review-video">
             <video [attr.src]="v" controls playsinline></video>
             <figcaption>{{ 'step.verify.review.video' | t }}</figcaption>
+            <button type="button" class="ghost" (click)="retakeFromReview('video')">{{ 'step.verify.retake.video' | t }}</button>
           </figure>
         }
       </div>
@@ -157,10 +148,32 @@
 
       <button type="button" class="cta" (click)="confirm()">
         <span>{{ 'step.verify.confirm' | t }}</span>
-        <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
       </button>
     }
   }
 </section>
+
+<app-modal [open]="trouble() !== null" [title]="'troubleshoot.title' | t" (closed)="trouble.set(null)">
+  <h2 class="ts-title">{{ 'troubleshoot.title' | t }}</h2>
+  <p class="ts-reason" role="status">{{ trouble() }}</p>
+  <p class="ts-sub">{{ 'troubleshoot.sub' | t }}</p>
+  @if (denied()) {
+    <p class="ts-reason">{{ 'troubleshoot.denied' | t }}</p>
+  }
+  <ul class="ts-tips">
+    <li>{{ 'troubleshoot.tip1' | t }}</li>
+    <li>{{ 'troubleshoot.tip2' | t }}</li>
+    <li>{{ 'troubleshoot.tip3' | t }}</li>
+  </ul>
+  <div class="ts-actions">
+    <button type="button" class="cta" (click)="retryAfterTrouble()"><span>{{ 'troubleshoot.retry' | t }}</span></button>
+    @if (canUpload()) {
+      <label class="ghost upload">
+        <input type="file" accept="video/*" capture="user" class="file" (change)="trouble.set(null); onVideoFile($event)" />
+        <span>{{ 'step.verify.upload' | t }}</span>
+      </label>
+    }
+    <a class="ghost" [attr.href]="helpLink" target="_blank" rel="noopener">{{ 'step.verify.help' | t }}</a>
+  </div>
+</app-modal>

@@ -1,3 +1,4 @@
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject } from '@angular/core';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { loanRoute } from '../../../core/flow/apply-routes';
@@ -10,7 +11,7 @@ import { LoanStatusBadgeComponent } from './loan-status-badge.component';
 /** Where a returning customer lands after verifying: their loans, and a way to take a new one. */
 @Component({
   selector: 'app-loans',
-  imports: [TPipe, LoanStatusBadgeComponent],
+  imports: [AnimatedIconComponent, TPipe, LoanStatusBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './loans.component.html',
   styleUrl: './loans.component.css',

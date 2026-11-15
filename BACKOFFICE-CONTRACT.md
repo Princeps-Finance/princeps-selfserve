@@ -10,6 +10,8 @@ code reads today.)
 | `BACKOFFICE_API_URL` | Base URL of the Caltos API. **Required** (no default). |
 | `SELFSERVE_INGEST_TOKEN` | Bearer token sent to Caltos. **Required.** |
 | `ALLOWED_ORIGINS` | Optional comma-separated origins allowed to call `/api/*`. Defaults to same-origin. |
+| `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Shared rate-limit store (Upstash Redis). **Required in production**: without them every limited call is refused, so the app cannot go live by accident without limits. Keys are hashed; no BVN, phone or token is stored. |
+| `SMS_HOURLY_CAP` | Optional. Texts per hour across all customers (default 1000). Caps the SMS bill. |
 | `TURNSTILE_SECRET` | Optional. When set, `send-otp` requires a valid Cloudflare Turnstile token. **Set before launch.** |
 
 Client-side (`src/environments/*`): `turnstileSiteKey` (empty disables the bot check) and
@@ -64,6 +66,14 @@ response keys.
 | `/api/selfserve/upload-document` *(token)* | `{docId, fileName, sizeBytes}` | `{status:'ok'\|'too-large'\|'bad-type'\|'network'}` |
 | `/api/selfserve/mandate-link` *(token)* | `{productId, channel, monthlyAmount, tenorMonths}` | `{url (https), reference}` |
 | `/api/selfserve/mandate-status` *(token)* | `{reference}` | `{status:'pending'\|'completed'\|'failed'}` |
+| `/api/selfserve/eligibility-check` *(no token: it runs before identity)* | `{employmentType, governmentLevel?, nyscMonthsRemaining?, channel, bankCode, accountNumber, ippisNumber?, employer?}` | `{status:'ok', decision:'approved'\|'review'\|'declined', maxAmount, tenorMonths, monthlyIncome}` / `{status:'not-found'\|'service-down'}`. Runs the **real employment and salary check** and the eligibility rules on the server. The exact maximum and the verified monthly pay are returned and shown to the customer (a product decision). The account name is never passed on. Our proxy bot-checks it and allows **4 checks per account per 30 minutes** (429 after that; the app shows a window). |
+| `/api/selfserve/push-subscribe` *(token)* | `{endpoint, keys:{p256dh, auth}}` | `{status:'ok'}`. The browser's Web Push subscription for this application. The back end stores it and sends updates with its VAPID private key. Payload: `{"notification":{"title","body","icon":"/icons/icon-192.png","data":{"onActionClick":{"default":{"operation":"navigateLastFocusedOrOpen","url":"/apply/status"}}}}}` |
+| `/api/selfserve/statement-check` *(no token: it runs before identity)* | `{employer, bankCode, fileName, sizeBytes}` | Same answer as `eligibility-check`: `{status:'ok', decision, maxAmount, tenorMonths, monthlyIncome}` / `{status:'service-down'}`. Private-sector workers: the bank statement (3 to 6 months) is reviewed **automatically**, with no identity. Bot-checked by our proxy, 4 per address per minute; the app shows a window on 429. The PDF itself still needs the real upload endpoint. |
+| `/api/selfserve/verify-bvn-otp` *(addition)* | as above | also returns `customerRef`: an **opaque handle** for this customer, which the app keeps on the device (never the BVN). |
+| `/api/selfserve/send-returning-otp` | `{customerRef}` | `{status:'sent', target, expiresInSeconds}` / `{status:'not-found'}`. Sends the code to the **BVN-linked phone** of the customer behind the handle. Bot-checked and limited per handle. |
+| `/api/selfserve/verify-returning-otp` | `{customerRef, code}` | `{status:'ok', token, identity, bvn, customerRef}` / `{status:'wrong'\|'expired'\|'locked'}`. A correct code proves ownership, so the customer's own BVN is released for this visit only (the app keeps it in memory, never on the device). The handle alone grants nothing: it must be revocable (SIM swap, lost phone, "forget this device"), expire, and never be enough to see or do anything without the code. |
+| `/api/selfserve/required-documents` *(token)* | `{productId, employmentType}` | `{documents:[{key, optional}]}`. The documents to ask for, from the product's configuration and from what could not be verified automatically (for example a payslip only when the pay could not be checked at source). **In production the app asks for exactly this list and nothing else** (known keys: `id`, `payslip`, `callup`; any other key is shown with a generic label). The demo build asks for a full set instead. |
+| `/api/selfserve/profile-fields` *(token)* | `{}` | `{fields:[{key, optional}]}`. Extra details to ask on the details screen (known key: `religion`). **In production the app asks for exactly this list**; the demo build asks for religion so it can be tried. Religion is sensitive personal data (NDPA): ask only if you have a lawful basis, keep it optional unless required, and the app never stores it on the device. It is sent on submit as `religion` when given. |
 | `/api/selfserve/waitlist` *(token)* | `{phone, email, type, employer?, incomeBand?, channel}` | `{status:'ok', referenceId}` (`positionInQueue` and `estimatedWindow` only if real) |
 | `/api/loans` (from `/api/submit-loan`) | validated loan record, see below | `201 {id}` |
 
@@ -98,8 +108,8 @@ These come from thinking like someone using stolen details. The browser cannot e
 8. **Document verification** (authenticity, name match to BVN).
 9. **Step-up for returning customers** (SIM-swap check, date of birth) before showing saved details.
 10. **Active mandate and salary history before disbursement**, to limit default fraud.
-11. **Rate limits that hold across instances** (Vercel Firewall or Upstash). The in-function limiter is per
-    serverless instance only.
+11. **Rate limits that hold across instances.** Done in the proxy with Upstash (see the env table). Caltos must still lock a
+    code after repeated wrong guesses per BVN and phone, because that is the last line of defence.
 
 ## What `/api/submit-loan` guarantees
 

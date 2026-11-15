@@ -8,6 +8,7 @@
     <p class="subtitle">
       {{ 'step.otp.subtitle' | t: { target: maskedTarget() } }}
     </p>
+    <p class="msg msg--hint">{{ 'step.otp.warn' | t }}</p>
   </header>
 
   @if (demo) {
@@ -21,20 +22,25 @@
       [attr.aria-label]="'step.otp.title' | t"
       [class.is-invalid]="!!error() || (attempted() && code().length < 6)"
     >
+      <input
+        #otpField
+        class="otp-field"
+        type="text"
+        name="otp"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        autocomplete="one-time-code"
+        enterkeyhint="done"
+        autocapitalize="off"
+        spellcheck="false"
+        [attr.aria-label]="'step.otp.title' | t"
+        [attr.aria-invalid]="!!error() || (attempted() && code().length < 6) ? true : null"
+        (input)="onCodeInput($event)"
+        (focus)="focused.set(true)"
+        (blur)="focused.set(false)"
+      />
       @for (i of indices; track i) {
-        <input
-          #cell
-          class="otp-cell"
-          type="text"
-          inputmode="numeric"
-          autocomplete="one-time-code"
-          maxlength="1"
-          [attr.aria-label]="('otp.digit' | t: { n: i + 1 })"
-          [attr.aria-invalid]="!!error() || (attempted() && !cells()[i]) ? true : null"
-          (input)="onCellInput(i, $event)"
-          (keydown)="onCellKeydown(i, $event)"
-          (paste)="onCellPaste($event)"
-        />
+        <span class="otp-cell" aria-hidden="true" [class.is-active]="focused() && i === activeIndex()">{{ cells()[i] }}</span>
       }
     </div>
 
@@ -62,6 +68,10 @@
         }
       </button>
 
+      @if (canPaste) {
+        <button type="button" class="link-btn" (click)="pasteCode()">{{ 'step.otp.paste' | t }}</button>
+      }
+
       <button type="button" class="link-btn link-btn--muted" (click)="goBack()">
         {{ 'step.otp.change.email' | t }}
       </button>
@@ -71,12 +81,10 @@
       <p class="msg--error" role="alert">{{ 'step.otp.error.incomplete' | t }}</p>
     }
 
-    <button type="submit" class="cta" [disabled]="submitting()">
+    <button type="submit" class="cta" [disabled]="!canSubmit()">
       <span>{{ submitting() ? ('step.otp.verifying' | t) : ('step.otp.verify' | t) }}</span>
       @if (!submitting()) {
-        <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
       }
     </button>
   </form>

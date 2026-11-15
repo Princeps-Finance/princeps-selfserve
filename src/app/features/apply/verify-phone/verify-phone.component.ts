@@ -1,3 +1,5 @@
+import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
+import { logWarn } from '../../../core/log';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -9,7 +11,7 @@ import {
   computed,
   inject,
   signal,
-  viewChildren,
+  viewChild,
 } from '@angular/core';
 import { IllustrationComponent } from '../../../core/ui/illustration.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
@@ -19,6 +21,8 @@ import { environment } from '../../../../environments/environment';
 import { API_CLIENT } from '../../../core/api/api-client';
 import { normalizePhoneNg } from '../../../core/api/contact.util';
 import { CaptchaService } from '../../../core/captcha/captcha.service';
+import { ReturningService } from '../../../core/application/returning.service';
+import { HapticsService } from '../../../core/ui/haptics.service';
 import { DraftService } from '../../../core/application/draft.service';
 import { ApplicationStateService } from '../../../core/application/application-state.service';
 import { APPLY } from '../../../core/flow/apply-routes';
@@ -35,7 +39,7 @@ type OtpError =
 
 @Component({
   selector: 'app-verify-phone',
-  imports: [IllustrationComponent, TPipe, WizardProgressComponent],
+  imports: [AnimatedIconComponent, IllustrationComponent, TPipe, WizardProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './verify-phone.component.html',
   styleUrl: './verify-phone.component.css',
@@ -45,6 +49,8 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly api = inject(API_CLIENT);
   private readonly captcha = inject(CaptchaService);
   private readonly drafts = inject(DraftService);
+  private readonly returning = inject(ReturningService);
+  private readonly haptics = inject(HapticsService);
   private readonly state = inject(ApplicationStateService);
   private readonly flow = inject(FlowNavigator);
   private readonly lang = inject(LangService);
@@ -52,7 +58,10 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly length = OTP_LENGTH;
   readonly indices = Array.from({ length: OTP_LENGTH }, (_, i) => i);
   readonly cells = signal<string[]>(Array(OTP_LENGTH).fill(''));
-  readonly cellRefs = viewChildren<ElementRef<HTMLInputElement>>('cell');
+  readonly field = viewChild<ElementRef<HTMLInputElement>>('otpField');
+  readonly focused = signal(false);
+  /** The box the next digit goes into. */
+  readonly activeIndex = computed(() => Math.min(this.code().length, OTP_LENGTH - 1));
 
   readonly maskedTarget = signal<string>('');
   readonly submitting = signal(false);
@@ -70,115 +79,135 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     const bvn = this.state.bvn();
-    if (!bvn) {
+    const ref = this.state.returningRef();
+    if (!bvn && !ref) {
       await this.flow.go(APPLY.bvn);
       return;
     }
     try {
-      // The code goes to the phone linked to the BVN, not to the number typed earlier.
-      const res = await this.api.sendBvnOtp(bvn.value, await this.captcha.token(), this.state.otpDestination() ?? undefined);
+      // The code goes to the phone linked to the BVN, not to the number typed earlier. A returning customer has
+      // no BVN typed: the handle kept on this device stands in for it.
+      const res = bvn
+        ? await this.api.sendBvnOtp(bvn.value, await this.captcha.token(), this.state.otpDestination() ?? undefined)
+        : await this.api.sendReturningOtp(ref as string, await this.captcha.token());
       if (res.status === 'not-found') {
         await this.flow.go(APPLY.bvn, { queryParams: { error: 'not-found' } });
         return;
       }
       this.maskedTarget.set(res.target);
       this.startCooldown();
-    } catch {
-      this.error.set({ kind: 'service' });
+      this.listenForSms();
+    } catch (err) {
+        logWarn('verify-phone step 1 failed', err);
+this.error.set({ kind: 'service' });
     }
   }
 
   ngAfterViewInit(): void {
-    queueMicrotask(() => this.cellRefs()[0]?.nativeElement.focus());
+    queueMicrotask(() => this.field()?.nativeElement.focus());
+  }
+
+  private smsAbort: AbortController | null = null;
+
+  /** Android Chrome can read the code from the text message itself (when it ends with the site and code), so nothing is typed. */
+  private listenForSms(): void {
+    if (typeof window === 'undefined' || !('OTPCredential' in window) || !navigator.credentials) return;
+    this.smsAbort?.abort();
+    this.smsAbort = new AbortController();
+    const options = { otp: { transport: ['sms'] }, signal: this.smsAbort.signal } as unknown as CredentialRequestOptions;
+    navigator.credentials
+      .get(options)
+      .then((c) => {
+        const code = (c as { code?: string } | null)?.code;
+        if (code && /^\d+$/.test(code)) this.setCode(code);
+      })
+      .catch(() => undefined);
   }
 
   ngOnDestroy(): void {
+    this.smsAbort?.abort();
     if (this.cooldownTimer) clearInterval(this.cooldownTimer);
   }
 
-  onCellInput(i: number, evt: Event): void {
+  /**
+   * One real input holds the whole code and the six boxes only show it. A single field is what lets the keyboard offer the
+   * code from the text message (iPhone, Samsung, Huawei and others) and fill all six digits in one go; separate one-digit
+   * fields cannot take it.
+   */
+  onCodeInput(evt: Event): void {
     const input = evt.target as HTMLInputElement;
-    const digits = input.value.replace(/\D/g, '');
-
-    if (digits.length > 1) {
-      // Handle paste / autofill: distribute across cells.
-      this.setCode(digits);
-      return;
-    }
-
-    const next = [...this.cells()];
-    next[i] = digits;
-    this.cells.set(next);
-    input.value = digits;
-
-    this.error.set(null);
-    if (digits && i < OTP_LENGTH - 1) this.cellRefs()[i + 1]?.nativeElement.focus();
-    if (this.code().length === OTP_LENGTH) void this.submit();
+    this.setCode(input.value);
   }
 
-  onCellKeydown(i: number, evt: KeyboardEvent): void {
-    if (evt.key === 'Backspace' && !this.cells()[i] && i > 0) {
-      this.cellRefs()[i - 1]?.nativeElement.focus();
-      return;
-    }
-    if (evt.key === 'ArrowLeft' && i > 0) this.cellRefs()[i - 1]?.nativeElement.focus();
-    if (evt.key === 'ArrowRight' && i < OTP_LENGTH - 1) this.cellRefs()[i + 1]?.nativeElement.focus();
-  }
+  /** The "Paste code" button, for phones whose keyboard does not offer the code: reads what was copied from the text message. */
+  readonly canPaste = typeof navigator !== 'undefined' && typeof navigator.clipboard?.readText === 'function';
 
-  onCellPaste(evt: ClipboardEvent): void {
-    const pasted = (evt.clipboardData?.getData('text') ?? '').replace(/\D/g, '');
-    if (!pasted) return;
-    evt.preventDefault();
-    this.setCode(pasted);
+  async pasteCode(): Promise<void> {
+    try {
+      this.setCode(await navigator.clipboard.readText());
+    } catch {
+      /* permission refused or nothing copied: the customer can still type it */
+    }
   }
 
   private setCode(raw: string): void {
-    const digits = raw.slice(0, OTP_LENGTH).split('');
+    const digits = raw.replace(/\D/g, '').slice(0, OTP_LENGTH);
     const next = Array(OTP_LENGTH).fill('') as string[];
-    digits.forEach((d, i) => (next[i] = d));
+    digits.split('').forEach((d, i) => (next[i] = d));
     this.cells.set(next);
-    const refs = this.cellRefs();
-    refs.forEach((r, i) => (r.nativeElement.value = next[i]));
-    const focusIdx = Math.min(digits.length, OTP_LENGTH - 1);
-    refs[focusIdx]?.nativeElement.focus();
-    if (this.code().length === OTP_LENGTH) void this.submit();
+    const field = this.field()?.nativeElement;
+    if (field && field.value !== digits) field.value = digits;
+    this.error.set(null);
+    if (digits.length === OTP_LENGTH) void this.submit();
   }
 
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (this.code().length !== OTP_LENGTH) {
       this.attempted.set(true);
-      const empty = this.cells().findIndex((c) => !c);
-      this.cellRefs()[empty === -1 ? 0 : empty]?.nativeElement.focus();
+      this.field()?.nativeElement.focus();
       return;
     }
     const bvn = this.state.bvn();
-    if (!bvn) return;
+    const ref = this.state.returningRef();
+    if (!bvn && !ref) return;
 
     this.submitting.set(true);
     this.error.set(null);
     try {
-      const res = await this.api.verifyBvnOtp(bvn.value, this.code());
+      const res = bvn ? await this.api.verifyBvnOtp(bvn.value, this.code()) : await this.api.verifyReturningOtp(ref as string, this.code());
       if (res.status === 'ok') {
+        // A returning customer's BVN comes back with the verified code and lives in memory for this visit only.
+        const verifiedBvn: string = bvn ? bvn.value : ((res as { bvn?: string }).bvn ?? '');
+        if (!bvn) this.state.setBvn({ value: verifiedBvn, verified: false });
+        if (res.customerRef) {
+          this.returning.save({ ref: res.customerRef, firstName: res.identity.firstName || res.identity.fullName.split(' ')[0], maskedPhone: this.maskedTarget() });
+        }
         // The contact number is the one registered with the BVN. Email is optional and asked later.
         const phone = normalizePhoneNg(res.identity.phone);
         if (!phone) throw new Error('BVN record has no usable phone number');
         const contact = { phone, email: this.state.contact()?.email ?? '' };
         this.state.setContact(contact);
         this.state.setBvnIdentity(res.identity);
-        this.state.setBvn({ value: bvn.value, verified: true });
+        this.state.setBvn({ value: verifiedBvn, verified: true });
         this.state.markPhoneVerified();
+        this.haptics.success();
         await this.flow.go(await this.nextAfterVerified(contact));
         return;
       }
+      this.haptics.error();
       if (res.status === 'wrong') this.error.set({ kind: 'wrong' });
       else if (res.status === 'expired') this.error.set({ kind: 'expired' });
       else this.error.set({ kind: 'locked', retryAfterSeconds: res.retryAfterSeconds });
       this.cells.set(Array(OTP_LENGTH).fill(''));
-      this.cellRefs().forEach((r) => (r.nativeElement.value = ''));
-      this.cellRefs()[0]?.nativeElement.focus();
-    } catch {
-      this.error.set({ kind: 'service' });
+      const field = this.field()?.nativeElement;
+      if (field) {
+        field.value = '';
+        field.focus();
+      }
+    } catch (err) {
+        logWarn('verify-phone step 2 failed', err);
+this.error.set({ kind: 'service' });
     } finally {
       this.submitting.set(false);
     }
@@ -197,8 +226,9 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
         this.state.setReturningCustomer(true, result.snapshot);
         return APPLY.loans;
       }
-    } catch {
-      // A failed lookup must never block a new application.
+    } catch (err) {
+        logWarn('verify-phone step 3 failed', err);
+// A failed lookup must never block a new application.
     }
     this.state.setReturningCustomer(false, null);
     return APPLY.profile;
@@ -207,25 +237,30 @@ export class VerifyPhoneComponent implements OnInit, AfterViewInit, OnDestroy {
   async resend(): Promise<void> {
     if (this.resendCooldown() > 0 || this.resending()) return;
     const bvn = this.state.bvn();
-    if (!bvn) return;
+    const ref = this.state.returningRef();
+    if (!bvn && !ref) return;
     this.resending.set(true);
     this.justResent.set(false);
     try {
-      const res = await this.api.sendBvnOtp(bvn.value, await this.captcha.token(), this.state.otpDestination() ?? undefined);
+      const res = bvn
+        ? await this.api.sendBvnOtp(bvn.value, await this.captcha.token(), this.state.otpDestination() ?? undefined)
+        : await this.api.sendReturningOtp(ref as string, await this.captcha.token());
       if (res.status !== 'sent') throw new Error('not-sent');
       this.maskedTarget.set(res.target);
       this.justResent.set(true);
       this.error.set(null);
       this.startCooldown();
-    } catch {
-      this.error.set({ kind: 'service' });
+    } catch (err) {
+        logWarn('verify-phone step 4 failed', err);
+this.error.set({ kind: 'service' });
     } finally {
       this.resending.set(false);
     }
   }
 
   goBack(): void {
-    void this.flow.go(APPLY.bvn);
+    this.state.setReturningRef(null);
+    void this.flow.go(this.returning.saved() ? APPLY.welcome : APPLY.bvn);
   }
 
   private startCooldown(): void {

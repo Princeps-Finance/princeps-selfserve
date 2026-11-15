@@ -45,16 +45,17 @@
 
 .body { margin: 0; font-size: var(--fs-base); line-height: 1.5; color: var(--ink-soft); max-width: 42ch; }
 
-.ref {
-  margin: 0;
-  font-size: var(--fs-sm);
-  color: var(--ink-muted);
-  font-family: var(--font-mono);
-  letter-spacing: 0.02em;
-}
-.ref span { color: var(--ink); }
+.ref { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.ref-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ref-label { font-size: var(--fs-sm); color: var(--ink-muted); }
+.ref-code { font-size: var(--fs-lg); font-weight: 600; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.ref-copy { flex: none; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 50%; background: transparent; color: var(--text-accent); cursor: pointer; }
+@media (hover: hover) and (pointer: fine) { .ref-copy:hover { background: var(--hover-tint); } }
+.ref-copy:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.channels { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-1); }
 .cta { transition: background 160ms ease; }
-.cta:hover { background: var(--action-primary-hover); }
+@media (hover: hover) and (pointer: fine) { .cta:hover { background: var(--action-primary-hover); } }
 
 
 .wa {
@@ -68,14 +69,14 @@
   text-decoration: none;
   transition: background 160ms ease, transform 120ms ease-out;
 }
-.wa:hover { background: color-mix(in srgb, var(--whatsapp) 18%, transparent); }
+@media (hover: hover) and (pointer: fine) { .wa:hover { background: color-mix(in srgb, var(--whatsapp) 18%, transparent); } }
 .wa:active { transform: scale(0.99); }
 .wa:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 .wa-icon {
   width: 36px; height: 36px; flex: none;
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: 50%;
-  background: var(--whatsapp); color: white;
+  background: var(--whatsapp); color: var(--on-dark);
 }
 .wa-body { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
 .wa-title { font-family: var(--font-display); font-size: var(--fs-body); font-weight: var(--btn-weight); letter-spacing: -0.01em; color: var(--ink); }
@@ -107,37 +108,6 @@
 }
 .directory-head p { margin: 0; font-size: var(--fs-md); color: var(--ink-soft); }
 
-.dir-block { display: flex; flex-direction: column; gap: var(--space-3); }
-.dir-block h3 {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: var(--fs-xs); font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.08em;
-  color: var(--ink-muted);
-}
-
-.agents, .offices {
-  list-style: none; padding: 0; margin: 0;
-  display: flex; flex-direction: column;
-}
-.agent, .office {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-4) 0;
-  border-bottom: 1px solid var(--hairline);
-}
-.agent:last-child, .office:last-child { border-bottom: none; }
-
-.agent-info, .office { flex-wrap: wrap; }
-.agent-info { display: flex; flex-direction: column; gap: 2px; }
-.agent-name { font-size: var(--fs-body); font-weight: 500; color: var(--ink); }
-.agent-region { font-size: var(--fs-sm); color: var(--ink-muted); }
-
-.office { flex-direction: column; align-items: flex-start; }
-.office-city { font-family: var(--font-display); font-size: var(--fs-base); font-weight: 600; color: var(--ink); }
-.office-address { font-size: var(--fs-md); color: var(--ink-soft); }
-.office-meta { font-size: var(--fs-sm); color: var(--ink-muted); }
-
 .tel {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 6px var(--space-3);
@@ -149,15 +119,16 @@
   transition: background 160ms ease;
   margin-top: var(--space-2);
 }
-.tel:hover { background: var(--hover-tint); }
+@media (hover: hover) and (pointer: fine) { .tel:hover { background: var(--hover-tint); } }
 .tel:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 .office .tel { align-self: flex-start; }
 
 .review { margin: 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--info-soft); font-size: var(--fs-md); }
+.copy-error { margin: var(--space-2) 0 0; color: var(--danger-text); font-size: var(--fs-md); }
 .copy { font-family: var(--font-sans); margin-left: var(--space-2); min-height: 44px; padding: 0 var(--space-3); border: 0; background: none; color: var(--text-accent); font: inherit; font-weight: var(--btn-weight); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .next-title { margin: 0 0 var(--space-2); font-size: var(--fs-lg); }
 .next-list { margin: 0; padding-left: var(--space-5); display: flex; flex-direction: column; gap: var(--space-2); color: var(--ink-soft); line-height: 1.5; }
-a.cta { text-decoration: none; justify-content: space-between; }
+a.cta { text-decoration: none; }
 .alt { font: inherit; }
 .alt:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
 
@@ -170,3 +141,4 @@ a.cta { text-decoration: none; justify-content: space-between; }
 .directory[open] .directory-sum::after { content: '−'; }
 .directory-sum:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); border-radius: 4px; }
 .directory-sub { margin: 0 0 var(--space-4); color: var(--ink-soft); font-size: var(--fs-body); }
+

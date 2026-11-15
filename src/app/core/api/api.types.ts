@@ -1,0 +1,324 @@
+// Shapes shared by the API clients, the mock and the screens. No logic lives here.
+
+export interface ReturningProfileSnapshot {
+  fullName: string;
+  lastLoanAt: string;
+  employmentType: 'government' | 'paramilitary' | 'corper';
+  employerName: string;
+  bankName: string;
+  accountLast4: string;
+  monthlyIncome: number;
+}
+
+export type LookupResult =
+  | { kind: 'new' }
+  | { kind: 'returning'; profileHint: string; snapshot: ReturningProfileSnapshot };
+
+export interface SalaryVerifyInput {
+  channel: 'remita' | 'ippis' | 'dedukt';
+  bankCode: string;
+  accountNumber: string;
+  /** Name the customer gave in bio data; the account name must match it. */
+  fullName: string;
+  ippisNumber?: string;
+  employer?: string;
+  /** Take-home pay the customer confirmed from a scanned payslip. Evidence for the server to weigh, never the verified pay. */
+  declaredNetPay?: number;
+}
+
+/** What the salary screen asks the back end before showing extra steps. */
+export interface SalaryRequirementsInput {
+  employmentType: 'government' | 'paramilitary' | 'corper';
+  channel: 'remita' | 'ippis' | 'dedukt';
+  governmentLevel?: 'federal' | 'state';
+  stateCode?: string;
+  employerCode?: string;
+}
+
+/** The extras the back end wants for this customer. Today only whether to ask for a payslip upload. */
+export interface SalaryRequirements {
+  payslip: boolean;
+}
+
+/**
+ * The "how much can I get" check, before any identity. The back end does the real employment and salary check
+ * from the account details and answers with a decision, the maximum and the verified monthly pay.
+ */
+export interface EligibilityCheckInput {
+  employmentType: 'government' | 'paramilitary' | 'corper';
+  governmentLevel?: 'federal' | 'state';
+  nyscMonthsRemaining?: number;
+  channel: 'remita' | 'ippis' | 'dedukt';
+  bankCode: string;
+  accountNumber: string;
+  ippisNumber?: string;
+  employer?: string;
+  /** Take-home pay the customer confirmed from a scanned payslip. Evidence for the server to weigh, never the verified pay. */
+  declaredNetPay?: number;
+  captchaToken?: string;
+}
+
+/** The same check for private-sector workers: the bank statement is reviewed automatically, with no identity. */
+export interface StatementCheckInput {
+  employer: string;
+  bankCode: string;
+  fileName: string;
+  sizeBytes: number;
+  captchaToken?: string;
+}
+
+/** One document the back end wants for this product and customer. Optional ones do not block the customer. */
+export interface RequiredDocument {
+  key: string;
+  optional: boolean;
+}
+
+export interface RequiredDocumentsInput {
+  productId: string;
+  employmentType: 'government' | 'paramilitary' | 'corper' | 'private-sector';
+}
+
+/** One extra detail the back end wants on the details screen, for example `religion`. */
+export interface RequiredProfileField {
+  key: string;
+  optional: boolean;
+}
+
+export type EligibilityCheckResult =
+  | { status: 'ok'; decision: 'approved' | 'review' | 'declined'; maxAmount: number; tenorMonths: number; monthlyIncome: number }
+  | { status: 'not-found' }
+  | { status: 'rate-limited' }
+  | { status: 'service-down' };
+
+/** The name the bank holds for an account number, shown so a person can see they typed the right one. */
+export type AccountLookupResult =
+  | { status: 'ok'; accountName: string }
+  | { status: 'not-found' }
+  | { status: 'service-down' };
+
+export type SalaryVerifyResult =
+  | { status: 'ok'; monthlyIncome: number; accountName: string }
+  | { status: 'name-mismatch' }
+  | { status: 'not-found' }
+  | { status: 'service-down' };
+
+/**
+ * Identity checks answer match / no-match only. They never return the record
+ * holder's name, date of birth, phone or address, so they cannot be used to
+ * look a stranger up.
+ */
+export type BvnVerifyResult =
+  | { status: 'ok' }
+  | { status: 'name-mismatch' }
+  | { status: 'not-found' }
+  | { status: 'service-down' };
+
+export type { Quote, QuoteLine } from '../../../shared/quote';
+
+export interface QuoteInput {
+  productId: string;
+  amount: number;
+  tenorMonths: number;
+  referralCode?: string;
+}
+
+export type QuoteResult =
+  | { status: 'ok'; quote: import('../../../shared/quote').Quote }
+  /** The server refused these terms (outside the limits, unknown code). Asking again will not help. */
+  | { status: 'invalid' }
+  /** No answer: offline, slow, or the service is down. Asking again may work. */
+  | { status: 'unavailable' };
+
+export interface DocUploadInput {
+  docId: string;
+  fileName: string;
+  sizeBytes: number;
+  contentType?: string;
+}
+
+export type DocUploadResult =
+  /** `uploadUrl`: where to send the file itself, when the server wants it sent straight to storage. */
+  | { status: 'ok'; uploadUrl?: string }
+  | { status: 'too-large' }
+  | { status: 'bad-type' }
+  | { status: 'network' };
+
+export interface SubmitPayload {
+  contact: { phone: string; email?: string };
+  employment: { type: string };
+  offer: { productId: string; amount: number; tenorMonths: number };
+  bvn: string;
+  // Full loan record for the backoffice ingest. Optional so older call sites
+  // still compile; when present, submit() posts to the real API.
+  loan?: {
+    productId: string;
+    /** Web app version that produced this application. */
+    appVersion: string;
+    consentVersion: string;
+    consentAt: string;
+    /** Eligibility fell in the manual-review band. Caltos re-scores; this is a hint only. */
+    manualReview: boolean;
+    mandateReference: string | null;
+    /** Same value on every retry of one application, so the server can refuse a duplicate. */
+    idempotencyKey: string;
+    /** The server's quote the customer accepted. The server checks its figures and that it has not expired. */
+    quoteId?: string | null;
+    referralCode: string | null;
+    borrowerBvn: string;
+    borrowerName: string;
+    borrowerPhone: string;
+    amountKobo: number;
+    tenorMonths: number;
+    monthlyRepaymentKobo: number;
+    interestModel: 'Flat Rate' | 'Reducing Balance' | 'Percentage Based';
+    ratePercent: number;
+    channel: 'ippis' | 'remita' | 'dedukt';
+    bankCode: string | null;
+    accountNumber: string | null;
+    ippisNumber: string | null;
+    employmentType: 'government' | 'paramilitary' | 'corper';
+    employer: string | null;
+    /** Only when the customer chose to give it. A sensitive detail: never stored on the device. */
+    religion?: string | null;
+    /** A place the customer chose to share from their phone. Optional, and never stored on the device. */
+    location?: { latitude: number; longitude: number; accuracyM: number; capturedAt: string } | null;
+  };
+}
+
+/** One loan the customer already has, as Caltos reports it. Amounts are naira; dates are ISO (YYYY-MM-DD). */
+export interface LoanSummary {
+  id: string;
+  /** The reference quoted to support. */
+  reference: string;
+  productName: string;
+  status: 'active' | 'overdue' | 'completed';
+  principal: number;
+  /** What is still owed, including interest. Zero once completed. */
+  outstanding: number;
+  monthlyRepayment: number;
+  /** The next instalment date, or null when completed. */
+  nextDueDate: string | null;
+  instalmentsPaid: number;
+  instalmentsTotal: number;
+  ratePercent: number;
+  disbursedAt: string;
+  /** Whether the repayment mandate is in place. */
+  mandateActive: boolean;
+}
+
+/** The application reached Caltos. Caltos decides the outcome; the app never claims one. */
+export interface SubmitResult {
+  status: 'received';
+  referenceId: string;
+}
+
+export interface MandateLink {
+  /** https link the customer opens to complete the mandate with their bank or salary provider. */
+  url: string;
+  reference: string;
+}
+
+export type MandateStatus = 'pending' | 'completed' | 'failed';
+
+export interface Bank {
+  code: string;
+  name: string;
+  /** A logo on our own site, such as `/banks/044.svg`. Optional: a bank without one shows its initials. */
+  logo?: string;
+}
+
+/**
+ * What the BVN record gives us once the owner has confirmed with an OTP sent to the phone linked
+ * to that BVN. The BVN photo is NEVER returned to the browser: it stays server-side for face match.
+ */
+export interface BvnIdentity {
+  /** The first name only, used to greet the customer. Never shown in full. */
+  firstName: string;
+  fullName: string;
+  dateOfBirth: string; // YYYY-MM-DD
+  /** The phone number registered with the BVN. This becomes the contact number. */
+  phone: string;
+  gender?: 'male' | 'female';
+  /** The address on the BVN record, if the back end sends one. It may be old, so the customer can change it. */
+  address?: { street?: string; state?: string; lga?: string };
+}
+
+/** A contact point tied to a BVN, shown only in part. `id` is an opaque reference the server understands. */
+export interface MaskedContact {
+  id: string;
+  masked: string;
+}
+
+export type BvnContactsResult =
+  | { status: 'ok'; phones: MaskedContact[]; emails: MaskedContact[] }
+  | { status: 'not-found' }
+  | { status: 'service-down' };
+
+/** Where the one-time code goes: a contact already tied to the BVN, or a number the customer gives. */
+export type OtpDestination =
+  | { kind: 'bvn-contact'; id: string }
+  | { kind: 'alternate-phone'; phone: string };
+
+export type BvnOtpSendResult =
+  | { status: 'sent'; target: string; expiresInSeconds: number }
+  | { status: 'not-found' };
+
+export type BvnOtpVerifyResult =
+  /** `customerRef` is an opaque handle the app may keep on the device to bring the customer back with one tap. */
+  | { status: 'ok'; identity: BvnIdentity; customerRef?: string }
+  | { status: 'wrong' }
+  | { status: 'expired' }
+  | { status: 'locked'; retryAfterSeconds: number };
+
+/** Coming back on a device the customer used before: a code to the BVN-linked phone, with no BVN typed. */
+export type ReturningOtpSendResult =
+  | { status: 'sent'; target: string; expiresInSeconds: number }
+  | { status: 'not-found' };
+
+export type ReturningOtpVerifyResult =
+  /** `bvn` is the customer's own BVN, returned after the code is verified and kept in memory only. */
+  | { status: 'ok'; identity: BvnIdentity; bvn: string; customerRef?: string }
+  | { status: 'wrong' }
+  | { status: 'expired' }
+  | { status: 'locked'; retryAfterSeconds: number };
+
+/** What the offer letter is for: the offer the customer is about to accept. */
+export interface OfferLetterRequest {
+  productId: string;
+  productName: string;
+  amount: number;
+  tenorMonths: number;
+  monthlyRepayment: number;
+  ratePercent: number;
+  /** The quote the letter is written from, so its figures are the ones the customer was shown. */
+  quoteId?: string;
+}
+
+export interface StatementReviewInput {
+  contact: { phone: string; email?: string };
+  bvn: string;
+  employer: string;
+  bankCode: string;
+  fileName: string;
+  sizeBytes: number;
+}
+
+export type IncomeBand = 'under-100k' | '100-250k' | '250-500k' | '500-1m' | 'over-1m';
+export type WaitlistChannel = 'whatsapp' | 'sms' | 'email';
+
+export interface WaitlistInput {
+  phone: string;
+  email?: string;
+  type: string;
+  employer?: string;
+  incomeBand?: IncomeBand;
+  channel: WaitlistChannel;
+}
+
+export interface WaitlistResult {
+  status: 'ok';
+  referenceId: string;
+  /** Only shown when Caltos provides them; the app never invents a queue position or date. */
+  positionInQueue?: number;
+  estimatedWindow?: string;
+}

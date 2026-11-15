@@ -1,3 +1,4 @@
+import { IconComponent } from '../../shared/icon.component';
 import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { LangService } from '../../core/i18n/lang.service';
 
@@ -9,12 +10,13 @@ const VOICE_LOCALE: Record<string, string> = {
 };
 
 @Component({
+  imports: [IconComponent],
   selector: 'app-read-aloud',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <button
       type="button"
-      class="tts"
+      class="tts glass-btn"
       (click)="toggle()"
       [class.is-speaking]="speaking()"
       [class.is-unavailable]="!hasVoice()"
@@ -24,15 +26,9 @@ const VOICE_LOCALE: Record<string, string> = {
       [attr.title]="titleAttr()"
     >
       @if (speaking()) {
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <rect x="6" y="6" width="4" height="12" rx="1" fill="currentColor"/>
-          <rect x="14" y="6" width="4" height="12" rx="1" fill="currentColor"/>
-        </svg>
+        <app-icon name="bold-pause" [size]="18" />
       } @else {
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M4 9v6h4l5 4V5L8 9H4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-          <path d="M16 8a5 5 0 0 1 0 8M19 5a9 9 0 0 1 0 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-        </svg>
+        <app-icon name="bold-volume" [size]="18" />
       }
     </button>
   `,
@@ -41,12 +37,10 @@ const VOICE_LOCALE: Record<string, string> = {
       .tts {
         display: inline-flex; align-items: center; justify-content: center;
         width: 44px; height: 44px;
-        background: transparent; border: 0;
-        color: var(--ink); border-radius: 50%;
+        color: var(--ink);
         cursor: pointer;
         transition: background 160ms ease, color 160ms ease, border-color 160ms ease, transform 120ms ease-out;
       }
-      .tts:hover:not(:disabled) { background: var(--hover-tint); }
       .tts:active:not(:disabled) { transform: scale(0.96); }
       .tts:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
       .tts:disabled { opacity: 0.4; cursor: not-allowed; }

@@ -64,7 +64,7 @@ export function toIsoDate(day: string, month: string, year: string): string {
         font-family: var(--font-sans); font-size: var(--fs-base); color: var(--ink);
         transition: border-color 140ms ease, box-shadow 140ms ease;
       }
-      .input:hover { border-color: var(--input-border-hover); }
+      @media (hover: hover) and (pointer: fine) { .input:hover { border-color: var(--input-border-hover); } }
       .input:focus-visible { outline: 2px solid transparent; border-color: var(--input-border-focus); box-shadow: var(--input-shadow-focus); }
       .input[aria-invalid='true'] { border-color: var(--danger-text); }
     `,

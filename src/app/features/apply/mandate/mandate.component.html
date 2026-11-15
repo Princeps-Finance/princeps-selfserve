@@ -15,6 +15,9 @@
   @if (linkError()) {
     <p class="msg--error" role="alert">{{ 'mandate.link.error' | t }}</p>
   }
+  @if (checkFailed() && linkStatus() !== 'completed') {
+    <p class="msg--error" role="alert">{{ 'mandate.check.error' | t }}</p>
+  }
   @if (linkUrl() && linkStatus() !== 'completed') {
     <p class="link-status" role="status" [attr.data-status]="linkStatus()">
       {{ (linkStatus() === 'failed' ? 'mandate.status.failed' : 'mandate.status.pending') | t }}
@@ -52,11 +55,7 @@
   @if (isCorperMonoCharge()) {
     <aside class="mono-notice" role="note">
       <div class="mono-icon" aria-hidden="true">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-          <rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/>
-          <path d="M3 10h18" stroke="currentColor" stroke-width="1.6"/>
-          <path d="M7 15h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-        </svg>
+        <app-icon name="bold-wallet" [size]="18" />
       </div>
       <div class="mono-body">
         <p class="mono-headline">{{ 'step.mandate.mono.headline' | t }}</p>
@@ -91,20 +90,11 @@
   @if (mode() === 'link') {
     <button type="button" class="cta" (click)="showLink()">
       <span>{{ 'mandate.continue' | t }}</span>
-      <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-        <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
+      <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
     </button>
   } @else {
   <label class="agree">
-    <input
-      type="checkbox"
-      [attr.aria-invalid]="attempted() && !agreed() ? true : null"
-      aria-describedby="agree-error"
-      class="agree-box"
-      [checked]="agreed()"
-      (change)="toggleAgree($any($event.target).checked)"
-    />
+    <app-checkbox [invalid]="attempted() && !agreed()" describedBy="agree-error" [checked]="agreed()" (checkedChange)="toggleAgree($event)" />
     <span>{{ 'step.mandate.agree' | t }}</span>
   </label>
   @if (attempted() && !agreed()) {
@@ -113,9 +103,7 @@
 
   <button type="button" class="cta" (click)="authorize()">
     <span>{{ 'step.mandate.authorize' | t }}</span>
-    <svg class="cta-arrow" width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-    </svg>
+    <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
   </button>
   }
 </section>

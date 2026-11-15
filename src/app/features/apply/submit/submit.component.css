@@ -35,4 +35,13 @@
 
 
 .cta-arrow { transition: transform 200ms cubic-bezier(0.2,0.7,0.1,1); }
-.cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); }
+@media (hover: hover) and (pointer: fine) { .cta:hover:not(:disabled) .cta-arrow { transform: translateX(3px); } }
+
+/* The optional location step: quiet, so it reads as a choice and not a requirement. */
+.where { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); border: 1px dashed var(--input-border); border-radius: var(--radius-md, 12px); }
+.where-title { margin: 0; font-size: var(--fs-lg); }
+.where-body, .where-status { margin: 0; color: var(--ink-soft); line-height: 1.5; }
+.where-status--ok { color: var(--success-text); font-weight: 600; }
+.where-btn { align-self: flex-start; min-height: 48px; padding: 0 var(--space-5); border-radius: var(--radius-pill); border: 1.5px solid var(--ink); background: transparent; color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; }
+.where-link { align-self: flex-start; min-height: 44px; padding: 0 var(--space-2); border: 0; background: none; color: var(--text-accent); font: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.where-btn:focus-visible, .where-link:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
