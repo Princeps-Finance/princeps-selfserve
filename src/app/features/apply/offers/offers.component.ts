@@ -11,7 +11,6 @@ import { Product, RepaymentFrequency, productsFor } from '../../../core/products
 import { LoanQuote, clampAmount, estimateApr, offerLimits, quoteLoan } from '../../../../shared/pricing';
 import { formatNaira } from '../../../core/money.util';
 import { telLink, whatsappLink } from '../../../core/support';
-import { ResultTimerComponent } from '../../../core/eligibility/result-timer.component';
 import { IconComponent } from '../../../shared/icon.component';
 import { QuoteService, offerFromQuote } from '../../../core/pricing/quote.service';
 import { ToastService } from '../../../core/toast/toast.service';
@@ -68,7 +67,7 @@ interface Choice {
 
 @Component({
   selector: 'app-offers',
-  imports: [AnimatedIconComponent, CardComponent, ProductMarkComponent, IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective, ReferralBoxComponent, AmountSliderComponent, IconComponent, ResultTimerComponent],
+  imports: [AnimatedIconComponent, CardComponent, ProductMarkComponent, IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective, ReferralBoxComponent, AmountSliderComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './offers.component.html',
   styleUrl: './offers.component.css',

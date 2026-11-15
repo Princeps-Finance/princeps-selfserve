@@ -36,6 +36,9 @@
             <p class="doc-error">{{ 'step.docs.too.large' | t }}</p>
           } @else if (errors()[spec.id] === 'bad-type') {
             <p class="doc-error">{{ 'step.docs.bad.type' | t }}</p>
+          } @else if (errors()[spec.id] === 'blurry' || errors()[spec.id] === 'dark') {
+            <p class="doc-error">{{ (errors()[spec.id] === 'blurry' ? 'step.docs.blurry' : 'step.docs.dark') | t }}</p>
+            <button type="button" class="doc-anyway" (click)="uploadAnyway(spec.id)">{{ 'step.docs.anyway' | t }}</button>
           } @else if (errors()[spec.id] === 'too-small') {
             <p class="doc-error">{{ 'step.docs.too.small' | t }}</p>
           } @else if (d?.status === 'failed') {

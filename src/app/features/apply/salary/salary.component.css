@@ -54,9 +54,9 @@
 .clear:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
 .lookup:empty, .lookup:not(:has(*)) { display: none; }
 .name-pill {
-  margin: 0; align-self: flex-start; max-width: 100%;
-  display: inline-flex; align-items: center; gap: var(--space-2);
-  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-3); border-radius: var(--radius-pill);
+  margin: 0; width: 100%; box-sizing: border-box;
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-3); border-radius: var(--input-radius);
   background: var(--success-soft); color: var(--success-text);
   font-size: var(--fs-md); font-weight: 600; line-height: 1.3;
 }

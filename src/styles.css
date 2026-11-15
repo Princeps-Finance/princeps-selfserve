@@ -205,6 +205,12 @@ input[type='checkbox'][aria-invalid='true'] {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16);
 }
 .cta:focus-visible, .alt:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
+/* On a phone there is no hover, so the press is the only visual feedback. Make it clear, and spring back on release. */
+@media (hover: none) and (prefers-reduced-motion: no-preference) {
+  .cta, .alt, .seg-item, .text-btn, .link, .clear { transition: transform 140ms cubic-bezier(0.3, 1.4, 0.5, 1), background-color 120ms ease-out; }
+  .cta:active:not(:disabled), .alt:active:not(:disabled), .seg-item:active, .text-btn:active, .link:active, .clear:active { transform: scale(0.96); }
+}
+
 .alt {
   align-self: stretch; min-height: var(--btn-height); padding: 0 var(--space-6);
   display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3);

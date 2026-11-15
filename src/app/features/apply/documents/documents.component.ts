@@ -48,7 +48,9 @@ export class DocumentsComponent implements OnInit {
   /** The list comes from the back end. Until it arrives, or if it cannot be loaded, nothing can be sent. */
   readonly loadState = signal<'loading' | 'ready' | 'error'>('loading');
   readonly docs = this.state.docs;
-  readonly errors = signal<Record<string, 'too-large' | 'network' | 'bad-type' | 'too-small' | null>>({});
+  readonly errors = signal<Record<string, 'too-large' | 'network' | 'bad-type' | 'too-small' | 'blurry' | 'dark' | null>>({});
+  /** A photo held back as blurry or dark, so "upload anyway" can send that same file. */
+  private readonly held = new Map<string, File>();
 
   readonly attempted = signal(false);
 
@@ -128,13 +130,21 @@ export class DocumentsComponent implements OnInit {
   }
 
   /** Checks the file and shrinks a large photo first; a file that cannot be used is explained, not sent. */
-  private async prepareAndUpload(id: string, file: File): Promise<void> {
-    const prepared = await prepareUpload(file);
+  private async prepareAndUpload(id: string, file: File, skipQuality = false): Promise<void> {
+    const prepared = await prepareUpload(file, { skipQuality });
     if (!prepared.ok) {
+      if (prepared.reason === 'blurry' || prepared.reason === 'dark') this.held.set(id, file);
       this.errors.update((e) => ({ ...e, [id]: prepared.reason }));
       return;
     }
+    this.held.delete(id);
     await this.upload(id, prepared.file);
+  }
+
+  /** The customer saw the warning and chose to send the photo as it is. */
+  uploadAnyway(id: string): void {
+    const file = this.held.get(id);
+    if (file) void this.prepareAndUpload(id, file, true);
   }
 
   /** Sends the same file again after a failure. */

@@ -1,4 +1,3 @@
-import { ResultTimerComponent } from '../../../core/eligibility/result-timer.component';
 import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { TPipe } from '../../../core/i18n/t.pipe';
@@ -17,7 +16,7 @@ import { ProductMarkComponent } from '../../../shared/product-mark.component';
  */
 @Component({
   selector: 'app-check-result',
-  imports: [AnimatedIconComponent, TPipe, ProductMarkComponent, ResultTimerComponent],
+  imports: [AnimatedIconComponent, TPipe, ProductMarkComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="step">
@@ -41,7 +40,6 @@ import { ProductMarkComponent } from '../../../shared/product-mark.component';
       } @else {
         <header class="head">
           <h1 class="title">{{ 'check.result.title' | t: { amount: money(max()) } }}</h1>
-          <app-result-timer />
           <p class="subtitle">{{ 'check.result.sub' | t: { months: months() } }}</p>
           @if (income() > 0) {
             <p class="income">{{ 'check.result.income' | t: { amount: money(income()) } }}</p>

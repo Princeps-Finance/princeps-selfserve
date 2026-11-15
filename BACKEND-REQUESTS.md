@@ -75,8 +75,39 @@ The salary screen offers an optional "scan your payslip".
 - Run the reader on the server, so the payslip is not handled by a browser library. Say how long the file is kept. A payslip holds salary and employer details, so it needs the same care as the other documents.
 - The customer confirms or corrects the figures, then the app sends them as `declaredNetPay` on `eligibility-check` and `verify-salary`. **Treat it as evidence, never as the verified pay**: eligibility stays decided on the server.
 
+**Who is asked for a payslip.** `POST /api/selfserve/salary-requirements` with `{ employmentType, channel, governmentLevel?, stateCode?, employerCode? }` answers `{ payslip: true | false }`. The screen asks it when it opens and again whenever the pay channel changes, and shows the upload only on `true`. Remita alone does not mean a payslip: the decision is yours, per product, state or employer. An error or no answer means no upload, so the app never blocks a customer on this.
+
 ### 8c. Bank list and logos
 `banks` should return the current licensed list (including OPay, Kuda, PalmPay and the other digital banks) with each bank's real NIBSS code, and an optional `logo`: a path on our own site such as `/banks/044.svg`. Our security policy only allows images from our own site, so serve the logo files from there. A bank with no logo shows its initials.
+
+### 8d. Automation: what each piece needs from the back end
+The app does the **photo quality check** itself (blurry, too dark, too small), so customers retake a bad photo before it is sent. Everything else below needs the back end. None of it should decline anyone on its own: a reader's result is evidence for a decision, and a person reviews any decline or doubt.
+
+**Rules for all of them**
+- Run readers on the server. Never trust the browser's quality check: repeat it and return `unreadable` per file.
+- Say how long each file and each extracted value is kept, and who can see them. Payslips, IDs and selfies are personal data under the NDPA, so the privacy notice and consent text must name them.
+- Log the outcome and a score, never the document's contents or numbers.
+- Slow readers answer in the background: return a job id, and let the app poll or receive a result. The app waits up to 30 seconds today.
+- Every result carries a `confidence` (0 to 1) and the reader's version, so thresholds can be tuned and audited.
+- Rate limit per customer and per address, and answer `429` like the other routes.
+
+| # | Automation | Endpoint (proposed) | The app sends | The back end returns | Notes for the back end |
+|---|---|---|---|---|---|
+| 1 | Payslip reading (the upload is offered only when `salary-requirements` says so) | `POST /api/selfserve/payslip-extract` (see 8b) | the file, `captchaToken` | `netMonthly`, `grossMonthly?`, `month?`, `employer?` | A vision model on the server is the likeliest fit. Reject payslips older than the allowed age. |
+| 2 | ID reading | `POST /api/selfserve/id-extract`, or run when an ID document is uploaded | the ID image | `fullName`, `dateOfBirth`, `idNumber`, `expiry`, `idType`, `confidence`, and `match` against the BVN record | Return only the match result to the browser, not the whole BVN record. |
+| 3 | Selfie match and liveness | `POST /api/selfserve/identity-check` | the stored photo and video keys | `decision: pass \| retry \| review`, `faceMatch` score, `liveness: pass \| fail` | Needs a face-match provider (the BVN photo or the ID photo as the reference). Cap retries. Never auto-decline on a failed match: send it to review. |
+| 4 | Server quality check | on every upload | n/a | `unreadable` for a file that fails | The browser check can be skipped by the customer ("upload anyway"), so the server decides. |
+| 5 | Bank statement reading | `statement-check` (exists), richer result | the statement file | `monthlyIncome`, salary credit dates, `flags` (gaps, edits, repeated cash credits) | Includes detecting an edited or fake statement. This is what makes private-sector review less manual. |
+| 6 | Borderline routing | in `eligibility-check` | n/a | `decision: approved \| declined \| review`, `reasonCodes` | The review band (score 45 to 55) is hard-coded in the app today. Move it here so risk can change it. Queue `review` cases for a person, with an SLA the app can show. |
+| 7 | Payslip against verified pay | inside `eligibility-check` and `verify-salary` | `declaredNetPay` | internal `payslipMatch: match \| differs \| unverified` | Flag a big gap for review. Do not show the customer a score or the reason. |
+| 8 | Name matching | internal | n/a | internal pass or fail | Match names across BVN, bank account, payslip and ID, with a documented threshold. Show the customer only "the names do not match, check and retry". |
+| 9 | Stalled-step follow-up and status updates | events, `GET /api/selfserve/status` | n/a | a status timeline; a `mandate.stalled` event after a set number of hours | Needs a message provider (SMS or WhatsApp), templates, and the customer's consent to be messaged. |
+
+**Questions for the business**
+- Which of these may influence a decision, and which only help a person decide?
+- Maximum age of a payslip, and the allowed gap between the payslip and the verified pay.
+- Thresholds for face match, name match and the review band, and who can change them.
+- How long each kind of file is kept.
 
 ### 9. Application status for the customer
 A status read that returns the reference, state (received, under review, approved, declined, disbursed) and a human-readable reason, so the status screen can show more than "received".

@@ -26,6 +26,20 @@ export interface SalaryVerifyInput {
   declaredNetPay?: number;
 }
 
+/** What the salary screen asks the back end before showing extra steps. */
+export interface SalaryRequirementsInput {
+  employmentType: 'government' | 'paramilitary' | 'corper';
+  channel: 'remita' | 'ippis' | 'dedukt';
+  governmentLevel?: 'federal' | 'state';
+  stateCode?: string;
+  employerCode?: string;
+}
+
+/** The extras the back end wants for this customer. Today only whether to ask for a payslip upload. */
+export interface SalaryRequirements {
+  payslip: boolean;
+}
+
 /**
  * The "how much can I get" check, before any identity. The back end does the real employment and salary check
  * from the account details and answers with a decision, the maximum and the verified monthly pay.

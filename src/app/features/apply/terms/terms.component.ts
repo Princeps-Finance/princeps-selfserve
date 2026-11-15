@@ -1,5 +1,4 @@
 import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
-import { ResultTimerComponent } from '../../../core/eligibility/result-timer.component';
 import { IconComponent } from '../../../shared/icon.component';
 import { dayToDate } from '../../../../shared/quote';
 import { QuoteService } from '../../../core/pricing/quote.service';
@@ -21,7 +20,7 @@ interface ScheduleRow {
 
 @Component({
   selector: 'app-terms',
-  imports: [AnimatedIconComponent, IconComponent, ResultTimerComponent, CardComponent, TPipe, WizardProgressComponent],
+  imports: [AnimatedIconComponent, IconComponent, CardComponent, TPipe, WizardProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './terms.component.html',
   styleUrl: './terms.component.css',

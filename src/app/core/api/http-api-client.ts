@@ -20,6 +20,8 @@ import {
   MandateLink,
   MandateStatus,
   SalaryVerifyInput,
+  SalaryRequirementsInput,
+  SalaryRequirements,
   AccountLookupResult,
   QuoteInput,
   QuoteResult,
@@ -76,7 +78,7 @@ interface Reply<T> {
 const MAX_LETTER_BASE64 = 7_000_000;
 
 /** Reads: asking twice changes nothing, so a dropped connection is simply tried again. */
-const SAFE_TO_REPEAT = new Set(['banks', 'lgas', 'list-loans', 'mandate-status', 'offer-letter', 'journey', 'profile-fields', 'required-documents', 'resolve-account', 'bvn-contacts']);
+const SAFE_TO_REPEAT = new Set(['banks', 'lgas', 'list-loans', 'mandate-status', 'offer-letter', 'journey', 'profile-fields', 'required-documents', 'resolve-account', 'bvn-contacts', 'salary-requirements']);
 
 @Injectable({ providedIn: 'root' })
 export class HttpApiClient implements ApiClient {
@@ -290,6 +292,12 @@ return []; // The user can type it.
 
   resolveAccount(bankCode: string, accountNumber: string): Promise<AccountLookupResult> {
     return this.opOr<AccountLookupResult>('resolve-account', { bankCode, accountNumber }, { status: 'service-down' });
+  }
+
+  async getSalaryRequirements(input: SalaryRequirementsInput): Promise<SalaryRequirements> {
+    const r = await this.opOr<{ payslip?: unknown }>('salary-requirements', input, {});
+    // Only a plain yes asks for a payslip; anything else, or no answer, does not.
+    return { payslip: r.payslip === true };
   }
 
   verifySalary(input: SalaryVerifyInput): Promise<SalaryVerifyResult> {

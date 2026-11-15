@@ -5,7 +5,7 @@ import type { PayslipResult } from './payslip';
 import type { ReferralDraft } from '../application/application-state.service';
 import type {
   Bank, BvnContactsResult, EligibilityCheckInput, EligibilityCheckResult, RequiredDocument, RequiredDocumentsInput, RequiredProfileField, ReturningOtpSendResult, ReturningOtpVerifyResult, StatementCheckInput, BvnOtpSendResult, BvnOtpVerifyResult, BvnVerifyResult, DocUploadInput, DocUploadResult,
-  AccountLookupResult, QuoteInput, QuoteResult, LoanSummary, LookupResult, MandateLink, OfferLetterRequest, MandateStatus, OtpDestination, SalaryVerifyInput, SalaryVerifyResult,
+  AccountLookupResult, QuoteInput, QuoteResult, LoanSummary, LookupResult, MandateLink, OfferLetterRequest, MandateStatus, OtpDestination, SalaryVerifyInput, SalaryVerifyResult, SalaryRequirementsInput, SalaryRequirements,
   StatementReviewInput, SubmitPayload, SubmitResult, WaitlistInput, WaitlistResult,
 } from './api.types';
 
@@ -47,6 +47,8 @@ export interface ApiClient {
   /** The name on a bank account, so the customer can confirm it before the salary check. */
   resolveAccount(bankCode: string, accountNumber: string): Promise<AccountLookupResult>;
   verifySalary(input: SalaryVerifyInput): Promise<SalaryVerifyResult>;
+  /** Whether this customer (work, channel, state, employer) is asked for a payslip. The back end decides; unreachable means no. */
+  getSalaryRequirements(input: SalaryRequirementsInput): Promise<SalaryRequirements>;
   verifyBvn(bvn: string, fullName: string, dateOfBirth: string): Promise<BvnVerifyResult>;
   verifyNin(nin: string, fullName: string, dateOfBirth: string): Promise<BvnVerifyResult>;
   uploadDocument(input: DocUploadInput): Promise<DocUploadResult>;

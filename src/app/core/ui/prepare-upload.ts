@@ -1,7 +1,14 @@
+import { checkImageQuality } from './image-quality';
+
 /** What the customer's file is, checked and shrunk on their phone before anything is sent. */
 export type PreparedUpload =
   | { ok: true; file: File; shrunk: boolean }
-  | { ok: false; reason: 'bad-type' | 'too-small' };
+  | { ok: false; reason: 'bad-type' | 'too-small' | 'blurry' | 'dark' };
+
+export interface PrepareOptions {
+  /** Skips the sharpness and light check, for a customer who chose to send a photo anyway. */
+  skipQuality?: boolean;
+}
 
 const ACCEPTED = /^(image\/(jpeg|png|webp|heic|heif)|application\/pdf)$/i;
 /** Under this a file cannot hold a readable page. */
@@ -14,10 +21,14 @@ const MAX_SIDE = 1800;
  * Checks the type and size, and shrinks a large photo to a sensible JPEG. A PDF, a small photo, or a format this
  * browser cannot draw (some HEIC files) goes through unchanged.
  */
-export async function prepareUpload(file: File): Promise<PreparedUpload> {
+export async function prepareUpload(file: File, options: PrepareOptions = {}): Promise<PreparedUpload> {
   const type = file.type || guessType(file.name);
   if (!ACCEPTED.test(type)) return { ok: false, reason: 'bad-type' };
   if (file.size < MIN_BYTES) return { ok: false, reason: 'too-small' };
+  if (type.startsWith('image/') && !options.skipQuality) {
+    const quality = await checkImageQuality(file);
+    if (quality === 'blurry' || quality === 'dark' || quality === 'too-small') return { ok: false, reason: quality };
+  }
   if (!type.startsWith('image/') || file.size <= SHRINK_ABOVE_BYTES) return { ok: true, file, shrunk: false };
   try {
     const bitmap = await createImageBitmap(file);

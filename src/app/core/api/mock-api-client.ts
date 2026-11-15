@@ -4,6 +4,8 @@ import type {
   OfferLetterRequest,
   LookupResult,
   SalaryVerifyInput,
+  SalaryRequirementsInput,
+  SalaryRequirements,
   AccountLookupResult,
   QuoteInput,
   QuoteResult,
@@ -233,6 +235,11 @@ export class MockApiClient implements ApiClient {
     if (accountNumber === '9999999999') return { status: 'service-down' };
     if (accountNumber === '0000000000') return { status: 'not-found' };
     return { status: 'ok', accountName: 'ADEYEMI ADEBAYO ADEWALE' };
+  }
+
+  /** Demo: the back end decides who is asked for a payslip, and the demo has none, so nobody is. */
+  async getSalaryRequirements(_input: SalaryRequirementsInput): Promise<SalaryRequirements> {
+    return { payslip: false };
   }
 
   async verifySalary(input: SalaryVerifyInput): Promise<SalaryVerifyResult> {

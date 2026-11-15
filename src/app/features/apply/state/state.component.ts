@@ -6,6 +6,7 @@ import { APPLY } from '../../../core/flow/apply-routes';
 import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
 import { whatsappLink } from '../../../core/support';
 import { TPipe } from '../../../core/i18n/t.pipe';
+import { SelectFieldComponent, SelectOption } from '../../../core/ui/select-field.component';
 import { IconComponent } from '../../../shared/icon.component';
 import { WizardProgressComponent } from '../wizard-progress.component';
 
@@ -16,7 +17,7 @@ import { WizardProgressComponent } from '../wizard-progress.component';
  */
 @Component({
   selector: 'app-state',
-  imports: [IconComponent, TPipe, WizardProgressComponent],
+  imports: [IconComponent, SelectFieldComponent, TPipe, WizardProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: '../employment/employment.component.css',
   template: `
@@ -44,16 +45,32 @@ import { WizardProgressComponent } from '../wizard-progress.component';
           <h1 class="title" id="state-title" tabindex="-1">{{ 'step.state.title' | t }}</h1>
           <p class="subtitle">{{ 'step.state.subtitle' | t }}</p>
         </header>
-        <ul class="options" [attr.aria-labelledby]="'state-title'">
-          @for (s of states(); track s.code) {
-            <li>
-              <button type="button" class="option" [class.is-selected]="selectedState() === s.code" (click)="pickState(s)">
-                <span class="option-body"><span class="option-label">{{ s.name }}</span></span>
-                <app-icon name="bold-chevron-down" [size]="20" [rotate]="-90" class="go" />
-              </button>
-            </li>
-          }
-        </ul>
+        @if (useSearch()) {
+          <!-- A long list (all 36 states) is a searchable picker, not a column of cards. -->
+          <div class="field">
+            <label class="label" for="state-select">{{ 'step.state.label' | t }}</label>
+            <app-select-field
+              inputId="state-select"
+              [options]="stateOptions()"
+              [searchable]="true"
+              [title]="'step.state.label' | t"
+              [placeholder]="'step.state.placeholder' | t"
+              [value]="selectedState() ?? ''"
+              (valueChange)="pickCode($event)"
+            />
+          </div>
+        } @else {
+          <ul class="options" [attr.aria-labelledby]="'state-title'">
+            @for (s of states(); track s.code) {
+              <li>
+                <button type="button" class="option" [class.is-selected]="selectedState() === s.code" (click)="pickState(s)">
+                  <span class="option-body"><span class="option-label">{{ s.name }}</span></span>
+                  <app-icon name="bold-chevron-down" [size]="20" [rotate]="-90" class="go" />
+                </button>
+              </li>
+            }
+          </ul>
+        }
         <p class="hint">
           {{ 'step.state.missing' | t }}
           <a class="link" [attr.href]="whatsapp" target="_blank" rel="noopener">{{ 'step.eligibility.declined.whatsapp' | t }}</a>
@@ -81,6 +98,11 @@ export class StateComponent implements OnInit {
   readonly selectedState = computed(() => this.app.employment()?.state?.code ?? null);
   readonly selectedEmployer = computed(() => this.app.employment()?.state?.employer?.code ?? null);
 
+  /** Up to this many states are cards; more than this is a searchable picker. */
+  static readonly SEARCH_FROM = 8;
+  readonly useSearch = computed(() => this.states().length > StateComponent.SEARCH_FROM);
+  readonly stateOptions = computed<SelectOption[]>(() => this.states().map((s) => ({ value: s.code, label: s.name })));
+
   async ngOnInit(): Promise<void> {
     await this.source.load();
   }
@@ -92,6 +114,12 @@ export class StateComponent implements OnInit {
       return;
     }
     void this.finish(s);
+  }
+
+  /** The picker gives back a code. A change to nothing, or to what is already chosen, is ignored. */
+  pickCode(code: string): void {
+    const s = this.states().find((x) => x.code === code);
+    if (s && code !== this.selectedState()) this.pickState(s);
   }
 
   pickEmployer(s: StateGovernment, e: StateEmployer): void {

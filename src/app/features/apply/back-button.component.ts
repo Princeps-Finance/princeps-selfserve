@@ -16,6 +16,7 @@ const BACK_MAP: Record<string, string> = {
   [APPLY.profile]: APPLY.welcome,
   [APPLY.employment]: APPLY.profile,
   [APPLY.waitlist]: APPLY.employment,
+  [APPLY.state]: APPLY.employment,
   [APPLY.salary]: APPLY.employment,
   [APPLY.eligibility]: APPLY.salary,
   [APPLY.offers]: APPLY.salary,
@@ -28,6 +29,7 @@ const BACK_MAP: Record<string, string> = {
 /** In the no-identity check the steps lead back through the work questions, not through the profile. */
 const CHECK_BACK: Record<string, string> = {
   [APPLY.employment]: APPLY.welcome,
+  [APPLY.state]: APPLY.employment,
   [APPLY.salary]: APPLY.employment,
   [APPLY.eligibility]: APPLY.salary,
   [APPLY.statement]: APPLY.employment,
@@ -71,6 +73,8 @@ export class BackButtonComponent {
     const checking = this.state.intent() === 'check';
     let target = (checking ? CHECK_BACK[here] : undefined) ?? BACK_MAP[here] ?? (here.startsWith(`${APPLY.loans}/`) ? APPLY.loans : APPLY.welcome);
     if (here === APPLY.checkResult && this.state.employment()?.type === 'private-sector') target = APPLY.statement;
+    // State government staff chose their state just before the salary details, so back from there goes to that choice.
+    if (here === APPLY.salary && this.state.employment()?.governmentLevel === 'state' && this.state.employment()?.type === 'government') target = APPLY.state;
     // The steps after the offer go back along this product's own order.
     const before = this.journey.previous(here);
     if (before) target = before;

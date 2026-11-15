@@ -4,7 +4,6 @@
   <header class="head">
     <h1 class="title">{{ titleKey() | t }}</h1>
     <p class="subtitle">{{ subtitleKey() | t }}</p>
-    <app-why-ask [text]="'reason.salary' | t" />
   </header>
 
   <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
@@ -29,11 +28,8 @@
             (click)="setChannel('remita')"
           >Remita</button>
         </div>
-        <p class="msg">{{ 'step.salary.channel.hint' | t }}</p>
       </div>
     }
-
-    <app-payslip-scan (figures)="payslip.set($event)" />
 
     @if (channel() === 'dedukt' && !stateEmployer) {
       <div class="field">
@@ -98,6 +94,10 @@
         />
         <p class="msg" id="ippis-hint">{{ 'step.salary.ippis.hint' | t }}</p>
       </div>
+    }
+
+    @if (asksForPayslip()) {
+      <app-payslip-scan (figures)="payslip.set($event)" />
     }
 
     @if (errorKey(); as key) {

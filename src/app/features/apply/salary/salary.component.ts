@@ -1,5 +1,4 @@
 import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
-import { WhyAskComponent } from '../../../shared/why-ask.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { SelectFieldComponent, SelectOption } from '../../../core/ui/select-field.component';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -10,6 +9,7 @@ import { WizardProgressComponent } from '../wizard-progress.component';
 import { API_CLIENT, Bank } from '../../../core/api/api-client';
 import { bankOption } from '../../../core/api/bank-logos';
 import type { PayslipFigures } from '../../../core/api/payslip';
+import { logWarn } from '../../../core/log';
 import { PayslipScanComponent } from './payslip-scan.component';
 import {
   ApplicationStateService,
@@ -33,7 +33,7 @@ const PARAMILITARY_EMPLOYERS = [
 
 @Component({
   selector: 'app-salary',
-  imports: [AnimatedIconComponent, WhyAskComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent, ModalComponent, IconComponent, HelpLinksComponent, PayslipScanComponent],
+  imports: [AnimatedIconComponent, TPipe, WizardProgressComponent, ReactiveFormsModule, SelectFieldComponent, ModalComponent, IconComponent, HelpLinksComponent, PayslipScanComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './salary.component.html',
   styleUrl: './salary.component.css',
@@ -57,16 +57,49 @@ export class SalaryComponent {
   /** A state government employer picked on the state screen, such as Adamawa PHCDA. Its name is the employer, so it is not asked again. */
   /** Pay the customer confirmed from a scanned payslip. It goes to the server as evidence; the verified pay still comes from the salary check. */
   readonly payslip = signal<PayslipFigures | null>(null);
+  /** Whether the back end wants a payslip from this customer. Asked again whenever the work, channel or state changes; unreachable means no. */
+  readonly asksForPayslip = signal(false);
+  private requirementsSeq = 0;
   readonly stateEmployer = this.state.employment()?.state?.employer?.name ?? null;
   readonly channel = signal<SalaryChannel>(this.deriveChannel());
-  /** Federal government is paid through IPPIS and state government through Remita, so the choice is only asked when the level is unknown. */
-  readonly showChannelChoice = computed(() => this.state.employment()?.type === 'government' && !this.state.employment()?.governmentLevel);
+  /**
+   * Federal staff are usually paid through IPPIS but some through Remita, so they choose (IPPIS is picked to start).
+   * State government staff do not choose: the state, and employer, picked on the state screen decide it.
+   */
+  readonly showChannelChoice = computed(() => this.state.employment()?.type === 'government' && this.state.employment()?.governmentLevel !== 'state');
   readonly paramilitaryEmployers = PARAMILITARY_EMPLOYERS;
   readonly employerOptions: SelectOption[] = PARAMILITARY_EMPLOYERS.map((e) => ({ value: e, label: e }));
 
   setChannel(c: SalaryChannel): void {
     this.channel.set(c);
     this.serverError.set(null);
+    void this.loadRequirements();
+  }
+
+  /** Asks the back end whether to offer the payslip upload for this customer's work, channel, state and employer. */
+  private async loadRequirements(): Promise<void> {
+    const seq = ++this.requirementsSeq;
+    const e = this.state.employment();
+    const type = e?.type;
+    if (type !== 'government' && type !== 'paramilitary' && type !== 'corper') {
+      this.asksForPayslip.set(false);
+      return;
+    }
+    let wanted = false;
+    try {
+      wanted = (await this.api.getSalaryRequirements({
+        employmentType: type,
+        channel: this.channel(),
+        governmentLevel: e?.governmentLevel,
+        stateCode: e?.state?.code,
+        employerCode: e?.state?.employer?.code,
+      })).payslip === true;
+    } catch (err) {
+      logWarn('salary requirements unavailable', err);
+    }
+    if (seq !== this.requirementsSeq) return;
+    this.asksForPayslip.set(wanted);
+    if (!wanted) this.payslip.set(null);
   }
 
   readonly banks = signal<Bank[]>([]);
@@ -136,6 +169,7 @@ export class SalaryComponent {
     // The employer was picked on the state screen, so it fills itself and the form never asks for it.
     if (this.stateEmployer) this.form.controls.employer.setValue(this.stateEmployer);
     this.watchAccount();
+    void this.loadRequirements();
     // The account came from the check: verify it now without asking again. If it fails, the form below shows why.
     if (this.mode === 'verify' && saved && saved.accountNumber) queueMicrotask(() => void this.submit());
   }
@@ -176,8 +210,16 @@ export class SalaryComponent {
       if (seq !== this.lookupSeq) return;
       this.lookup.set(res.status === 'ok' ? { state: 'ok', name: res.accountName } : res.status === 'not-found' ? { state: 'not-found' } : { state: 'unavailable' });
     };
+    let lastBank = bank.value;
     bank.valueChanges.subscribe((code) => {
       this.form.controls.bankName.setValue(this.banks().find((b) => b.code === code)?.name ?? '');
+      // A different bank means the account number typed is for another bank. Only a pick by the customer clears it,
+      // not a saved answer being put back.
+      if (bank.dirty && code !== lastBank && acct.value) {
+        acct.setValue('');
+        this.serverError.set(null);
+      }
+      lastBank = code;
       void run();
     });
     acct.valueChanges.subscribe(() => void run());
@@ -215,7 +257,7 @@ export class SalaryComponent {
           accountNumber: v.accountNumber,
           ippisNumber: v.ippisNumber || undefined,
           employer: v.employer || undefined,
-          declaredNetPay: this.payslip()?.netMonthly,
+          declaredNetPay: this.asksForPayslip() ? this.payslip()?.netMonthly : undefined,
           captchaToken: await this.captcha.token(),
         });
         if (res.status === 'rate-limited') {
@@ -252,7 +294,7 @@ export class SalaryComponent {
         fullName: this.state.profile()?.fullName ?? '',
         ippisNumber: v.ippisNumber || undefined,
         employer: v.employer || undefined,
-        declaredNetPay: this.payslip()?.netMonthly,
+        declaredNetPay: this.asksForPayslip() ? this.payslip()?.netMonthly : undefined,
       });
       if (res.status !== 'ok') {
         this.serverError.set(res.status);

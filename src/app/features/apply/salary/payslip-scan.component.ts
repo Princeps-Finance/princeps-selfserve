@@ -5,12 +5,11 @@ import type { PayslipFigures, PayslipResult } from '../../../core/api/payslip';
 import { CaptchaService } from '../../../core/captcha/captcha.service';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { MAX_UPLOAD_BYTES } from '../../../core/limits';
+import { prepareUpload } from '../../../core/ui/prepare-upload';
 import { logWarn } from '../../../core/log';
 
 type Phase = 'idle' | 'reading' | 'review' | 'confirmed';
-type Problem = 'unreadable' | 'too-large' | 'bad-type' | 'rate-limited' | 'service-down';
-
-const ACCEPTED = /^(image\/(jpeg|png|webp|heic|heif)|application\/pdf)$/;
+type Problem = 'unreadable' | 'too-large' | 'bad-type' | 'rate-limited' | 'service-down' | 'blurry' | 'dark' | 'too-small';
 
 /**
  * Optional help on the salary screen: photograph a payslip and we read the figures off it. The customer always checks
@@ -57,9 +56,12 @@ const ACCEPTED = /^(image\/(jpeg|png|webp|heic|heif)|application\/pdf)$/;
 
       @if (problem(); as p) {
         <p class="error" role="alert">{{ problemKey(p) | t }}</p>
+        @if (held() && (p === 'blurry' || p === 'dark')) {
+          <button type="button" class="link" (click)="useAnyway()">{{ 'step.docs.anyway' | t }}</button>
+        }
       }
 
-      <input #file class="file" type="file" accept="image/*,application/pdf" capture="environment" tabindex="-1" aria-hidden="true" (change)="onFile($event)" />
+      <input #file class="file" type="file" accept="image/*,application/pdf" tabindex="-1" aria-hidden="true" (change)="onFile($event)" />
     </section>
   `,
   styles: [
@@ -88,6 +90,8 @@ export class PayslipScanComponent {
 
   protected readonly phase = signal<Phase>('idle');
   protected readonly problem = signal<Problem | null>(null);
+  /** A photo held back as blurry or dark, so "upload anyway" can send that same file. */
+  protected readonly held = signal<File | null>(null);
   private readonly read = signal<PayslipFigures | null>(null);
   protected readonly net = new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/^\s*₦?\s*[\d,]+\s*$/)] });
 
@@ -109,8 +113,24 @@ export class PayslipScanComponent {
   protected async onFile(event: Event): Promise<void> {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
-    if (file.size > MAX_UPLOAD_BYTES) return this.fail('too-large');
-    if (!ACCEPTED.test(file.type)) return this.fail('bad-type');
+    await this.send(file, false);
+  }
+
+  protected useAnyway(): void {
+    const file = this.held();
+    if (file) void this.send(file, true);
+  }
+
+  private async send(original: File, skipQuality: boolean): Promise<void> {
+    if (original.size > MAX_UPLOAD_BYTES) return this.fail('too-large');
+    // The same check the documents step makes: type, size, and whether a photo is sharp and lit well enough to read.
+    const prepared = await prepareUpload(original, { skipQuality });
+    if (!prepared.ok) {
+      if (prepared.reason === 'blurry' || prepared.reason === 'dark') this.held.set(original);
+      return this.fail(prepared.reason);
+    }
+    const file = prepared.file;
+    this.held.set(null);
     this.problem.set(null);
     this.phase.set('reading');
     let res: PayslipResult;
@@ -143,6 +163,9 @@ export class PayslipScanComponent {
     return p === 'unreadable' ? 'payslip.error.unreadable'
       : p === 'too-large' ? 'payslip.error.size'
       : p === 'bad-type' ? 'payslip.error.type'
+      : p === 'blurry' ? 'step.docs.blurry'
+      : p === 'dark' ? 'step.docs.dark'
+      : p === 'too-small' ? 'step.docs.too.small'
       : p === 'rate-limited' ? 'payslip.error.limited'
       : 'payslip.error.service';
   }
