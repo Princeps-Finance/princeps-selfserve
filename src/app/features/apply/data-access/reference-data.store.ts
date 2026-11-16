@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom, timeout } from 'rxjs';
 import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 import { z } from 'zod/mini';
-import { APP_CONFIG } from '../../../runtime-config';
+import { apiOrigin } from '../../../core/api-origin';
 import * as ApplicationContract from './application-contract';
 import { parseApiResponse } from './api-response';
 import { apiError } from './api-error';
@@ -12,10 +12,11 @@ const DAY = 86_400_000;
 export const ReferenceDataStore = signalStore(
   { providedIn: 'root' },
   withState({ entries: {} as Record<string, { expires: number; value: unknown }> }),
-  withMethods((store, http = inject(HttpClient), config = inject(APP_CONFIG)) => {
+  withMethods((store, http = inject(HttpClient)) => {
     const requests = new Map<string, Promise<unknown>>();
     async function load<T>(path: string, schema: z.ZodMiniType<T>, ttl: number): Promise<T> {
-      const key = `princeps.public.v2:${config.environment}:${config.apiBaseUrl}:${path}`;
+      const origin = apiOrigin();
+      const key = `princeps.public.v2:${origin}:${path}`;
       let cached = store.entries()[key];
       if (!cached) {
         try {
@@ -32,7 +33,7 @@ export const ReferenceDataStore = signalStore(
       const pending = requests.get(key);
       if (pending) return schema.parse(await pending);
       const request = firstValueFrom(
-        http.get<unknown>(`${config.apiBaseUrl}/api/v2/${path}`).pipe(timeout(20_000)),
+        http.get<unknown>(`${origin}/api/v2/${path}`).pipe(timeout(20_000)),
       )
         .then((value) => {
           const parsed = parseApiResponse(value, schema),

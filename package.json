@@ -10,7 +10,6 @@
     "test:ci": "ng test --watch=false",
     "build:icons": "node scripts/build-icons.mjs",
     "generate:api": "python3 scripts/generate-contracts.py",
-    "config:runtime": "node scripts/runtime-config.mjs",
     "deploy:development": "wrangler deploy"
   },
   "private": true,

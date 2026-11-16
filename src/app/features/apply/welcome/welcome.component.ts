@@ -1,5 +1,4 @@
 import { RouterLink } from '@angular/router';
-import { APP_CONFIG } from '../../../runtime-config';
 import { ButtonDirective } from '../../../shared/components/button/button.directive';
 import { AnimatedIconComponent } from '../../../shared/components/animated-icon.component';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
@@ -159,5 +158,5 @@ import { APPLY } from '../apply-routes';
 })
 export class WelcomeIntentComponent {
   protected readonly applyPath = APPLY.bvn;
-  protected readonly accountsUrl = inject(APP_CONFIG).accountsUrl;
+  protected readonly accountsUrl = import.meta.env?.NG_APP_ACCOUNTS_URL?.trim();
 }

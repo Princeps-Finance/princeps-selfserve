@@ -1,8 +1,8 @@
+import { apiOrigin } from '../../../core/api-origin';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { APP_CONFIG } from '../../../runtime-config';
 import { applicationTokenInterceptor } from '../../../core/session/application-token.interceptor';
 import {
   ApplicationSession,
@@ -14,7 +14,7 @@ import { ApplicationStore, stepRoutes } from '../state/application.store';
 import { OffersStore } from '../state/offers.store';
 import { ApplicationApi } from './application.api';
 
-const origin = 'https://api.example.test';
+const origin = apiOrigin();
 const base = origin + '/api/v2';
 const application = base + '/applications/id';
 const wrapped = (data: unknown) => ({ status: 'success', statusCode: 200, code: 'SUCCESS', data });
@@ -55,10 +55,6 @@ describe('v2 browser integration', () => {
         provideHttpClient(withInterceptors([applicationTokenInterceptor])),
         provideHttpClientTesting(),
         provideRouter([]),
-        {
-          provide: APP_CONFIG,
-          useValue: { environment: 'staging', apiBaseUrl: origin, accountsUrl: '' },
-        },
       ],
     });
     http = TestBed.inject(HttpTestingController);
@@ -200,7 +196,7 @@ describe('v2 browser integration', () => {
     request.flush(wrapped([{ code: '001', name: 'Test bank' }]));
     expect(await first).toEqual(await second);
     expect(
-      JSON.parse(localStorage.getItem('princeps.public.v2:staging:' + origin + ':banks')!).value,
+      JSON.parse(localStorage.getItem('princeps.public.v2:' + origin + ':banks')!).value,
     ).toEqual(await first);
     expect(await reference.banks()).toEqual(await first);
     now.mockReturnValue(86_410_000);

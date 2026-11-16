@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, self-service-development, self-service-production]
+    branches: [main, development, self-service-development, self-service-production]
 
 permissions:
   contents: read
@@ -28,5 +28,4 @@ jobs:
           path: |
             dist/princeps-selfserve/browser
             customHttp.yml
-            scripts/runtime-config.mjs
           if-no-files-found: error

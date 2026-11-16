@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
-import { APP_CONFIG } from './runtime-config';
 import { App } from './app';
 
 describe('App', () => {
@@ -11,14 +10,6 @@ describe('App', () => {
       providers: [
         provideRouter([]),
         provideHttpClient(),
-        {
-          provide: APP_CONFIG,
-          useValue: {
-            environment: 'development',
-            apiBaseUrl: 'https://api.example.test',
-            accountsUrl: '',
-          },
-        },
       ],
     }).compileComponents();
   });
