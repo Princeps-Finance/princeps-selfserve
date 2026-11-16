@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { ToastService } from '../toast/toast.service';
+import { ToastService } from '../../shared/components/toast/toast.service';
 import { InstallService } from './install.service';
 
 describe('InstallService', () => {

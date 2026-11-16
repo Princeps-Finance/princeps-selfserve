@@ -10,7 +10,7 @@ export class TPipe implements PipeTransform {
     this.lang.lang();
     const raw = this.lang.t(key);
     if (!params) return raw;
-    return raw.replace(/\{(\w+)\}/g, (_, name: string) =>
+    return raw.replace(/\{(\w+)\}/g, (placeholder, name: string) =>
       params[name] !== undefined ? String(params[name]) : `{${name}}`,
     );
   }

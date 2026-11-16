@@ -255,3 +255,13 @@ html.is-scrolled body::before {
 }
 
 .cdk-global-overlay-wrapper.princeps-toast-layer { z-index: calc(var(--z-toast) + 1); }
+
+.cta:has(> app-animated-icon), .cta:has(> app-icon) {
+  padding-inline: 52px;
+}
+
+@media (hover: none) and (prefers-reduced-motion: no-preference) {
+  .cta:active:not(:disabled), .alt:active:not(:disabled), .text-btn:active, .link:active {
+    transform: scale(0.96);
+  }
+}

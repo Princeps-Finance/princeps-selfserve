@@ -1,0 +1,429 @@
+<section class="step">
+  <app-wizard-progress
+    [current]="page === 'profile' ? 3 : page === 'employment' ? 4 : 5"
+    [label]="'step.' + page + '.eyebrow' | t"
+  />
+  <header class="head">
+    <h1 class="title">
+      @if (page === 'profile' && profile()?.name?.firstName; as name) {
+        {{ 'step.profile.title.named' | t: { name: name } }}
+      } @else {
+        {{ (page === 'salary' ? 'step.salary.remita.title' : 'step.' + page + '.title') | t }}
+      }
+    </h1>
+    <p class="subtitle">
+      {{ (page === 'salary' ? 'salary.accountIntro' : 'step.' + page + '.subtitle') | t }}
+    </p>
+  </header>
+  @if (store.errors()['details-load']; as error) {
+    <p class="error" role="alert">{{ error.message }}</p>
+    <button appButton variant="secondary" (click)="load()">{{ 'common.retry' | t }}</button>
+  }
+  @if (!loaded() && !store.errors()['details-load']) {
+    <app-spinner [label]="'common.loading' | t" />
+  }
+  @if (loaded()) {
+    @if (page === 'profile') {
+      <div class="card">
+        <dl class="identity-summary">
+          @if (profile()?.name?.fullName || profile()?.name?.firstName; as name) {
+            <div>
+              <dt>{{ 'step.profile.name.label' | t }}</dt>
+              <dd>{{ name }}</dd>
+            </div>
+          }
+          @if (profile()?.dateOfBirth; as birthDate) {
+            <div>
+              <dt>{{ 'step.profile.dob.label' | t }}</dt>
+              <dd>{{ birthDate }}</dd>
+            </div>
+          }
+        </dl>
+      </div>
+      <form class="form" [formGroup]="profileForm" (ngSubmit)="save()">
+        <div class="field">
+          @let streetInvalid =
+            profileForm.controls.streetAddress.touched &&
+            profileForm.controls.streetAddress.invalid;
+
+          <label class="label" for="street">{{ 'step.profile.address.label' | t }}</label
+          ><input
+            appInput
+            id="street"
+            formControlName="streetAddress"
+            autocomplete="street-address"
+            [attr.aria-invalid]="streetInvalid || null"
+            [attr.aria-describedby]="streetInvalid ? 'street-error' : null"
+          />
+          @if (streetInvalid) {
+            <p id="street-error" class="error" role="alert">{{ 'form.street' | t }}</p>
+          }
+        </div>
+        <div class="field">
+          @let stateInvalid =
+            profileForm.controls.state.touched && profileForm.controls.state.invalid;
+
+          <label class="label" for="state">{{ 'step.profile.state.label' | t }}</label
+          ><app-select-field
+            inputId="state"
+            [title]="'step.profile.state.label' | t"
+            [options]="states()"
+            [searchable]="true"
+            formControlName="state"
+            [invalid]="stateInvalid"
+            [describedBy]="stateInvalid ? 'state-error' : null"
+          />
+          @if (stateInvalid) {
+            <p id="state-error" class="error" role="alert">
+              {{ profileForm.controls.state.getError('server') || ('form.state' | t) }}
+            </p>
+          }
+        </div>
+        <div class="field">
+          @let lgaInvalid = profileForm.controls.lga.touched && profileForm.controls.lga.invalid;
+
+          <label class="label" for="lga">{{ 'step.profile.lga.label' | t }}</label
+          ><app-select-field
+            inputId="lga"
+            [title]="'step.profile.lga.label' | t"
+            [options]="lgas()"
+            [searchable]="true"
+            formControlName="lga"
+            [invalid]="lgaInvalid"
+            [describedBy]="lgaInvalid ? 'lga-error' : null"
+          />
+          @if (lgaInvalid) {
+            <p id="lga-error" class="error" role="alert">{{ 'form.lga' | t }}</p>
+          }
+        </div>
+        @if (lgaError()) {
+          <p class="error" role="alert">{{ 'profile.lgaError' | t }}</p>
+          <button appButton type="button" variant="secondary" (click)="retryLgas()">
+            {{ 'common.retry' | t }}
+          </button>
+        }
+        <div class="field">
+          @let relationshipInvalid =
+            profileForm.controls.relationshipStatus.touched &&
+            profileForm.controls.relationshipStatus.invalid;
+
+          <label class="label" for="relationship">{{ 'step.profile.relationship.label' | t }}</label
+          ><app-select-field
+            inputId="relationship"
+            [title]="'step.profile.relationship.label' | t"
+            [options]="relationships()"
+            formControlName="relationshipStatus"
+            [invalid]="relationshipInvalid"
+            [describedBy]="relationshipInvalid ? 'relationship-error' : null"
+          />
+          @if (relationshipInvalid) {
+            <p id="relationship-error" class="error" role="alert">
+              {{
+                profileForm.controls.relationshipStatus.getError('server') ||
+                  ('form.relationship' | t)
+              }}
+            </p>
+          }
+        </div>
+        <div class="field">
+          @let emailInvalid =
+            profileForm.controls.email.touched && profileForm.controls.email.invalid;
+
+          <label class="label" for="email">{{ 'step.profile.email.label' | t }}</label
+          ><input
+            appInput
+            id="email"
+            type="email"
+            formControlName="email"
+            autocomplete="email"
+            [readOnly]="!!profile()?.profile?.email?.trim()"
+            [attr.aria-invalid]="emailInvalid || null"
+            [attr.aria-describedby]="emailInvalid ? 'email-error' : null"
+          />
+          @if (emailInvalid) {
+            <p id="email-error" class="error" role="alert">
+              {{ profileForm.controls.email.getError('server') || ('form.email' | t) }}
+            </p>
+          }
+        </div>
+        <button appButton class="cta" [disabled]="store.pending()['details-save']">
+          @if (store.pending()['details-save']) {
+            <app-spinner [inline]="true" [label]="'common.loading' | t" />
+          }
+          {{ 'step.profile.continue' | t }}
+          <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
+        </button>
+      </form>
+    } @else if (page === 'employment') {
+      <form class="form" [formGroup]="employmentForm" (ngSubmit)="save()">
+        @let typeInvalid =
+          employmentForm.controls.type.touched && employmentForm.controls.type.invalid;
+        <div
+          class="choices"
+          role="radiogroup"
+          [attr.aria-label]="'step.employment.title' | t"
+          [attr.aria-invalid]="typeInvalid || null"
+          [attr.aria-describedby]="typeInvalid ? 'employment-type-error' : null"
+        >
+          @for (option of types(); track option.code) {
+            <button
+              type="button"
+              class="choice employment-choice"
+              role="radio"
+              [attr.aria-checked]="type() === option.code"
+              [disabled]="option.status !== 'AVAILABLE'"
+              (click)="chooseType(option.code)"
+            >
+              <span class="choice-copy"
+                ><strong>{{ option.name }}</strong>
+                <span>{{ option.description }}</span>
+              </span>
+              @if (option.status !== 'AVAILABLE') {
+                <span class="coming-soon">{{ 'step.employment.coming.soon' | t }}</span>
+              } @else {
+                <span class="choice-mark" aria-hidden="true"></span>
+              }
+            </button>
+          }
+        </div>
+        @if (typeInvalid) {
+          <p id="employment-type-error" class="error" role="alert">
+            {{ employmentForm.controls.type.getError('server') || ('form.employmentType' | t) }}
+          </p>
+        }
+        @if (type() === 'state') {
+          <div class="field">
+            @let mdastateInvalid =
+              employmentForm.controls.mdaState.touched && employmentForm.controls.mdaState.invalid;
+
+            <label class="label" for="mda-state">{{ 'step.state.title' | t }}</label>
+            <app-select-field
+              inputId="mda-state"
+              [title]="'step.state.title' | t"
+              [placeholder]="'step.state.placeholder' | t"
+              [options]="mdaStates()"
+              [searchable]="true"
+              formControlName="mdaState"
+              [invalid]="mdastateInvalid"
+              [describedBy]="mdastateInvalid ? 'mda-state-error' : null"
+            />
+            @if (mdastateInvalid) {
+              <p id="mda-state-error" class="error" role="alert">{{ 'form.state' | t }}</p>
+            }
+          </div>
+          @if (mdaState()) {
+            <div class="field">
+              @let mdaInvalid =
+                employmentForm.controls.mdaCode.touched && employmentForm.controls.mdaCode.invalid;
+
+              <label class="label" for="mda">{{
+                'step.state.employer.title' | t: { state: mdaState() }
+              }}</label>
+              <app-select-field
+                inputId="mda"
+                [title]="'step.state.employer.title' | t: { state: mdaState() }"
+                [placeholder]="'employment.mda' | t"
+                [options]="mdaOptions()"
+                [searchable]="true"
+                formControlName="mdaCode"
+                [invalid]="mdaInvalid"
+                [describedBy]="mdaInvalid ? 'mda-error' : null"
+              />
+              @if (mdaInvalid) {
+                <p id="mda-error" class="error" role="alert">
+                  {{ employmentForm.controls.mdaCode.getError('server') || ('form.employer' | t) }}
+                </p>
+              }
+            </div>
+          }
+        }
+        @if (type() === 'paramilitary') {
+          @let employerInvalid =
+            employmentForm.controls.employerId.touched &&
+            employmentForm.controls.employerId.invalid;
+
+          <app-select-field
+            inputId="employer"
+            [title]="'step.salary.employer.label' | t"
+            [placeholder]="'step.salary.employer.label' | t"
+            [options]="employers()"
+            [searchable]="true"
+            formControlName="employerId"
+            [invalid]="employerInvalid"
+            [describedBy]="employerInvalid ? 'employer-error' : null"
+          />
+          @if (employerInvalid) {
+            <p id="employer-error" class="error" role="alert">
+              {{ employmentForm.controls.employerId.getError('server') || ('form.employer' | t) }}
+            </p>
+          }
+        }
+        @if (type() === 'state' || type() === 'paramilitary') {
+          @if (store.pending()[type() + '-options']) {
+            <app-spinner [label]="'common.loading' | t" />
+          }
+          @if (store.errors()[type() + '-options']; as error) {
+            <p class="error" role="alert">{{ error.message }}</p>
+            <button appButton type="button" variant="secondary" (click)="loadEmploymentOptions()">
+              {{ 'common.retry' | t }}
+            </button>
+          }
+        }
+        @if (type() === 'nysc') {
+          <div class="field">
+            @let monthsInvalid =
+              employmentForm.controls.monthsLeftInService.touched &&
+              employmentForm.controls.monthsLeftInService.invalid;
+
+            <label class="label" for="months">{{ 'step.employment.corper.months.label' | t }}</label
+            ><input
+              appInput
+              id="months"
+              type="number"
+              min="1"
+              max="11"
+              formControlName="monthsLeftInService"
+              [attr.aria-invalid]="monthsInvalid || null"
+              [attr.aria-describedby]="monthsInvalid ? 'months-error' : null"
+            />
+            @if (monthsInvalid) {
+              <p id="months-error" class="error" role="alert">
+                {{
+                  employmentForm.controls.monthsLeftInService.getError('server') ||
+                    ('form.nyscMonths' | t)
+                }}
+              </p>
+            }
+          </div>
+        }
+        <button appButton class="cta" [disabled]="store.pending()['details-save']">
+          @if (store.pending()['details-save']) {
+            <app-spinner [inline]="true" [label]="'common.loading' | t" />
+          }
+          {{ 'step.profile.continue' | t }}
+          <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
+        </button>
+      </form>
+    } @else {
+      <form class="form" [formGroup]="salaryForm" (ngSubmit)="save()">
+        <div class="field">
+          @let bankInvalid =
+            salaryForm.controls.bankCode.touched && salaryForm.controls.bankCode.invalid;
+
+          <label class="label" for="bank">{{ 'step.salary.bank.label' | t }}</label
+          ><app-combobox
+            inputId="bank"
+            [label]="'step.salary.bank.label' | t"
+            [placeholder]="'step.salary.bank.placeholder' | t"
+            [options]="banks()"
+            formControlName="bankCode"
+            [invalid]="bankInvalid"
+            [describedBy]="bankInvalid ? 'bank-error' : null"
+          />
+          @if (bankInvalid) {
+            <p id="bank-error" class="error" role="alert">
+              {{ salaryForm.controls.bankCode.getError('server') || ('form.bank' | t) }}
+            </p>
+          }
+        </div>
+        <div class="field">
+          @let accountInvalid =
+            (salaryForm.controls.accountNumber.touched &&
+              salaryForm.controls.accountNumber.invalid) ||
+            lookup()?.nameMatchesBvn === false;
+
+          <label class="label" for="account">{{ 'step.salary.account.label' | t }}</label
+          ><input
+            appInput
+            id="account"
+            inputmode="numeric"
+            maxlength="10"
+            formControlName="accountNumber"
+            autocomplete="off"
+            [attr.aria-invalid]="accountInvalid || null"
+            [attr.aria-describedby]="accountInvalid ? 'account-error' : null"
+          />
+          @if (accountInvalid) {
+            <p id="account-error" class="error" role="alert">
+              {{
+                salaryForm.controls.accountNumber.getError('server') ||
+                  ((lookup()?.nameMatchesBvn === false
+                    ? 'step.salary.error.mismatch'
+                    : 'form.account'
+                  ) | t)
+              }}
+            </p>
+          }
+        </div>
+        @if (lookupFailed()) {
+          <p role="status">{{ 'salary.accountLookupFailed' | t }}</p>
+        }
+        @if (looking()) {
+          <app-spinner [label]="'step.salary.account.checking' | t" />
+        }
+        @if (lookup()?.nameMatchesBvn) {
+          <p role="status">{{ lookup()?.accountName }}</p>
+        }
+        @if (employment()?.type === 'federal') {
+          <div class="field">
+            @let ippisInvalid =
+              salaryForm.controls.ippisNumber.touched && salaryForm.controls.ippisNumber.invalid;
+
+            <label class="label" for="ippis">{{ 'step.salary.ippis.label' | t }}</label
+            ><input
+              appInput
+              id="ippis"
+              formControlName="ippisNumber"
+              [attr.aria-invalid]="ippisInvalid || null"
+              [attr.aria-describedby]="ippisInvalid ? 'ippis-error' : null"
+            />
+            @if (ippisInvalid) {
+              <p id="ippis-error" class="error" role="alert">
+                {{ salaryForm.controls.ippisNumber.getError('server') || ('form.ippis' | t) }}
+              </p>
+            }
+          </div>
+        }
+        @if (employment()?.type === 'state' || employment()?.type === 'paramilitary') {
+          <div class="field">
+            @let serviceInvalid =
+              salaryForm.controls.serviceNumber.touched &&
+              salaryForm.controls.serviceNumber.invalid;
+
+            <label class="label" for="service">{{ 'salary.serviceNumber' | t }}</label
+            ><input
+              appInput
+              id="service"
+              formControlName="serviceNumber"
+              [attr.aria-invalid]="serviceInvalid || null"
+              [attr.aria-describedby]="serviceInvalid ? 'service-error' : null"
+            />
+            @if (serviceInvalid) {
+              <p id="service-error" class="error" role="alert">
+                {{
+                  salaryForm.controls.serviceNumber.getError('server') || ('form.serviceNumber' | t)
+                }}
+              </p>
+            }
+          </div>
+        }
+        <button
+          appButton
+          class="cta"
+          [disabled]="
+            store.pending()['details-save'] || looking() || lookup()?.nameMatchesBvn === false
+          "
+        >
+          @if (store.pending()['details-save']) {
+            <app-spinner [inline]="true" [label]="'common.loading' | t" />
+          }
+          {{ (page === 'salary' ? 'step.salary.check.continue' : 'step.profile.continue') | t }}
+          <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
+        </button>
+      </form>
+    }
+    @if (store.errors()['details-save']; as error) {
+      <p class="error" role="alert">{{ error.message }}</p>
+    }
+  }
+</section>

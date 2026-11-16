@@ -1,6 +1,13 @@
-import { IconComponent } from '../../icon.component';
+import { IconComponent } from '../icon.component';
 import {
-  ChangeDetectionStrategy, Component, computed, forwardRef, input, model, signal, viewChild,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  forwardRef,
+  input,
+  model,
+  signal,
+  viewChild,
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CdkListbox, CdkOption } from '@angular/cdk/listbox';
@@ -18,7 +25,13 @@ import type { SelectOption } from './select-option';
   selector: 'app-select-field',
   imports: [IconComponent, TPipe, DialogComponent, InputDirective, CdkListbox, CdkOption],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => SelectFieldComponent), multi: true }],
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => SelectFieldComponent),
+      multi: true,
+    },
+  ],
   template: `
     <button
       type="button"
@@ -26,16 +39,26 @@ import type { SelectOption } from './select-option';
       [id]="inputId()"
       [disabled]="disabled()"
       [attr.aria-invalid]="invalid() ? true : null"
+      [attr.aria-describedby]="describedBy()"
       aria-haspopup="dialog"
       [attr.aria-expanded]="open()"
       (click)="show()"
       (blur)="!open() && markTouched()"
     >
-      <span class="value" [class.placeholder]="!selected()">{{ selected()?.label ?? placeholder() }}</span>
+      <span class="value" [class.placeholder]="!selected()">{{
+        selected()?.label ?? placeholder()
+      }}</span>
       <app-icon name="bold-chevron-down" [size]="18" class="chev" />
     </button>
 
-    <app-dialog #dialog [open]="open()" [title]="title()" layout="sheet" [autoFocus]="initialFocus()" (closed)="onClosed()">
+    <app-dialog
+      #dialog
+      [open]="open()"
+      [title]="title()"
+      layout="sheet"
+      [autoFocus]="initialFocus()"
+      (closed)="onClosed()"
+    >
       <ng-template>
         <h2 class="sheet-title">{{ title() }}</h2>
         @if (searchable()) {
@@ -51,13 +74,24 @@ import type { SelectOption } from './select-option';
             (input)="readQuery($event)"
           />
         }
-        <div class="list" cdkListbox [cdkListboxValue]="visibleSelection()" [attr.aria-label]="title()"
-          (cdkListboxValueChange)="pick($event.value[0])">
-          @for (o of filtered(); track o.value) {
-            <button type="button" class="opt" [cdkOption]="o.value"
-              (click)="pickCurrent(o.value)" (keydown.enter)="pickCurrent(o.value)" (keydown.space)="pickCurrent(o.value)">
-              <span>{{ o.label }}</span>
-              @if (o.value === value()) {
+        <div
+          class="list"
+          cdkListbox
+          [cdkListboxValue]="visibleSelection()"
+          [attr.aria-label]="title()"
+          (cdkListboxValueChange)="pick($event.value[0])"
+        >
+          @for (option of filtered(); track option.value) {
+            <button
+              type="button"
+              class="opt"
+              [cdkOption]="option.value"
+              (click)="pickCurrent(option.value)"
+              (keydown.enter)="pickCurrent(option.value)"
+              (keydown.space)="pickCurrent(option.value)"
+            >
+              <span>{{ option.label }}</span>
+              @if (option.value === value()) {
                 <app-icon name="bold-success" [size]="18" />
               }
             </button>
@@ -70,35 +104,104 @@ import type { SelectOption } from './select-option';
   `,
   styles: [
     `
-      :host { display: block; }
+      :host {
+        display: block;
+      }
       .trigger {
-        width: 100%; min-height: var(--input-height);
-        display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+        width: 100%;
+        min-height: var(--input-height);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
         padding: 0 var(--space-4);
-        background: var(--input-bg); border: 1px solid var(--input-border); border-radius: var(--input-radius);
-        font-family: var(--font-sans); font-size: var(--fs-base); color: var(--ink); text-align: start; cursor: pointer;
-        transition: border-color 140ms ease, box-shadow 140ms ease;
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: var(--input-radius);
+        font-family: var(--font-sans);
+        font-size: var(--fs-base);
+        color: var(--ink);
+        text-align: start;
+        cursor: pointer;
+        transition:
+          border-color 140ms ease,
+          box-shadow 140ms ease;
       }
-      .trigger:hover:not(:disabled) { border-color: var(--input-border-hover); }
-      .trigger:focus-visible { outline: 2px solid transparent; border-color: var(--input-border-focus); box-shadow: var(--input-shadow-focus); }
-      .trigger[aria-invalid='true'] { border-color: var(--danger-text); }
-      .trigger:disabled { opacity: 0.55; cursor: not-allowed; }
-      .value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .value.placeholder { color: var(--ink-muted); }
-      .chev { flex: none; color: var(--ink-soft); }
+      .trigger:hover:not(:disabled) {
+        border-color: var(--input-border-hover);
+      }
+      .trigger:focus-visible {
+        outline: 2px solid transparent;
+        border-color: var(--input-border-focus);
+        box-shadow: var(--input-shadow-focus);
+      }
+      .trigger[aria-invalid='true'] {
+        border-color: var(--danger-text);
+      }
+      .trigger:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+      .value {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .value.placeholder {
+        color: var(--ink-muted);
+      }
+      .chev {
+        flex: none;
+        color: var(--ink-soft);
+      }
 
-      .sheet-title { margin: 0 0 var(--space-3); font-size: var(--fs-lg); }
-      .search { margin-bottom: var(--space-3); }
-      .list { overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; }
-      .opt {
-        display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
-        min-height: 52px; padding: 0 var(--space-2); border: 0; border-bottom: 1px solid var(--hairline);
-        background: transparent; font: inherit; font-size: var(--fs-base); color: var(--ink); text-align: start; cursor: pointer;
+      .sheet-title {
+        margin: 0 0 var(--space-3);
+        font-size: var(--fs-lg);
       }
-      .opt[aria-selected='true'] { font-weight: 600; color: var(--text-accent); }
-      .opt:hover { background: var(--hover-tint); }
-      .opt:focus-visible { outline: 2px solid transparent; box-shadow: var(--focus-ring); }
-      .none { margin: 0; padding: var(--space-5) var(--space-2); color: var(--ink-soft); }
+      .search {
+        margin-bottom: var(--space-3);
+      }
+      .list {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        display: flex;
+        flex-direction: column;
+      }
+      .opt {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
+        min-height: 52px;
+        padding: 0 var(--space-2);
+        border: 0;
+        border-bottom: 1px solid var(--hairline);
+        background: transparent;
+        font: inherit;
+        font-size: var(--fs-base);
+        color: var(--ink);
+        text-align: start;
+        cursor: pointer;
+      }
+      .opt[aria-selected='true'] {
+        font-weight: 600;
+        color: var(--text-accent);
+      }
+      .opt:hover {
+        background: var(--hover-tint);
+      }
+      .opt:focus-visible {
+        outline: 2px solid transparent;
+        box-shadow: var(--focus-ring);
+      }
+      .none {
+        margin: 0;
+        padding: var(--space-5) var(--space-2);
+        color: var(--ink-soft);
+      }
     `,
   ],
 })
@@ -109,6 +212,7 @@ export class SelectFieldComponent implements ControlValueAccessor {
   readonly title = input<string>('');
   readonly searchable = input<boolean>(false);
   readonly invalid = input<boolean | null>(null);
+  readonly describedBy = input<string | null>(null);
 
   readonly value = model('');
   readonly isDisabled = input(false);
@@ -120,10 +224,18 @@ export class SelectFieldComponent implements ControlValueAccessor {
   private readonly dialog = viewChild.required<DialogComponent>('dialog');
   protected readonly initialFocus = signal('first-heading');
 
-  protected readonly selected = computed(() => this.options().find((o) => o.value === this.value()) ?? null);
+  protected readonly selected = computed(
+    () => this.options().find((option) => option.value === this.value()) ?? null,
+  );
+  private readonly searchableOptions = computed(() =>
+    this.options().map((option) => ({ option, searchLabel: option.label.toLowerCase() })),
+  );
   protected readonly filtered = computed(() => {
-    const q = this.query().trim().toLowerCase();
-    return q ? this.options().filter((o) => o.label.toLowerCase().includes(q)) : this.options();
+    const searchTerm = this.query().trim().toLowerCase();
+    if (!searchTerm) return this.options();
+    return this.searchableOptions()
+      .filter(({ searchLabel }) => searchLabel.includes(searchTerm))
+      .map(({ option }) => option);
   });
 
   protected readonly visibleSelection = computed(() =>
@@ -133,9 +245,15 @@ export class SelectFieldComponent implements ControlValueAccessor {
   private onChange: (value: string) => void = () => undefined;
   private onTouched: () => void = () => undefined;
 
-  writeValue(value: string | null): void { this.value.set(value ?? ''); }
-  registerOnChange(fn: (value: string) => void): void { this.onChange = fn; }
-  registerOnTouched(fn: () => void): void { this.onTouched = fn; }
+  writeValue(value: string | null): void {
+    this.value.set(value ?? '');
+  }
+  registerOnChange(callback: (value: string) => void): void {
+    this.onChange = callback;
+  }
+  registerOnTouched(callback: () => void): void {
+    this.onTouched = callback;
+  }
   setDisabledState(disabled: boolean): void {
     this.formDisabled.set(disabled);
     if (disabled) this.open.set(false);

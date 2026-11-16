@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { filter, takeUntil } from 'rxjs';
 import { TPipe } from '../../../core/i18n/t.pipe';
-import { IconComponent } from '../../icon.component';
+import { IconComponent } from '../icon.component';
 
 type DialogLayout = 'center' | 'sheet' | 'wide-sheet';
 type DialogDismissal = 'all' | 'escape' | 'explicit';
@@ -39,7 +39,7 @@ export class DialogComponent {
     effect(() => {
       const open = this.open();
       untracked(() => {
-        if (open && !this.ref && !this.loading) void this.show();
+        if (open && !this.ref && !this.loading) void this.show().catch(() => { if (!this.destroyed) this.closed.emit(); });
         if (!open) this.ref?.close();
       });
     });

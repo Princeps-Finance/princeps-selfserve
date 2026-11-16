@@ -50,3 +50,6 @@ Thumbs.db
 # Cloudflare
 .wrangler/
 .dev.vars
+
+# Environment overrides
+.env.*.local

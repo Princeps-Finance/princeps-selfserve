@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { SwUpdate } from '@angular/service-worker';
-import { filter } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter, fromEvent, interval, merge } from 'rxjs';
 
 const CHECK_EVERY_MS = 6 * 60 * 60 * 1000;
 
@@ -19,30 +20,46 @@ export class AppUpdateService {
   readonly updateReady = signal(false);
   readonly offline = signal(typeof navigator !== 'undefined' && !navigator.onLine);
 
+  private checking = false;
+
   constructor() {
-    if (typeof window !== 'undefined') {
-      window.addEventListener('online', () => this.offline.set(false));
-      window.addEventListener('offline', () => this.offline.set(true));
-    }
+    if (typeof window === 'undefined') return;
+    fromEvent(window, 'online')
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.offline.set(false));
+    fromEvent(window, 'offline')
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.offline.set(true));
     if (!this.sw?.isEnabled) return;
 
-    this.sw.versionUpdates
-      .pipe(filter((e) => e.type === 'VERSION_READY'))
+    merge(
+      this.sw.versionUpdates.pipe(filter((event) => event.type === 'VERSION_READY')),
+      this.sw.unrecoverable,
+    )
+      .pipe(takeUntilDestroyed())
       .subscribe(() => this.updateReady.set(true));
-    // If the cached app is broken, a reload is the only safe recovery.
-    this.sw.unrecoverable.subscribe(() => this.updateReady.set(true));
 
-    // Look as soon as the app opens: do not wait for the first timer.
-    if (!this.offline()) void this.sw.checkForUpdate().catch(() => undefined);
+    void this.checkForUpdate();
+    merge(
+      fromEvent(document, 'visibilitychange').pipe(
+        filter(() => document.visibilityState === 'visible'),
+      ),
+      interval(CHECK_EVERY_MS),
+    )
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => void this.checkForUpdate());
+  }
 
-    // An installed app is rarely closed, only put away: look for a new version each time it comes back to the front.
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && !this.offline()) void this.sw?.checkForUpdate().catch(() => undefined);
-    });
-
-    setInterval(() => {
-      if (!this.offline()) void this.sw?.checkForUpdate().catch(() => undefined);
-    }, CHECK_EVERY_MS);
+  private async checkForUpdate(): Promise<void> {
+    if (!this.sw || this.offline() || this.checking) return;
+    this.checking = true;
+    try {
+      await this.sw.checkForUpdate();
+    } catch {
+      // A later scheduled check can retry.
+    } finally {
+      this.checking = false;
+    }
   }
 
   /** Activates the downloaded version and reloads. Call only at a safe point. */

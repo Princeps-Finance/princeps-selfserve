@@ -1,266 +1,190 @@
-import { InputDirective } from '../../../shared/components/input/input.directive';
-import { ButtonDirective } from '../../../shared/components/button/button.directive';
-import { AnimatedIconComponent } from '../../../shared/animated-icon.component';
-import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, signal, untracked } from '@angular/core';
-import { CardComponent } from '../../../shared/card.component';
-import { ProductMarkComponent } from '../../../shared/product-mark.component';
-import { IllustrationComponent } from '../../../core/ui/illustration.component';
-import { TPipe } from '../../../core/i18n/t.pipe';
-import { RadioGroupDirective } from '../../../core/a11y/radio-group.directive';
+import { SpinnerComponent } from '../../../shared/components/spinner/spinner.component';
+import { RouterLink } from '@angular/router';
+import { HelpLinksComponent } from '../../support/help-links.component';
+import { IllustrationComponent } from '../../../shared/components/illustration.component';
 import { WizardProgressComponent } from '../wizard-progress.component';
-import { ApplicationStateService } from '../../../core/application/application-state.service';
-import { Product, RepaymentFrequency, productsFor } from '../../../core/products/products';
-import { LoanQuote, clampAmount, estimateApr, offerLimits, quoteLoan } from '../../../../shared/pricing';
-import { formatNaira } from '../../../core/money.util';
-import { telLink, whatsappLink } from '../../../core/support';
-import { ResultTimerComponent } from '../../../core/eligibility/result-timer.component';
-import { IconComponent } from '../../../shared/icon.component';
-import { QuoteService, offerFromQuote } from '../../../core/pricing/quote.service';
-import { ToastService } from '../../../core/toast/toast.service';
-import { LangService } from '../../../core/i18n/lang.service';
-import { discountedRate } from '../../../../shared/referral';
-import { resolveAmount } from './amount-request';
-import { AmountSliderComponent } from '../../../shared/amount-slider.component';
-import { ReferralBoxComponent } from './referral-box.component';
-import { APPLY } from '../../../core/flow/apply-routes';
-import { FlowNavigator } from '../../../core/flow/flow-navigator.service';
-
-interface Limits {
-  minAmount: number;
-  maxAmount: number;
-  minTenor: number;
-  maxTenor: number;
-}
-
-interface OfferView {
-  product: Product;
-  limits: Limits;
-  amount: number;
-  tenor: number;
-  tenors: number[];
-  quote: LoanQuote;
-  /** Estimated yearly rate including fees, for comparing offers. */
-  apr: number;
-}
-
-/**
- * A few round choices (3, 6, 9, 12 months) plus the longest allowed, instead of every month:
- * ten buttons is noise, and nobody needs to choose between 7 and 8 months.
- */
-function tenorChoices(limits: Limits, current: number): number[] {
-  const set = new Set<number>();
-  for (let t = 3; t <= limits.maxTenor; t += 3) if (t >= limits.minTenor) set.add(t);
-  set.add(limits.maxTenor);
-  set.add(current);
-  return [...set].sort((a, b) => a - b);
-}
-
-/** A copy of the map with one product's entry set, or removed when the value is null. */
-function withEntry(map: Record<string, number>, id: string, value: number | null): Record<string, number> {
-  const copy = { ...map };
-  if (value === null) delete copy[id];
-  else copy[id] = value;
-  return copy;
-}
-
-interface Choice {
-  amount: number;
-  tenor: number;
-}
-
+import { AnimatedIconComponent } from '../../../shared/components/animated-icon.component';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime, tap } from 'rxjs';
+import { ApplicationStore } from '../state/application.store';
+import { OffersStore } from '../state/offers.store';
+import { ApplicationApi } from '../data-access/application.api';
+import { ButtonDirective } from '../../../shared/components/button/button.directive';
+import { InputDirective } from '../../../shared/components/input/input.directive';
+import { CurrencyInputDirective } from '../../../shared/components/input/currency-input.directive';
+import { SelectFieldComponent } from '../../../shared/components/select/select-field.component';
+import { AmountSliderComponent } from '../../../shared/components/amount-slider.component';
+import { TPipe } from '../../../core/i18n/t.pipe';
+import { formatNaira } from '../money';
+import * as ApplicationContract from '../data-access/application-contract';
 @Component({
-  selector: 'app-offers',
-  imports: [InputDirective, ButtonDirective, AnimatedIconComponent, CardComponent, ProductMarkComponent, IllustrationComponent, TPipe, WizardProgressComponent, RadioGroupDirective, ReferralBoxComponent, AmountSliderComponent, IconComponent, ResultTimerComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  selector: 'app-offers-v2',
+  imports: [
+    SpinnerComponent,
+    RouterLink,
+    HelpLinksComponent,
+    IllustrationComponent,
+    WizardProgressComponent,
+    AnimatedIconComponent,
+    ReactiveFormsModule,
+    ButtonDirective,
+    InputDirective,
+    CurrencyInputDirective,
+    SelectFieldComponent,
+    AmountSliderComponent,
+    TPipe,
+  ],
   templateUrl: './offers.component.html',
-  styleUrl: './offers.component.css',
+  styleUrl: '../apply-step.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class OffersComponent implements OnInit {
-  private readonly state = inject(ApplicationStateService);
-  private readonly flow = inject(FlowNavigator);
-  private readonly lang = inject(LangService);
-  private readonly toast = inject(ToastService);
-  private readonly quotes = inject(QuoteService);
-
+export class OffersComponent {
+  readonly store = inject(ApplicationStore);
+  readonly offers = inject(OffersStore);
+  readonly api = inject(ApplicationApi);
+  private readonly router = inject(Router);
+  private readonly destroy = inject(DestroyRef);
+  readonly page = inject(ActivatedRoute).snapshot.data['page'] as string;
+  readonly selected = signal<ApplicationContract.EligibleOfferDto | null>(null);
+  readonly locked = signal<ApplicationContract.LockedOfferDto | null>(null);
+  readonly now = signal(Date.now());
+  readonly declined = computed(
+    () =>
+      this.offers.result()?.outcome === 'DECLINE' ||
+      ['NOT_ELIGIBLE', 'NO_ELIGIBLE_PRODUCTS'].includes(this.offers.error()?.code ?? ''),
+  );
+  readonly expired = computed(
+    () =>
+      this.offers.error()?.status === 410 ||
+      (!!this.offers.result() && Date.parse(this.offers.result()!.expiresAt) <= this.now()),
+  );
+  readonly tenorOptions = computed(() =>
+    (this.selected()?.tenorOptions ?? []).map((value) => ({
+      value: String(value),
+      label: String(value),
+    })),
+  );
+  readonly form = new FormGroup({
+    amount: new FormControl<number | null>(null, {
+      validators: [Validators.required, Validators.min(1)],
+    }),
+    tenor: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    referralCode: new FormControl('', { nonNullable: true }),
+  });
+  readonly money = formatNaira;
   constructor() {
-    // Whenever the customer settles on an amount and period, the server prices it. Until it answers, the screen
-    // shows a local estimate and the button waits.
-    effect(() => {
-      const input = this.quoteInput();
-      if (input) untracked(() => this.quotes.request(input));
+    const timer = setInterval(() => this.now.set(Date.now()), 1000);
+    this.destroy.onDestroy(() => {
+      clearInterval(timer);
+      this.offers.invalidateQuote();
+    });
+    this.form.valueChanges
+      .pipe(
+        tap(() => this.offers.invalidateQuote()),
+        debounceTime(350),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => {
+        const input = this.input();
+        if (input) void this.offers.requestQuote(input);
+      });
+    if (this.page === 'eligibility') {
+      const existing = this.store.application()?.eligibility;
+      void this.check(
+        !existing || existing.expired || Date.parse(existing.expiresAt) <= Date.now(),
+      );
+    }
+    if (this.page === 'offers') void this.offers.load();
+    if (this.page === 'terms') void this.loadLocked();
+  }
+  async check(refresh = true) {
+    if (this.offers.loading()) return;
+    this.selected.set(null);
+    this.offers.invalidateQuote();
+    await this.offers.load(refresh);
+    if (this.destroy.destroyed) return;
+    if (
+      this.offers.result() &&
+      this.offers.result()!.outcome !== 'DECLINE' &&
+      this.offers.result()!.offers.length
+    ) {
+      await this.store.run('refresh', () => this.store.refresh());
+      if (!this.destroy.destroyed) await this.router.navigateByUrl('/apply/offers');
+    }
+  }
+  retry() {
+    const value = this.input();
+    if (value && !this.expired()) void this.offers.requestQuote(value);
+    else void this.offers.load();
+  }
+  choose(offer: ApplicationContract.EligibleOfferDto) {
+    this.selected.set(offer);
+    this.form.controls.amount.setValidators([
+      Validators.required,
+      Validators.min(offer.minAmount),
+      Validators.max(offer.maxAmount),
+    ]);
+    this.form.markAsUntouched();
+    this.form.patchValue({
+      amount: offer.suggestedAmount,
+      tenor: String(offer.defaultTenorMonths),
     });
   }
-
-  /** The terms of the open product, as the server is asked about them. */
-  readonly quoteInput = computed(() => {
-    const o = this.selected();
-    if (!o) return null;
-    const code = this.referral()?.code;
-    return { productId: o.product.id, amount: o.amount, tenorMonths: o.tenor, ...(code ? { referralCode: code } : {}) };
-  });
-
-  /** The server's answer for exactly those terms, or null while none has been asked for. */
-  readonly quoteView = computed(() => {
-    const input = this.quoteInput();
-    return input ? this.quotes.viewFor(input.productId, input) : null;
-  });
-  readonly quoteReady = computed(() => this.quoteView()?.status === 'ready');
-
-  retryQuote(): void {
-    const input = this.quoteInput();
-    if (input) this.quotes.request(input, { immediately: true });
+  input(): ApplicationContract.QuoteDto | null {
+    const selected = this.selected(),
+      value = this.form.getRawValue();
+    if (
+      !selected ||
+      value.amount === null ||
+      this.form.invalid ||
+      !selected.tenorOptions.includes(Number(value.tenor))
+    )
+      return null;
+    return {
+      productId: selected.productId,
+      amount: value.amount,
+      tenorMonths: Number(value.tenor),
+      ...(value.referralCode.trim() ? { referralCode: value.referralCode.trim() } : {}),
+    };
   }
-
-  private readonly catalogue = signal<{ product: Product; limits: Limits }[]>([]);
-  /** What the customer has chosen per product. Starts at the most they are eligible for. */
-  private readonly choices = signal<Record<string, Choice>>({});
-  /** Set when an amount typed by the customer had to be adjusted to fit. */
-  readonly adjusted = signal<Record<string, number>>({});
-  /** Amounts typed above the limit, by product: the customer is offered an agent for these. */
-  readonly askedMore = signal<Record<string, number>>({});
-
-  readonly referral = this.state.referral;
-
-  readonly formatNaira = formatNaira;
-  readonly justChecking = computed(() => this.state.intent() === 'check');
-  readonly reviewRequired = computed(() => this.state.eligibility()?.decision === 'review');
-  readonly whatsapp = whatsappLink('Hello Princeps, I could not find a loan that fits my details and would like help.');
-  readonly tel = telLink();
-  readonly ready = signal(false);
-  /** Only one product is open at a time; the others are a single line. */
-  readonly selectedId = signal<string | null>(null);
-  /** The product being configured: the one the customer chose, or the only one there is. */
-  readonly selected = computed(() => this.offers().find((o) => o.product.id === this.selectedId()) ?? null);
-
-  readonly offers = computed<OfferView[]>(() =>
-    this.catalogue().map(({ product: base, limits }) => {
-      const r = this.referral();
-      const product = r ? { ...base, ratePercent: discountedRate(base.ratePercent, r) } : base;
-      const c = this.choices()[product.id] ?? { amount: limits.maxAmount, tenor: limits.maxTenor };
-      const quote = quoteLoan(product, c.amount, c.tenor);
-      return {
-        product,
-        limits,
-        amount: c.amount,
-        tenor: c.tenor,
-        tenors: tenorChoices(limits, c.tenor),
-        quote,
-        apr: estimateApr(c.amount, quote.totalFees, quote.monthly, c.tenor),
-      };
-    }),
-  );
-
-  async ngOnInit(): Promise<void> {
-    const employment = this.state.employment();
-    const salary = this.state.salary();
-    const eligibility = this.state.eligibility();
-    // The route guards guarantee an approved eligibility result; the check only narrows the types.
-    if (!employment || !salary || !eligibility) return;
-
-    const pref = this.state.offerPreference();
-    const catalogue: { product: Product; limits: Limits }[] = [];
-    const choices: Record<string, Choice> = {};
-    for (const product of productsFor(employment.type, salary.channel)) {
-      const limits = offerLimits(product, {
-        maxAmount: eligibility.maxEligibleAmount,
-        maxTenorMonths: eligibility.tenorMonths,
-      });
-      if (!limits) continue;
-      catalogue.push({ product, limits });
-      choices[product.id] = { amount: limits.maxAmount, tenor: limits.maxTenor };
-      // Remember what the customer chose last time, if it still fits.
-      if (pref && pref.productId === product.id) {
-        choices[product.id] = {
-          amount: clampAmount(product, pref.amount, limits),
-          tenor: Math.min(limits.maxTenor, Math.max(limits.minTenor, pref.tenorMonths)),
-        };
-      }
-    }
-    this.catalogue.set(catalogue);
-    this.choices.set(choices);
-    // Several loans: none is open until the customer taps one (a returning choice stays open). Only one: it is open.
-    this.selectedId.set((pref && catalogue.find((c) => c.product.id === pref.productId)?.product.id) || (catalogue.length === 1 ? catalogue[0].product.id : null));
-    this.ready.set(true);
+  async select() {
+    this.form.markAllAsTouched();
+    const input = this.input();
+    if (
+      !input ||
+      this.expired() ||
+      !this.offers.quote()?.eligible ||
+      this.offers.quoteKey() !== JSON.stringify(input)
+    )
+      return;
+    if (
+      (await this.store.save('select', () => this.api.selectOffer(input))) &&
+      !this.destroy.destroyed
+    )
+      await this.router.navigateByUrl('/apply/terms');
   }
-
-  private setChoice(id: string, patch: Partial<Choice>): void {
-    this.choices.update((all) => ({ ...all, [id]: { ...all[id], ...patch } }));
+  async loadLocked() {
+    const offer = await this.store.run('locked', () => this.api.getOffer());
+    if (offer && !this.destroy.destroyed) this.locked.set(offer);
   }
-
-  /** Applies a typed or stepped amount, rounding to the product step and range. */
-  setAmount(o: OfferView, raw: number, announce = false): void {
-    const out = resolveAmount(o.product, Number.isFinite(raw) ? raw : o.amount, o.limits);
-    this.setChoice(o.product.id, { amount: out.amount });
-    this.adjusted.update((a) => withEntry(a, o.product.id, announce ? out.adjustedTo : null));
-    // Asking for more than the limit is only kept while it is typed; moving the slider or a chip clears it.
-    this.askedMore.update((a) => withEntry(a, o.product.id, announce ? out.askedMore : null));
-    if (announce && out.askedMore) {
-      this.toast.show('info', this.lang.t('offers.more.toast').replace('{max}', formatNaira(o.limits.maxAmount)), 5000);
-    }
+  async acceptTerms() {
+    if ((await this.store.save('terms', () => this.api.completeTerms())) && !this.destroy.destroyed)
+      await this.router.navigateByUrl(this.store.nextRoute());
   }
-
-  /** A WhatsApp message to an agent that already says what the customer wants and what their limit is. */
-  agentLink(o: OfferView): string {
-    const wanted = this.askedMore()[o.product.id] ?? o.amount;
-    return whatsappLink(
-      `Hello Princeps, I would like ${formatNaira(wanted)} on ${o.product.name} over ${o.tenor} months. My limit is ${formatNaira(o.limits.maxAmount)}. Please help me.`,
+  scheduleEntries(row: Record<string, unknown>) {
+    return Object.entries(row).filter(
+      (entry): entry is [string, string | number] =>
+        typeof entry[1] === 'string' || typeof entry[1] === 'number',
     );
-  }
-
-  onAmountInput(o: OfferView, event: Event): void {
-    const el = event.target as HTMLInputElement;
-    const digits = el.value.replace(/\D/g, '');
-    el.value = digits ? Number(digits).toLocaleString('en-NG') : '';
-  }
-
-  commitAmount(o: OfferView, event: Event): void {
-    const el = event.target as HTMLInputElement;
-    const raw = Number(el.value.replace(/\D/g, ''));
-    this.setAmount(o, raw || o.amount, true);
-    el.value = Number(this.choices()[o.product.id].amount).toLocaleString('en-NG');
-  }
-
-  select(id: string): void {
-    this.selectedId.set(id);
-  }
-
-  /** Only the chosen product is in the tab order; arrow keys move between the others. */
-  productTab(id: string): number {
-    return this.selectedId() === id ? 0 : -1;
-  }
-
-  setTenor(o: OfferView, tenor: number): void {
-    this.setChoice(o.product.id, { tenor });
-  }
-
-  tenorTab(o: OfferView, tenor: number): number {
-    return o.tenor === tenor ? 0 : -1;
-  }
-
-  modelKey(m: Product['interestModel']): string {
-    if (m === 'Flat Rate') return 'step.offers.model.flat';
-    if (m === 'Reducing Balance') return 'step.offers.model.reducing';
-    return 'step.offers.model.percent';
-  }
-
-  frequencyKey(f: RepaymentFrequency): string {
-    return `step.offers.frequency.${f}`;
-  }
-
-  finishLater(): void {
-    void this.flow.go(APPLY.saved);
-  }
-
-  editDetails(): void {
-    void this.flow.go(APPLY.employment);
-  }
-
-  pick(o: OfferView): void {
-    // Only the server's figures go forward; with no answer yet there is nothing to accept.
-    const quote = this.quoteView();
-    if (quote?.status !== 'ready' || !quote.quote) return;
-    this.state.setOffer(offerFromQuote(quote.quote, o.product.name, this.referral()?.code));
-    this.state.setOfferPreference({ productId: o.product.id, amount: o.amount, tenorMonths: o.tenor });
-    void this.flow.go(APPLY.terms);
   }
 }

@@ -1,10 +1,25 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { APP_CONFIG } from './runtime-config';
 import { App } from './app';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        {
+          provide: APP_CONFIG,
+          useValue: {
+            environment: 'development',
+            apiBaseUrl: 'https://api.example.test',
+            accountsUrl: '',
+          },
+        },
+      ],
     }).compileComponents();
   });
 
@@ -17,11 +32,10 @@ describe('App', () => {
   it('hosts the router outlet, toast host and update banner', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
-    const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('router-outlet')).toBeTruthy();
-    expect(el.querySelector('app-privacy-dialog')).toBeNull();
-    expect(el.querySelector('app-pwa-banner')).toBeTruthy();
-    expect(el.querySelector('app-demo-banner')).toBeTruthy();
-    expect(el.querySelector('app-toast-host')).toBeTruthy();
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('router-outlet')).toBeTruthy();
+    expect(host.querySelector('app-privacy-dialog')).toBeNull();
+    expect(host.querySelector('app-pwa-banner')).toBeTruthy();
+    expect(host.querySelector('app-toast-host')).toBeTruthy();
   });
 });

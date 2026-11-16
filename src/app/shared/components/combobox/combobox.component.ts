@@ -1,5 +1,13 @@
 import { CdkConnectedOverlay, CdkOverlayOrigin, ConnectedPosition } from '@angular/cdk/overlay';
-import { ChangeDetectionStrategy, Component, computed, forwardRef, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  afterRenderEffect,
+  computed,
+  forwardRef,
+  input,
+  signal,
+} from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { InputDirective } from '../input/input.directive';
@@ -8,7 +16,9 @@ import type { SelectOption } from '../select/select-option';
 @Component({
   selector: 'app-combobox',
   imports: [CdkConnectedOverlay, CdkOverlayOrigin, InputDirective, TPipe],
-  providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => ComboboxComponent), multi: true }],
+  providers: [
+    { provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => ComboboxComponent), multi: true },
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './combobox.component.html',
   styleUrl: './combobox.component.css',
@@ -19,6 +29,7 @@ export class ComboboxComponent implements ControlValueAccessor {
   readonly placeholder = input('');
   readonly label = input.required<string>();
   readonly invalid = input<boolean | null>(null);
+  readonly describedBy = input<string | null>(null);
 
   protected readonly disabled = signal(false);
   protected readonly open = signal(false);
@@ -26,14 +37,24 @@ export class ComboboxComponent implements ControlValueAccessor {
   protected readonly value = signal('');
   private readonly query = signal('');
   protected readonly listId = computed(() => this.inputId() + '-listbox');
-  protected readonly text = computed(() => this.value()
-    ? this.options().find((option) => option.value === this.value())?.label ?? ''
-    : this.query());
+  protected readonly text = computed(() =>
+    this.value()
+      ? (this.options().find((option) => option.value === this.value())?.label ?? '')
+      : this.query(),
+  );
+  private readonly searchableOptions = computed(() =>
+    this.options().map((option) => ({ option, searchLabel: option.label.toLocaleLowerCase() })),
+  );
   protected readonly filtered = computed(() => {
     const query = this.query().trim().toLocaleLowerCase();
-    return this.options().filter((option) => option.label.toLocaleLowerCase().includes(query));
+    if (!query) return this.options();
+    return this.searchableOptions()
+      .filter(({ searchLabel }) => searchLabel.includes(query))
+      .map(({ option }) => option);
   });
-  protected readonly active = computed(() => this.open() ? this.filtered()[this.activeIndex()] : undefined);
+  protected readonly active = computed(() =>
+    this.open() ? this.filtered()[this.activeIndex()] : undefined,
+  );
   protected readonly positions: ConnectedPosition[] = [
     { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top', offsetY: 4 },
     { originX: 'start', originY: 'top', overlayX: 'start', overlayY: 'bottom', offsetY: -4 },
@@ -42,14 +63,31 @@ export class ComboboxComponent implements ControlValueAccessor {
   private onChange: (value: string) => void = () => undefined;
   private onTouched: () => void = () => undefined;
 
+  constructor() {
+    afterRenderEffect({
+      read: () => {
+        const activeOption = this.active();
+        if (activeOption) {
+          document
+            .getElementById(this.optionId(activeOption))
+            ?.scrollIntoView({ block: 'nearest' });
+        }
+      },
+    });
+  }
+
   writeValue(value: string | null): void {
     this.value.set(value ?? '');
     this.query.set('');
     this.close();
   }
 
-  registerOnChange(fn: (value: string) => void): void { this.onChange = fn; }
-  registerOnTouched(fn: () => void): void { this.onTouched = fn; }
+  registerOnChange(callback: (value: string) => void): void {
+    this.onChange = callback;
+  }
+  registerOnTouched(callback: () => void): void {
+    this.onTouched = callback;
+  }
 
   setDisabledState(disabled: boolean): void {
     this.disabled.set(disabled);
@@ -106,10 +144,6 @@ export class ComboboxComponent implements ControlValueAccessor {
       const step = event.key === 'ArrowDown' ? 1 : -1;
       const next = current < 0 ? (step === 1 ? 0 : count - 1) : (current + step + count) % count;
       this.activeIndex.set(next);
-      const option = this.filtered()[next];
-      requestAnimationFrame(() => {
-        if (this.active() === option) document.getElementById(this.optionId(option))?.scrollIntoView({ block: 'nearest' });
-      });
     }
   }
 }

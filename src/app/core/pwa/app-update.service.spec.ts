@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { SwUpdate } from '@angular/service-worker';
 import { Subject } from 'rxjs';
-import { APP_VERSION } from '../app-version';
+import { APP_VERSION } from '../../app-version';
 import { AppUpdateService } from './app-update.service';
 
 describe('APP_VERSION', () => {
@@ -14,15 +14,15 @@ describe('AppUpdateService', () => {
   function setup(enabled: boolean) {
     const versionUpdates = new Subject<{ type: string }>();
     const unrecoverable = new Subject<unknown>();
-    const sw = {
+    const serviceWorker = {
       isEnabled: enabled,
       versionUpdates,
       unrecoverable,
       checkForUpdate: vi.fn().mockResolvedValue(false),
       activateUpdate: vi.fn().mockResolvedValue(true),
     };
-    TestBed.configureTestingModule({ providers: [{ provide: SwUpdate, useValue: sw }] });
-    return { sw, versionUpdates, unrecoverable, service: TestBed.inject(AppUpdateService) };
+    TestBed.configureTestingModule({ providers: [{ provide: SwUpdate, useValue: serviceWorker }] });
+    return { serviceWorker, versionUpdates, unrecoverable, service: TestBed.inject(AppUpdateService) };
   }
 
   it('marks an update ready only when a new version is downloaded', () => {

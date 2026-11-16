@@ -1,0 +1,75 @@
+import { TestBed } from '@angular/core/testing';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { TOAST_EXIT_MS, ToastService } from './toast.service';
+
+describe('ToastService', () => {
+  // jsdom has no matchMedia: motion is on, so a dismissed toast leaves through its exit animation first.
+  let toast: ToastService;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    toast = TestBed.inject(ToastService);
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it('does not stack the same message twice', () => {
+    toast.error('Could not submit');
+    toast.error('Could not submit');
+    expect(toast.toasts()).toHaveLength(1);
+  });
+
+  it('shows at most three at a time, dropping the oldest', () => {
+    ['a', 'b', 'c', 'd'].forEach((message) => toast.info(message));
+    expect(toast.toasts().map((item) => item.message)).toEqual(['b', 'c', 'd']);
+  });
+
+  it('keeps errors on screen longer than confirmations', () => {
+    toast.success('Saved');
+    toast.error('Failed');
+    vi.advanceTimersByTime(4_500 + TOAST_EXIT_MS);
+    expect(toast.toasts().map((item) => item.tone)).toEqual(['error']);
+    vi.advanceTimersByTime(3_000 + TOAST_EXIT_MS);
+    expect(toast.toasts()).toHaveLength(0);
+  });
+
+  it('stays while paused and goes after it is resumed', () => {
+    const toastId = toast.success('Saved');
+    toast.pause(toastId);
+    vi.advanceTimersByTime(60_000);
+    expect(toast.toasts()).toHaveLength(1);
+    toast.resume(toastId);
+    vi.advanceTimersByTime(5_000 + TOAST_EXIT_MS);
+    expect(toast.toasts()).toHaveLength(0);
+  });
+
+  it('pauses both visible toasts and arrivals while the stack is open', () => {
+    toast.info('First', 4_000);
+    vi.advanceTimersByTime(2_000);
+    toast.setStackPaused(true);
+    toast.info('Second', 4_000);
+    vi.advanceTimersByTime(10_000);
+    expect(toast.toasts()).toHaveLength(2);
+
+    toast.setStackPaused(false);
+    vi.advanceTimersByTime(2_000 + TOAST_EXIT_MS);
+    expect(toast.toasts().map((item) => item.message)).toEqual(['Second']);
+
+    vi.advanceTimersByTime(2_000);
+    expect(toast.toasts()).toHaveLength(0);
+  });
+
+  it('carries one follow-up action', () => {
+    const run = vi.fn();
+    toast.error('Failed', { action: { label: 'Try again', run } });
+    toast.toasts()[0].action?.run();
+    expect(run).toHaveBeenCalledOnce();
+  });
+
+  it('marks a dismissed toast as leaving, then removes it after the exit animation', () => {
+    const toastId = toast.info('Hello');
+    toast.dismiss(toastId);
+    expect(toast.toasts()[0].leaving).toBe(true);
+    vi.advanceTimersByTime(TOAST_EXIT_MS);
+    expect(toast.toasts()).toHaveLength(0);
+  });
+});

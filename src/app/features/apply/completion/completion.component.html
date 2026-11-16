@@ -1,0 +1,409 @@
+<section class="step">
+  @if (stagePosition) {
+    <app-wizard-progress [current]="stagePosition" [label]="progressLabel | t" />
+  }
+  @if (page === 'status' && status()?.status === 'SUBMITTED') {
+    <app-illustration name="check" />
+  }
+  <header class="head">
+    <h1 class="title">{{ titleKey | t }}</h1>
+    @if (page === 'documents') {
+      <p class="subtitle">{{ 'step.docs.subtitle' | t }}</p>
+      <app-why-ask [text]="'reason.docs' | t" />
+    } @else if (page === 'offer-letter' || page === 'submit') {
+      <p class="subtitle">
+        {{ (page === 'submit' ? 'step.submit.subtitle' : 'step.offerletter.subtitle') | t }}
+      </p>
+    }
+  </header>
+  @if (store.pending()['completion-load']) {
+    <app-spinner [label]="'common.loading' | t" />
+  }
+  @for (
+    key of ['completion-load', 'refresh', 'mandates', 'submit', 'status', 'camera', 'recording'];
+    track key
+  ) {
+    @if (store.errors()[key]; as error) {
+      <p class="error" role="alert">{{ error.message }}</p>
+    }
+  }
+  @if (store.errors()['completion-load']) {
+    <button appButton variant="secondary" (click)="load()">{{ 'common.retry' | t }}</button>
+  }
+  @if (page === 'documents' || page === 'verify-identity') {
+    @if (page === 'verify-identity') {
+      @if (identityDone()) {
+        <p class="card" role="status">{{ 'identity.done' | t }}</p>
+      } @else if (digisignAvailable()) {
+        <div class="card fields">
+          <h2>{{ 'identity.heading' | t }}</h2>
+          <p>{{ 'identity.instructions' | t }}</p>
+          @if (identity(); as check) {
+            @if (check.status !== 'NOT_STARTED') {
+              <p role="status">{{ 'identity.' + check.status | t }}</p>
+            }
+            @if (check.failureReason) {
+              <p>{{ check.failureReason }}</p>
+            }
+            @if (check.status === 'PENDING' && check.signingUrl) {
+              <a
+                appButton
+                [href]="check.signingUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                (click)="markDigiSignOpened()"
+              >
+                {{ 'identity.open' | t }}
+              </a>
+            }
+          }
+          @if (
+            !identity() || identity()?.status === 'NOT_STARTED' || identity()?.status === 'FAILED'
+          ) {
+            <button
+              appButton
+              type="button"
+              [disabled]="store.pending()['identity']"
+              (click)="startDigiSign()"
+            >
+              {{ 'identity.start' | t }}
+            </button>
+          }
+          <button
+            appButton
+            type="button"
+            variant="secondary"
+            [disabled]="store.pending()['identity']"
+            (click)="loadIdentity()"
+          >
+            {{ 'application.refreshStatus' | t }}
+          </button>
+        </div>
+      } @else if (store.pending()['identity']) {
+        <app-spinner [label]="'common.loading' | t" />
+      } @else if (identity() && !store.errors()['identity']) {
+        <p role="status">{{ 'identity.unavailable' | t }}</p>
+        <button appButton type="button" variant="secondary" (click)="loadIdentity()">
+          {{ 'application.refreshStatus' | t }}
+        </button>
+      }
+      @if (store.errors()['identity']; as error) {
+        <p class="error" role="alert">{{ error.message }}</p>
+        @if (error.code === 'EMAIL_REQUIRED') {
+          <a routerLink="/apply/profile" [queryParams]="{ returnTo: 'identity' }">{{
+            'identity.addEmail' | t
+          }}</a>
+        } @else if (!digisignAvailable()) {
+          <button appButton type="button" variant="secondary" (click)="loadIdentity()">
+            {{ 'common.retry' | t }}
+          </button>
+        }
+      }
+    } @else {
+      <ul class="documents">
+        @for (type of required(); track type) {
+          @let uploaded = !missing().includes(type);
+          @let activeUpload = uploadType() === type;
+          <li class="document-row">
+            <div class="document-copy">
+              <h2>{{ 'document.' + type | t }}</h2>
+              @if (type === 'gov-id' || type === 'payslip') {
+                <p class="msg">
+                  {{ (type === 'gov-id' ? 'step.docs.id.hint' : 'step.docs.payslip.hint') | t }}
+                </p>
+              }
+              @if (activeUpload && checkingPhoto()) {
+                <app-spinner [inline]="true" [label]="'common.loading' | t" />
+              } @else if (activeUpload && store.pending()['upload']) {
+                <p class="document-badge" role="status">{{ 'document.uploading' | t }}</p>
+              } @else if (uploaded) {
+                <p class="document-badge document-badge--ready" role="status">
+                  {{ 'document.uploaded' | t }}
+                </p>
+              }
+              @for (file of documents()?.documents ?? []; track file.fileId) {
+                @if (file.documentType === type && uploaded) {
+                  <p class="document-name">{{ file.fileName }}</p>
+                }
+              }
+              @if (photoWarning(); as photo) {
+                @if (photo.type === type) {
+                  <p class="error" role="alert">
+                    {{
+                      (photo.warning === 'too-small'
+                        ? 'step.docs.too.small'
+                        : 'step.docs.' + photo.warning
+                      ) | t
+                    }}
+                  </p>
+                  <button appButton variant="secondary" type="button" (click)="uploadPhotoAnyway()">
+                    {{ 'step.docs.anyway' | t }}
+                  </button>
+                }
+              }
+              @if (activeUpload && store.errors()['upload']; as error) {
+                <p class="error" role="alert">{{ error.message }}</p>
+              }
+            </div>
+            <div class="document-actions">
+              <label
+                class="upload-action"
+                [class.is-disabled]="checkingPhoto() || store.pending()['upload']"
+              >
+                <input
+                  class="sr-only"
+                  type="file"
+                  [attr.aria-label]="
+                    ('document.' + type | t) +
+                    ' · ' +
+                    ((uploaded ? 'step.docs.replace' : 'step.docs.upload') | t)
+                  "
+                  [accept]="
+                    type === 'terms-video'
+                      ? 'video/*'
+                      : type === 'selfie-with-id'
+                        ? 'image/*'
+                        : 'image/*,application/pdf'
+                  "
+                  [attr.capture]="type === 'selfie-with-id' ? 'user' : null"
+                  [disabled]="checkingPhoto() || store.pending()['upload']"
+                  (change)="upload($event, type)"
+                />
+                {{ (uploaded ? 'step.docs.replace' : 'step.docs.upload') | t }}
+              </label>
+              @if (type === 'selfie-with-id' || type === 'terms-video') {
+                <button
+                  appButton
+                  type="button"
+                  variant="secondary"
+                  [disabled]="
+                    store.pending()['camera'] || cameraOpen() || store.pending()['upload']
+                  "
+                  (click)="openCamera(type)"
+                >
+                  {{ 'identity.openCamera' | t }}
+                </button>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+      @if (cameraOpen()) {
+        <video
+          #cameraVideo
+          autoplay
+          muted
+          playsinline
+          style="width: 100%; border-radius: 16px"
+        ></video>
+        @if (captureType() === 'selfie-with-id') {
+          <button appButton (click)="takePhoto()">{{ 'identity.takePhoto' | t }}</button>
+        } @else if (!recording()) {
+          <button appButton (click)="record()">{{ 'identity.record' | t }}</button>
+        } @else {
+          <p>{{ seconds() }}s</p>
+          <button appButton variant="danger" (click)="stopRecording()">
+            {{ 'identity.stopRecording' | t }}
+          </button>
+        }
+      }
+    }
+    <button
+      appButton
+      class="cta"
+      [disabled]="!canContinue() || recording() || checkingPhoto() || store.pending()['upload']"
+      (click)="next()"
+    >
+      {{ 'step.profile.continue' | t }}
+      <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
+    </button>
+  } @else if (page === 'offer-letter') {
+    <button appButton class="cta" [disabled]="!letter()" (click)="letterOpen.set(true)">
+      {{ 'step.offerletter.read' | t }}
+    </button>
+    <app-dialog
+      [open]="letterOpen()"
+      [title]="'pdf.letter.title' | t"
+      (closed)="letterOpen.set(false)"
+      ><ng-template>
+        @if (letter(); as document) {
+          <div class="letter-sheet">
+            <div
+              #letterViewport
+              class="letter"
+              tabindex="0"
+              (scroll)="scroll($event)"
+              [innerHTML]="document.html"
+            ></div>
+            <form [formGroup]="agreedForm" (ngSubmit)="acceptLetter()" class="fields">
+              <label class="consent"
+                ><input
+                  type="checkbox"
+                  formControlName="agreed"
+                  [attr.aria-invalid]="(agreed.invalid && agreed.touched) || null"
+                  [attr.aria-describedby]="
+                    agreed.invalid && agreed.touched ? 'letter-agreement-error' : null
+                  "
+                /><span>{{ 'step.terms.agree' | t }}</span></label
+              >
+              @if (agreed.invalid && agreed.touched) {
+                <p id="letter-agreement-error" class="error" role="alert">
+                  {{ 'form.offerAgreement' | t }}
+                </p>
+              }
+              @if (!letterRead()) {
+                <p>{{ 'step.offerletter.readfirst' | t }}</p>
+              }
+              @if (store.errors()['letter-accept']; as error) {
+                <p class="error" role="alert">{{ error.message }}</p>
+              }
+              <button
+                appButton
+                class="cta"
+                [disabled]="!letterRead() || store.pending()['letter-accept']"
+              >
+                {{ 'step.offerletter.accept' | t }}
+              </button>
+            </form>
+          </div>
+        }
+      </ng-template></app-dialog
+    >
+  } @else if (page === 'mandate') {
+    @for (mandate of mandates()?.mandates ?? []; track mandate.kind) {
+      <div class="card fields">
+        <strong>{{ mandate.provider }}</strong>
+        <p>{{ mandate.status }}</p>
+        @if (mandate.errorMessage) {
+          <p class="error">{{ mandate.errorMessage }}</p>
+        }
+        @if (mandate.actionUrl) {
+          <a appButton [href]="mandate.actionUrl" target="_blank" rel="noopener noreferrer">{{
+            'mandate.authorize' | t
+          }}</a>
+        }
+      </div>
+    }
+    @if (store.errors()['mandates-poll'] && !mandates()?.complete) {
+      <p class="error" role="alert">{{ 'mandate.check.error' | t }}</p>
+    }
+    <p class="hint">{{ 'mandate.instructions' | t }}</p>
+    @if (!mandates()?.complete) {
+      <button
+        appButton
+        class="cta"
+        [disabled]="store.pending()['mandates']"
+        (click)="setupMandates()"
+      >
+        {{ 'mandate.setup' | t }}</button
+      ><button appButton variant="secondary" (click)="load()">
+        {{ 'application.refreshStatus' | t }}
+      </button>
+    } @else {
+      <button appButton class="cta" (click)="afterMandates()">
+        {{ 'step.profile.continue' | t }}
+      </button>
+    }
+  } @else if (page === 'submit') {
+    @if (store.application(); as application) {
+      @if (application.salary; as salary) {
+        <dl class="card">
+          <div>
+            <dt>{{ 'step.salary.bank.label' | t }}</dt>
+            <dd>{{ salary.bankName || salary.bankCode }}</dd>
+          </div>
+          <div>
+            <dt>{{ 'step.salary.account.label' | t }}</dt>
+            <dd>{{ salary.accountNumberMasked }}</dd>
+          </div>
+        </dl>
+      }
+    }
+    <form class="form" [formGroup]="submittedForm" (ngSubmit)="submit()">
+      <label class="consent"
+        ><input
+          type="checkbox"
+          formControlName="submitted"
+          [attr.aria-invalid]="(submitted.invalid && submitted.touched) || null"
+          [attr.aria-describedby]="
+            submitted.invalid && submitted.touched ? 'submit-confirmation-error' : null
+          "
+        /><span>{{ 'step.submit.confirm' | t }}</span></label
+      >
+      @if (submitted.invalid && submitted.touched) {
+        <p id="submit-confirmation-error" class="error" role="alert">
+          {{ 'form.submitConfirmation' | t }}
+        </p>
+      }
+      <button appButton class="cta" [disabled]="awaitingStatus() || store.pending()['submit']">
+        {{ 'step.submit.submit' | t }}
+        <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
+      </button>
+    </form>
+    @if (store.errors()['submit']) {
+      <button appButton variant="secondary" (click)="checkStatus()">
+        {{ 'submit.checkStatus' | t }}
+      </button>
+    }
+  } @else {
+    @if (status(); as result) {
+      @if (result.reference; as reference) {
+        <div class="card fields">
+          <div class="reference-row">
+            <div>
+              <p class="hint">{{ 'status.reference' | t }}</p>
+              <strong class="reference-code">{{ reference }}</strong>
+            </div>
+            <button
+              appButton
+              variant="glass"
+              type="button"
+              [attr.aria-label]="'received.copy' | t"
+              (click)="copyReference(reference)"
+            >
+              <app-icon [name]="copyState() === 'copied' ? 'bold-success' : 'bold-copy'" />
+            </button>
+          </div>
+          <span class="sr-only" role="status">{{
+            copyState() === 'copied' ? ('received.copied' | t) : ''
+          }}</span>
+          @if (copyState() === 'failed') {
+            <p class="error" role="alert">{{ 'status.copy.error' | t }}</p>
+          }
+        </div>
+      }
+      <div class="card fields">
+        <strong>{{ 'status.' + result.status | t }}</strong>
+        @if (result.manualReview) {
+          <p>{{ 'received.review' | t }}</p>
+        }
+        @for (reason of result.reviewReasons; track reason) {
+          <p>{{ reason }}</p>
+        }
+        @for (step of result.pendingSteps; track step) {
+          <p>{{ step }}</p>
+        }
+      </div>
+    }
+    <button appButton variant="secondary" (click)="load()">
+      {{ 'application.refreshStatus' | t }}
+    </button>
+    @if (status()) {
+      <details class="card">
+        <summary>{{ 'status.contact.title' | t }}</summary>
+        <ul class="support-channels">
+          <li>
+            <a [href]="supportWhatsApp" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+          </li>
+          <li>
+            <a [href]="supportTel">{{ supportPhone }}</a>
+          </li>
+          <li>
+            <a [href]="'mailto:' + supportEmail">{{ supportEmail }}</a>
+          </li>
+        </ul>
+      </details>
+    }
+    <button appButton class="cta" (click)="finish()">{{ 'application.finish' | t }}</button>
+  }
+</section>

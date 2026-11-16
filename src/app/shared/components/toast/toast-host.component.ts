@@ -1,15 +1,26 @@
-import { IconComponent } from '../../icon.component';
+import { IconComponent } from '../icon.component';
 import {
-  ChangeDetectionStrategy, Component, DestroyRef, ElementRef, Injector, TemplateRef,
-  ViewContainerRef, afterRenderEffect, computed, effect, inject, input, signal,
-  viewChild, viewChildren,
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  Injector,
+  TemplateRef,
+  ViewContainerRef,
+  afterRenderEffect,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+  viewChild,
+  viewChildren,
 } from '@angular/core';
 import { TPipe } from '../../../core/i18n/t.pipe';
-import { Toast, ToastService } from '../../../core/toast/toast.service';
+import { Toast, ToastService } from './toast.service';
 
 type ToastPosition =
-  | 'top-left' | 'top-center' | 'top-right'
-  | 'bottom-left' | 'bottom-center' | 'bottom-right';
+  'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
 
 @Component({
   selector: 'app-toast-host',
@@ -28,7 +39,9 @@ export class ToastHostComponent {
   private readonly hovered = signal(false);
   private readonly focused = signal(false);
   private readonly touchExpanded = signal(false);
-  protected readonly expanded = computed(() => this.hovered() || this.focused() || this.touchExpanded());
+  protected readonly expanded = computed(
+    () => this.hovered() || this.focused() || this.touchExpanded(),
+  );
   private readonly heights = signal<readonly number[]>([]);
   protected readonly frontHeight = computed(() => this.heights()[0] ?? 0);
   protected readonly offsets = computed(() => {
@@ -39,7 +52,9 @@ export class ToastHostComponent {
       return offset;
     });
   });
-  protected readonly totalHeight = computed(() => this.heights().reduce((sum, height) => sum + height, 0));
+  protected readonly totalHeight = computed(() =>
+    this.heights().reduce((sum, height) => sum + height, 0),
+  );
 
   private readonly injector = inject(Injector);
   private readonly view = inject(ViewContainerRef);
@@ -61,13 +76,14 @@ export class ToastHostComponent {
       if (!hasToasts()) return;
       const cancellation = new AbortController();
       cleanup(() => cancellation.abort());
-      void this.mountStack(this.template(), cancellation.signal);
+      void this.mountStack(this.template(), cancellation.signal).catch(() => undefined);
     });
 
     afterRenderEffect({
       read: (cleanup) => {
         const cards = this.cards();
-        const measure = () => this.heights.set(cards.map(({ nativeElement }) => nativeElement.offsetHeight));
+        const measure = () =>
+          this.heights.set(cards.map(({ nativeElement }) => nativeElement.offsetHeight));
         measure();
         if (!cards.length || typeof ResizeObserver === 'undefined') return;
         const observer = new ResizeObserver(measure);
@@ -106,8 +122,11 @@ export class ToastHostComponent {
     const observer = new MutationObserver((records) => {
       syncModal();
       const openedPopover = records.some(({ addedNodes }) =>
-        Array.from(addedNodes).some((node) =>
-          node !== host && node instanceof HTMLElement && node.classList.contains('cdk-overlay-popover'),
+        Array.from(addedNodes).some(
+          (node) =>
+            node !== host &&
+            node instanceof HTMLElement &&
+            node.classList.contains('cdk-overlay-popover'),
         ),
       );
       // Native top-layer order follows when each popover was shown.
@@ -117,10 +136,14 @@ export class ToastHostComponent {
       }
     });
     observer.observe(container, { childList: true });
-    signal.addEventListener('abort', () => {
-      observer.disconnect();
-      overlay.dispose();
-    }, { once: true });
+    signal.addEventListener(
+      'abort',
+      () => {
+        observer.disconnect();
+        overlay.dispose();
+      },
+      { once: true },
+    );
   }
 
   protected enter(event: PointerEvent): void {

@@ -1,0 +1,276 @@
+<section class="step">
+  <app-wizard-progress
+    [current]="2"
+    [label]="(isBvn ? 'step.bvn.eyebrow' : 'step.otp.eyebrow') | t"
+  />
+  <app-illustration [name]="isBvn ? 'shield' : 'message'" />
+
+  @if (isBvn) {
+    <header class="head">
+      <h1 class="title">{{ 'step.bvn.title' | t }}</h1>
+      <p class="subtitle">{{ 'verification.bvnIntro' | t }}</p>
+      <app-why-ask [text]="'reason.bvn' | t" />
+    </header>
+    <form class="form" [formGroup]="startForm" (ngSubmit)="start()">
+      <div class="field" [class.is-invalid]="attempted() && startForm.controls.bvn.invalid">
+        <label class="label" for="bvn">{{ 'step.bvn.label' | t }}</label>
+        <input
+          appInput
+          id="bvn"
+          inputmode="numeric"
+          autocomplete="off"
+          maxlength="11"
+          formControlName="bvn"
+          [attr.aria-invalid]="attempted() && startForm.controls.bvn.invalid"
+          [attr.aria-describedby]="
+            attempted() && startForm.controls.bvn.invalid ? 'bvn-error' : 'bvn-hint'
+          "
+        />
+        @if (attempted() && startForm.controls.bvn.invalid) {
+          <p class="msg msg--error" id="bvn-error" role="alert">{{ 'step.bvn.invalid' | t }}</p>
+        } @else {
+          <p class="msg" id="bvn-hint">{{ 'step.bvn.hint' | t }}</p>
+        }
+      </div>
+      <div class="consent">
+        <input
+          id="bvn-consent"
+          aria-labelledby="bvn-consent-label bvn-privacy-label"
+          type="checkbox"
+          formControlName="consent"
+          [attr.aria-describedby]="
+            attempted() && startForm.controls.consent.invalid ? 'consent-error' : null
+          "
+        />
+        <div>
+          <label id="bvn-consent-label" for="bvn-consent">{{ 'consent.label' | t }}</label>
+          <button
+            type="button"
+            id="bvn-privacy-label"
+            class="consent-inline"
+            (click)="privacy.open()"
+          >
+            {{ 'consent.link' | t }}</button
+          >.
+          @if (attempted() && startForm.controls.consent.invalid) {
+            <p class="msg msg--error" id="consent-error" role="alert">
+              {{ 'consent.required' | t }}
+            </p>
+          }
+        </div>
+      </div>
+      @if (store.errors()['start']; as error) {
+        <p class="server-error" role="alert">{{ error.message }}</p>
+      }
+      <button
+        appButton
+        type="submit"
+        class="cta"
+        [disabled]="store.pending()['start'] || pickerOpen()"
+      >
+        {{ (store.pending()['start'] ? 'step.bvn.verifying' : 'step.bvn.verify') | t }}
+        <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
+      </button>
+    </form>
+    <app-dialog
+      [open]="pickerOpen()"
+      [title]="'otp.where.title' | t"
+      [showClose]="!store.pending()['send']"
+      [dismissal]="store.pending()['send'] ? 'explicit' : 'escape'"
+      (closed)="closePicker()"
+    >
+      <ng-template>
+        <div class="picker">
+          <h2>{{ 'otp.where.title' | t }}</h2>
+          @let sendingCode = store.pending()['send'];
+          @let loadingSupport = store.pending()['support'];
+          <p class="picker-status" role="status" [class.sr-only]="!sendingCode && !loadingSupport">
+            @if (sendingCode || loadingSupport) {
+              <app-spinner [inline]="true" />
+              {{ (sendingCode ? 'otp.where.sending' : 'otp.where.loadingSupport') | t }}
+            }
+          </p>
+          @if (expiredSession()) {
+            <button appButton type="button" (click)="restartVerification()">
+              {{ 'verification.restart' | t }}
+            </button>
+          } @else if (enteringAlternate()) {
+            <form class="form" [formGroup]="alternateForm" (ngSubmit)="sendAlternate()">
+              @let invalidAlternate =
+                alternateForm.controls.phoneNumber.touched &&
+                alternateForm.controls.phoneNumber.invalid;
+              <div class="field">
+                <label class="label" for="alternate-phone">{{
+                  'verification.alternatePhone' | t
+                }}</label>
+                <input
+                  appInput
+                  id="alternate-phone"
+                  type="tel"
+                  autocomplete="tel"
+                  formControlName="phoneNumber"
+                  [attr.aria-invalid]="invalidAlternate || null"
+                  [attr.aria-describedby]="invalidAlternate ? 'alternate-phone-error' : null"
+                />
+                @if (invalidAlternate) {
+                  <p id="alternate-phone-error" class="msg msg--error" role="alert">
+                    {{ 'verification.invalidPhone' | t }}
+                  </p>
+                }
+              </div>
+              <button appButton type="submit" [disabled]="store.pending()['send']">
+                {{ 'otp.send' | t }}
+              </button>
+              <button
+                type="button"
+                class="link"
+                (click)="enteringAlternate.set(false)"
+                [disabled]="store.pending()['send']"
+              >
+                {{ 'otp.alt.back' | t }}
+              </button>
+            </form>
+          } @else {
+            <p class="sub">{{ (contacts().length ? 'otp.where.sub' : 'otp.where.none') | t }}</p>
+            <div class="options">
+              @for (contact of contacts(); track contact.id) {
+                <button
+                  type="button"
+                  class="option"
+                  [disabled]="store.pending()['send']"
+                  (click)="
+                    contact.id === 'mono-alternate_phone'
+                      ? enteringAlternate.set(true)
+                      : send(contact.id)
+                  "
+                >
+                  <app-icon
+                    [name]="contact.type === 'phone' ? 'bold-call' : 'bold-message'"
+                    [size]="20"
+                  />
+                  <span class="option-text">
+                    <span class="kind">{{ 'otp.' + contact.type | t }}</span>
+                    <span class="value">{{ contact.masked }}</span>
+                  </span>
+                  <span class="mark" aria-hidden="true"></span>
+                </button>
+              }
+            </div>
+            <button
+              type="button"
+              class="link"
+              [disabled]="store.pending()['support'] || store.pending()['send']"
+              (click)="unreachable()"
+            >
+              {{ 'otp.where.noaccess' | t }}
+            </button>
+            @if (support(); as channels) {
+              <div class="support">
+                <p>{{ 'verification.contactSupport' | t }}</p>
+                @if (channels.phone) {
+                  <a [href]="'tel:' + channels.phone">{{ channels.phone }}</a>
+                }
+                @if (channels.email) {
+                  <a [href]="'mailto:' + channels.email">{{ channels.email }}</a>
+                }
+                @if (channels.whatsapp) {
+                  <a [href]="whatsapp(channels.whatsapp)" target="_blank" rel="noopener noreferrer"
+                    >WhatsApp</a
+                  >
+                }
+              </div>
+            }
+          }
+          @for (key of ['send', 'support']; track key) {
+            @if (store.errors()[key]; as error) {
+              <p class="msg msg--error" role="alert">{{ error.message }}</p>
+            }
+          }
+        </div>
+      </ng-template>
+    </app-dialog>
+  } @else {
+    <header class="head">
+      <h1 class="title">{{ 'step.otp.title' | t }}</h1>
+      @if (selected()) {
+        <p class="subtitle">
+          {{
+            (selected().startsWith('mono-') ? 'verification.monoSent' : 'step.otp.subtitle')
+              | t: { target: target() }
+          }}
+        </p>
+        <p class="msg">{{ 'step.otp.warn' | t }}</p>
+      }
+    </header>
+    @if (expiredSession() || !selected()) {
+      <button appButton type="button" (click)="restartVerification()">
+        {{ 'verification.restart' | t }}
+      </button>
+    } @else {
+      <form class="form" [formGroup]="otpForm" (ngSubmit)="verify()">
+        @let otpError = store.errors()['verify'];
+        @let otpInvalid = otpForm.controls.otp.touched && otpForm.controls.otp.invalid;
+        <app-otp-input
+          formControlName="otp"
+          [label]="'step.otp.title' | t"
+          [invalid]="!!otpError || otpInvalid"
+          [describedBy]="otpError || otpInvalid ? 'code-error' : null"
+          [readOnly]="!!store.pending()['verify']"
+          (edited)="store.clearError('verify')"
+        />
+        @if (otpError || otpInvalid) {
+          <p id="code-error" class="server-error" role="alert">
+            {{ otpError?.message || ('form.otp' | t) }}
+          </p>
+        }
+        @if (selectedContact()?.type === 'phone') {
+          <p class="msg">{{ 'step.otp.spam.hint' | t }}</p>
+        }
+        <div class="otp-actions">
+          <button
+            type="button"
+            class="link"
+            [disabled]="seconds() > 0 || store.pending()['send'] || store.pending()['verify']"
+            (click)="resend()"
+          >
+            {{
+              (seconds() ? 'step.otp.resend.wait' : 'step.otp.resend') | t: { seconds: seconds() }
+            }}
+          </button>
+          @if (canPaste) {
+            <button
+              type="button"
+              class="link"
+              [disabled]="store.pending()['verify']"
+              (click)="pasteCode()"
+            >
+              {{ 'step.otp.paste' | t }}
+            </button>
+          }
+          <button
+            type="button"
+            class="link link--muted"
+            [disabled]="store.pending()['close'] || store.pending()['verify']"
+            (click)="wrongBvn()"
+          >
+            {{ 'step.otp.change.email' | t }}
+          </button>
+        </div>
+        <button
+          appButton
+          type="submit"
+          class="cta"
+          [disabled]="store.pending()['verify'] || store.pending()['send']"
+        >
+          {{ (store.pending()['verify'] ? 'step.otp.verifying' : 'step.otp.verify') | t }}
+          <app-animated-icon animation="arrow-right" fallback="outline-arrow-right" [size]="18" />
+        </button>
+      </form>
+    }
+    @for (key of ['send', 'close']; track key) {
+      @if (store.errors()[key]; as error) {
+        <p class="server-error" role="alert">{{ error.message }}</p>
+      }
+    }
+  }
+</section>

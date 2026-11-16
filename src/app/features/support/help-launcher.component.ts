@@ -1,0 +1,88 @@
+import { IconComponent } from '../../shared/components/icon.component';
+import { DialogComponent } from '../../shared/components/dialog/dialog.component';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { TPipe } from '../../core/i18n/t.pipe';
+import { APP_VERSION } from '../../app-version';
+import { SUPPORT_EMAIL, SUPPORT_PHONE, telLink, whatsappLink } from './support-contacts';
+
+/**
+ * Help lives in the top bar as a "?" button (not a floating button that covers content as
+ * you scroll). It opens a bottom sheet with the three ways to reach a person.
+ */
+@Component({
+  selector: 'app-help-launcher',
+  imports: [IconComponent, DialogComponent, TPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <button
+      type="button"
+      class="help-btn glass-pill"
+      (click)="toggle()"
+      [attr.aria-expanded]="open()"
+      aria-haspopup="dialog"
+      [attr.aria-label]="'help.open' | t"
+    >
+      <app-icon name="bold-help" [size]="20" />
+      <span>{{ 'support.label' | t }}</span>
+    </button>
+
+    <app-dialog [open]="open()" [title]="'help.dialog' | t" (closed)="open.set(false)"><ng-template>
+        <p class="sheet-title">{{ 'help.title' | t }}</p>
+        <p class="sheet-sub">{{ 'help.sub' | t }}</p>
+        <a class="row" [attr.href]="wa" target="_blank" rel="noopener">
+          <span class="row-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.5 15.2L2 22l4.9-1.4A10 10 0 1 0 12 2zm5.5 14.3c-.2.6-1.3 1.2-1.8 1.3-.5.1-1.1.1-1.7-.1-.4-.1-1-.3-1.7-.6-3-1.3-4.9-4.4-5.1-4.6-.1-.2-1.2-1.6-1.2-3s.8-2.1 1-2.4c.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .6.5.2.6.7 2 .8 2.1.1.1.1.3 0 .5s-.1.3-.3.5-.3.4-.5.6c-.1.1-.3.3-.1.6.2.3.9 1.5 2 2.4 1.4 1.2 2.6 1.6 2.9 1.7.3.2.5.1.7-.1.2-.2.8-.9 1-1.2.2-.3.4-.3.7-.2.3.1 1.9.9 2.2 1 .3.2.6.2.6.4.1.1.1.9-.1 1.5z"/></svg>
+          </span>
+          <span>WhatsApp</span>
+        </a>
+        <a class="row" [attr.href]="tel">
+          <span class="row-icon" aria-hidden="true">
+            <app-icon name="bold-call" [size]="18" />
+          </span>
+          <span>{{ 'help.call' | t: { tel: phone } }}</span>
+        </a>
+        <a class="row" [attr.href]="'mailto:' + email + '?subject=Loan%20application%20help'">
+          <span class="row-icon" aria-hidden="true">
+            <app-icon name="bold-message" [size]="18" />
+          </span>
+          <span>{{ 'help.email' | t }}</span>
+        </a>
+        <p class="sheet-version">{{ 'help.version' | t: { v: version } }}</p>
+    </ng-template></app-dialog>
+  `,
+  styles: [
+    `
+      :host { position: fixed; right: calc(var(--space-4) + env(safe-area-inset-right)); bottom: calc(var(--space-4) + env(safe-area-inset-bottom)); z-index: 60; }
+      .help-btn { font: var(--btn-weight) 15px/1 var(--font-sans); }
+      .sheet-title { margin: 0; font-family: var(--font-display); font-size: 20px; font-weight: 600; }
+      .sheet-sub { margin: 0 0 var(--space-2); font-size: var(--fs-md); color: var(--ink-soft); }
+      .row {
+        display: flex; align-items: center; gap: var(--space-3); min-height: 52px; padding: 0 var(--space-3);
+        border-radius: var(--radius-md); color: var(--ink); text-decoration: none; font-weight: 500;
+      }
+      .row--off { opacity: 0.7; align-items: flex-start; padding-block: var(--space-3); }
+      .off-text { display: flex; flex-direction: column; gap: 2px; }
+      .off-note { font-size: var(--fs-xs); font-weight: 400; color: var(--ink-muted); line-height: 1.4; }
+      .row-btn { width: 100%; border: 0; background: none; font: inherit; font-weight: 500; text-align: left; cursor: pointer; }
+      @media (hover: hover) and (pointer: fine) { .row:hover { background: var(--surface-2); } }
+      .row:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--focus-ring); }
+      .row-icon { display: inline-flex; width: 32px; height: 32px; border-radius: 50%; align-items: center; justify-content: center; background: var(--grey-100); color: var(--ink); }
+      .sheet-version { margin: var(--space-2) 0 0; font-size: var(--fs-xs); color: var(--ink-muted); }
+      @media (prefers-reduced-motion: reduce) { .help-btn { transition: none; } }
+    `,
+  ],
+})
+export class HelpLauncherComponent {
+
+  readonly open = signal(false);
+  readonly tel = telLink();
+  readonly phone = SUPPORT_PHONE;
+  readonly email = SUPPORT_EMAIL;
+  readonly wa = whatsappLink();
+  readonly version = APP_VERSION;
+
+  toggle(): void {
+    this.open.update((isOpen) => !isOpen);
+  }
+
+}

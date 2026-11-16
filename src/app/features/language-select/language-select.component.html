@@ -23,12 +23,12 @@
 
     <!-- One language per row: rows stacked full width, so a tap cannot land on the wrong one. A tap chooses and continues. -->
     <ul class="lang-grid" [attr.aria-label]="'lang.select.title' | t">
-      @for (l of languages; track l.code; let i = $index) {
-        <li [style.--i]="i">
-          <button type="button" class="lang-card" [attr.lang]="l.code" (click)="choose(l.code)">
+      @for (language of languages; track language.code; let index = $index) {
+        <li [style.--index]="index">
+          <button type="button" class="lang-card" [attr.lang]="language.code" (click)="choose(language.code)">
             <span class="lang-text">
-              <span class="lang-endonym">{{ l.endonym }}</span>
-              <span class="lang-english">{{ l.hello }}</span>
+              <span class="lang-endonym">{{ language.endonym }}</span>
+              <span class="lang-english">{{ language.hello }}</span>
             </span>
             <app-icon name="bold-chevron-down" [size]="20" [rotate]="-90" class="lang-go" />
           </button>

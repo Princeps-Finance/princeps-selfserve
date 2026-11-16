@@ -14,38 +14,38 @@
     (focusin)="focus($event)"
     (focusout)="blur($event)"
   >
-    @for (t of toasts(); track t.id; let index = $index) {
+    @for (toast of toasts(); track toast.id; let index = $index) {
       <div
         class="toast"
-        [attr.data-tone]="t.tone"
+        [attr.data-tone]="toast.tone"
         [class.is-behind]="index > 0"
-        [class.is-leaving]="t.leaving"
+        [class.is-leaving]="toast.leaving"
         [style.--index]="index"
         [style.--offset.px]="offsets()[index]"
         [style.z-index]="toasts().length - index"
-        (keydown.escape)="dismiss(t, $event)"
+        (keydown.escape)="dismiss(toast, $event)"
       >
         <div class="card" #card>
           <div class="message" (pointerup)="$first && toggleFromBody($event)">
             <span class="icon" aria-hidden="true">
-              <app-icon [name]="t.tone === 'success' ? 'bold-success' : t.tone === 'error' ? 'bold-error' : 'bold-info'" [size]="24" />
+              <app-icon [name]="toast.tone === 'success' ? 'bold-success' : toast.tone === 'error' ? 'bold-error' : 'bold-info'" [size]="24" />
             </span>
-            <span class="msg" [attr.role]="t.tone === 'error' ? 'alert' : 'status'">{{ t.message }}</span>
+            <span class="msg" [attr.role]="toast.tone === 'error' ? 'alert' : 'status'">{{ toast.message }}</span>
           </div>
-          @if (t.action; as action) {
+          @if (toast.action; as action) {
             <button
               type="button"
               class="action"
-              [disabled]="modalOpen() || !!t.leaving || (!$first && !expanded())"
-              (click)="run(t)"
+              [disabled]="modalOpen() || !!toast.leaving || (!$first && !expanded())"
+              (click)="run(toast)"
             >{{ action.label }}</button>
           }
           <button
             type="button"
             class="close"
-            [disabled]="modalOpen() || !!t.leaving || (!$first && !expanded())"
+            [disabled]="modalOpen() || !!toast.leaving || (!$first && !expanded())"
             [attr.aria-label]="'common.dismiss' | t"
-            (click)="dismiss(t)"
+            (click)="dismiss(toast)"
           >
             <app-icon name="bold-close" [size]="14" />
           </button>

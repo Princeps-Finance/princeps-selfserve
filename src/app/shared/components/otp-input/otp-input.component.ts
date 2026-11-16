@@ -11,13 +11,14 @@ export const OTP_LENGTH = 6;
 export class OtpInputComponent implements ControlValueAccessor {
   readonly label = input.required<string>();
   readonly invalid = input(false);
+  readonly describedBy = input<string | null>(null);
   readonly incomplete = input(false);
   readonly readOnly = input(false);
   readonly edited = output<void>();
   protected readonly value = signal('');
   protected readonly disabled = signal(false);
   protected readonly focused = signal(false);
-  protected readonly cells = computed(() => Array.from({ length: OTP_LENGTH }, (_, i) => this.value()[i] ?? ''));
+  protected readonly cells = computed(() => Array.from({ length: OTP_LENGTH }, (_unused, index) => this.value()[index] ?? ''));
   protected readonly activeIndex = computed(() => Math.min(this.value().length, OTP_LENGTH - 1));
   private readonly field = viewChild<ElementRef<HTMLInputElement>>('field');
   private onChange: (value: string) => void = () => undefined;
@@ -28,8 +29,8 @@ export class OtpInputComponent implements ControlValueAccessor {
     const field = this.field()?.nativeElement;
     if (field) field.value = digits;
   }
-  registerOnChange(fn: (value: string) => void): void { this.onChange = fn; }
-  registerOnTouched(fn: () => void): void { this.onTouched = fn; }
+  registerOnChange(callback: (value: string) => void): void { this.onChange = callback; }
+  registerOnTouched(callback: () => void): void { this.onTouched = callback; }
   setDisabledState(disabled: boolean): void { this.disabled.set(disabled); }
   focusFirstEmpty(): void { this.field()?.nativeElement.focus(); }
   protected onInput(event: Event): void {

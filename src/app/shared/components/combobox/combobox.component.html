@@ -7,6 +7,7 @@
   autocomplete="off"
   aria-autocomplete="list"
   [id]="inputId()"
+  [attr.aria-describedby]="describedBy()"
   [attr.aria-invalid]="invalid()"
   [attr.aria-expanded]="open()"
   [attr.aria-controls]="open() ? listId() : null"
@@ -43,7 +44,16 @@
           [attr.aria-selected]="value() === option.value"
           (mousedown)="$event.preventDefault()"
           (click)="select(option)"
-        >{{ option.label }}</li>
+        >
+          @if (option.logo; as logo) {
+            <img class="option-mark" [src]="logo" width="24" height="24" loading="lazy" alt="" />
+          } @else if (option.initials) {
+            <span class="option-mark option-initials" aria-hidden="true">{{
+              option.initials
+            }}</span>
+          }
+          {{ option.label }}
+        </li>
       }
     </ul>
     @if (!filtered().length) {

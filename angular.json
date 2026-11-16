@@ -14,30 +14,26 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular/build:application",
+          "builder": "@ngx-env/builder:application",
           "options": {
-            "allowedCommonJsDependencies": ["lottie-web"],
+            "allowedCommonJsDependencies": [
+              "lottie-web"
+            ],
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
                 "glob": "**/*",
                 "input": "public"
-              },
-              {
-                "glob": "pdf.worker.min.mjs",
-                "input": "node_modules/pdfjs-dist/legacy/build",
-                "output": "/pdf"
-              },
-              {
-                "glob": "**/*",
-                "input": "node_modules/pdfjs-dist/standard_fonts",
-                "output": "/pdf/standard_fonts"
               }
             ],
             "styles": [
               "src/styles.css"
-            ]
+            ],
+            "ngxEnv": {
+              "runtime": true,
+              "prefix": "^NG_APP_"
+            }
           },
           "configurations": {
             "production": {
@@ -54,12 +50,6 @@
                 }
               ],
               "outputHashing": "all",
-              "fileReplacements": [
-                {
-                  "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.production.ts"
-                }
-              ],
               "optimization": {
                 "scripts": true,
                 "styles": {
@@ -79,7 +69,7 @@
           "defaultConfiguration": "production"
         },
         "serve": {
-          "builder": "@angular/build:dev-server",
+          "builder": "@ngx-env/builder:dev-server",
           "configurations": {
             "production": {
               "buildTarget": "princeps-selfserve:build:production"
@@ -91,7 +81,7 @@
           "defaultConfiguration": "development"
         },
         "test": {
-          "builder": "@angular/build:unit-test"
+          "builder": "@ngx-env/builder:unit-test"
         }
       }
     }

@@ -1,7 +1,7 @@
 <div class="otp" [class.is-invalid]="invalid() || incomplete()">
   <input #field class="otp-field" type="text" name="otp" inputmode="numeric" pattern="[0-9]*"
     autocomplete="one-time-code" enterkeyhint="done" autocapitalize="off" spellcheck="false"
-    [attr.aria-label]="label()" [attr.aria-invalid]="invalid() || incomplete() ? true : null"
+    [attr.aria-label]="label()" [attr.aria-describedby]="describedBy()" [attr.aria-invalid]="invalid() || incomplete() ? true : null"
     [disabled]="disabled()" [readOnly]="readOnly()" [value]="value()"
     (input)="onInput($event)" (focus)="focused.set(true)" (blur)="blur()" />
   @for (digit of cells(); track $index) {

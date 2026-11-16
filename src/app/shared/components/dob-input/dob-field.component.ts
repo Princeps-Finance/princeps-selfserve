@@ -8,12 +8,12 @@ import type { SelectOption } from '../select/select-option';
 
 /** Returns an ISO date (YYYY-MM-DD) for a real calendar date, otherwise ''. */
 export function toIsoDate(day: string, month: string, year: string): string {
-  const d = Number(day), m = Number(month), y = Number(year);
-  if (!day || !month || year.length !== 4 || !Number.isInteger(d) || !Number.isInteger(m) || !Number.isInteger(y)) return '';
-  const dt = new Date(Date.UTC(y, m - 1, d));
-  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) return '';
-  if (y < 1900 || dt.getTime() > Date.now()) return '';
-  return `${year}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  const dayNumber = Number(day), monthNumber = Number(month), yearNumber = Number(year);
+  if (!day || !month || year.length !== 4 || !Number.isInteger(dayNumber) || !Number.isInteger(monthNumber) || !Number.isInteger(yearNumber)) return '';
+  const date = new Date(Date.UTC(yearNumber, monthNumber - 1, dayNumber));
+  if (date.getUTCFullYear() !== yearNumber || date.getUTCMonth() !== monthNumber - 1 || date.getUTCDate() !== dayNumber) return '';
+  if (yearNumber < 1900 || date.getTime() > Date.now()) return '';
+  return `${year}-${String(monthNumber).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
 }
 
 /**
@@ -80,28 +80,28 @@ export class DobFieldComponent implements ControlValueAccessor {
     let fmt: Intl.DateTimeFormat;
     try { fmt = new Intl.DateTimeFormat(code, { month: 'long', timeZone: 'UTC' }); }
     catch { fmt = new Intl.DateTimeFormat('en', { month: 'long', timeZone: 'UTC' }); }
-    return Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: fmt.format(new Date(Date.UTC(2000, i, 1))) }));
+    return Array.from({ length: 12 }, (_unused, monthIndex) => ({ value: String(monthIndex + 1), label: fmt.format(new Date(Date.UTC(2000, monthIndex, 1))) }));
   });
 
-  private onChange: (v: string) => void = () => undefined;
+  private onChange: (value: string) => void = () => undefined;
   private onTouched: () => void = () => undefined;
 
-  writeValue(v: string | null): void {
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v ?? '');
-    this.year.set(m ? m[1] : '');
-    this.month.set(m ? String(Number(m[2])) : '');
-    this.day.set(m ? String(Number(m[3])) : '');
+  writeValue(value: string | null): void {
+    const dateParts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value ?? '');
+    this.year.set(dateParts ? dateParts[1] : '');
+    this.month.set(dateParts ? String(Number(dateParts[2])) : '');
+    this.day.set(dateParts ? String(Number(dateParts[3])) : '');
   }
-  registerOnChange(fn: (v: string) => void): void { this.onChange = fn; }
-  registerOnTouched(fn: () => void): void { this.onTouched = fn; }
+  registerOnChange(callback: (value: string) => void): void { this.onChange = callback; }
+  registerOnTouched(callback: () => void): void { this.onTouched = callback; }
 
   setDisabledState(disabled: boolean): void { this.disabled.set(disabled); }
 
   protected touch(): void { this.onTouched(); }
 
-  protected setDay(v: string): void { this.day.set(v.replace(/\D/g, '').slice(0, 2)); this.emit(); }
-  protected setYear(v: string): void { this.year.set(v.replace(/\D/g, '').slice(0, 4)); this.emit(); }
-  protected setMonth(v: string): void { this.month.set(v); this.emit(); }
+  protected setDay(value: string): void { this.day.set(value.replace(/\D/g, '').slice(0, 2)); this.emit(); }
+  protected setYear(value: string): void { this.year.set(value.replace(/\D/g, '').slice(0, 4)); this.emit(); }
+  protected setMonth(value: string): void { this.month.set(value); this.emit(); }
 
   private emit(): void { this.onChange(toIsoDate(this.day(), this.month(), this.year())); }
 }

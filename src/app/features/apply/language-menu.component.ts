@@ -1,4 +1,4 @@
-import { IconComponent } from '../../shared/icon.component';
+import { IconComponent } from '../../shared/components/icon.component';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -37,19 +37,19 @@ import { TPipe } from '../../core/i18n/t.pipe';
 
       @if (open()) {
         <ul class="menu" role="listbox" [attr.aria-label]="'apply.language' | t">
-          @for (l of languages; track l.code) {
+          @for (language of languages; track language.code) {
             <li>
               <button
                 type="button"
                 class="option"
                 role="option"
-                [attr.aria-selected]="l.code === currentLang()"
-                [class.is-current]="l.code === currentLang()"
-                (click)="pick(l.code)"
+                [attr.aria-selected]="language.code === currentLang()"
+                [class.is-current]="language.code === currentLang()"
+                (click)="pick(language.code)"
               >
-                <span class="option-endonym">{{ l.endonym }}</span>
-                <span class="option-english">{{ l.english }}</span>
-                @if (l.code === currentLang()) {
+                <span class="option-endonym">{{ language.endonym }}</span>
+                <span class="option-english">{{ language.english }}</span>
+                @if (language.code === currentLang()) {
                   <app-icon name="bold-success" [size]="14" class="check" />
                 }
               </button>
@@ -127,17 +127,16 @@ export class LanguageMenuComponent {
   readonly currentLang = computed(() => this.langService.lang());
 
   currentEndonym(): string {
-    return LANGUAGES.find((l) => l.code === this.langService.lang())?.endonym ?? 'English';
+    return LANGUAGES.find((language) => language.code === this.langService.lang())?.endonym ?? 'English';
   }
 
   toggle(evt: Event): void {
     evt.stopPropagation();
-    this.open.update((v) => !v);
+    this.open.update((isOpen) => !isOpen);
   }
 
-  pick(lang: Lang): void {
-    this.langService.set(lang);
-    this.open.set(false);
+  async pick(language: Lang): Promise<void> {
+    if (await this.langService.set(language)) this.open.set(false);
   }
 
   close(): void {
@@ -146,7 +145,7 @@ export class LanguageMenuComponent {
 
   onDocClick(evt: MouseEvent): void {
     if (!this.open()) return;
-    const el = this.wrap()?.nativeElement;
-    if (el && !el.contains(evt.target as Node)) this.close();
+    const wrapper = this.wrap()?.nativeElement;
+    if (wrapper && !wrapper.contains(evt.target as Node)) this.close();
   }
 }

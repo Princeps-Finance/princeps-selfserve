@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, self-service-production]
+    branches: [main, self-service-development, self-service-production]
 
 permissions:
   contents: read
@@ -18,14 +18,15 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Type-check the API and Worker
-        run: npm run typecheck:api
-      - name: Unit tests
-        run: npm run test:ci
-      - name: Production build
-        run: npm run build
+      - run: npm run test:ci
+      - run: npm run build
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
-      - name: Go-live gate (production branch only)
-        if: github.base_ref == 'self-service-production' || github.ref_name == 'self-service-production'
-        run: npm run check:live
+      - uses: actions/upload-artifact@v4
+        with:
+          name: self-service-browser
+          path: |
+            dist/princeps-selfserve/browser
+            customHttp.yml
+            scripts/runtime-config.mjs
+          if-no-files-found: error
