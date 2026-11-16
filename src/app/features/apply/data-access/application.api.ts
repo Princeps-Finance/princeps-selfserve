@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { defer, firstValueFrom, map, Observable, takeUntil, timeout } from 'rxjs';
 import type { z } from 'zod/mini';
-import { APP_CONFIG } from '../../../runtime-config';
+import { apiOrigin } from '../../../core/api-origin';
 import { ApplicationSession } from '../../../core/session/application-session.service';
 import { parseApiResponse } from './api-response';
 import { ApiError, apiError } from './api-error';
@@ -11,7 +11,6 @@ import * as ApplicationContract from './application-contract';
 @Injectable({ providedIn: 'root' })
 export class ApplicationApi {
   private readonly http = inject(HttpClient);
-  private readonly config = inject(APP_CONFIG);
   private readonly session = inject(ApplicationSession);
   private requestResponse<Response>(
     method: string,
@@ -20,7 +19,7 @@ export class ApplicationApi {
     body?: unknown,
   ): Observable<Response> {
     return this.http
-      .request<unknown>(method, this.config.apiBaseUrl + '/api/v2/' + path, {
+      .request<unknown>(method, apiOrigin() + '/api/v2/' + path, {
         body,
         cache: 'no-store',
         credentials: 'omit',

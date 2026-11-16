@@ -1,8 +1,8 @@
+import { apiOrigin } from '../../../core/api-origin';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { APP_CONFIG } from '../../../runtime-config';
 import { ApplicationStore, stepRoutes } from '../state/application.store';
 import { ApplicationSession } from '../../../core/session/application-session.service';
 import { VerificationComponent } from './verification.component';
@@ -16,14 +16,6 @@ describe('BVN form', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: ActivatedRoute, useValue: { snapshot: { data: { page: 'bvn' } } } },
-        {
-          provide: APP_CONFIG,
-          useValue: {
-            environment: 'development',
-            apiBaseUrl: 'https://api.example.test',
-            accountsUrl: '',
-          },
-        },
       ],
     });
     const fixture = TestBed.createComponent(VerificationComponent);
@@ -53,7 +45,7 @@ describe('BVN form', () => {
     submit();
     const request = http.expectOne({
       method: 'POST',
-      url: 'https://api.example.test/api/v2/applications',
+      url: apiOrigin() + '/api/v2/applications',
     });
     expect(request.request.body).toMatchObject({
       bvn: '00000000000',
@@ -73,14 +65,6 @@ describe('BVN form', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: ActivatedRoute, useValue: { snapshot: { data: { page: 'verify' } } } },
-        {
-          provide: APP_CONFIG,
-          useValue: {
-            environment: 'development',
-            apiBaseUrl: 'https://api.example.test',
-            accountsUrl: '',
-          },
-        },
       ],
     });
     const fixture = TestBed.createComponent(VerificationComponent);
@@ -103,7 +87,7 @@ describe('BVN form', () => {
     const http = TestBed.inject(HttpTestingController);
     const sending = store.sendCode({ contactId: 'phone' });
     http
-      .expectOne('https://api.example.test/api/v2/applications/test-id/otp/send')
+      .expectOne(apiOrigin() + '/api/v2/applications/test-id/otp/send')
       .flush({ channel: 'sms', expiresAt: '2026-11-13T00:05:00Z', resendAfterSeconds: 30 });
     await sending;
     await fixture.whenStable();
@@ -118,7 +102,7 @@ describe('BVN form', () => {
     expect(event.defaultPrevented).toBe(true);
     const verify = http.expectOne({
       method: 'POST',
-      url: 'https://api.example.test/api/v2/applications/test-id/otp/verify',
+      url: apiOrigin() + '/api/v2/applications/test-id/otp/verify',
     });
     expect(verify.request.body).toEqual({ code: '000000' });
     verify.flush({ code: 'OTP_WRONG' }, { status: 400, statusText: 'Bad Request' });
