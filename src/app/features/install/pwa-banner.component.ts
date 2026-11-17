@@ -1,4 +1,4 @@
-import { ButtonDirective } from '../../shared/components/button/button.directive';
+import { ButtonDirective } from '@princeps-finance/ui';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';

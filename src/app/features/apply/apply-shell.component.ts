@@ -1,7 +1,7 @@
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TPipe } from '../../core/i18n/t.pipe';
 import { DialogComponent } from '../../shared/components/dialog/dialog.component';
-import { ButtonDirective } from '../../shared/components/button/button.directive';
+import { ButtonDirective } from '@princeps-finance/ui';
 import { ApplicationApi } from './data-access/application.api';
 import { OffersStore } from './state/offers.store';
 import { ApplicationStore } from './state/application.store';

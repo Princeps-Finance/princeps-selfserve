@@ -29,7 +29,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ApplicationStore } from '../state/application.store';
 import { ApplicationApi } from '../data-access/application.api';
 import { ApplicationSession } from '../../../core/session/application-session.service';
-import { ButtonDirective } from '../../../shared/components/button/button.directive';
+import { ButtonDirective } from '@princeps-finance/ui';
 import { DialogComponent } from '../../../shared/components/dialog/dialog.component';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import { CameraSession } from './camera-session';

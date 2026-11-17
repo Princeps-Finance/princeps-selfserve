@@ -19,7 +19,7 @@ import { debounceTime, tap } from 'rxjs';
 import { ApplicationStore } from '../state/application.store';
 import { OffersStore } from '../state/offers.store';
 import { ApplicationApi } from '../data-access/application.api';
-import { ButtonDirective } from '../../../shared/components/button/button.directive';
+import { ButtonDirective } from '@princeps-finance/ui';
 import { InputDirective } from '../../../shared/components/input/input.directive';
 import { CurrencyInputDirective } from '../../../shared/components/input/currency-input.directive';
 import { SelectFieldComponent } from '../../../shared/components/select/select-field.component';

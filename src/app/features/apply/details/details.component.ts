@@ -24,7 +24,7 @@ import { ApplicationStore } from '../state/application.store';
 import { OffersStore } from '../state/offers.store';
 import { ApplicationApi } from '../data-access/application.api';
 import { ReferenceDataStore } from '../data-access/reference-data.store';
-import { ButtonDirective } from '../../../shared/components/button/button.directive';
+import { ButtonDirective } from '@princeps-finance/ui';
 import { InputDirective } from '../../../shared/components/input/input.directive';
 import {
   SelectFieldComponent,

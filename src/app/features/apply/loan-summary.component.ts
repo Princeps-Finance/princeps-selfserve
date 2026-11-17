@@ -1,5 +1,5 @@
 import { Router } from '@angular/router';
-import { ButtonDirective } from '../../shared/components/button/button.directive';
+import { ButtonDirective } from '@princeps-finance/ui';
 import { IconComponent } from '../../shared/components/icon.component';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { TPipe } from '../../core/i18n/t.pipe';
