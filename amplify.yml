@@ -3,7 +3,10 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm ci
+        - |
+          : "${NODE_AUTH_TOKEN:?Set the GitHub Packages read token in Amplify}"
+          printf '%s\n' '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}' >> "$HOME/.npmrc"
+          npm ci
     build:
       commands:
         - npm run build

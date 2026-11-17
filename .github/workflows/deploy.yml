@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 jobs:
   release:
@@ -25,7 +26,11 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          registry-url: https://npm.pkg.github.com
+          scope: '@princeps-finance'
       - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
       - run: npm run test:ci
       - name: Build for the selected environment
         run: |

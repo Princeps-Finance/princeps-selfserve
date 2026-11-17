@@ -11,7 +11,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApplicationStore } from '../state/application.store';
 import { ApplicationApi } from '../data-access/application.api';
-import { OtpInputComponent } from '../../../shared/components/otp-input/otp-input.component';
+import { OtpInput } from '@princeps-finance/ui';
 import { ButtonDirective } from '../../../shared/components/button/button.directive';
 import { InputDirective } from '../../../shared/components/input/input.directive';
 import { DialogComponent } from '../../../shared/components/dialog/dialog.component';
@@ -33,7 +33,7 @@ function normalizePhone(value: string): string {
   imports: [
     SpinnerComponent,
     ReactiveFormsModule,
-    OtpInputComponent,
+    OtpInput,
     ButtonDirective,
     InputDirective,
     DialogComponent,
