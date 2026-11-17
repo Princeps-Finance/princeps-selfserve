@@ -1,5 +1,5 @@
 import { RouterLink } from '@angular/router';
-import { ButtonDirective } from '../../../shared/components/button/button.directive';
+import { ButtonDirective } from '@princeps-finance/ui';
 import { AnimatedIconComponent } from '../../../shared/components/animated-icon.component';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { IllustrationComponent } from '../../../shared/components/illustration.component';

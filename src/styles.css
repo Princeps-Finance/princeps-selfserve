@@ -1,5 +1,6 @@
 @import '@angular/cdk/overlay-prebuilt.css';
-@import './app/shared/components/button/button.css';
+@import '@princeps-finance/ui/button.css';
+@import './styles/legacy-buttons.css';
 @import './app/shared/components/input/input.css';
 @import './app/shared/components/dialog/dialog-overlay.css';
 @import '@fontsource-variable/inter/wght.css';
