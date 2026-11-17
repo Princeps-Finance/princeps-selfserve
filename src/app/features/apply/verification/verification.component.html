@@ -210,7 +210,7 @@
       <form class="form" [formGroup]="otpForm" (ngSubmit)="verify()">
         @let otpError = store.errors()['verify'];
         @let otpInvalid = otpForm.controls.otp.touched && otpForm.controls.otp.invalid;
-        <app-otp-input
+        <ps-otp-input
           formControlName="otp"
           [label]="'step.otp.title' | t"
           [invalid]="!!otpError || otpInvalid"
