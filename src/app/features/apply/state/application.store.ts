@@ -20,6 +20,7 @@ export const stepRoutes: Record<string, string> = {
   eligibility: 'eligibility',
   offer: 'offers',
   terms: 'terms',
+  nin: 'nin',
   documents: 'documents',
   identity: 'verify-identity',
   offerLetter: 'offer-letter',

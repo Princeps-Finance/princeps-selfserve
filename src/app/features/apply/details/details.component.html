@@ -171,8 +171,7 @@
               class="choice employment-choice"
               role="radio"
               [attr.aria-checked]="type() === option.code"
-              [disabled]="option.status !== 'AVAILABLE'"
-              (click)="chooseType(option.code)"
+              (click)="chooseEmploymentOption(option)"
             >
               <span class="choice-copy"
                 ><strong>{{ option.name }}</strong>

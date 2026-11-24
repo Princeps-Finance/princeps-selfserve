@@ -20,6 +20,7 @@ import { ThemeToggleComponent } from '../../shared/components/theme-toggle.compo
 
 /** The steps after the review, where the chosen amount and period stay one tap away. */
 const SUMMARY_ROUTES = new Set<string>([
+  APPLY.nin,
   APPLY.documents,
   APPLY.offerLetter,
   APPLY.verifyIdentity,

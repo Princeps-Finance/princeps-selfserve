@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { ApplicationApi } from '../data-access/application.api';
 import { ReferenceDataStore } from '../data-access/reference-data.store';
 import { DetailsComponent } from './details.component';
@@ -55,7 +55,7 @@ describe('details form validation', () => {
     expect(screen.querySelector('#state-error')).not.toBeNull();
   });
 
-  it('requires a state before showing its employers and clears the employer when the state changes', async () => {
+  it('opens the dedicated state-employer screen for state government customers', async () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
@@ -67,10 +67,6 @@ describe('details form validation', () => {
             employmentTypes: async () => [
               { code: 'state', name: 'State government', status: 'AVAILABLE' },
             ],
-            mdas: async () => [
-              { code: 'ondo-education', name: 'Education', state: 'Ondo' },
-              { code: 'lagos-works', name: 'Works', state: 'Lagos' },
-            ],
           },
         },
       ],
@@ -78,23 +74,11 @@ describe('details form validation', () => {
 
     const fixture = TestBed.createComponent(DetailsComponent);
     const screen = fixture.nativeElement as HTMLElement;
+    const router = TestBed.inject(Router);
+    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
     await fixture.whenStable();
     screen.querySelector<HTMLButtonElement>('button[role="radio"]')!.click();
     await fixture.whenStable();
-    expect(screen.querySelector('#mda')).toBeNull();
-
-    const { employmentForm, mdaOptions } = fixture.componentInstance;
-    employmentForm.controls.mdaState.setValue('Ondo');
-    expect(mdaOptions().map((option) => option.value)).toEqual(['ondo-education']);
-    screen.querySelector<HTMLButtonElement>('form .cta')!.click();
-    await fixture.whenStable();
-    expect(screen.querySelector('#mda-error')).not.toBeNull();
-
-    employmentForm.controls.mdaCode.setValue('ondo-education');
-    expect(employmentForm.valid).toBe(true);
-    employmentForm.controls.mdaState.setValue('Lagos');
-    expect(mdaOptions().map((option) => option.value)).toEqual(['lagos-works']);
-    expect(employmentForm.controls.mdaCode.value).toBe('');
-    expect(employmentForm.invalid).toBe(true);
+    expect(navigate).toHaveBeenCalledWith('/apply/state');
   });
 });

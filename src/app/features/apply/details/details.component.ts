@@ -316,6 +316,18 @@ export class DetailsComponent {
     if (!['federal', 'state', 'paramilitary', 'nysc'].includes(value)) return;
     this.employmentForm.controls.type.setValue(value as ApplicationContract.EmploymentDto['type']);
   }
+  chooseEmploymentOption(option: ApplicationContract.EmploymentTypeItemDto) {
+    if (option.status === 'AVAILABLE') {
+      if (option.code === 'state') {
+        void this.router.navigateByUrl('/apply/state');
+        return;
+      }
+      this.chooseType(option.code);
+      return;
+    }
+    const target = option.code === 'private-sector' ? '/apply/statement' : '/apply/waitlist';
+    void this.router.navigate([target], { queryParams: { type: option.code } });
+  }
   async save() {
     if (this.store.pending()['details-save']) return;
     let action: () => Promise<unknown>;
