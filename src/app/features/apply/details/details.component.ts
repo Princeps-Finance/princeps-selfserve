@@ -6,8 +6,10 @@ import {
   Component,
   DestroyRef,
   computed,
+  effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -35,7 +37,10 @@ import { LangService } from '../../../core/i18n/lang.service';
 import { TPipe } from '../../../core/i18n/t.pipe';
 import * as ApplicationContract from '../data-access/application-contract';
 
+import { FEATURES } from '../../../core/features';
 import { bankOption } from './bank-option';
+
+type PayrollMethod = NonNullable<ApplicationContract.SalaryDto['payrollMethod']>;
 
 const wholeNumber: ValidatorFn = (control) =>
   control.value == null || Number.isInteger(control.value) ? null : { wholeNumber: true };
@@ -130,6 +135,20 @@ export class DetailsComponent {
       .map((agency) => ({ value: agency.code, label: agency.name })),
   );
   readonly employment = computed(() => this.store.application()?.employment);
+  private readonly features = inject(FEATURES);
+  readonly payrollMethods = ['ippis', 'remita'] as const;
+  /** How a federal customer is paid. Older records have no method and are IPPIS. */
+  readonly payrollMethod = signal<PayrollMethod>('ippis');
+  /** The IPPIS / Remita choice is for federal customers only, and only once the Remita path is released. */
+  readonly showPayrollChoice = computed(
+    () => this.features.remitaSalary && this.employment()?.type === 'federal',
+  );
+  /** Federal customers give an IPPIS number unless they chose Remita. */
+  readonly needsIppis = computed(
+    () =>
+      this.employment()?.type === 'federal' &&
+      (!this.showPayrollChoice() || this.payrollMethod() === 'ippis'),
+  );
   readonly salaryForm = new FormGroup({
     bankCode: new FormControl('', { nonNullable: true, validators: Validators.required }),
     accountNumber: new FormControl('', {
@@ -138,7 +157,7 @@ export class DetailsComponent {
     }),
     ippisNumber: new FormControl('', {
       nonNullable: true,
-      validators: this.employment()?.type === 'federal' ? requiredText : null,
+      validators: (control) => (this.needsIppis() ? requiredText(control) : null),
     }),
     serviceNumber: new FormControl('', {
       nonNullable: true,
@@ -146,6 +165,13 @@ export class DetailsComponent {
     }),
   });
   constructor() {
+    // Re-check the IPPIS field when the employment type or the payroll method changes whether it is required.
+    effect(() => {
+      this.needsIppis();
+      untracked(() =>
+        this.salaryForm.controls.ippisNumber.updateValueAndValidity({ emitEvent: false }),
+      );
+    });
     this.profileForm.controls.state.valueChanges
       .pipe(
         switchMap((state) => {
@@ -281,6 +307,8 @@ export class DetailsComponent {
       this.banks.set(result.banks.map(bankOption));
       const salary = this.store.application()?.salary;
       if (salary) this.salaryForm.patchValue({ bankCode: salary.bankCode });
+      // A resumed federal application keeps its choice; records saved before the choice existed are IPPIS.
+      this.payrollMethod.set(salary?.payrollMethod === 'remita' ? 'remita' : 'ippis');
     }
     if (!this.destroy.destroyed) this.loaded.set(true);
   }
@@ -312,9 +340,24 @@ export class DetailsComponent {
   retryLgas() {
     this.profileForm.controls.state.setValue(this.profileForm.controls.state.value);
   }
+  choosePayrollMethod(method: PayrollMethod) {
+    this.payrollMethod.set(method);
+  }
   chooseType(value: string) {
     if (!['federal', 'state', 'paramilitary', 'nysc'].includes(value)) return;
     this.employmentForm.controls.type.setValue(value as ApplicationContract.EmploymentDto['type']);
+  }
+  chooseEmploymentOption(option: ApplicationContract.EmploymentTypeItemDto) {
+    if (option.status === 'AVAILABLE') {
+      if (option.code === 'state') {
+        void this.router.navigateByUrl('/apply/state');
+        return;
+      }
+      this.chooseType(option.code);
+      return;
+    }
+    const target = option.code === 'private-sector' ? '/apply/statement' : '/apply/waitlist';
+    void this.router.navigate([target], { queryParams: { type: option.code } });
   }
   async save() {
     if (this.store.pending()['details-save']) return;
@@ -353,19 +396,31 @@ export class DetailsComponent {
       if (this.salaryForm.invalid || this.looking() || this.lookup()?.nameMatchesBvn === false)
         return;
       const value = this.salaryForm.getRawValue();
-      action = () =>
-        this.api.saveSalary({
-          ...value,
-          ippisNumber: value.ippisNumber.trim() || undefined,
-          serviceNumber: value.serviceNumber.trim() || undefined,
-        });
+      // Sent for federal customers only, and only while the Remita path is switched on: the API rejects
+      // unknown fields, so it must not go out before the back end accepts it.
+      const payrollMethod = this.showPayrollChoice() ? this.payrollMethod() : undefined;
+      const ippisNumber = value.ippisNumber.trim();
+      const serviceNumber = value.serviceNumber.trim();
+      const body: ApplicationContract.SalaryDto = {
+        bankCode: value.bankCode,
+        accountNumber: value.accountNumber,
+        ...(ippisNumber && payrollMethod !== 'remita' ? { ippisNumber } : {}),
+        ...(serviceNumber ? { serviceNumber } : {}),
+        ...(payrollMethod ? { payrollMethod } : {}),
+      };
+      action = () => this.api.saveSalary(body);
       next = 'eligibility';
     }
     const saved = await this.store.save('details-save', action);
     if (this.destroy.destroyed) return;
     if (saved) {
       this.offers.clear();
-      await this.router.navigateByUrl('/apply/' + next);
+      // New salary details always get a fresh POST /eligibility, never an earlier result.
+      if (next === 'eligibility')
+        await this.router.navigateByUrl('/apply/eligibility', {
+          state: { checkEligibility: true },
+        });
+      else await this.router.navigateByUrl('/apply/' + next);
     } else {
       this.showSaveFieldError();
     }

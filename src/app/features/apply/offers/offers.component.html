@@ -182,6 +182,9 @@
     @if (offers.error()) {
       <button appButton variant="secondary" (click)="retry()">{{ 'common.retry' | t }}</button>
     }
+    @if (offers.result()?.offers?.length) {
+      <a appButton variant="secondary" routerLink="/apply/saved">{{ 'offers.check.cta' | t }}</a>
+    }
   } @else {
     @if (store.pending()['locked']) {
       <app-spinner [label]="'common.loading' | t" />

@@ -174,7 +174,9 @@ export class VerificationComponent {
     if (this.otpForm.invalid || this.expiredSession() || this.store.pending()['send']) return;
     if ((await this.store.verify(this.otpForm.controls.otp.value)) && !this.destroy.destroyed) {
       this.otpForm.reset();
-      await this.router.navigateByUrl(this.store.nextRoute());
+      await this.router.navigateByUrl(
+        this.store.application()?.returningCustomer ? '/apply/resume' : this.store.nextRoute(),
+      );
     }
   }
 

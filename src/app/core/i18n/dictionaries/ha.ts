@@ -336,18 +336,25 @@ export const hausa: Dictionary = {
   'step.employment.state': 'Gwamnatin jiha',
   'step.employment.state.hint': "Ma'aikatun jiha, hukumomi da ƙananan hukumomi.",
   'step.salary.check.continue': 'Duba adadin da zan iya samu',
-  'check.result.title': 'Za ka iya samun {amount}',
+  'check.result.indicative': 'Sakamakon cancanta na wucin gadi',
+  'check.result.refer.title': 'Iyakar rance ta wucin gadi ita ce {amount}',
+  'check.result.refer.body': 'Lokacin biya na wucin gadi ya kai watanni {months}.',
+  'check.result.refer.empty.title': 'Babu nau’in rancen da ya dace',
+  'check.result.refer.empty.body':
+    'Har yanzu za ka iya tabbatar da bayananka don a duba cancantarka sosai.',
+  'check.result.refer.verify': 'Ci gaba don tabbatar da cancanta',
+  'check.result.title': 'Mai yiwuwa ka cancanci har zuwa {amount}',
   'check.result.sub':
     'Biya cikin watanni {months} a mafi yawa. Mun lissafa wannan daga duba albashinka. Za a tabbatar da adadin ƙarshe idan mun tabbatar da kai wane ne.',
-  'check.result.declined.title': 'Ba za mu iya ba ka rance yanzu ba',
+  'check.result.declined.title': 'Mai yiwuwa ba ka cancanci rance yanzu ba',
   'check.result.declined.body':
-    'Bisa duba aikinka da albashinka, ba za mu iya ba ka rance a yanzu ba. Za ka iya sake dubawa, ko ka yi magana da mu.',
+    'Wannan binciken na wucin gadi yana nuna mai yiwuwa ba ka cancanta ba bisa bayanan aikinka da albashinka. Za a tabbatar da cancantarka ta ƙarshe yayin neman rance.',
   'check.limit.title': 'Binciken ya yi yawa',
   'check.limit.body':
     'Ka yi amfani da binciken 4 da aka ba da izini ga wannan asusun cikin minti 30. Da fatan ka sake gwadawa bayan minti 30, ko ka yi magana da mu.',
   'check.result.income': 'Bisa albashinka na wata da aka tabbatar, {amount}',
-  'check.result.products': 'Rancen da za ka iya ɗauka',
-  'check.result.take': 'Ɗauki rancen yanzu',
+  'check.result.products': 'Zaɓuɓɓukan rance na wucin gadi',
+  'check.result.take': 'Ci gaba da neman rance',
   'check.result.take.hint':
     'Na gaba: BVN ɗinka da lambar da za mu aika maka ta SMS. Ba za mu sake tambayar inda kake aiki ko albashinka ba.',
   'check.result.again': 'Sake dubawa',

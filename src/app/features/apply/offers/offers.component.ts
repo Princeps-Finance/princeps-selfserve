@@ -100,8 +100,14 @@ export class OffersComponent {
       });
     if (this.page === 'eligibility') {
       const existing = this.store.application()?.eligibility;
+      // Arriving straight from a salary save always re-runs the check against the new details.
+      const salaryJustSaved =
+        this.router.currentNavigation()?.extras.state?.['checkEligibility'] === true;
       void this.check(
-        !existing || existing.expired || Date.parse(existing.expiresAt) <= Date.now(),
+        salaryJustSaved ||
+          !existing ||
+          existing.expired ||
+          Date.parse(existing.expiresAt) <= Date.now(),
       );
     }
     if (this.page === 'offers') void this.offers.load();

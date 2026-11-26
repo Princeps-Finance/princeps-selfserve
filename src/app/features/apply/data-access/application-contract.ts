@@ -54,6 +54,7 @@ export const SalaryViewDtoSchema = z.object({
   "accountNumberMasked": z.string(),
   "ippisNumber": z.optional(z.string()),
   "serviceNumber": z.optional(z.string()),
+  "payrollMethod": z.optional(z.enum(["ippis", "remita"])),
 });
 export type SalaryViewDto = z.infer<typeof SalaryViewDtoSchema>;
 
@@ -373,6 +374,7 @@ export const SalaryDtoSchema = z.object({
   "accountNumber": z.string(),
   "ippisNumber": z.optional(z.string()),
   "serviceNumber": z.optional(z.string()),
+  "payrollMethod": z.optional(z.enum(["ippis", "remita"])),
 });
 export type SalaryDto = z.infer<typeof SalaryDtoSchema>;
 

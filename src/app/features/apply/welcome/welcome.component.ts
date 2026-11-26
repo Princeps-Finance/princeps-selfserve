@@ -34,6 +34,11 @@ import { APPLY } from '../apply-routes';
           </a>
           <p class="hint">{{ 'welcome.intent.apply.hint' | t }}</p>
         </div>
+        <div class="choice">
+          <a appButton variant="secondary" class="alt" [routerLink]="checkPath">
+            {{ 'welcome.intent.check' | t }}
+          </a>
+        </div>
       </div>
 
       @if (accountsUrl) {
@@ -109,7 +114,8 @@ import { APPLY } from '../apply-routes';
         font-size: var(--fs-md);
         color: var(--ink-soft);
       }
-      .cta {
+      .cta,
+      .alt {
         min-height: var(--btn-height);
         padding: 0 var(--space-6);
         border-radius: var(--btn-radius);
@@ -129,6 +135,9 @@ import { APPLY } from '../apply-routes';
         position: relative;
         border: 0;
         margin-top: 0 !important;
+      }
+      .alt {
+        text-decoration: none;
       }
       .cta app-animated-icon {
         position: absolute;
@@ -158,5 +167,6 @@ import { APPLY } from '../apply-routes';
 })
 export class WelcomeIntentComponent {
   protected readonly applyPath = APPLY.bvn;
+  protected readonly checkPath = APPLY.checkEmployment;
   protected readonly accountsUrl = import.meta.env?.NG_APP_ACCOUNTS_URL?.trim();
 }

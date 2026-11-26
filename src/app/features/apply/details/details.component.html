@@ -171,8 +171,7 @@
               class="choice employment-choice"
               role="radio"
               [attr.aria-checked]="type() === option.code"
-              [disabled]="option.status !== 'AVAILABLE'"
-              (click)="chooseType(option.code)"
+              (click)="chooseEmploymentOption(option)"
             >
               <span class="choice-copy"
                 ><strong>{{ option.name }}</strong>
@@ -306,6 +305,35 @@
       </form>
     } @else {
       <form class="form" [formGroup]="salaryForm" (ngSubmit)="save()">
+        @if (showPayrollChoice()) {
+          <div class="field">
+            <span class="label" id="payroll-method-label">{{
+              'step.salary.channel.label' | t
+            }}</span>
+            <div
+              class="choices"
+              role="radiogroup"
+              aria-labelledby="payroll-method-label"
+              aria-describedby="payroll-method-hint"
+            >
+              @for (method of payrollMethods; track method) {
+                <button
+                  type="button"
+                  class="choice employment-choice"
+                  role="radio"
+                  [attr.aria-checked]="payrollMethod() === method"
+                  (click)="choosePayrollMethod(method)"
+                >
+                  <span class="choice-copy"
+                    ><strong>{{ method === 'ippis' ? 'IPPIS' : 'Remita' }}</strong></span
+                  >
+                  <span class="choice-mark" aria-hidden="true"></span>
+                </button>
+              }
+            </div>
+            <p class="hint" id="payroll-method-hint">{{ 'step.salary.channel.hint' | t }}</p>
+          </div>
+        }
         <div class="field">
           @let bankInvalid =
             salaryForm.controls.bankCode.touched && salaryForm.controls.bankCode.invalid;
@@ -364,7 +392,7 @@
         @if (lookup()?.nameMatchesBvn) {
           <p role="status">{{ lookup()?.accountName }}</p>
         }
-        @if (employment()?.type === 'federal') {
+        @if (needsIppis()) {
           <div class="field">
             @let ippisInvalid =
               salaryForm.controls.ippisNumber.touched && salaryForm.controls.ippisNumber.invalid;
