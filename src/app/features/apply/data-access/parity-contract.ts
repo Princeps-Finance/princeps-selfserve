@@ -12,13 +12,16 @@ export const LoanListItemSchema = z.object({
   principal: z.number().check(z.nonnegative()),
   balance: z.number().check(z.nonnegative()),
   monthlyRepayment: z.number().check(z.nonnegative()),
-  disbursedAt: z.string(),
-  maturityDate: z.string(),
+  disbursedAt: z.nullable(z.string()),
+  maturityDate: z.nullable(z.string()),
 });
 export type LoanListItem = z.infer<typeof LoanListItemSchema>;
 
 export const LoansResponseSchema = z.object({
   loans: z.array(LoanListItemSchema),
+  partial: z.optional(z.boolean()),
+  // The screen uses the partial flag and preserves the backend's ledger metadata as sent.
+  availability: z.optional(z.unknown()),
 });
 export type LoansResponse = z.infer<typeof LoansResponseSchema>;
 
@@ -40,7 +43,7 @@ export const LoanMandateSchema = z.object({
   provider: z.string(),
   kind: z.string(),
   status: z.string(),
-  externalId: z.string(),
+  externalId: z.nullable(z.string()),
 });
 
 export const LoanDetailSchema = z.object({

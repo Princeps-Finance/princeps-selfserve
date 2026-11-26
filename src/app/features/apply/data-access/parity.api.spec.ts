@@ -67,7 +67,7 @@ describe('ParityApi backend handoff', () => {
     await expect(response).resolves.toMatchObject({ decision: 'DECLINE', maximumAmount: 0 });
   });
 
-  it('parses the loan list and detail shapes using the resume token', async () => {
+  it('accepts mixed loan dates and a null mandate reference using the resume token', async () => {
     session.establish('app-id', 'resume-token');
     const summary = {
       id: 'Y2FsdG9zOmxvYW4tMQ',
@@ -81,11 +81,20 @@ describe('ParityApi backend handoff', () => {
       disbursedAt: '2026-03-12',
       maturityDate: '2027-03-12',
     };
+    const summaryWithoutDates = {
+      ...summary,
+      id: 'bG9hbmRpc2s6bG9hbi0y',
+      reference: 'PRC-NULL-DATES',
+      source: 'loandisk',
+      status: 'closed',
+      disbursedAt: null,
+      maturityDate: null,
+    };
     const listed = api.listLoans();
     const listRequest = http.expectOne({ method: 'GET', url: `${application}/loans` });
     expect(listRequest.request.headers.get('x-application-resume-token')).toBe('resume-token');
-    listRequest.flush(wrapped({ loans: [summary] }));
-    await expect(listed).resolves.toEqual({ loans: [summary] });
+    listRequest.flush(wrapped({ loans: [summary, summaryWithoutDates] }));
+    await expect(listed).resolves.toEqual({ loans: [summary, summaryWithoutDates] });
 
     const detailed = api.getLoan(summary.id);
     const detailRequest = http.expectOne({
@@ -107,12 +116,15 @@ describe('ParityApi backend handoff', () => {
             provider: 'mono',
             kind: 'DIRECT_DEBIT',
             status: 'ACTIVE',
-            externalId: 'mn_1234',
+            externalId: null,
           },
         ],
       }),
     );
-    await expect(detailed).resolves.toMatchObject({ balance: 120_000 });
+    await expect(detailed).resolves.toMatchObject({
+      balance: 120_000,
+      mandates: [{ externalId: null }],
+    });
   });
 
   it('uses the exact waitlist, statement-review and NIN contracts', async () => {

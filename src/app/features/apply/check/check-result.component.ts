@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { ButtonDirective } from '@princeps-finance/ui';
 import { AnimatedIconComponent } from '../../../shared/components/animated-icon.component';
@@ -13,18 +13,34 @@ import { CheckFlowService } from './check-flow.service';
     <section class="step">
       @if (result(); as result) {
         <header class="head">
-          <h1 class="title">
-            {{
-              (declined() ? 'check.result.declined.title' : 'check.result.title')
-                | t: { amount: money(result.maximumAmount) }
-            }}
-          </h1>
-          <p class="subtitle">
-            {{
-              (declined() ? 'check.result.declined.body' : 'check.result.sub')
-                | t: { months: result.maximumTenor }
-            }}
-          </p>
+          @if (result.decision !== 'REFER') {
+            <p class="eyebrow">{{ 'check.result.indicative' | t }}</p>
+          }
+          @switch (result.decision) {
+            @case ('REFER') {
+              @if (result.eligibleProducts.length) {
+                <h1 class="title">
+                  {{ 'check.result.refer.title' | t: { amount: money(result.maximumAmount) } }}
+                </h1>
+                <p class="subtitle">
+                  {{ 'check.result.refer.body' | t: { months: result.maximumTenor } }}
+                </p>
+              } @else {
+                <h1 class="title">{{ 'check.result.refer.empty.title' | t }}</h1>
+                <p class="subtitle">{{ 'check.result.refer.empty.body' | t }}</p>
+              }
+            }
+            @case ('DECLINE') {
+              <h1 class="title">{{ 'check.result.declined.title' | t }}</h1>
+              <p class="subtitle">{{ 'check.result.declined.body' | t }}</p>
+            }
+            @case ('APPROVE') {
+              <h1 class="title">
+                {{ 'check.result.title' | t: { amount: money(result.maximumAmount) } }}
+              </h1>
+              <p class="subtitle">{{ 'check.result.sub' | t: { months: result.maximumTenor } }}</p>
+            }
+          }
         </header>
         @if (result.reasons.length) {
           <ul class="reasons">
@@ -47,16 +63,21 @@ import { CheckFlowService } from './check-flow.service';
           </section>
         }
         <div class="actions">
-          @if (!declined()) {
-            <button appButton class="cta" type="button" (click)="takeLoan()">
-              {{ 'check.result.take' | t }}
+          @if (result.decision !== 'DECLINE') {
+            <button appButton class="cta" type="button" (click)="continueToVerification()">
+              {{
+                (result.decision === 'REFER' ? 'check.result.refer.verify' : 'check.result.take')
+                  | t
+              }}
               <app-animated-icon
                 animation="arrow-right"
                 fallback="outline-arrow-right"
                 [size]="18"
               />
             </button>
-            <p class="hint">{{ 'check.result.take.hint' | t }}</p>
+            @if (result.decision === 'APPROVE') {
+              <p class="hint">{{ 'check.result.take.hint' | t }}</p>
+            }
           }
           <button appButton variant="secondary" type="button" (click)="again()">
             {{ 'check.result.again' | t }}
@@ -115,7 +136,6 @@ export class CheckResultComponent {
   readonly flow = inject(CheckFlowService);
   private readonly router = inject(Router);
   readonly result = this.flow.result;
-  readonly declined = computed(() => this.result()?.decision === 'DECLINE');
   readonly money = formatNaira;
 
   constructor() {
@@ -123,7 +143,7 @@ export class CheckResultComponent {
       void this.router.navigateByUrl('/apply/check/employment', { replaceUrl: true });
   }
 
-  takeLoan() {
+  continueToVerification() {
     void this.router.navigateByUrl('/apply/bvn');
   }
 

@@ -14,6 +14,7 @@ import { formatNaira } from '../money';
 import { ApiError, apiError } from '../data-access/api-error';
 import { LoanDetail } from '../data-access/parity-contract';
 import { ParityApi } from '../data-access/parity.api';
+import { formatLoanDate } from './loan-date';
 
 @Component({
   selector: 'app-loan-detail',
@@ -96,6 +97,7 @@ export class LoanDetailComponent {
   readonly loading = signal(true);
   readonly error = signal<ApiError | null>(null);
   readonly money = formatNaira;
+  readonly date = formatLoanDate;
   readonly mandateActive = computed(() =>
     this.loan()?.mandates.some((mandate) => mandate.status === 'ACTIVE'),
   );
@@ -111,9 +113,6 @@ export class LoanDetailComponent {
     } finally {
       if (!this.destroy.destroyed) this.loading.set(false);
     }
-  }
-  date(value: string) {
-    return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(value));
   }
   back() {
     void this.router.navigateByUrl('/apply/loans');

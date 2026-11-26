@@ -85,6 +85,7 @@ export const applicationEnglish: Record<string, string> = {
   'loans.sub': 'See active loans, repayments and loans you have completed.',
   'loans.loading': 'Loading your loans…',
   'loans.error': 'We could not load your loans. Try again.',
+  'loans.partial': 'We could not load your full loan history. Some loans may be missing.',
   'loans.none': 'You do not have any loans to show yet.',
   'loans.open': 'Open loans',
   'loans.owed': 'Outstanding balance',

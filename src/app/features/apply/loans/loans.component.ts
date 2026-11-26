@@ -15,6 +15,7 @@ import { formatNaira } from '../money';
 import { ApiError, apiError } from '../data-access/api-error';
 import { LoanListItem, LoansResponse } from '../data-access/parity-contract';
 import { ParityApi } from '../data-access/parity.api';
+import { formatLoanDate } from './loan-date';
 
 @Component({
   selector: 'app-loans',
@@ -27,17 +28,28 @@ import { ParityApi } from '../data-access/parity.api';
         </h1>
         <p class="subtitle">{{ 'loans.sub' | t }}</p>
       </header>
+      @let history = data();
       @if (loading()) {
         <app-spinner [label]="'loans.loading' | t" />
-      } @else if (error()) {
-        <div class="state" role="alert">
-          <p>{{ 'loans.error' | t }}</p>
-          <button appButton variant="secondary" type="button" (click)="load()">
+      }
+      @if (history?.partial || error()) {
+        <div class="state">
+          <p [attr.role]="error() ? 'alert' : 'status'">
+            {{ (history?.partial ? 'loans.partial' : 'loans.error') | t }}
+          </p>
+          <button
+            appButton
+            variant="secondary"
+            type="button"
+            [disabled]="loading()"
+            (click)="load()"
+          >
             {{ 'common.retry' | t }}
           </button>
         </div>
-      } @else {
-        @if (!data()?.loans?.length) {
+      }
+      @if (history) {
+        @if (!history.partial && !loading() && !error() && !history.loans.length) {
           <p class="state">{{ 'loans.none' | t }}</p>
         }
         @if (openLoans().length) {
@@ -181,10 +193,12 @@ export class LoansComponent {
     () => this.data()?.loans.filter((loan) => loan.status === 'closed') ?? [],
   );
   readonly money = formatNaira;
+  readonly date = formatLoanDate;
   constructor() {
     void this.load();
   }
   async load() {
+    if (this.loading()) return;
     this.loading.set(true);
     this.error.set(null);
     try {
@@ -200,9 +214,6 @@ export class LoansComponent {
     return loan.principal
       ? Math.min(100, ((loan.principal - loan.balance) / loan.principal) * 100)
       : 0;
-  }
-  date(value: string) {
-    return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(value));
   }
   open(id: string) {
     void this.router.navigate(['/apply/loans', id]);

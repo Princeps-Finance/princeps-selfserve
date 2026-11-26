@@ -328,18 +328,25 @@ export const igbo: Dictionary = {
   'step.employment.state': 'Gọọmentị steeti',
   'step.employment.state.hint': 'Ngalaba, ụlọ ọrụ na gọọmentị ime obodo nke steeti.',
   'step.salary.check.continue': 'Hụ ego m nwere ike inweta',
-  'check.result.title': 'Ị nwere ike inweta {amount}',
+  'check.result.indicative': 'Nsonaazụ ntozu e mere atụmaatụ',
+  'check.result.refer.title': 'Oke mgbazinye ego e mere atụmatụ bụ {amount}',
+  'check.result.refer.body': 'Oge a tụrụ anya iji kwụọ ụgwọ ruru ọnwa {months}.',
+  'check.result.refer.empty.title': 'Enweghị ụdị mgbazinye ego dabara adaba',
+  'check.result.refer.empty.body':
+    'Ị ka nwere ike ikwenye nkọwa gị ka e nyochaa ntozu gị nke ọma.',
+  'check.result.refer.verify': "Gaa n'ihu ka e nyochaa ntozu gị",
+  'check.result.title': 'Ị nwere ike iru eru inweta ihe ruru {amount}',
   'check.result.sub':
     "Kwụghachi n'ime ọnwa {months} ruo n'ókè. Anyị gbakọrọ nke a site na nlele ụgwọ ọrụ gị. A ga-akwado ego ikpeazụ mgbe anyị kwadoro onye ị bụ.",
-  'check.result.declined.title': 'Anyị enweghị ike inye gị mgbazinye ego ugbu a',
+  'check.result.declined.title': 'Ị nwere ike ịghị eru inweta mgbazinye ego ugbu a',
   'check.result.declined.body':
-    'Dabere na nlele ọrụ na ụgwọ ọrụ gị, anyị enweghị ike inye gị mgbazinye ego ugbu a. Ị nwere ike ilele ọzọ, ma ọ bụ kwurịta okwu na anyị.',
+    'Nlele atụmaatụ a na-egosi na ị nwere ike ịghara iru eru dabere na nkọwa ọrụ na ụgwọ ọrụ gị. A ga-akwado ntozu ikpeazụ mgbe ị na-etinye akwụkwọ.',
   'check.limit.title': 'Nlele ndị a dị ọtụtụ',
   'check.limit.body':
     "I jirila nlele anọ a kwere maka akaụntụ a n'ime nkeji iri atọ. Biko nwaa ọzọ mgbe nkeji iri atọ gasịrị, ma ọ bụ kwurịta okwu na anyị.",
   'check.result.income': 'Dabere na ụgwọ ọrụ gị kwa ọnwa e kwadoro, {amount}',
-  'check.result.products': 'Mgbazinye ego ị nwere ike iweta',
-  'check.result.take': 'Weta mgbazinye ego ugbu a',
+  'check.result.products': 'Nhọrọ mgbazinye ego e mere atụmaatụ',
+  'check.result.take': "Gaa n'ihu tinye akwụkwọ",
   'check.result.take.hint':
     "Nke na-esote: BVN gị na koodu anyị zipụrụ gị n'SMS. A gaghị ajụ ebe ị na-arụ ọrụ ma ọ bụ ụgwọ ọrụ gị ọzọ.",
   'check.result.again': 'Lelee ọzọ',
